@@ -186,29 +186,45 @@ class StockTracker(object):
         watchlist.add_stocks_to_tree(self.performance_tree, self.fundamentals_tree)
         
     def add_quote(self, watchlist):
-        quote_dialog = dialogs.QuoteDialog(self.gladefile)
-        if (quote_dialog.run() == gtk.RESPONSE_OK):
+        dialog = dialogs.QuoteDialog(self.gladefile)
+        if (dialog.run() == gtk.RESPONSE_OK):
                 #Append to the tree
-                quote_dialog.quote.add_to_tree(self.performance_tree, self.fundamentals_tree)
+                dialog.quote.add_to_tree(self.performance_tree, self.fundamentals_tree)
                 #Add to the Watchlist
-                watchlist.add_child(quote_dialog.quote)
+                watchlist.add_child(dialog.quote)
+    
+    def buy_position(self, watchlist):
+        dialog = dialogs.BuyDialog(self.gladefile)
+        if (dialog.run() == gtk.RESPONSE_OK):
+                #Append to the tree
+                dialog.position.add_to_tree(self.performance_tree, self.fundamentals_tree)
+                #Add to the Watchlist
+                watchlist.add_child(dialog.position)
     
     def add_watchlist(self, selection_iter):
         dialog = dialogs.WatchlistDialog(self.gladefile)
         if (dialog.run() == gtk.RESPONSE_OK):
                 #Append to the tree
-                dialog.watchlist.add_to_tree(self.left_tree.treestore
+                dialog.item.add_to_tree(self.left_tree.treestore
                     , selection_iter
                     , self.left_tree.tree_columns)
-                self.watchlists.add_child(dialog.watchlist)
+                self.watchlists.add_child(dialog.item)
+                
+    def add_portfolio(self, selection_iter):
+        dialog = dialogs.PortfolioDialog(self.gladefile)
+        if (dialog.run() == gtk.RESPONSE_OK):
+                #Append to the tree
+                dialog.item.add_to_tree(self.left_tree.treestore
+                    , selection_iter
+                    , self.left_tree.tree_columns)
+                self.portfolios.add_child(dialog.item)
                 
     def reload_from_data(self):
         """Called when we want to reset everything based
         on internal data.  Probably called when a file has been loaded."""
         self.performance_tree.treestore.clear()
         self.left_tree.treestore.clear()
-        self.fundamentals.treestore.clear()
-      
+        self.fundamentals_tree.treestore.clear()
         self.watchlists.add_to_tree(self.left_tree)
         self.portfolios.add_to_tree(self.left_tree)
 
@@ -239,13 +255,16 @@ class StockTracker(object):
         if item == None:
             model, selection_iter, item = self.performance_tree.get_selected_object()
         if item:
+            print item.type
             if (item.type == items.CATEGORY):
                 if (item.name == "Watchlists"):
                     self.add_watchlist(selection_iter)
                 elif (item.name == "Portfolios"):
-                    print "not implemented yet!"
+                    self.add_portfolio(selection_iter)
             elif (item.type == items.WATCHLIST):
                 self.add_quote(item)
+            elif (item.type == items.PORTFOLIO):
+                self.buy_position(item)
             elif (item.type == items.QUOTE):
                 self.add_quote(self.currentList)
     
@@ -262,6 +281,13 @@ class StockTracker(object):
                 self.editButton.set_sensitive(False)
             elif (item.type == items.WATCHLIST):
                 self.reload_watchlist(item)
+                self.currentList = item
+                self.addButton.set_sensitive(True)
+                self.updateButton.set_sensitive(True)
+                self.removeButton.set_sensitive(True)
+                self.editButton.set_sensitive(True)
+            elif (item.type == items.PORTFOLIO):
+                #self.reload_portfolio(item)  #TODO
                 self.currentList = item
                 self.addButton.set_sensitive(True)
                 self.updateButton.set_sensitive(True)
