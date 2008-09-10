@@ -49,9 +49,10 @@ class StockTracker(object):
         #Connect with main window
         self.mainWindow.signal_autoconnect(self)
         #Initialize trees
-        self.performance_tree = treeviews.PerformanceTree(self.mainWindow.get_widget('performanceTree'))
-        self.fundamentals_tree = treeviews.FundamentalsTree(self.mainWindow.get_widget('fundamentalsTree'))
-        self.left_tree = treeviews.LeftTree(self.mainWindow.get_widget('leftTree'))
+        self.performance_tree          = treeviews.PerformanceTree(self.mainWindow.get_widget('performanceTree'))
+        self.fundamentals_tree         = treeviews.FundamentalsTree(self.mainWindow.get_widget('fundamentalsTree'))
+        self.portfolio_performance_tree = treeviews.PortfolioPerformanceTree(self.mainWindow.get_widget('portfolioPerformanceTree'))
+        self.left_tree                 = treeviews.LeftTree(self.mainWindow.get_widget('leftTree'))
         #init file
         self.file = file.File()        
         #init widgets
@@ -73,16 +74,21 @@ class StockTracker(object):
         #Get the Main Window
         self.main_window = self.mainWindow.get_widget("mainWindow")
         self.set_window_title_from_file(self.file.filename)
-        #Get the widgets
+        #Get the button widgets
         self.editButton = self.mainWindow.get_widget("editButton")
         self.removeButton = self.mainWindow.get_widget("removeButton")
         self.addButton = self.mainWindow.get_widget("addButton")
         self.updateButton = self.mainWindow.get_widget("updateButton")
-        #disable them
-        self.editButton.set_sensitive(False)
-        self.removeButton.set_sensitive(False)
-        self.addButton.set_sensitive(False)
-        self.updateButton.set_sensitive(False)
+        #get watchlist tabs
+        self.watchlist_tabs = []
+        self.watchlist_tabs.append(self.mainWindow.get_widget("tab_fundamentals"))
+        self.watchlist_tabs.append(self.mainWindow.get_widget("tab_performance"))
+        self.hide_watchlist()
+        #get portfolio tabs
+        self.portfolio_tabs = []
+        self.portfolio_tabs.append(self.mainWindow.get_widget("tab_fundamentals"))
+        self.portfolio_tabs.append(self.mainWindow.get_widget("tab_portfolio_performance"))
+        self.hide_portfolio()
 
     #********************************************************
     #* Simple Helpers
@@ -97,7 +103,35 @@ class StockTracker(object):
                 % (os.path.basename(file)))
         else:
             self.main_window.set_title(_("StockTracker - Untitled"))
+        
+    def show_watchlist(self, item):
+        self.reload_watchlist(item)
+        self.currentList = item
+        self.addButton.set_sensitive(True)
+        self.updateButton.set_sensitive(True)
+        self.removeButton.set_sensitive(True)
+        self.editButton.set_sensitive(True)
+        for tab in self.watchlist_tabs:
+            tab.show()
+        
+    def hide_watchlist(self):
+        for tab in self.watchlist_tabs:
+            tab.hide()
             
+    def show_portfolio(self, item):
+        #self.reload_portfolio(item)  #TODO
+        self.currentList = item
+        self.addButton.set_sensitive(True)
+        self.updateButton.set_sensitive(True)
+        self.removeButton.set_sensitive(True)
+        self.editButton.set_sensitive(True)
+        for tab in self.portfolio_tabs:
+            tab.show()
+             
+    def hide_portfolio(self):
+        for tab in self.portfolio_tabs:
+            tab.hide()  
+
     def get_watchlist_selected(self):
         """This function is a wrapper for the
         gtk.TreeView.get_selection() function and the
@@ -185,6 +219,9 @@ class StockTracker(object):
     def reload_watchlist(self, watchlist):
         watchlist.add_stocks_to_tree(self.performance_tree, self.fundamentals_tree)
         
+    def reload_portfolio(self, portfolio):
+        portfolio.add_positions_to_tree(self.portfolio_performance_tree, self.fundamentals_tree)
+        
     def add_quote(self, watchlist):
         dialog = dialogs.QuoteDialog(self.gladefile)
         if (dialog.run() == gtk.RESPONSE_OK):
@@ -193,13 +230,13 @@ class StockTracker(object):
                 #Add to the Watchlist
                 watchlist.add_child(dialog.quote)
     
-    def buy_position(self, watchlist):
+    def buy_position(self, portfolio):
         dialog = dialogs.BuyDialog(self.gladefile)
         if (dialog.run() == gtk.RESPONSE_OK):
                 #Append to the tree
-                dialog.position.add_to_tree(self.performance_tree, self.fundamentals_tree)
-                #Add to the Watchlist
-                watchlist.add_child(dialog.position)
+                dialog.position.add_to_tree(self.portfolio_performance_tree, self.fundamentals_tree)
+                #Add to the portfolio
+                portfolio.add_child(dialog.position)
     
     def add_watchlist(self, selection_iter):
         dialog = dialogs.WatchlistDialog(self.gladefile)
@@ -225,6 +262,7 @@ class StockTracker(object):
         self.performance_tree.treestore.clear()
         self.left_tree.treestore.clear()
         self.fundamentals_tree.treestore.clear()
+        self.portfolio_performance_tree.treestore.clear()
         self.watchlists.add_to_tree(self.left_tree)
         self.portfolios.add_to_tree(self.left_tree)
 
@@ -255,7 +293,6 @@ class StockTracker(object):
         if item == None:
             model, selection_iter, item = self.performance_tree.get_selected_object()
         if item:
-            print item.type
             if (item.type == items.CATEGORY):
                 if (item.name == "Watchlists"):
                     self.add_watchlist(selection_iter)
@@ -273,32 +310,29 @@ class StockTracker(object):
         self.performance_tree.treestore.clear()
         self.fundamentals_tree.treestore.clear()
         if not (item == None):
+            #category selected
             if (item.type == items.CATEGORY):
                 self.currentList = None
                 self.addButton.set_sensitive(True)
                 self.updateButton.set_sensitive(True)
                 self.removeButton.set_sensitive(False)
                 self.editButton.set_sensitive(False)
+                self.hide_portfolio()
+                self.hide_watchlist()
             elif (item.type == items.WATCHLIST):
-                self.reload_watchlist(item)
-                self.currentList = item
-                self.addButton.set_sensitive(True)
-                self.updateButton.set_sensitive(True)
-                self.removeButton.set_sensitive(True)
-                self.editButton.set_sensitive(True)
+                self.hide_portfolio()
+                self.show_watchlist(item)
             elif (item.type == items.PORTFOLIO):
-                #self.reload_portfolio(item)  #TODO
-                self.currentList = item
-                self.addButton.set_sensitive(True)
-                self.updateButton.set_sensitive(True)
-                self.removeButton.set_sensitive(True)
-                self.editButton.set_sensitive(True)
+                self.hide_watchlist()
+                self.show_portfolio(item)
             else :
                 self.currentList = None
                 self.addButton.set_sensitive(False)
                 self.updateButton.set_sensitive(False)
                 self.removeButton.set_sensitive(False)
                 self.editButton.set_sensitive(False)
+                self.hide_portfolio()
+                self.hide_watchlist()
             
     def on_performanceTree_cursor_changed(self, widget):
         model, selection_iter, item = self.left_tree.get_selected_object()

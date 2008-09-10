@@ -6,6 +6,7 @@ import time
 import config
 import treeviews
 import stock
+import helper
 
 try:
     import sys
@@ -290,7 +291,7 @@ class Portfolio(ItemBase):
         """
         tree.append(parent, self.get_column_list(columnList))
         
-    def add_stocks_to_tree(self, performance_tree, fundamentals_tree):
+    def add_positions_to_tree(self, performance_tree, fundamentals_tree):
         for child in self.__m_children:
             child.add_to_tree(performance_tree, fundamentals_tree)
             
@@ -382,10 +383,65 @@ class WatchlistItem(ItemBase):
 class PortfolioItem(WatchlistItem):
     def __init__(self, symbol, quantity, price, date, transactionCosts, comment):
         #init variables
-        self.stock = stock.Stock(symbol, "", comment)
-        self.quantity = quantity
-        self.buyPrice = price
-        self.buyDate = date
-        self.transactionCosts = transactionCosts
+        self.stock = stock.Stock(symbol, "None", comment)
+        self.stock.startPrice = float(price.replace(",","."))
+        self.stock.startDate = date
+        self.transactionCosts = float(transactionCosts.replace(",","."))
+        self.quantity = float(quantity.replace(",","."))
+        self.buysum = self.stock.startPrice * self.quantity
         #init base
         ItemBase.__init__(self, PORTFOLIOITEM)
+    
+    def update(self):
+        self.stock.update()
+    
+    def get_buysum_text(self):
+        color = '#606060'
+        text = ""
+        text = text + str(round(self.buysum, 2)) +"\n<span foreground=\""+ color +"\"><small>" +str(round(self.transactionCosts, 2)) + "</small></span>"
+        return text
+    
+    def get_overallchange_text(self):
+        color = '#606060'
+        text = ""
+        text = text + str(self.currentChange) +"\n<span foreground=\""+ color +"\"><small>" +str(round(self.currentPercent, 2)) + "</small></span>"
+        return text
+    
+    def get_performance_column_list(self, columnList):
+        """This function is used to get the display list
+        for the watchlistTree. The watchlistCOlumnList controls the
+        order that the list will be returned in.
+        @param watchlistColumnList - list - A list of watchlistColumn items.
+        Their type member should use used to determine the order of the returned list.
+        @returns list - A list for the watchlistTree.
+        """
+        lst_return = []
+        # Loop through the columns and create the return list   
+        for item_column in columnList:
+            if (item_column.ID == treeviews.COL_OBJECT):
+                lst_return.append(self)
+            elif (item_column.ID == treeviews.COL_OBJECT_TYPE):
+                lst_return.append(self.type)
+            elif (item_column.ID == treeviews.COL_QUANTITY):
+                lst_return.append(self.quantity)
+            elif (item_column.ID == treeviews.COL_PF_NAME):
+                lst_return.append(self.stock.get_name_text())
+            elif (item_column.ID == treeviews.COL_BUYPRICE):
+                lst_return.append(self.stock.get_price_text())
+            elif (item_column.ID == treeviews.COL_BUYSUM):
+                lst_return.append(self.get_buysum_text())
+            elif (item_column.ID == treeviews.COL_LASTTRADE):
+                lst_return.append(self.stock.get_currentprice_text())    
+            elif (item_column.ID == treeviews.COL_PF_CHANGE):
+                lst_return.append(self.stock.get_currentchange_text())
+            elif (item_column.ID == treeviews.COL_PF_OVERALL):
+                lst_return.append(self.stock.get_change_text())
+            elif (item_column.ID == treeviews.COL_PF_COMMENT):
+                lst_return.append(self.stock.comment)
+            else:
+                helper.show_error_dlg(_("Error unknown column ID: %d" % item_column.ID))
+                lst_return.append("")
+        #return the list
+        return lst_return
+        
+        

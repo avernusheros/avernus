@@ -12,10 +12,11 @@ class Stock(object):
         self.symbol            = symbol
         self.currentPrice      = None
         self.currentPercent    = None
+        self.currentChange     = None
         self.currentDate       = None
         self.name              = name
-        self.watchStartPrice   = None
-        self.watchStartDate    = None 
+        self.startPrice        = None
+        self.startDate         = None 
         self.comment           = comment
         self.change            = None
         self.percent           = None
@@ -35,7 +36,7 @@ class Stock(object):
     def get_price_text(self):
         color = '#606060'
         text = ""
-        text = text + str(self.watchStartPrice) +"\n<span foreground=\""+ color +"\"><small>" +str(self.watchStartDate) + "</small></span>"
+        text = text + str(self.startPrice) +"\n<span foreground=\""+ color +"\"><small>" +str(self.startDate) + "</small></span>"
         return text
         
     def get_name_text(self):
@@ -61,7 +62,6 @@ class Stock(object):
         @returns - string - the date and the time.
         """
         ret = ""
-        print self.watchStartDate
         return ret
  
     def update(self):
@@ -79,14 +79,14 @@ class Stock(object):
         self.pe                 = config.DATA_PROVIDER.get_price_earnings_ratio(self.symbol)              
                                     
         #on first update
-        if (self.watchStartPrice == None):
-            self.watchStartPrice = self.currentPrice
-            self.watchStartDate = self.currentDate
+        if (self.startPrice == None):
+            self.startPrice = self.currentPrice
+            self.startDate = self.currentDate
             self.change = 0.00
             self.percent = 0.00
         else:
-            self.change = self.currentPrice - self.watchStartPrice
-            self.percent = 100*self.currentPrice/self.watchStartPrice -100
+            self.change = self.currentPrice - self.startPrice
+            self.percent = 100*self.currentPrice/self.startPrice -100
 
 
 

@@ -232,11 +232,11 @@
               </packing>
             </child>
             <child>
-              <widget class="GtkNotebook" id="notebook1">
+              <widget class="GtkNotebook" id="notebook">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <child>
-                  <widget class="GtkScrolledWindow" id="scrolledwindow3">
+                  <widget class="GtkScrolledWindow" id="tab_performance">
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="hscrollbar_policy">GTK_POLICY_AUTOMATIC</property>
@@ -253,7 +253,7 @@
                   </widget>
                 </child>
                 <child>
-                  <widget class="GtkLabel" id="tab_performance">
+                  <widget class="GtkLabel" id="label_performance">
                     <property name="visible">True</property>
                     <property name="label" translatable="yes">&lt;b&gt;Performance&lt;/b&gt;</property>
                     <property name="use_markup">True</property>
@@ -264,7 +264,39 @@
                   </packing>
                 </child>
                 <child>
-                  <widget class="GtkScrolledWindow" id="scrolledwindow2">
+                  <widget class="GtkScrolledWindow" id="tab_portfolio_performance">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="hscrollbar_policy">GTK_POLICY_AUTOMATIC</property>
+                    <property name="vscrollbar_policy">GTK_POLICY_AUTOMATIC</property>
+                    <child>
+                      <widget class="GtkTreeView" id="portfolioPerformanceTree">
+                        <property name="width_request">400</property>
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="headers_clickable">True</property>
+                        <property name="reorderable">True</property>
+                      </widget>
+                    </child>
+                  </widget>
+                  <packing>
+                    <property name="position">1</property>
+                  </packing>
+                </child>
+                <child>
+                  <widget class="GtkLabel" id="label_performance1">
+                    <property name="visible">True</property>
+                    <property name="label" translatable="yes">&lt;b&gt;Performance&lt;/b&gt;</property>
+                    <property name="use_markup">True</property>
+                  </widget>
+                  <packing>
+                    <property name="type">tab</property>
+                    <property name="position">1</property>
+                    <property name="tab_fill">False</property>
+                  </packing>
+                </child>
+                <child>
+                  <widget class="GtkScrolledWindow" id="tab_fundamentals">
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="hscrollbar_policy">GTK_POLICY_AUTOMATIC</property>
@@ -282,18 +314,18 @@
                     </child>
                   </widget>
                   <packing>
-                    <property name="position">1</property>
+                    <property name="position">2</property>
                   </packing>
                 </child>
                 <child>
-                  <widget class="GtkLabel" id="tab_fundamentals">
+                  <widget class="GtkLabel" id="label_fundamentals">
                     <property name="visible">True</property>
                     <property name="label" translatable="yes">&lt;b&gt;Fundamentals&lt;/b&gt;</property>
                     <property name="use_markup">True</property>
                   </widget>
                   <packing>
                     <property name="type">tab</property>
-                    <property name="position">1</property>
+                    <property name="position">2</property>
                     <property name="tab_fill">False</property>
                   </packing>
                 </child>
@@ -687,7 +719,6 @@ You should have received a copy of the GNU General Public License along with XXX
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="invisible_char">*</property>
-                        <property name="text" translatable="yes">position</property>
                       </widget>
                     </child>
                   </widget>

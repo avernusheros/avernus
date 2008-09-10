@@ -25,6 +25,7 @@ except ImportError, e:
 
 
 """Column IDs"""
+#watchlist performance tree
 COL_OBJECT        = 0
 COL_OBJECT_TYPE   = 1
 COL_NAME          = 2
@@ -34,10 +35,22 @@ COL_PRICE         = 5
 COL_CHANGE        = 6
 COL_COMMENT       = 7
 
+#portfolio performance tree
+COL_QUANTITY      = 2
+COL_PF_NAME       = 3
+COL_BUYPRICE      = 4
+COL_BUYSUM        = 5
+COL_LASTTRADE     = 6
+COL_PF_CHANGE     = 7
+COL_PF_OVERALL    = 8
+COL_PF_COMMENT    = 9
+
+#left tree
 COL_FOLDER        = 2
 COL_TODAY         = 3
 COL_OVERALL       = 4
 
+#fundamentals tree
 COL_MKTCAP        = 3
 COL_AVG_VOL       = 4
 COL_52WEEK_HIGH   = 5
@@ -47,8 +60,7 @@ COL_PE            = 8
 
 
 
-         
-
+        
 
 class Column(object):
     """This is a class that represents a column in the tree.
@@ -271,6 +283,52 @@ class PerformanceTree(Treeview):
         elif ((ID == COL_CURRENTCHANGE) or (ID == COL_CHANGE)):
             widget = gtk.Label()
             widget.set_markup('<span size="medium"><b>Change</b></span>\n<span size="small">$</span>\n<span size="small">%</span>') 
+        return widget
+        
+class PortfolioPerformanceTree(Treeview):
+    def __init__(self, treeview):
+        self.name = 'PortfolioPerformanceTree'
+        self.tree_columns = [
+            Column(COL_OBJECT, gobject.TYPE_PYOBJECT, "object", COL_OBJECT)
+            , Column(COL_OBJECT_TYPE, gobject.TYPE_INT, "object_type", COL_OBJECT_TYPE)
+            , Column(COL_QUANTITY, gobject.TYPE_STRING, _("Quantity"), COL_QUANTITY, True, gtk.CellRendererText(), markup=True)
+            , Column(COL_PF_NAME, gobject.TYPE_STRING, _("Name"), COL_PF_NAME, True, gtk.CellRendererText(), markup=True)
+            , Column(COL_BUYPRICE, gobject.TYPE_STRING, _("Buy Price"), COL_BUYPRICE, True, gtk.CellRendererText(), markup=True)
+            , Column(COL_BUYSUM, gobject.TYPE_STRING, _("Buy Sum"), COL_BUYSUM, True, gtk.CellRendererText(), markup=True)
+            , Column(COL_LASTTRADE, gobject.TYPE_STRING, _("Last Trade"), COL_LASTTRADE, True, gtk.CellRendererText(), markup=True)
+            , Column(COL_PF_CHANGE, gobject.TYPE_STRING, _("Change"), COL_PF_CHANGE, True, gtk.CellRendererText(), markup=True)
+            , Column(COL_PF_OVERALL, gobject.TYPE_STRING, _("Overall Change"), COL_PF_OVERALL, True, gtk.CellRendererText(), markup=True)
+            , Column(COL_PF_COMMENT, gobject.TYPE_STRING, _("Comment"), COL_PF_COMMENT, True, gtk.CellRendererText())
+                ]
+        Treeview.__init__(self, treeview)
+    
+    def get_custom_header_widget(self, ID):
+        #create custom header widgets
+        widget = None
+        if ID == COL_LASTTRADE:
+            widget = gtk.Label()
+            widget.set_markup('<span size="medium"><b>Last Trade</b></span>\n<span size="small">Price</span>\n<span size="small">Trade Time</span>') 
+        elif ID == COL_BUYPRICE:                  
+            widget = gtk.Label()
+            widget.set_markup('<span size="medium"><b>Buy</b></span>\n<span size="small">Price</span>\n<span size="small">Trade Time</span>') 
+        elif ID == COL_PF_NAME:
+            widget = gtk.Label()
+            widget.set_markup('<span size="medium"><b>Quote</b></span>\n<span size="small">Name</span>\n<span size="small">Symbol</span>')             
+        elif ID == COL_PF_COMMENT:
+            widget = gtk.Label()
+            widget.set_markup('<span size="medium"><b>Comment</b></span>\n<span size="small"> </span>\n<span size="small"> </span>') 
+        elif ID == COL_QUANTITY:
+            widget = gtk.Label()
+            widget.set_markup('<span size="medium"><b>Quantity</b></span>\n<span size="small"> </span>\n<span size="small"> </span>') 
+        elif ID == COL_BUYSUM:
+            widget = gtk.Label()
+            widget.set_markup('<span size="medium"><b>Sum</b></span>\n<span size="small"> </span>\n<span size="small"> </span>') 
+        elif ID == COL_PF_CHANGE:
+            widget = gtk.Label()
+            widget.set_markup('<span size="medium"><b>Change</b></span>\n<span size="small">$</span>\n<span size="small">%</span>') 
+        elif ID == COL_PF_OVERALL:
+            widget = gtk.Label()
+            widget.set_markup('<span size="medium"><b>Overall</b></span>\n<span size="small">$</span>\n<span size="small">%</span>') 
         return widget
 
 
