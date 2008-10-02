@@ -79,6 +79,7 @@ class StockTracker(object):
         self.removeButton = self.mainWindow.get_widget("removeButton")
         self.addButton = self.mainWindow.get_widget("addButton")
         self.updateButton = self.mainWindow.get_widget("updateButton")
+        self.header = self.mainWindow.get_widget("header")
         #get watchlist tabs
         self.watchlist_tabs = []
         self.watchlist_tabs.append(self.mainWindow.get_widget("tab_fundamentals"))
@@ -111,6 +112,8 @@ class StockTracker(object):
         self.updateButton.set_sensitive(True)
         self.removeButton.set_sensitive(True)
         self.editButton.set_sensitive(True)
+        self.reload_header()
+        self.header.show()
         for tab in self.watchlist_tabs:
             tab.show()
         
@@ -125,6 +128,8 @@ class StockTracker(object):
         self.updateButton.set_sensitive(True)
         self.removeButton.set_sensitive(True)
         self.editButton.set_sensitive(True)
+        self.reload_header()
+        self.header.show()
         for tab in self.portfolio_tabs:
             tab.show()
              
@@ -217,11 +222,21 @@ class StockTracker(object):
                         , self.performance_tree.tree_columns)
                         
     def reload_watchlist(self, watchlist):
-        watchlist.add_stocks_to_tree(self.performance_tree, self.fundamentals_tree)
+        watchlist.show(self.performance_tree, self.fundamentals_tree)
+        self.reload_header()
         
     def reload_portfolio(self, portfolio):
-        portfolio.add_positions_to_tree(self.portfolio_performance_tree, self.fundamentals_tree)
+        portfolio.show(self.portfolio_performance_tree, self.fundamentals_tree)
+        self.reload_header()
         
+    def reload_header(self):
+        name        = self.mainWindow.get_widget("header_name")
+        performance = self.mainWindow.get_widget("header_performance")
+        overall     = self.mainWindow.get_widget("header_overall")
+        name.set_label('<span size="medium"><b>' + self.currentList.name+ ' </b></span>\n')
+        performance.set_label(self.currentList.get_performance_text())
+        overall.set_label(self.currentList.get_overall_performance_text()) 
+
     def add_quote(self, watchlist):
         dialog = dialogs.QuoteDialog(self.gladefile)
         if (dialog.run() == gtk.RESPONSE_OK):
@@ -317,6 +332,7 @@ class StockTracker(object):
                 self.updateButton.set_sensitive(True)
                 self.removeButton.set_sensitive(False)
                 self.editButton.set_sensitive(False)
+                self.header.hide()
                 self.hide_portfolio()
                 self.hide_watchlist()
             elif (item.type == items.WATCHLIST):
@@ -331,6 +347,7 @@ class StockTracker(object):
                 self.updateButton.set_sensitive(False)
                 self.removeButton.set_sensitive(False)
                 self.editButton.set_sensitive(False)
+                self.header.hide()
                 self.hide_portfolio()
                 self.hide_watchlist()
             
@@ -391,12 +408,14 @@ class StockTracker(object):
             , file.FILE_EXT)
         data = self.file.load_from_file()
         if data:
-            self.watchlists = data
+            self.watchlists = data[0]
+            self.portfolios = data[1]
             self.set_window_title_from_file(self.file.filename)
             self.reload_from_data()
 
     def on_file_save(self, widget):
         """Save the file"""
+        data = [self.watchlists, self.portfolios]
         # Let the user browse for the save location and name
         if (self.file.filename == None):
             self.file.filename = helper.file_browse(gtk.FILE_CHOOSER_ACTION_SAVE
@@ -404,12 +423,13 @@ class StockTracker(object):
             , file.FILE_EXT)
         #If we have a file
         if (self.file.filename):
-            if (self.file.save_to_file(self.watchlists)):
+            if (self.file.save_to_file(data)):
                 #Allright it all worked! Set the Title
                 self.set_window_title_from_file(self.file.filename)
 
     def on_file_save_as(self, widget):
         """ Save As function"""
+        data = [self.watchlists, self.portfolios]
         f = _("Untitled")
         if (self.file.filename != None):
             f = os.path.basename(self.file.filename)
@@ -419,7 +439,7 @@ class StockTracker(object):
         #If we have a xml_file
         if (f):
             self.file.filename = file
-            if (self.file.save_to_file(self.watchlists)):
+            if (self.file.save_to_file(data)):
                 #set title
                 self.set_window_title_from_file(self.file.filename)
         
@@ -474,10 +494,8 @@ class StockTracker(object):
     def on_update(self, widget):
         """called when update button is clicked"""
         #get all quotes in performanceTree
-        quotes =  self.watchlists.get_child_quotes()
-        #update all quotes
-        for quote in quotes:
-            quote.update()
+        self.watchlists.update()
+        self.portfolios.update()
         self.reload_from_data()
         
 

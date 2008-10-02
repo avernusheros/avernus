@@ -163,17 +163,13 @@
                 <signal name="clicked" handler="on_update"/>
               </widget>
               <packing>
-                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
               </packing>
             </child>
             <child>
               <widget class="GtkSeparatorToolItem" id="separatortoolitem2">
                 <property name="visible">True</property>
               </widget>
-              <packing>
-                <property name="expand">False</property>
-                <property name="homogeneous">False</property>
-              </packing>
             </child>
             <child>
               <widget class="GtkToolButton" id="addButton">
@@ -184,7 +180,7 @@
                 <signal name="clicked" handler="on_add_button"/>
               </widget>
               <packing>
-                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
               </packing>
             </child>
             <child>
@@ -195,7 +191,7 @@
                 <signal name="clicked" handler="on_remove_item"/>
               </widget>
               <packing>
-                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
               </packing>
             </child>
             <child>
@@ -205,7 +201,7 @@
                 <signal name="clicked" handler="on_edit_object"/>
               </widget>
               <packing>
-                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
               </packing>
             </child>
           </widget>
@@ -222,7 +218,6 @@
               <widget class="GtkTreeView" id="leftTree">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
-                <property name="headers_clickable">True</property>
                 <signal name="row_activated" handler="on_leftTree_row_activated"/>
                 <signal name="cursor_changed" handler="on_leftTree_cursor_changed"/>
               </widget>
@@ -232,101 +227,157 @@
               </packing>
             </child>
             <child>
-              <widget class="GtkNotebook" id="notebook">
+              <widget class="GtkVBox" id="vbox4">
                 <property name="visible">True</property>
-                <property name="can_focus">True</property>
                 <child>
-                  <widget class="GtkScrolledWindow" id="tab_performance">
-                    <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                    <property name="hscrollbar_policy">GTK_POLICY_AUTOMATIC</property>
-                    <property name="vscrollbar_policy">GTK_POLICY_AUTOMATIC</property>
+                  <widget class="GtkHBox" id="header">
+                    <property name="height_request">75</property>
                     <child>
-                      <widget class="GtkTreeView" id="performanceTree">
-                        <property name="width_request">400</property>
+                      <widget class="GtkLabel" id="header_name">
                         <property name="visible">True</property>
-                        <property name="can_focus">True</property>
-                        <property name="headers_clickable">True</property>
-                        <property name="reorderable">True</property>
+                        <property name="label" translatable="yes">Portfolio</property>
+                        <property name="use_markup">True</property>
                       </widget>
                     </child>
-                  </widget>
-                </child>
-                <child>
-                  <widget class="GtkLabel" id="label_performance">
-                    <property name="visible">True</property>
-                    <property name="label" translatable="yes">&lt;b&gt;Performance&lt;/b&gt;</property>
-                    <property name="use_markup">True</property>
+                    <child>
+                      <widget class="GtkVSeparator" id="vseparator1">
+                        <property name="visible">True</property>
+                      </widget>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="position">1</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <widget class="GtkLabel" id="header_performance">
+                        <property name="visible">True</property>
+                        <property name="use_markup">True</property>
+                      </widget>
+                      <packing>
+                        <property name="position">2</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <widget class="GtkVSeparator" id="vseparator2">
+                        <property name="visible">True</property>
+                      </widget>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="position">3</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <widget class="GtkLabel" id="header_overall">
+                        <property name="visible">True</property>
+                        <property name="use_markup">True</property>
+                      </widget>
+                      <packing>
+                        <property name="position">4</property>
+                      </packing>
+                    </child>
                   </widget>
                   <packing>
-                    <property name="type">tab</property>
-                    <property name="tab_fill">False</property>
+                    <property name="expand">False</property>
                   </packing>
                 </child>
                 <child>
-                  <widget class="GtkScrolledWindow" id="tab_portfolio_performance">
+                  <widget class="GtkNotebook" id="notebook">
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
-                    <property name="hscrollbar_policy">GTK_POLICY_AUTOMATIC</property>
-                    <property name="vscrollbar_policy">GTK_POLICY_AUTOMATIC</property>
                     <child>
-                      <widget class="GtkTreeView" id="portfolioPerformanceTree">
-                        <property name="width_request">400</property>
+                      <widget class="GtkScrolledWindow" id="tab_performance">
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
-                        <property name="headers_clickable">True</property>
-                        <property name="reorderable">True</property>
+                        <property name="hscrollbar_policy">GTK_POLICY_AUTOMATIC</property>
+                        <property name="vscrollbar_policy">GTK_POLICY_AUTOMATIC</property>
+                        <child>
+                          <widget class="GtkTreeView" id="performanceTree">
+                            <property name="width_request">400</property>
+                            <property name="visible">True</property>
+                            <property name="can_focus">True</property>
+                            <property name="reorderable">True</property>
+                          </widget>
+                        </child>
                       </widget>
+                    </child>
+                    <child>
+                      <widget class="GtkLabel" id="label_performance">
+                        <property name="visible">True</property>
+                        <property name="label" translatable="yes">&lt;b&gt;Performance&lt;/b&gt;</property>
+                        <property name="use_markup">True</property>
+                      </widget>
+                      <packing>
+                        <property name="type">tab</property>
+                        <property name="tab_fill">False</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <widget class="GtkScrolledWindow" id="tab_portfolio_performance">
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="hscrollbar_policy">GTK_POLICY_AUTOMATIC</property>
+                        <property name="vscrollbar_policy">GTK_POLICY_AUTOMATIC</property>
+                        <child>
+                          <widget class="GtkTreeView" id="portfolioPerformanceTree">
+                            <property name="width_request">400</property>
+                            <property name="visible">True</property>
+                            <property name="can_focus">True</property>
+                            <property name="reorderable">True</property>
+                          </widget>
+                        </child>
+                      </widget>
+                      <packing>
+                        <property name="position">1</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <widget class="GtkLabel" id="label_performance1">
+                        <property name="visible">True</property>
+                        <property name="label" translatable="yes">&lt;b&gt;Performance&lt;/b&gt;</property>
+                        <property name="use_markup">True</property>
+                      </widget>
+                      <packing>
+                        <property name="type">tab</property>
+                        <property name="position">1</property>
+                        <property name="tab_fill">False</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <widget class="GtkScrolledWindow" id="tab_fundamentals">
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="hscrollbar_policy">GTK_POLICY_AUTOMATIC</property>
+                        <property name="vscrollbar_policy">GTK_POLICY_AUTOMATIC</property>
+                        <child>
+                          <widget class="GtkTreeView" id="fundamentalsTree">
+                            <property name="width_request">400</property>
+                            <property name="visible">True</property>
+                            <property name="can_focus">True</property>
+                            <property name="reorderable">True</property>
+                            <signal name="row_activated" handler="on_performanceTree_row_activated"/>
+                            <signal name="cursor_changed" handler="on_performanceTree_cursor_changed"/>
+                          </widget>
+                        </child>
+                      </widget>
+                      <packing>
+                        <property name="position">2</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <widget class="GtkLabel" id="label_fundamentals">
+                        <property name="visible">True</property>
+                        <property name="label" translatable="yes">&lt;b&gt;Fundamentals&lt;/b&gt;</property>
+                        <property name="use_markup">True</property>
+                      </widget>
+                      <packing>
+                        <property name="type">tab</property>
+                        <property name="position">2</property>
+                        <property name="tab_fill">False</property>
+                      </packing>
                     </child>
                   </widget>
                   <packing>
                     <property name="position">1</property>
-                  </packing>
-                </child>
-                <child>
-                  <widget class="GtkLabel" id="label_performance1">
-                    <property name="visible">True</property>
-                    <property name="label" translatable="yes">&lt;b&gt;Performance&lt;/b&gt;</property>
-                    <property name="use_markup">True</property>
-                  </widget>
-                  <packing>
-                    <property name="type">tab</property>
-                    <property name="position">1</property>
-                    <property name="tab_fill">False</property>
-                  </packing>
-                </child>
-                <child>
-                  <widget class="GtkScrolledWindow" id="tab_fundamentals">
-                    <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                    <property name="hscrollbar_policy">GTK_POLICY_AUTOMATIC</property>
-                    <property name="vscrollbar_policy">GTK_POLICY_AUTOMATIC</property>
-                    <child>
-                      <widget class="GtkTreeView" id="fundamentalsTree">
-                        <property name="width_request">400</property>
-                        <property name="visible">True</property>
-                        <property name="can_focus">True</property>
-                        <property name="headers_clickable">True</property>
-                        <property name="reorderable">True</property>
-                        <signal name="row_activated" handler="on_performanceTree_row_activated"/>
-                        <signal name="cursor_changed" handler="on_performanceTree_cursor_changed"/>
-                      </widget>
-                    </child>
-                  </widget>
-                  <packing>
-                    <property name="position">2</property>
-                  </packing>
-                </child>
-                <child>
-                  <widget class="GtkLabel" id="label_fundamentals">
-                    <property name="visible">True</property>
-                    <property name="label" translatable="yes">&lt;b&gt;Fundamentals&lt;/b&gt;</property>
-                    <property name="use_markup">True</property>
-                  </widget>
-                  <packing>
-                    <property name="type">tab</property>
-                    <property name="position">2</property>
-                    <property name="tab_fill">False</property>
                   </packing>
                 </child>
               </widget>

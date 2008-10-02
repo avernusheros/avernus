@@ -148,6 +148,10 @@ class Category(ItemBase):
         for child in self.__m_children:
             ret.extend(child.get_child_quotes())
         return ret
+    
+    def update(self):
+        for child in self.__m_children:
+            child.update()
 
 
 class Watchlist(ItemBase):
@@ -165,6 +169,7 @@ class Watchlist(ItemBase):
         @param item - Either a watchlist or a quote. This will be a child of the watchlist.
         """
         self.__m_children.append(item)
+        self.empty = False
         
     def get_child_quotes(self):
         """ returns all quotes in this watchlist, including those in children watchlists"""
@@ -184,6 +189,8 @@ class Watchlist(ItemBase):
         """
         try:
             self.__m_children.remove(item)
+            if len(self.__m_children == 0):
+                empty = True
         except ValueError, e:
             helper.show_error_dlg(_("Error removing child %s = %s") % (item, e))
 
@@ -218,9 +225,37 @@ class Watchlist(ItemBase):
         """
         tree.append(parent, self.get_column_list(columnList))
         
-    def add_stocks_to_tree(self, performance_tree, fundamentals_tree):
+    def show(self, performance_tree, fundamentals_tree):
+        #adding stocks to treeview
         for child in self.__m_children:
             child.add_to_tree(performance_tree, fundamentals_tree)
+    
+    def get_performance_text(self):
+        if self.empty:
+            return ''
+        start = 0
+        change = 0
+        for child in self.__m_children:
+            start += child.stock.currentPrice - child.stock.currentChange
+            change += child.stock.currentChange
+        percent = 100/start * change
+        return '<span size="medium"><b> Performance </b></span>\n \
+                <span size="small">$ '+ str(round(change,2)) +'</span>\n \
+                <span size="small">% '+ str(round(percent,2)) +'</span>'
+                    
+    def get_overall_performance_text(self):
+        if self.empty:
+            return ''
+        start = 0
+        current_sum = 0
+        for child in self.__m_children: 
+            current_sum += child.stock.currentPrice
+            start += child.stock.startPrice
+        change = current_sum - start
+        percent = 100/start * change
+        return '<span size="medium"><b> Overall </b></span>\n \
+                <span size="small">$ '+ str(round(change,2)) +'</span>\n \
+                <span size="small">% '+ str(round(percent,2)) +'</span>'
             
 
 class Portfolio(ItemBase):
@@ -230,6 +265,8 @@ class Portfolio(ItemBase):
         #init variables
         self.name = name
         self.description = description
+        self.buy_sum = 0.0
+        self.empty = True
         #children
         self.__m_children = []
     
@@ -238,6 +275,8 @@ class Portfolio(ItemBase):
         @param item - Either a watchlist or a quote. This will be a child of the watchlist.
         """
         self.__m_children.append(item)
+        self.buy_sum += item.buy_sum
+        self.empty = False
     
     def get_child_quotes(self):
         """ returns all quotes in this watchlist, including those in children watchlists"""
@@ -256,7 +295,10 @@ class Portfolio(ItemBase):
         @param item - Either a watchlist or a quote. This will be a removed.
         """
         try:
+            self.buy_sum -= item.buy_sum
             self.__m_children.remove(item)
+            if len(self.__m_children == 0):
+                empty = True
         except ValueError, e:
             helper.show_error_dlg(_("Error removing child %s = %s") % (item, e))
 
@@ -291,10 +333,38 @@ class Portfolio(ItemBase):
         """
         tree.append(parent, self.get_column_list(columnList))
         
-    def add_positions_to_tree(self, performance_tree, fundamentals_tree):
+    def show(self, performance_tree, fundamentals_tree):
+        #adding positions to treeview...
         for child in self.__m_children:
             child.add_to_tree(performance_tree, fundamentals_tree)
             
+    def get_performance_text(self):
+        if self.empty:
+            return ''
+        start = 0
+        change = 0
+        for child in self.__m_children:
+            start += child.quantity * (child.stock.currentPrice - child.stock.currentChange)
+            change += child.stock.currentChange*child.quantity
+        percent = 100/start * change
+        return '<span size="medium"><b> Performance </b></span>\n \
+                <span size="small">$ '+ str(round(change,2)) +'</span>\n \
+                <span size="small">% '+ str(round(percent,2)) +'</span>'
+                    
+    def get_overall_performance_text(self):
+        if self.empty:
+            return ''
+        start = 0
+        current_sum = 0
+        for child in self.__m_children: 
+            current_sum += child.stock.currentPrice * child.quantity
+            start += child.quantity * child.stock.startPrice
+        change = current_sum - start
+        percent = 100/start * change
+        print percent
+        return '<span size="medium"><b> Overall </b></span>\n \
+                <span size="small">$ '+ str(round(change,2)) +'</span>\n \
+                <span size="small">% '+ str(round(percent,2)) +'</span>'
 
 class WatchlistItem(ItemBase):
     """This is a quote in the watchlistTree.  It represents a quote in the watchlist """
@@ -388,23 +458,33 @@ class PortfolioItem(WatchlistItem):
         self.stock.startDate = date
         self.transactionCosts = float(transactionCosts.replace(",","."))
         self.quantity = float(quantity.replace(",","."))
-        self.buysum = self.stock.startPrice * self.quantity
+        self.buy_sum = self.stock.startPrice * self.quantity
         #init base
         ItemBase.__init__(self, PORTFOLIOITEM)
     
     def update(self):
         self.stock.update()
     
-    def get_buysum_text(self):
+    def get_buy_sum_text(self):
         color = '#606060'
         text = ""
-        text = text + str(round(self.buysum, 2)) +"\n<span foreground=\""+ color +"\"><small>" +str(round(self.transactionCosts, 2)) + "</small></span>"
+        text = text + str(round(self.buy_sum, 2)) +"\n<span foreground=\""+ color +"\"><small>" +str(round(self.transactionCosts, 2)) + "</small></span>"
         return text
     
-    def get_overallchange_text(self):
+    def get_change_text(self):
         color = '#606060'
         text = ""
-        text = text + str(self.currentChange) +"\n<span foreground=\""+ color +"\"><small>" +str(round(self.currentPercent, 2)) + "</small></span>"
+        text = text + str(round(self.stock.percent, 2)) +"\n \
+                <span foreground=\""+ color +"\"><small>" +str(self.stock.change*self.quantity) + "</small></span> \n \
+                <span foreground=\""+ color +"\"><small>" +str(self.stock.currentPrice*self.quantity) + "</small></span>"
+        return text
+        
+    def get_currentchange_text(self):
+        color = '#606060'
+        text = ""
+        text = text + str(self.stock.currentChange) +"\n \
+                <span foreground=\""+ color +"\"><small>" +str(round(self.stock.currentPercent, 2)) + "</small></span> \n \
+                <span foreground=\""+ color +"\"><small>" +str(self.stock.currentChange*self.quantity) + "</small></span>"
         return text
     
     def get_performance_column_list(self, columnList):
@@ -429,13 +509,13 @@ class PortfolioItem(WatchlistItem):
             elif (item_column.ID == treeviews.COL_BUYPRICE):
                 lst_return.append(self.stock.get_price_text())
             elif (item_column.ID == treeviews.COL_BUYSUM):
-                lst_return.append(self.get_buysum_text())
+                lst_return.append(self.get_buy_sum_text())
             elif (item_column.ID == treeviews.COL_LASTTRADE):
                 lst_return.append(self.stock.get_currentprice_text())    
             elif (item_column.ID == treeviews.COL_PF_CHANGE):
-                lst_return.append(self.stock.get_currentchange_text())
+                lst_return.append(self.get_currentchange_text())
             elif (item_column.ID == treeviews.COL_PF_OVERALL):
-                lst_return.append(self.stock.get_change_text())
+                lst_return.append(self.get_change_text())
             elif (item_column.ID == treeviews.COL_PF_COMMENT):
                 lst_return.append(self.stock.comment)
             else:
