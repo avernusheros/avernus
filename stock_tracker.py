@@ -223,12 +223,10 @@ class StockTracker(object):
                         
     def reload_watchlist(self, watchlist):
         watchlist.show(self.performance_tree, self.fundamentals_tree)
-        self.reload_header()
-        
+
     def reload_portfolio(self, portfolio):
         portfolio.show(self.portfolio_performance_tree, self.fundamentals_tree)
-        self.reload_header()
-        
+
     def reload_header(self):
         name        = self.mainWindow.get_widget("header_name")
         performance = self.mainWindow.get_widget("header_performance")
@@ -244,6 +242,7 @@ class StockTracker(object):
                 dialog.quote.add_to_tree(self.performance_tree, self.fundamentals_tree)
                 #Add to the Watchlist
                 watchlist.add_child(dialog.quote)
+        self.reload_header()
     
     def buy_position(self, portfolio):
         dialog = dialogs.BuyDialog(self.gladefile)
@@ -252,6 +251,7 @@ class StockTracker(object):
                 dialog.position.add_to_tree(self.portfolio_performance_tree, self.fundamentals_tree)
                 #Add to the portfolio
                 portfolio.add_child(dialog.position)
+        self.reload_header()
     
     def add_watchlist(self, selection_iter):
         dialog = dialogs.WatchlistDialog(self.gladefile)

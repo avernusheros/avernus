@@ -161,6 +161,7 @@ class Watchlist(ItemBase):
         #init variables
         self.name = name
         self.description = description
+        self.empty = True
         #children
         self.__m_children = []
 
