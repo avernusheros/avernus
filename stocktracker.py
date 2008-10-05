@@ -21,6 +21,7 @@ try:
     import os
     import locale
     import gettext
+    import config
     import file
     import items
     import helper
@@ -122,7 +123,7 @@ class StockTracker(object):
             tab.hide()
             
     def show_portfolio(self, item):
-        #self.reload_portfolio(item)  #TODO
+        self.reload_portfolio(item)  
         self.currentList = item
         self.addButton.set_sensitive(True)
         self.updateButton.set_sensitive(True)
@@ -228,12 +229,21 @@ class StockTracker(object):
         portfolio.show(self.portfolio_performance_tree, self.fundamentals_tree)
 
     def reload_header(self):
-        name        = self.mainWindow.get_widget("header_name")
-        performance = self.mainWindow.get_widget("header_performance")
-        overall     = self.mainWindow.get_widget("header_overall")
+        name            = self.mainWindow.get_widget("header_name")
+        performance     = self.mainWindow.get_widget("header_performance")
+        overall         = self.mainWindow.get_widget("header_overall")
+        performance_img = self.mainWindow.get_widget("header_performance_img")
+        overall_img     = self.mainWindow.get_widget("header_overall_img")
         name.set_label('<span size="medium"><b>' + self.currentList.name+ ' </b></span>\n')
-        performance.set_label(self.currentList.get_performance_text())
-        overall.set_label(self.currentList.get_overall_performance_text()) 
+        #get performance information from current list
+        perf = self.currentList.get_performance()
+        oall = self.currentList.get_overall_performance()
+        #setting labels
+        performance.set_label(perf[0])
+        overall.set_label(oall[0])
+        #setting icons
+        performance_img.set_from_file(perf[1])
+        overall_img .set_from_file(oall[1])
 
     def add_quote(self, watchlist):
         dialog = dialogs.QuoteDialog(self.gladefile)
@@ -324,6 +334,7 @@ class StockTracker(object):
         model, selection_iter, item = self.left_tree.get_selected_object()
         self.performance_tree.treestore.clear()
         self.fundamentals_tree.treestore.clear()
+        self.portfolio_performance_tree.treestore.clear()
         if not (item == None):
             #category selected
             if (item.type == items.CATEGORY):

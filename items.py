@@ -231,7 +231,7 @@ class Watchlist(ItemBase):
         for child in self.__m_children:
             child.add_to_tree(performance_tree, fundamentals_tree)
     
-    def get_performance_text(self):
+    def get_performance(self):
         if self.empty:
             return ''
         start = 0
@@ -240,11 +240,12 @@ class Watchlist(ItemBase):
             start += child.stock.currentPrice - child.stock.currentChange
             change += child.stock.currentChange
         percent = 100/start * change
-        return '<span size="medium"><b> Performance </b></span>\n \
+        return ['<span size="medium"><b> Performance </b></span>\n \
                 <span size="small">$ '+ str(round(change,2)) +'</span>\n \
-                <span size="small">% '+ str(round(percent,2)) +'</span>'
+                <span size="small">% '+ str(round(percent,2)) +'</span>',
+                config.get_arrow_type(percent)]
                     
-    def get_overall_performance_text(self):
+    def get_overall_performance(self):
         if self.empty:
             return ''
         start = 0
@@ -254,9 +255,10 @@ class Watchlist(ItemBase):
             start += child.stock.startPrice
         change = current_sum - start
         percent = 100/start * change
-        return '<span size="medium"><b> Overall </b></span>\n \
+        return ['<span size="medium"><b> Overall </b></span>\n \
                 <span size="small">$ '+ str(round(change,2)) +'</span>\n \
-                <span size="small">% '+ str(round(percent,2)) +'</span>'
+                <span size="small">% '+ str(round(percent,2)) +'</span>',
+                config.get_arrow_type(percent)]
             
 
 class Portfolio(ItemBase):
@@ -339,7 +341,7 @@ class Portfolio(ItemBase):
         for child in self.__m_children:
             child.add_to_tree(performance_tree, fundamentals_tree)
             
-    def get_performance_text(self):
+    def get_performance(self):
         if self.empty:
             return ''
         start = 0
@@ -348,11 +350,12 @@ class Portfolio(ItemBase):
             start += child.quantity * (child.stock.currentPrice - child.stock.currentChange)
             change += child.stock.currentChange*child.quantity
         percent = 100/start * change
-        return '<span size="medium"><b> Performance </b></span>\n \
+        return ['<span size="medium"><b> Performance </b></span>\n \
                 <span size="small">$ '+ str(round(change,2)) +'</span>\n \
-                <span size="small">% '+ str(round(percent,2)) +'</span>'
+                <span size="small">% '+ str(round(percent,2)) +'</span>',
+                config.get_arrow_type(percent)]
                     
-    def get_overall_performance_text(self):
+    def get_overall_performance(self):
         if self.empty:
             return ''
         start = 0
@@ -362,10 +365,10 @@ class Portfolio(ItemBase):
             start += child.quantity * child.stock.startPrice
         change = current_sum - start
         percent = 100/start * change
-        print percent
-        return '<span size="medium"><b> Overall </b></span>\n \
+        return ['<span size="medium"><b> Overall </b></span>\n \
                 <span size="small">$ '+ str(round(change,2)) +'</span>\n \
-                <span size="small">% '+ str(round(percent,2)) +'</span>'
+                <span size="small">% '+ str(round(percent,2)) +'</span>',
+                config.get_arrow_type(percent)]
 
 class WatchlistItem(ItemBase):
     """This is a quote in the watchlistTree.  It represents a quote in the watchlist """
