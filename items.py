@@ -233,7 +233,7 @@ class Watchlist(ItemBase):
     
     def get_performance(self):
         if self.empty:
-            return ''
+            return ['',None]
         start = 0
         change = 0
         for child in self.__m_children:
@@ -243,11 +243,11 @@ class Watchlist(ItemBase):
         return ['<span size="medium"><b> Performance </b></span>\n \
                 <span size="small">$ '+ str(round(change,2)) +'</span>\n \
                 <span size="small">% '+ str(round(percent,2)) +'</span>',
-                config.get_arrow_type(percent)]
+                config.get_arrow_type(percent, True)]
                     
     def get_overall_performance(self):
         if self.empty:
-            return ''
+            return ['',None]
         start = 0
         current_sum = 0
         for child in self.__m_children: 
@@ -258,7 +258,7 @@ class Watchlist(ItemBase):
         return ['<span size="medium"><b> Overall </b></span>\n \
                 <span size="small">$ '+ str(round(change,2)) +'</span>\n \
                 <span size="small">% '+ str(round(percent,2)) +'</span>',
-                config.get_arrow_type(percent)]
+                config.get_arrow_type(percent, True)]
             
 
 class Portfolio(ItemBase):
@@ -343,7 +343,7 @@ class Portfolio(ItemBase):
             
     def get_performance(self):
         if self.empty:
-            return ''
+            return ['',None]
         start = 0
         change = 0
         for child in self.__m_children:
@@ -353,11 +353,11 @@ class Portfolio(ItemBase):
         return ['<span size="medium"><b> Performance </b></span>\n \
                 <span size="small">$ '+ str(round(change,2)) +'</span>\n \
                 <span size="small">% '+ str(round(percent,2)) +'</span>',
-                config.get_arrow_type(percent)]
+                config.get_arrow_type(percent, True)]
                     
     def get_overall_performance(self):
         if self.empty:
-            return ''
+            return ['',None]
         start = 0
         current_sum = 0
         for child in self.__m_children: 
@@ -368,7 +368,7 @@ class Portfolio(ItemBase):
         return ['<span size="medium"><b> Overall </b></span>\n \
                 <span size="small">$ '+ str(round(change,2)) +'</span>\n \
                 <span size="small">% '+ str(round(percent,2)) +'</span>',
-                config.get_arrow_type(percent)]
+                config.get_arrow_type(percent, True)]
 
 class WatchlistItem(ItemBase):
     """This is a quote in the watchlistTree.  It represents a quote in the watchlist """
@@ -405,6 +405,11 @@ class WatchlistItem(ItemBase):
                 lst_return.append(self.stock.get_change_text())
             elif (item_column.ID == treeviews.COL_COMMENT):
                 lst_return.append(self.stock.comment)
+            elif (item_column.ID == treeviews.COL_CURRENTICON):
+                lst_return.append(gtk.gdk.pixbuf_new_from_file(config.get_arrow_type(self.stock.currentChange)))
+            elif (item_column.ID == treeviews.COL_ICON):
+                lst_return.append(gtk.gdk.pixbuf_new_from_file(config.get_arrow_type(self.stock.change)))
+
             else:
                 helper.show_error_dlg(_("Error unknown column ID: %d" % item_column.ID))
                 lst_return.append("")
@@ -522,6 +527,10 @@ class PortfolioItem(WatchlistItem):
                 lst_return.append(self.get_change_text())
             elif (item_column.ID == treeviews.COL_PF_COMMENT):
                 lst_return.append(self.stock.comment)
+            elif (item_column.ID == treeviews.COL_PF_ICON):
+                lst_return.append(gtk.gdk.pixbuf_new_from_file(config.get_arrow_type(self.stock.currentChange)))
+            elif (item_column.ID == treeviews.COL_PF_OALL_ICON):
+                lst_return.append(gtk.gdk.pixbuf_new_from_file(config.get_arrow_type(self.stock.change)))
             else:
                 helper.show_error_dlg(_("Error unknown column ID: %d" % item_column.ID))
                 lst_return.append("")

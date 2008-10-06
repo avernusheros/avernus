@@ -31,9 +31,11 @@ COL_OBJECT_TYPE   = 1
 COL_NAME          = 2
 COL_CURRENTPRICE  = 3
 COL_CURRENTCHANGE = 4
-COL_PRICE         = 5
-COL_CHANGE        = 6
-COL_COMMENT       = 7
+COL_CURRENTICON   = 5
+COL_PRICE         = 6
+COL_CHANGE        = 7
+COL_ICON          = 8
+COL_COMMENT       = 9
 
 #portfolio performance tree
 COL_QUANTITY      = 2
@@ -42,8 +44,10 @@ COL_BUYPRICE      = 4
 COL_BUYSUM        = 5
 COL_LASTTRADE     = 6
 COL_PF_CHANGE     = 7
-COL_PF_OVERALL    = 8
-COL_PF_COMMENT    = 9
+COL_PF_ICON       = 8
+COL_PF_OVERALL    = 9
+COL_PF_OALL_ICON  = 10
+COL_PF_COMMENT    = 11
 
 #left tree
 COL_FOLDER        = 2
@@ -67,7 +71,8 @@ class Column(object):
     It is simply a helper class that makes it easier to inialize thet tree."""
     
     def __init__(self, ID, type, name, pos, visible=False, cellrenderer = None
-                , markup = False,  share_column = False, multiline = False, wrap_width = 20):
+                , markup = False,  share_column = False, multiline = False
+                , wrap_width = 20, icon = False):
         """
         @param ID - int - The Columns ID
         @param type - int  - A gobject.TYPE_ for the gtk.TreeStore
@@ -88,6 +93,7 @@ class Column(object):
         self.color = 0
         self.markup = markup
         self.share_column = share_column
+        self.icon = icon
         if multiline:
             #make the current column multiline
             self.cellrenderer.props.wrap_mode = pango.WRAP_WORD
@@ -101,6 +107,11 @@ class Column(object):
         """
         if (column == None):
             if (self.visible):
+                #first if never used
+                if (self.icon):
+                    column = gtk.TreeViewColumn(self.name
+                            , self.cellrenderer
+                            , pixbuf = self.pos)
                 if (not self.markup):
                     column = gtk.TreeViewColumn(self.name
                             , self.cellrenderer
@@ -116,6 +127,8 @@ class Column(object):
             #pack it
             column.pack_start(cell, True)
             #Set the attribute
+            if (self.icon):
+                column.add_attribute(cell, "pixbuf", self.pos)
             if (not self.markup):
                 column.add_attribute(cell, "text", self.pos)
             else:
@@ -125,11 +138,6 @@ class Column(object):
             column.set_widget(widget)
             widget.show()
         return column
-
-    def __str__(self):
-        return "<column object: ID = %s type = %s name = %s pos = %d visible = %s cellrenderer = %s>" % (self.ID, self.type, self.name, self.pos, self.visible, self.cellrenderer)
-
-
         
 
 class Treeview(object):
@@ -259,8 +267,10 @@ class PerformanceTree(Treeview):
             , Column(COL_NAME, gobject.TYPE_STRING, _("Name"), COL_NAME, True, gtk.CellRendererText(), markup=True)
             , Column(COL_CURRENTPRICE, gobject.TYPE_STRING, _("Price"), COL_CURRENTPRICE, True, gtk.CellRendererText(), markup=True)
             , Column(COL_CURRENTCHANGE, gobject.TYPE_STRING, _("Change"), COL_CURRENTCHANGE, True, gtk.CellRendererText(), markup=True)
+            , Column(COL_CURRENTICON, gobject.TYPE_OBJECT, _("Change"), COL_CURRENTICON, True, gtk.CellRendererPixbuf(), share_column=True, icon =True)
             , Column(COL_PRICE, gobject.TYPE_STRING, _("Price"), COL_PRICE, True, gtk.CellRendererText(), markup=True)
             , Column(COL_CHANGE, gobject.TYPE_STRING, _("Change"), COL_CHANGE, True, gtk.CellRendererText(), markup=True)
+            , Column(COL_ICON, gobject.TYPE_OBJECT, _("Change"), COL_ICON, True, gtk.CellRendererPixbuf(), share_column=True, icon =True)
             , Column(COL_COMMENT, gobject.TYPE_STRING, _("Comment"), COL_COMMENT, True, gtk.CellRendererText())
                 ]
         Treeview.__init__(self, treeview)
@@ -297,7 +307,9 @@ class PortfolioPerformanceTree(Treeview):
             , Column(COL_BUYSUM, gobject.TYPE_STRING, _("Buy Sum"), COL_BUYSUM, True, gtk.CellRendererText(), markup=True)
             , Column(COL_LASTTRADE, gobject.TYPE_STRING, _("Last Trade"), COL_LASTTRADE, True, gtk.CellRendererText(), markup=True)
             , Column(COL_PF_CHANGE, gobject.TYPE_STRING, _("Change"), COL_PF_CHANGE, True, gtk.CellRendererText(), markup=True)
+            , Column(COL_PF_ICON, gobject.TYPE_OBJECT, _("Change"), COL_PF_ICON, True, gtk.CellRendererPixbuf(), share_column=True, icon =True)
             , Column(COL_PF_OVERALL, gobject.TYPE_STRING, _("Overall Change"), COL_PF_OVERALL, True, gtk.CellRendererText(), markup=True)
+            , Column(COL_PF_OALL_ICON, gobject.TYPE_OBJECT, _("Overall Change"), COL_PF_OALL_ICON, True, gtk.CellRendererPixbuf(), share_column=True, icon =True)
             , Column(COL_PF_COMMENT, gobject.TYPE_STRING, _("Comment"), COL_PF_COMMENT, True, gtk.CellRendererText())
                 ]
         Treeview.__init__(self, treeview)

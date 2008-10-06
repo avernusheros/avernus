@@ -1,6 +1,6 @@
 #!/bin/sh
 
-python "stock_tracker.py"
+python "stocktracker.py"
 
 echo "
 
