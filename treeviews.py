@@ -25,9 +25,12 @@ except ImportError, e:
 
 
 """Column IDs"""
-#watchlist performance tree
+
+#common
 COL_OBJECT        = 0
 COL_OBJECT_TYPE   = 1
+
+#watchlist performance tree
 COL_NAME          = 2
 COL_CURRENTPRICE  = 3
 COL_CURRENTCHANGE = 4
@@ -62,7 +65,14 @@ COL_52WEEK_LOW    = 6
 COL_EPS           = 7
 COL_PE            = 8
 
-
+#portfolio transactions 
+COL_T_DATETIME    = 2
+COL_T_NAME        = 3 
+COL_T_TYPE        = 4
+COL_T_QUANTITY    = 5
+COL_T_PRICE       = 6
+COL_T_VALUE       = 7
+COL_T_COMMENT     = 8
 
         
 
@@ -372,4 +382,40 @@ class FundamentalsTree(Treeview):
         elif ID == COL_NAME:
             widget = gtk.Label()
             widget.set_markup('<span size="medium"><b>Quote</b></span>\n<span size="small">Name</span>\n<span size="small">Symbol</span>')             
+        return widget
+
+
+class TransactionsTree(Treeview):
+    def __init__(self, treeview):
+        self.name = 'TransactionsTree'
+        self.tree_columns = [
+            Column(COL_OBJECT, gobject.TYPE_PYOBJECT, "object", COL_OBJECT)
+            , Column(COL_OBJECT_TYPE, gobject.TYPE_INT, "object_type", COL_OBJECT_TYPE)
+            , Column(COL_T_DATETIME, gobject.TYPE_STRING, _("Date-Time"), COL_T_DATETIME, True, gtk.CellRendererText())
+            , Column(COL_T_NAME, gobject.TYPE_STRING, _("Name"), COL_T_NAME, True, gtk.CellRendererText(), markup=True)
+            , Column(COL_T_TYPE, gobject.TYPE_STRING, _("Transaction Type"), COL_CURRENTPRICE, True, gtk.CellRendererText(), markup=True)
+            , Column(COL_T_QUANTITY, gobject.TYPE_STRING, _("Quantity"), COL_T_QUANTITY, True, gtk.CellRendererText(), markup=True)
+            , Column(COL_T_PRICE, gobject.TYPE_STRING, _("Price"), COL_T_PRICE, True, gtk.CellRendererText(), markup=True)
+            , Column(COL_T_VALUE, gobject.TYPE_STRING, _("Value"), COL_T_VALUE, True, gtk.CellRendererText(), markup=True)
+            , Column(COL_T_COMMENT, gobject.TYPE_STRING, _("Comment"), COL_T_COMMENT, True, gtk.CellRendererText())
+                ]
+        Treeview.__init__(self, treeview)
+    
+    def get_custom_header_widget(self, ID):
+        #create custom header widgets
+        widget = gtk.Label()
+        if ID == COL_T_TYPE:
+            widget.set_markup('<span size="medium"><b>Transaction type</b></span>\n') 
+        elif ID == COL_T_PRICE:                  
+            widget.set_markup('<span size="medium"><b>Price</b></span>\n<span size="small">Charges</span>') 
+        elif ID == COL_T_NAME:
+            widget.set_markup('<span size="medium"><b>Quote</b></span>\n<span size="small">Name</span>\n<span size="small">Symbol</span>')             
+        elif ID == COL_T_COMMENT:
+            widget.set_markup('<span size="medium"><b>Comment</b></span>\n') 
+        elif ID == COL_T_QUANTITY:
+            widget.set_markup('<span size="medium"><b>Quantity</b></span>\n') 
+        elif ID == COL_T_VALUE:
+            widget.set_markup('<span size="medium"><b>Value</b></span>\n')
+        elif ID == COL_T_DATETIME:
+            widget.set_markup('<span size="medium"><b>Date</b></span>\n<span size="small">Time</span>') 
         return widget

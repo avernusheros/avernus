@@ -28,11 +28,13 @@ try:
     import pango
     import dialogs
     import treeviews
+    from pysqlite2 import dbapi2 as sqlite3
+
 
 except ImportError, e:
     print "Import error stocktracker cannot start:", e
     sys.exit(1)
-    
+
 
 
 '''A simple python based portfolio manager'''
@@ -50,10 +52,11 @@ class StockTracker(object):
         #Connect with main window
         self.mainWindow.signal_autoconnect(self)
         #Initialize trees
-        self.performance_tree          = treeviews.PerformanceTree(self.mainWindow.get_widget('performanceTree'))
-        self.fundamentals_tree         = treeviews.FundamentalsTree(self.mainWindow.get_widget('fundamentalsTree'))
+        self.performance_tree           = treeviews.PerformanceTree(self.mainWindow.get_widget('performanceTree'))
+        self.fundamentals_tree          = treeviews.FundamentalsTree(self.mainWindow.get_widget('fundamentalsTree'))
         self.portfolio_performance_tree = treeviews.PortfolioPerformanceTree(self.mainWindow.get_widget('portfolioPerformanceTree'))
-        self.left_tree                 = treeviews.LeftTree(self.mainWindow.get_widget('leftTree'))
+        self.left_tree                  = treeviews.LeftTree(self.mainWindow.get_widget('leftTree'))
+        self.transactions_tree          = treeviews.TransactionsTree(self.mainWindow.get_widget('transactionsTree'))
         #init file
         self.file = file.File()        
         #init widgets
@@ -62,6 +65,9 @@ class StockTracker(object):
         self.watchlists = items.Category('Watchlists', self.left_tree)
         self.portfolios = items.Category('Portfolios', self.left_tree)
         self.currentList = None
+        
+        #init database
+        self.initialize_db()
 
 
     #************************************************************
@@ -90,11 +96,28 @@ class StockTracker(object):
         self.portfolio_tabs = []
         self.portfolio_tabs.append(self.mainWindow.get_widget("tab_fundamentals"))
         self.portfolio_tabs.append(self.mainWindow.get_widget("tab_portfolio_performance"))
+        self.portfolio_tabs.append(self.mainWindow.get_widget("tab_transactions"))
         self.hide_portfolio()
+    
+    def initialize_db(self):
+        path = os.path.expanduser("~")
+        path = os.path.join(path, '.stocktracker/')
+        if not os.path.exists(path):
+                os.mkdir(path)
+        path = os.path.join(path, 'data.db')
+        if not os.path.exists(path):
+            self.db_conn = sqlite3.connect(path)
+            # Create tables
+            self.db_conn.execute('''create table stocks (id text, name text, exchange text)''')
+            self.db_conn.execute('''create table transactions (id text
+            , type integer, datetime timestamp, quantity integer, price real, charge real)''')
+            #commit
+            self.db_conn.commit()
 
     #********************************************************
     #* Simple Helpers
     #********************************************************
+    
     def set_window_title_from_file(self, file):
         """Set the windows title, take it from file.
         @param file - string - The file name that we will
@@ -226,7 +249,9 @@ class StockTracker(object):
         watchlist.show(self.performance_tree, self.fundamentals_tree)
 
     def reload_portfolio(self, portfolio):
-        portfolio.show(self.portfolio_performance_tree, self.fundamentals_tree)
+        portfolio.show(self.portfolio_performance_tree
+                     , self.fundamentals_tree
+                     , self.transactions_tree)
 
     def reload_header(self):
         name            = self.mainWindow.get_widget("header_name")
@@ -258,7 +283,7 @@ class StockTracker(object):
         dialog = dialogs.BuyDialog(self.gladefile)
         if (dialog.run() == gtk.RESPONSE_OK):
                 #Append to the tree
-                dialog.position.add_to_tree(self.portfolio_performance_tree, self.fundamentals_tree)
+                dialog.position.add_to_tree(self.portfolio_performance_tree, self.fundamentals_tree, self.transactions_tree)
                 #Add to the portfolio
                 portfolio.add_child(dialog.position)
         self.reload_header()
@@ -287,6 +312,7 @@ class StockTracker(object):
         self.performance_tree.treestore.clear()
         self.left_tree.treestore.clear()
         self.fundamentals_tree.treestore.clear()
+        self.transactions_tree.treestore.clear()
         self.portfolio_performance_tree.treestore.clear()
         self.watchlists.add_to_tree(self.left_tree)
         self.portfolios.add_to_tree(self.left_tree)
@@ -334,6 +360,7 @@ class StockTracker(object):
         model, selection_iter, item = self.left_tree.get_selected_object()
         self.performance_tree.treestore.clear()
         self.fundamentals_tree.treestore.clear()
+        self.transactions_tree.treestore.clear()
         self.portfolio_performance_tree.treestore.clear()
         if not (item == None):
             #category selected

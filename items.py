@@ -336,10 +336,10 @@ class Portfolio(ItemBase):
         """
         tree.append(parent, self.get_column_list(columnList))
         
-    def show(self, performance_tree, fundamentals_tree):
+    def show(self, performance_tree, fundamentals_tree, transactions_tree):
         #adding positions to treeview...
         for child in self.__m_children:
-            child.add_to_tree(performance_tree, fundamentals_tree)
+            child.add_to_tree(performance_tree, fundamentals_tree, transactions_tree)
             
     def get_performance(self):
         if self.empty:
@@ -473,6 +473,12 @@ class PortfolioItem(WatchlistItem):
     
     def update(self):
         self.stock.update()
+    
+    def add_to_tree(self, performance_tree, fundamentals_tree, transactions_tree):
+        WatchlistItem.add_to_tree(self, performance_tree, fundamentals_tree)
+        transactions_tree.treestore.append(None, self.get_transactions_column_list(transactions_tree.tree_columns))
+
+        
     
     def get_buy_sum_text(self):
         color = '#606060'
