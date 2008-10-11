@@ -100,19 +100,20 @@ class StockTracker(object):
         self.hide_portfolio()
     
     def initialize_db(self):
-        path = os.path.expanduser("~")
-        path = os.path.join(path, '.stocktracker/')
-        if not os.path.exists(path):
-                os.mkdir(path)
-        path = os.path.join(path, 'data.db')
-        if not os.path.exists(path):
-            self.db_conn = sqlite3.connect(path)
-            # Create tables
-            self.db_conn.execute('''create table stocks (id text, name text, exchange text)''')
-            self.db_conn.execute('''create table transactions (id text
-            , type integer, datetime timestamp, quantity integer, price real, charge real)''')
-            #commit
-            self.db_conn.commit()
+        #path = os.path.expanduser("~")
+        #path = os.path.join(path, '.stocktracker/')
+        #if not os.path.exists(path):
+        #        os.mkdir(path)
+        #path = os.path.join(path, 'data.db')
+        #if not os.path.exists(path):
+        #    self.db_conn = sqlite3.connect(path)
+        #    # Create tables
+        #    self.db_conn.execute('''create table stocks (id text, name text, exchange text)''')
+        #    self.db_conn.execute('''create table transactions (id text
+        #    , type integer, datetime timestamp, quantity integer, price real, charge real)''')
+        #    #commit
+        #    self.db_conn.commit()
+        self.db_conn = sqlite3.connect('data.db')
 
     #********************************************************
     #* Simple Helpers
