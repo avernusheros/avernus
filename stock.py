@@ -1,5 +1,6 @@
 try:
     import config
+    from data import *
 except:
     pass
 
@@ -7,14 +8,13 @@ except:
 
 class Stock(object):
     """ """
-    def __init__(self, symbol, name, comment):
+    def __init__(self, stock_id, comment):
         #init variables
-        self.symbol            = symbol
+        self.stock_id          = stock_id
         self.currentPrice      = None
         self.currentPercent    = None
         self.currentChange     = None
         self.currentDate       = None
-        self.name              = name
         self.startPrice        = None
         self.startDate         = None 
         self.comment           = comment
@@ -26,6 +26,8 @@ class Stock(object):
         self.fiftytwoweek_high = None
         self.eps               = None
         self.pe                = None
+        #database connection
+        self.db = database.get_db() 
 
     def get_currentprice_text(self):
         color = '#606060'
@@ -42,7 +44,10 @@ class Stock(object):
     def get_name_text(self):
         color = '#606060'
         text = ""
-        text = text + self.name +"\n<span foreground=\""+ color +"\"><small>" +self.symbol + "</small></span>"
+        info = self.db.get_stock_name(self.stock_id)
+        text = text + info[0] +"\n \
+                <span foreground=\""+ color +"\"><small>" +info[1]+ "</small></span>\n \
+                 <span foreground=\""+ color +"\"><small>" +info[2]+ "</small></span>"
         return text
     
     def get_change_text(self):
@@ -66,17 +71,17 @@ class Stock(object):
  
     def update(self):
         #get data from data provider
-        self.currentPrice       = config.DATA_PROVIDER.get_price(self.symbol)
-        self.currentChange      = config.DATA_PROVIDER.get_change(self.symbol)
+        self.currentPrice       = config.DATA_PROVIDER.get_price(self.stock_id)
+        self.currentChange      = config.DATA_PROVIDER.get_change(self.stock_id)
         self.currentPercent     = 100*self.currentPrice/(self.currentPrice-self.currentChange)-100
-        self.currentDate        = "%s %s" % (config.DATA_PROVIDER.get_price_date(self.symbol)
-                                    , config.DATA_PROVIDER.get_price_time(self.symbol))
-        self.mkt_cap            = config.DATA_PROVIDER.get_market_cap(self.symbol)
-        self.avg_vol            = config.DATA_PROVIDER.get_avg_daily_volume(self.symbol)
-        self.fiftytwoweek_low   = config.DATA_PROVIDER.get_52_week_high(self.symbol)
-        self.fiftytwoweek_high  = config.DATA_PROVIDER.get_52_week_low(self.symbol)
-        self.eps                = config.DATA_PROVIDER.get_earnings_per_share(self.symbol)
-        self.pe                 = config.DATA_PROVIDER.get_price_earnings_ratio(self.symbol)              
+        self.currentDate        = "%s %s" % (config.DATA_PROVIDER.get_price_date(self.stock_id)
+                                    , config.DATA_PROVIDER.get_price_time(self.stock_id))
+        self.mkt_cap            = config.DATA_PROVIDER.get_market_cap(self.stock_id)
+        self.avg_vol            = config.DATA_PROVIDER.get_avg_daily_volume(self.stock_id)
+        self.fiftytwoweek_low   = config.DATA_PROVIDER.get_52_week_high(self.stock_id)
+        self.fiftytwoweek_high  = config.DATA_PROVIDER.get_52_week_low(self.stock_id)
+        self.eps                = config.DATA_PROVIDER.get_earnings_per_share(self.stock_id)
+        self.pe                 = config.DATA_PROVIDER.get_price_earnings_ratio(self.stock_id)              
                                     
         #on first update
         if (self.startPrice == None):

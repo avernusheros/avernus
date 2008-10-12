@@ -296,7 +296,7 @@ class PerformanceTree(Treeview):
             widget.set_markup('<span size="medium"><b>Watch Start</b></span>\n<span size="small">Price</span>\n<span size="small">Trade Time</span>') 
         elif ID == COL_NAME:
             widget = gtk.Label()
-            widget.set_markup('<span size="medium"><b>Quote</b></span>\n<span size="small">Name</span>\n<span size="small">Symbol</span>')             
+            widget.set_markup('<span size="medium"><b>Name</b></span>\n<span size="small">ISIN</span>\n<span size="small">Exchange</span>')             
         elif ID == COL_COMMENT:
             widget = gtk.Label()
             widget.set_markup('<span size="medium"><b>Comment</b></span>\n<span size="small"> </span>\n<span size="small"> </span>') 
@@ -335,7 +335,7 @@ class PortfolioPerformanceTree(Treeview):
             widget.set_markup('<span size="medium"><b>Buy</b></span>\n<span size="small">Price</span>\n<span size="small">Trade Time</span>') 
         elif ID == COL_PF_NAME:
             widget = gtk.Label()
-            widget.set_markup('<span size="medium"><b>Quote</b></span>\n<span size="small">Name</span>\n<span size="small">Symbol</span>')             
+            widget.set_markup('<span size="medium"><b>Name</b></span>\n<span size="small">ISIN</span>\n<span size="small">Exchange</span>')             
         elif ID == COL_PF_COMMENT:
             widget = gtk.Label()
             widget.set_markup('<span size="medium"><b>Comment</b></span>\n<span size="small"> </span>\n<span size="small"> </span>') 
@@ -381,7 +381,7 @@ class FundamentalsTree(Treeview):
             widget.set_markup('<span size="medium"><b>52week low</b></span>\n<span size="small">Price</span>\n<span size="small">Trade Time</span>') 
         elif ID == COL_NAME:
             widget = gtk.Label()
-            widget.set_markup('<span size="medium"><b>Quote</b></span>\n<span size="small">Name</span>\n<span size="small">Symbol</span>')             
+            widget.set_markup('<span size="medium"><b>Name</b></span>\n<span size="small">ISIN</span>\n<span size="small">Exchange</span>')             
         return widget
 
 
@@ -409,7 +409,7 @@ class TransactionsTree(Treeview):
         elif ID == COL_T_PRICE:                  
             widget.set_markup('<span size="medium"><b>Price</b></span>\n<span size="small">Charges</span>') 
         elif ID == COL_T_NAME:
-            widget.set_markup('<span size="medium"><b>Quote</b></span>\n<span size="small">Name</span>\n<span size="small">Symbol</span>')             
+            widget.set_markup('<span size="medium"><b>Name</b></span>\n<span size="small">ISIN</span>\n<span size="small">Exchange</span>')             
         elif ID == COL_T_COMMENT:
             widget.set_markup('<span size="medium"><b>Comment</b></span>\n') 
         elif ID == COL_T_QUANTITY:

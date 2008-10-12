@@ -372,9 +372,9 @@ class Portfolio(ItemBase):
 
 class WatchlistItem(ItemBase):
     """This is a quote in the watchlistTree.  It represents a quote in the watchlist """
-    def __init__(self, symbol, name, comment):
+    def __init__(self, stock_id, comment):
         #init variables
-        self.stock = stock.Stock(symbol, name, comment)
+        self.stock = stock.Stock(stock_id, comment)
         #init base
         ItemBase.__init__(self, WATCHLISTITEM)
 
@@ -460,9 +460,9 @@ class WatchlistItem(ItemBase):
 
 
 class PortfolioItem(WatchlistItem):
-    def __init__(self, symbol, quantity, price, date, transactionCosts, comment):
+    def __init__(self, stock_id, quantity, price, date, transactionCosts, comment):
         #init variables
-        self.stock = stock.Stock(symbol, "None", comment)
+        self.stock = stock.Stock(stock_id, comment)
         self.stock.startPrice = float(price.replace(",","."))
         self.stock.startDate = date
         self.transactionCosts = float(transactionCosts.replace(",","."))
@@ -478,8 +478,6 @@ class PortfolioItem(WatchlistItem):
         WatchlistItem.add_to_tree(self, performance_tree, fundamentals_tree)
         transactions_tree.treestore.append(None, self.get_transactions_column_list(transactions_tree.tree_columns))
 
-        
-    
     def get_buy_sum_text(self):
         color = '#606060'
         text = ""
@@ -501,6 +499,10 @@ class PortfolioItem(WatchlistItem):
                 <span foreground=\""+ color +"\"><small>" +str(round(self.stock.currentPercent, 2)) + "</small></span> \n \
                 <span foreground=\""+ color +"\"><small>" +str(self.stock.currentChange*self.quantity) + "</small></span>"
         return text
+        
+    def get_transactions_column_list(self, columnList):
+        lst_return = []
+        return lst_return
     
     def get_performance_column_list(self, columnList):
         """This function is used to get the display list

@@ -28,12 +28,14 @@ try:
     import pango
     import dialogs
     import treeviews
+    from data import *
     from pysqlite2 import dbapi2 as sqlite3
 
 
 except ImportError, e:
     print "Import error stocktracker cannot start:", e
     sys.exit(1)
+
 
 
 
@@ -113,7 +115,8 @@ class StockTracker(object):
         #    , type integer, datetime timestamp, quantity integer, price real, charge real)''')
         #    #commit
         #    self.db_conn.commit()
-        self.db_conn = sqlite3.connect('data.db')
+        self.db = database.get_db()
+        self.db.connect()
 
     #********************************************************
     #* Simple Helpers
@@ -275,9 +278,9 @@ class StockTracker(object):
         dialog = dialogs.QuoteDialog(self.gladefile)
         if (dialog.run() == gtk.RESPONSE_OK):
                 #Append to the tree
-                dialog.quote.add_to_tree(self.performance_tree, self.fundamentals_tree)
+                dialog.stock.add_to_tree(self.performance_tree, self.fundamentals_tree)
                 #Add to the Watchlist
-                watchlist.add_child(dialog.quote)
+                watchlist.add_child(dialog.stock)
         self.reload_header()
     
     def buy_position(self, portfolio):
