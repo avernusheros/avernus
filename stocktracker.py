@@ -68,6 +68,9 @@ class StockTracker(object):
         self.portfolios = items.Category('Portfolios', self.left_tree)
         self.currentList = None
         
+        #current selected item
+        self.selected_item = None
+        
         #init database
         self.initialize_db()
 
@@ -164,90 +167,43 @@ class StockTracker(object):
     def hide_portfolio(self):
         for tab in self.portfolio_tabs:
             tab.hide()  
-
-    def get_watchlist_selected(self):
-        """This function is a wrapper for the
-        gtk.TreeView.get_selection() function and the
-        gtk.TreeSelection.get_selected() function. It returns
-        the same as gtk.TreeSelection.get_selected(), but ensures
-        that it is a watchlist that is selected. So if a quote
-        is selected then it's parent watchlist will be returned.
-        @returns A 3-tuple containing a reference to the
-        gtk.TreeModel and a gtk.TreeIter pointing to the
-        currently selected node. Just like
-        gtk.TreeSelection.get_selected but with the itemBase
-        being returned as well.
-        """
-        #First get the object column
-        watchlist_ob = None
-        wcolumn, pos = self.find_watchlistColumn(treeviews.COL_OBJECT)
-        if (not wcolumn):
-            return None,None
-        #Get the current selection in the gtk.TreeView
-        selection = self.leftTreeView.get_selection()
-        # Get the selection iter
-        model, selection_iter = selection.get_selected()
-        if (selection_iter):
-            #Something is selected so get the object
-            watchlist_ob = model.get_value(selection_iter, wcolumn.pos)
-            if ((watchlist_ob) and (watchlist_ob.type != items.WATCHLIST)):
-                #Alright we need the parent, this is not a watchlist
-                selection_iter = model.iter_parent(selection_iter)
-                watchlist_ob = model.get_value(selection_iter, wcolumn.pos)
-        return model, selection_iter, watchlist_ob
-    
-    def get_parent_watchlist(self, selection_iter, object_pos = None):
-        """Get the parent watchlist of the selection_item
-        @param selection_iter - gtk.TreeIter - A iter whose
-        parent you want to get.
-        @param object_pos - number - The index of the object
-        column.  If None this will be calculated.
-        @returns - watchlist, gtk.TreeIter - The parent watchlist of the
-        iter on success, or None on failure. The parent gtk.TreeIter
-        """
-        if (object_pos == None):
-            wcolumn, pos = self.find_watchlistColumn(treeviews.COL_OBJECT)
-            if (wcolumn):
-                object_pos = wcolumn.pos
-            else:
-                #Column Data Error
-                return None, None
-                
-        watchlist_parent = None
-        selection_parent = None
-        #Get the Model
-        model = self.performanceTreeView.get_model()
-        #Get the current selection in the gtk.TreeView
-        selection = self.performanceTreeView.get_selection()
-        if ((model) and (selection)):
-            selection_parent = model.iter_parent(selection_iter)
-            if (selection_parent):
-                watchlist_parent = model.get_value(selection_parent, object_pos)
-
-        return watchlist_parent, selection_parent
-        
-    def edit_object(self, watchlist_object, model, object_iter):
+           
+    def edit_object(self, object, model, object_iter):
         """Helper function used to edit an object in the tree.
-        @param watchlist_object - itemBase- The object that we are editing.
+        @param object - itemBase- The object that we are editing.
         @param model - gtk.TreeModel - The model for the tree.
-        @param object_iter - gtk.TreeIter representing the watchlist_object's position in the tree.
+        @param object_iter - gtk.TreeIter representing the object's position in the tree.
         """
         #Just make sure that they are all correct
-        if ((watchlist_object) and (model) and (object_iter)):
-            if (watchlist_object.type == items.WATCHLIST):
+        if (object and model and object_iter):
+            if (object.type == items.WATCHLIST):
                 #Edit watchlist
-                watchlist_dialog = dialogs.WatchlistDialog(self.gladefile, watchlist_object)
-                if (watchlist_dialog.run() == gtk.RESPONSE_OK):
-                    watchlist_object.set_tree_values(model
+                dialog = dialogs.WatchlistDialog(self.gladefile, object)
+                if (dialog.run() == gtk.RESPONSE_OK):
+                    object.set_tree_values(model
                         , object_iter
                         , self.left_tree.tree_columns)
-            else:
-                #Edit quote
-                quote_dialog = dialogs.QuoteDialog(self.gladefile, watchlist_object)
-                if (quote_dialog.run() == gtk.RESPONSE_OK):
-                    watchlist_object.set_tree_values(model
+            if (object.type == items.PORTFOLIO):
+                #Edit portfolio
+                dialog = dialogs.PortfolioDialog(self.gladefile, object)
+                if (dialog.run() == gtk.RESPONSE_OK):
+                    object.set_tree_values(model
+                        , object_iter
+                        , self.left_tree.tree_columns)
+            if (object.type == items.WATCHLISTITEM):
+                #Edit watchlist item
+                dialog = dialogs.QuoteDialog(self.gladefile, object)
+                if (dialog.run() == gtk.RESPONSE_OK):
+                    object.set_tree_values(model
                         , object_iter
                         , self.performance_tree.tree_columns)
+            if (object.type == items.PORTFOLIOITEM):
+                #Edit portfolio item
+                dialog = dialogs.BuyDialog(self.gladefile, object)
+                if (dialog.run() == gtk.RESPONSE_OK):
+                    object.set_tree_values(model
+                        , object_iter
+                        , self.portfolio_performance_tree.tree_columns)
                         
     def reload_watchlist(self, watchlist):
         watchlist.show(self.performance_tree, self.fundamentals_tree)
@@ -277,6 +233,7 @@ class StockTracker(object):
     def add_quote(self, watchlist):
         dialog = dialogs.QuoteDialog(self.gladefile)
         if (dialog.run() == gtk.RESPONSE_OK):
+                dialog.stock.update()
                 #Append to the tree
                 dialog.stock.add_to_tree(self.performance_tree, self.fundamentals_tree)
                 #Add to the Watchlist
@@ -286,6 +243,7 @@ class StockTracker(object):
     def buy_position(self, portfolio):
         dialog = dialogs.BuyDialog(self.gladefile)
         if (dialog.run() == gtk.RESPONSE_OK):
+                dialog.position.update()
                 #Append to the tree
                 dialog.position.add_to_tree(self.portfolio_performance_tree, self.fundamentals_tree, self.transactions_tree)
                 #Add to the portfolio
@@ -344,9 +302,7 @@ class StockTracker(object):
         dlg.run()
 
     def on_add_button(self, widget):
-        model, selection_iter, item = self.left_tree.get_selected_object()
-        if item == None:
-            model, selection_iter, item = self.performance_tree.get_selected_object()
+        item, model, selection_iter = self.selected_item
         if item:
             if (item.type == items.CATEGORY):
                 if (item.name == "Watchlists"):
@@ -357,10 +313,22 @@ class StockTracker(object):
                 self.add_quote(item)
             elif (item.type == items.PORTFOLIO):
                 self.buy_position(item)
-            elif (item.type == items.QUOTE):
+            elif (item.type == items.PORTFOLIOITEM or item.type == items.WATCHLISTITEM):
                 self.add_quote(self.currentList)
     
+    def on_treeview_cursor_changed(self, widget):
+        self.selected_item = None
+        #Get the current selection in the gtk.TreeView
+        selection = widget.get_selection()
+        # Get the selection iter
+        model, selection_iter = selection.get_selected()
+        if (selection_iter and model):
+            #Something is selected so get the object
+            item = model.get_value(selection_iter, 0)
+        self.selected_item = [item, model, selection_iter]
+    
     def on_leftTree_cursor_changed(self, widget):
+        self.on_treeview_cursor_changed(widget)
         model, selection_iter, item = self.left_tree.get_selected_object()
         self.performance_tree.treestore.clear()
         self.fundamentals_tree.treestore.clear()
@@ -393,17 +361,6 @@ class StockTracker(object):
                 self.hide_portfolio()
                 self.hide_watchlist()
             
-    def on_performanceTree_cursor_changed(self, widget):
-        model, selection_iter, item = self.left_tree.get_selected_object()
-        if item == None:
-            model, selection_iter, item = self.performance_tree.get_selected_object()
-        if item:
-            if (item.type == items.QUOTE):
-                self.addButton.set_sensitive(True)
-                self.updateButton.set_sensitive(True)
-                self.removeButton.set_sensitive(True)
-                self.editButton.set_sensitive(True)
-                
     def on_tree_button_press_event(self, widget, event):
         """There has been a button press on a Tree
         for now we use this as a quick hack to remove
@@ -421,17 +378,18 @@ class StockTracker(object):
     def on_remove_item(self, widget):
         """called then the remove button is clicked.
         Can also be generally used to remove a items."""
-        model, selection_iter, item = self.performance_tree.get_selected_object()
-        if item == None:
-            model, selection_iter, item = self.left_tree.get_selected_object()
+        item , model, selection_iter = self.selected_item
         if item:
             if (item.type == items.CATEGORY):
                 #categories should not be removed
                 pass
-            elif (item.type == items.WATCHLIST):
+            elif item.type == items.WATCHLIST:
                 self.watchlists.remove_child(item)
-            elif (item.type == items.QUOTE):
+            elif item.type == items.PORTFOLIO:
+                self.portfolios.remove_child(item)
+            elif (item.type == items.WATCHLISTITEM or item.type == items.PORTFOLIOITEM):
                 self.currentList.remove_child(item)
+                self.reload_header()
             model.remove(selection_iter)
                     
     def on_file_new(self, widget):
@@ -488,12 +446,12 @@ class StockTracker(object):
     def on_edit_object(self, widget):
         """Called when we want to edit the selected item"""
         # Get the selected object
-        model, selection_iter, watchlist_ob = self.get_selected_object()
-        if ((selection_iter) and (model) and (watchlist_ob)):
+        object, model, selection_iter  = self.selected_item
+        if (selection_iter and model and object):
             """All right something and we have all the needed data"""
-            self.edit_object(watchlist_ob, model, selection_iter)
+            self.edit_object(object, model, selection_iter)
             
-    def on_performanceTree_row_activated(self, tree_view, path, tree_column):
+    def on_row_activated(self, tree_view, path, tree_column):
         """This is called when a row is "activated" in the tree
         view.  It happens when the user double clicks on an item
         in the tree.  We will use it to edit the items.
@@ -509,9 +467,9 @@ class StockTracker(object):
             selection_iter = model.get_iter(path)
             if (selection_iter):
                 #Now that we have the selection let's get the object
-                watchlist_ob = model.get_value(selection_iter, wcolumn.pos)
+                object = model.get_value(selection_iter, wcolumn.pos)
                 #Now lets edit the object
-                self.edit_object(watchlist_ob, model, selection_iter)
+                self.edit_object(object, model, selection_iter)
     
     def on_leftTree_row_activated(self, tree_view, path, tree_column):
         """This is called when a row is "activated" in the tree
@@ -524,7 +482,7 @@ class StockTracker(object):
         #Get the column of the object
         wcolumn, pos = self.left_tree.find_Column(treeviews.COL_OBJECT)
         model = tree_view.get_model()
-        if ((wcolumn) and (model)):
+        if (wcolumn and model):
             #Now get the selection iter from the path
             selection_iter = model.get_iter(path)
             if (selection_iter):
@@ -535,7 +493,6 @@ class StockTracker(object):
                 
     def on_update(self, widget):
         """called when update button is clicked"""
-        #get all quotes in performanceTree
         self.watchlists.update()
         self.portfolios.update()
         self.reload_from_data()

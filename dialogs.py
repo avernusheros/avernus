@@ -177,7 +177,7 @@ class QuoteDialog(Dialog):
             #Symbol
             #self.enterSymbol.set_text(self.quote.symbol)
             #Comment
-            self.set_comment(self.quote.comment)
+            self.set_comment(self.stock.stock.comment)
 
     def save_data_to_object(self):
         """This function is used to read the data from the dialog
@@ -187,7 +187,6 @@ class QuoteDialog(Dialog):
             self.stock = items.WatchlistItem(self.stock_id, self.get_comment())
         else:
             self.stock.comment = self.get_comment()
-        self.stock.update()
 
     def get_comment(self):
         """This function gets the details from the TextView
@@ -270,14 +269,14 @@ class BuyDialog(QuoteDialog):
             #Symbol
             #self.enterSymbol.set_text(self.quote.symbol)
             #Comment
-            self.set_comment(self.quote.comment)
+            self.set_comment(self.position.stock.comment)
 
     def save_data_to_object(self):
         """This function is used to read the data from the dialog
         and then store it in the watchlist.quote object.
         """
         #get data from widgets
-        symbol           = self.stock_id
+        stock_id           = self.stock_id
         comment          = self.get_comment()
         quantity         = self.numShares.get_text()
         price            = self.enterBuyPrice.get_text()
@@ -285,10 +284,10 @@ class BuyDialog(QuoteDialog):
         transactionCosts = self.transactioncosts.get_text()
         #create new position    
         if (self.position == None):
-            self.position = items.PortfolioItem(symbol,quantity,price,date,transactionCosts,comment)
+            self.position = items.PortfolioItem(stock_id,quantity,price,date,transactionCosts,comment)
         #or edit existing position
         else:
-            self.position.symbol   = symbol
+            self.position.symbol   = stock_id
             self.position.comment  = comment
             self.position.quantity = quantity
             self.position.buyPrice = price

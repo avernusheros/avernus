@@ -316,6 +316,8 @@
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="reorderable">True</property>
+                            <signal name="row_activated" handler="on_row_activated"/>
+                            <signal name="cursor_changed" handler="on_treeview_cursor_changed"/>
                           </widget>
                         </child>
                       </widget>
@@ -343,6 +345,8 @@
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="reorderable">True</property>
+                            <signal name="row_activated" handler="on_row_activated"/>
+                            <signal name="cursor_changed" handler="on_treeview_cursor_changed"/>
                           </widget>
                         </child>
                       </widget>
@@ -374,8 +378,8 @@
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="reorderable">True</property>
-                            <signal name="row_activated" handler="on_performanceTree_row_activated"/>
-                            <signal name="cursor_changed" handler="on_performanceTree_cursor_changed"/>
+                            <signal name="row_activated" handler="on_row_activated"/>
+                            <signal name="cursor_changed" handler="on_treeview_cursor_changed"/>
                           </widget>
                         </child>
                       </widget>
@@ -407,6 +411,7 @@
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="reorderable">True</property>
+                            <signal name="cursor_changed" handler="on_treeview_cursor_changed"/>
                           </widget>
                         </child>
                       </widget>

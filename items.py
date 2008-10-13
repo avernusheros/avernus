@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import stock_tracker
+import stocktracker
 import datetime
 import time
 import config
@@ -70,6 +70,9 @@ class ItemBase(object):
         for value in lst_values:
             tree_model.set_value(iter, count, value)
             count += 1
+            
+    
+    
 
 class Category(ItemBase):
     def __init__(self, name, tree):
@@ -81,9 +84,6 @@ class Category(ItemBase):
         #children
         self.__m_children = []
         self.add_to_tree(tree)
-
-    def __str__(self):
-        return _("<watchlist object: name = %s num_children = %d>") % (self.name, len(self.__m_children))
 
     def add_child(self, item):
         """Add a child to the watchlist.
@@ -139,7 +139,7 @@ class Category(ItemBase):
                 child.add_to_tree(tree.treestore, insert_iter, tree.tree_columns)
         else:
             helper.show_error_dlg(_("Error appending category: %s" % self))
-    
+            
     def clear(self):
         self.__m_children = []
         
@@ -152,6 +152,7 @@ class Category(ItemBase):
     def update(self):
         for child in self.__m_children:
             child.update()
+    
 
 
 class Watchlist(ItemBase):
@@ -190,8 +191,8 @@ class Watchlist(ItemBase):
         """
         try:
             self.__m_children.remove(item)
-            if len(self.__m_children == 0):
-                empty = True
+            if len(self.__m_children) == 0:
+                self.empty = True
         except ValueError, e:
             helper.show_error_dlg(_("Error removing child %s = %s") % (item, e))
 
@@ -259,6 +260,10 @@ class Watchlist(ItemBase):
                 <span size="small">$ '+ str(round(change,2)) +'</span>\n \
                 <span size="small">% '+ str(round(percent,2)) +'</span>',
                 config.get_arrow_type(percent, True)]
+    
+    def update(self):
+        for child in self.__m_children:
+            child.update()
             
 
 class Portfolio(ItemBase):
@@ -300,8 +305,8 @@ class Portfolio(ItemBase):
         try:
             self.buy_sum -= item.buy_sum
             self.__m_children.remove(item)
-            if len(self.__m_children == 0):
-                empty = True
+            if len(self.__m_children) == 0:
+                self.empty = True
         except ValueError, e:
             helper.show_error_dlg(_("Error removing child %s = %s") % (item, e))
 
@@ -369,6 +374,10 @@ class Portfolio(ItemBase):
                 <span size="small">$ '+ str(round(change,2)) +'</span>\n \
                 <span size="small">% '+ str(round(percent,2)) +'</span>',
                 config.get_arrow_type(percent, True)]
+    
+    def update(self):
+        for child in self.__m_children:
+            child.update()
 
 class WatchlistItem(ItemBase):
     """This is a quote in the watchlistTree.  It represents a quote in the watchlist """
@@ -476,7 +485,8 @@ class PortfolioItem(WatchlistItem):
     
     def add_to_tree(self, performance_tree, fundamentals_tree, transactions_tree):
         WatchlistItem.add_to_tree(self, performance_tree, fundamentals_tree)
-        transactions_tree.treestore.append(None, self.get_transactions_column_list(transactions_tree.tree_columns))
+        #TODO
+        #transactions_tree.treestore.append(None, self.get_transactions_column_list(transactions_tree.tree_columns))
 
     def get_buy_sum_text(self):
         color = '#606060'
