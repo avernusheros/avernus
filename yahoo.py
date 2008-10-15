@@ -30,7 +30,7 @@ class Yahoo(data_provider.DataProvider):
         
         Returns a dictionary.
         """
-        values = self.__request(yahoo(stock_id), 'l1c1va2xj1b4j4dyekjm3m4rr5p5p6s7').split(',')
+        values = self.__request(yahoo(stock_id), 'l1c1va2xj1b4j4dyekjm3m4rr5p5p6s7t1d1').split(',')
         data = {}
         data['price'] = values[0]
         data['change'] = values[1]
@@ -52,6 +52,8 @@ class Yahoo(data_provider.DataProvider):
         data['price_sales_ratio'] = values[17]
         data['price_book_ratio'] = values[18]
         data['short_ratio'] = values[19]
+        data['price_time'] = values[20]
+        data['price_date'] = values[21]
         return data
         
     def get_price(self, stock_id): 

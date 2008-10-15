@@ -71,17 +71,17 @@ class Stock(object):
  
     def update(self):
         #get data from data provider
-        self.currentPrice       = config.DATA_PROVIDER.get_price(self.stock_id)
-        self.currentChange      = config.DATA_PROVIDER.get_change(self.stock_id)
+        data = config.DATA_PROVIDER.get_all(self.stock_id)
+        self.currentPrice       = float(data['price'])
+        self.currentChange      = float(data['change'])
         self.currentPercent     = 100*self.currentPrice/(self.currentPrice-self.currentChange)-100
-        self.currentDate        = "%s %s" % (config.DATA_PROVIDER.get_price_date(self.stock_id)
-                                    , config.DATA_PROVIDER.get_price_time(self.stock_id))
-        self.mkt_cap            = config.DATA_PROVIDER.get_market_cap(self.stock_id)
-        self.avg_vol            = config.DATA_PROVIDER.get_avg_daily_volume(self.stock_id)
-        self.fiftytwoweek_low   = config.DATA_PROVIDER.get_52_week_high(self.stock_id)
-        self.fiftytwoweek_high  = config.DATA_PROVIDER.get_52_week_low(self.stock_id)
-        self.eps                = config.DATA_PROVIDER.get_earnings_per_share(self.stock_id)
-        self.pe                 = config.DATA_PROVIDER.get_price_earnings_ratio(self.stock_id)              
+        self.currentDate        = "%s %s" % (data['price_date'], data['price_time'])
+        self.mkt_cap            = data['market_cap']
+        self.avg_vol            = data['avg_daily_volume']
+        self.fiftytwoweek_low   = data['52_week_high']
+        self.fiftytwoweek_high  = data['52_week_low']
+        self.eps                = data['earnings_per_share']
+        self.pe                 = data['price_earnings_ratio']
                                     
         #on first update
         if (self.startPrice == None):
