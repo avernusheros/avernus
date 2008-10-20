@@ -274,16 +274,18 @@ class Portfolio(ItemBase):
         self.name = name
         self.description = description
         self.buy_sum = 0.0
+        self.cash_balance = 0.0
         self.empty = True
         #children
         self.__m_children = []
     
     def add_child(self, item):
-        """Add a child to the watchlist.
-        @param item - Either a watchlist or a quote. This will be a child of the watchlist.
+        """Add a child to the portfolio
+        @param item -
         """
         self.__m_children.append(item)
         self.buy_sum += item.buy_sum
+        self.cash_balance -= item.buy_sum
         self.empty = False
     
     def get_child_quotes(self):
@@ -303,12 +305,13 @@ class Portfolio(ItemBase):
         @param item - Either a watchlist or a quote. This will be a removed.
         """
         try:
-            self.buy_sum -= item.buy_sum
+            buy_sum = item.buy_sum
             self.__m_children.remove(item)
             if len(self.__m_children) == 0:
                 self.empty = True
         except ValueError, e:
             helper.show_error_dlg(_("Error removing child %s = %s") % (item, e))
+        self.buy_sum -= buy_sum
 
     def get_column_list(self, watchlistColumnList):
         """This function is used to get the display list
@@ -476,7 +479,7 @@ class PortfolioItem(WatchlistItem):
         self.stock.startDate = date
         self.transactionCosts = float(transactionCosts.replace(",","."))
         self.quantity = float(quantity.replace(",","."))
-        self.buy_sum = self.stock.startPrice * self.quantity
+        self.buy_sum = self.stock.startPrice * self.quantity + self.transactionCosts
         #init base
         ItemBase.__init__(self, PORTFOLIOITEM)
     

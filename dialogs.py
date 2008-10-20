@@ -137,8 +137,8 @@ class QuoteDialog(Dialog):
         
     def autocomplete(self):
         #get db
-        db = database.get_db()
-        db.connect()
+        self.db = database.get_db()
+        self.db.connect()
 
         completion = gtk.EntryCompletion()
         self.liststore = gtk.ListStore(str, str, str, str)
@@ -158,7 +158,7 @@ class QuoteDialog(Dialog):
         completion.pack_start(cell3, expand = True)
         completion.add_attribute(cell3, 'text', 3)
         completion.set_property('text_column', 3)
-        list = db.get_stock_list()
+        list = self.db.get_stock_list()
         for item in list:
             self.liststore.append(item)
         completion.set_model(self.liststore)
@@ -259,10 +259,27 @@ class BuyDialog(QuoteDialog):
         self.enterBuyPrice = self.wTree.get_widget("enterBuyPrice")
         self.buyDate = self.wTree.get_widget("buyDate")
         self.transactioncosts = self.wTree.get_widget("buyTransactionCosts")
+        self.buy_position_name = self.wTree.get_widget("buy_position_name")
         #update dialog
         self.update_dialog_from_object()
         self.autocomplete()
+    
+    def match_cb(self, completion, model, iter):
+        self.stock_id = model[iter][0]
+        self.update_stock_info()
+        return
         
+    def update_stock_info(self):
+        #if a stock is selected
+        if self.stock_id:
+            print "setting stock info.. "
+            info = self.db.get_stock_name(self.stock_id) #name, isin, exchange
+            color = '#606060'
+            text = info[0] +"\n \
+                <span foreground=\""+ color +"\"><small>" +info[1]+ "</small></span>\n \
+                 <span foreground=\""+ color +"\"><small>" +info[2]+ "</small></span>"
+            self.buy_position_name.set_markup(text)
+    
     def update_dialog_from_object(self):
         """Used to update the settings on the dialog"""
         if (self.position):
