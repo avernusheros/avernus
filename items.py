@@ -55,7 +55,7 @@ class ItemBase(object):
         of the returned list.
         """
         tree.append(parent, self.get_column_list(tree.tree_columns))
-        
+
     def set_tree_values(self, tree_model, iter, columnList):
         """This is used to set the values in a tree.
         For whatever reason you cannot use the same list that you
@@ -70,9 +70,9 @@ class ItemBase(object):
         for value in lst_values:
             tree_model.set_value(iter, count, value)
             count += 1
-            
-    
-    
+
+
+
 
 class Category(ItemBase):
     def __init__(self, name, tree):
@@ -90,7 +90,7 @@ class Category(ItemBase):
         @param item - Either a watchlist or a quote. This will be a child of the watchlist.
         """
         self.__m_children.append(item)
-        
+
     def remove_child(self, item):
         """Removes a child from the watchlist.
         @param item - Either a watchlist or a quote. This will be a removed.
@@ -99,7 +99,7 @@ class Category(ItemBase):
             self.__m_children.remove(item)
         except ValueError, e:
             helper.show_error_dlg(_("Error removing child %s = %s") % (item, e))
-        
+
     def get_column_list(self, watchlistColumnList):
         """This function is used to get the display list
         for the watchlistTree. The watchlistColumnList controls the
@@ -121,7 +121,7 @@ class Category(ItemBase):
             else:
                 lst_return.append("")
         return lst_return
-    
+
     def add_to_tree(self, tree):
         """This function is used to add an item to a
         gtk.TreeStore, usually when loading.  All
@@ -139,20 +139,20 @@ class Category(ItemBase):
                 child.add_to_tree(tree.treestore, insert_iter, tree.tree_columns)
         else:
             helper.show_error_dlg(_("Error appending category: %s" % self))
-            
+
     def clear(self):
         self.__m_children = []
-        
+
     def get_child_quotes(self):
         ret = []
         for child in self.__m_children:
             ret.extend(child.get_child_quotes())
         return ret
-    
+
     def update(self):
         for child in self.__m_children:
             child.update()
-    
+
 
 
 class Watchlist(ItemBase):
@@ -172,7 +172,7 @@ class Watchlist(ItemBase):
         """
         self.__m_children.append(item)
         self.empty = False
-        
+
     def get_child_quotes(self):
         """ returns all quotes in this watchlist, including those in children watchlists"""
         returnlist = []
@@ -217,7 +217,7 @@ class Watchlist(ItemBase):
             else:
                 lst_return.append("")
         return lst_return
-    
+
     def add_to_tree(self, tree, parent, columnList):
         """This function is used to add an item to a gtk.TreeStore, usually when loading.  All children will be added as well
         @param tree - gtk.TreeStore - The tree store that we will be adding to.
@@ -226,12 +226,12 @@ class Watchlist(ItemBase):
         Their type member should use used to determine the order of the returned list.
         """
         tree.append(parent, self.get_column_list(columnList))
-        
+
     def show(self, performance_tree, fundamentals_tree):
         #adding stocks to treeview
         for child in self.__m_children:
             child.add_to_tree(performance_tree, fundamentals_tree)
-    
+
     def get_performance(self):
         if self.empty:
             return ['',None]
@@ -245,13 +245,13 @@ class Watchlist(ItemBase):
                 <span size="small">$ '+ str(round(change,2)) +'</span>\n \
                 <span size="small">% '+ str(round(percent,2)) +'</span>',
                 config.get_arrow_type(percent, True)]
-                    
+
     def get_overall_performance(self):
         if self.empty:
             return ['',None]
         start = 0
         current_sum = 0
-        for child in self.__m_children: 
+        for child in self.__m_children:
             current_sum += child.stock.currentPrice
             start += child.stock.startPrice
         change = current_sum - start
@@ -260,11 +260,12 @@ class Watchlist(ItemBase):
                 <span size="small">$ '+ str(round(change,2)) +'</span>\n \
                 <span size="small">% '+ str(round(percent,2)) +'</span>',
                 config.get_arrow_type(percent, True)]
-    
+
+
     def update(self):
         for child in self.__m_children:
             child.update()
-            
+
 
 class Portfolio(ItemBase):
     def __init__(self, name, description = ""):
@@ -277,7 +278,7 @@ class Portfolio(ItemBase):
         self.empty = True
         #children
         self.__m_children = []
-    
+
     def add_child(self, item):
         """Add a child to the watchlist.
         @param item - Either a watchlist or a quote. This will be a child of the watchlist.
@@ -285,7 +286,7 @@ class Portfolio(ItemBase):
         self.__m_children.append(item)
         self.buy_sum += item.buy_sum
         self.empty = False
-    
+
     def get_child_quotes(self):
         """ returns all quotes in this watchlist, including those in children watchlists"""
         returnlist = []
@@ -331,7 +332,7 @@ class Portfolio(ItemBase):
             else:
                 lst_return.append("")
         return lst_return
-    
+
     def add_to_tree(self, tree, parent, columnList):
         """This function is used to add an item to a gtk.TreeStore, usually when loading.  All children will be added as well
         @param tree - gtk.TreeStore - The tree store that we will be adding to.
@@ -340,12 +341,12 @@ class Portfolio(ItemBase):
         Their type member should use used to determine the order of the returned list.
         """
         tree.append(parent, self.get_column_list(columnList))
-        
+
     def show(self, performance_tree, fundamentals_tree, transactions_tree):
         #adding positions to treeview...
         for child in self.__m_children:
             child.add_to_tree(performance_tree, fundamentals_tree, transactions_tree)
-            
+
     def get_performance(self):
         if self.empty:
             return ['',None]
@@ -359,13 +360,13 @@ class Portfolio(ItemBase):
                 <span size="small">$ '+ str(round(change,2)) +'</span>\n \
                 <span size="small">% '+ str(round(percent,2)) +'</span>',
                 config.get_arrow_type(percent, True)]
-                    
+
     def get_overall_performance(self):
         if self.empty:
             return ['',None]
         start = 0
         current_sum = 0
-        for child in self.__m_children: 
+        for child in self.__m_children:
             current_sum += child.stock.currentPrice * child.quantity
             start += child.quantity * child.stock.startPrice
         change = current_sum - start
@@ -374,7 +375,7 @@ class Portfolio(ItemBase):
                 <span size="small">$ '+ str(round(change,2)) +'</span>\n \
                 <span size="small">% '+ str(round(percent,2)) +'</span>',
                 config.get_arrow_type(percent, True)]
-    
+
     def update(self):
         for child in self.__m_children:
             child.update()
@@ -396,20 +397,20 @@ class WatchlistItem(ItemBase):
         @returns list - A list for the watchlistTree.
         """
         lst_return = []
-        # Loop through the columns and create the return list      
+        # Loop through the columns and create the return list
         for item_column in columnList:
             if (item_column.ID == treeviews.COL_OBJECT):
                 lst_return.append(self)
             elif (item_column.ID == treeviews.COL_OBJECT_TYPE):
                 lst_return.append(self.type)
             elif (item_column.ID == treeviews.COL_NAME):
-                lst_return.append(self.stock.get_name_text())  
+                lst_return.append(self.stock.get_name_text())
             elif (item_column.ID == treeviews.COL_CURRENTPRICE):
-                lst_return.append(self.stock.get_currentprice_text())    
+                lst_return.append(self.stock.get_currentprice_text())
             elif (item_column.ID == treeviews.COL_CURRENTCHANGE):
                 lst_return.append(self.stock.get_currentchange_text())
             elif (item_column.ID == treeviews.COL_PRICE):
-                lst_return.append(self.stock.get_price_text())    
+                lst_return.append(self.stock.get_price_text())
             elif (item_column.ID == treeviews.COL_CHANGE):
                 lst_return.append(self.stock.get_change_text())
             elif (item_column.ID == treeviews.COL_COMMENT):
@@ -424,7 +425,7 @@ class WatchlistItem(ItemBase):
                 lst_return.append("")
         #return the list
         return lst_return
-        
+
     def get_fundamentals_column_list(self, columnList):
         """This function is used to get the display list
         for the watchlistTree. The watchlistCOlumnList controls the
@@ -434,32 +435,32 @@ class WatchlistItem(ItemBase):
         @returns list - A list for the watchlistTree.
         """
         lst_return = []
-        # Loop through the columns and create the return list  
+        # Loop through the columns and create the return list
         for item_column in columnList:
             if (item_column.ID == treeviews.COL_OBJECT):
                 lst_return.append(self)
             elif (item_column.ID == treeviews.COL_OBJECT_TYPE):
                 lst_return.append(self.type)
             elif (item_column.ID == treeviews.COL_NAME):
-                lst_return.append(self.stock.get_name_text())  
+                lst_return.append(self.stock.get_name_text())
             elif (item_column.ID == treeviews.COL_MKTCAP):
-                lst_return.append(str(self.stock.mkt_cap))   
+                lst_return.append(str(self.stock.mkt_cap))
             elif (item_column.ID == treeviews.COL_AVG_VOL):
-                lst_return.append(str(self.stock.avg_vol))  
+                lst_return.append(str(self.stock.avg_vol))
             elif (item_column.ID == treeviews.COL_52WEEK_HIGH):
-                lst_return.append(str(self.stock.fiftytwoweek_high))  
+                lst_return.append(str(self.stock.fiftytwoweek_high))
             elif (item_column.ID == treeviews.COL_52WEEK_LOW):
-                lst_return.append(str(self.stock.fiftytwoweek_low))  
+                lst_return.append(str(self.stock.fiftytwoweek_low))
             elif (item_column.ID == treeviews.COL_EPS):
-                lst_return.append(str(self.stock.eps))  
+                lst_return.append(str(self.stock.eps))
             elif (item_column.ID == treeviews.COL_PE):
-                lst_return.append(str(self.stock.pe))  
+                lst_return.append(str(self.stock.pe))
             else:
                 helper.show_error_dlg(_("Error unknown column ID: %d" % item_column.ID))
                 lst_return.append("")
         #return the list
         return lst_return
-        
+
     def add_to_tree(self, performance_tree, fundamentals_tree):
         performance_tree.treestore.append(None, self.get_performance_column_list(performance_tree.tree_columns))
         fundamentals_tree.treestore.append(None, self.get_fundamentals_column_list(fundamentals_tree.tree_columns))
@@ -479,10 +480,10 @@ class PortfolioItem(WatchlistItem):
         self.buy_sum = self.stock.startPrice * self.quantity
         #init base
         ItemBase.__init__(self, PORTFOLIOITEM)
-    
+
     def update(self):
         self.stock.update()
-    
+
     def add_to_tree(self, performance_tree, fundamentals_tree, transactions_tree):
         WatchlistItem.add_to_tree(self, performance_tree, fundamentals_tree)
         #TODO
@@ -493,7 +494,7 @@ class PortfolioItem(WatchlistItem):
         text = ""
         text = text + str(round(self.buy_sum, 2)) +"\n<span foreground=\""+ color +"\"><small>" +str(round(self.transactionCosts, 2)) + "</small></span>"
         return text
-    
+
     def get_change_text(self):
         color = '#606060'
         text = ""
@@ -501,7 +502,7 @@ class PortfolioItem(WatchlistItem):
                 <span foreground=\""+ color +"\"><small>" +str(self.stock.change*self.quantity) + "</small></span> \n \
                 <span foreground=\""+ color +"\"><small>" +str(self.stock.currentPrice*self.quantity) + "</small></span>"
         return text
-        
+
     def get_currentchange_text(self):
         color = '#606060'
         text = ""
@@ -509,11 +510,11 @@ class PortfolioItem(WatchlistItem):
                 <span foreground=\""+ color +"\"><small>" +str(round(self.stock.currentPercent, 2)) + "</small></span> \n \
                 <span foreground=\""+ color +"\"><small>" +str(self.stock.currentChange*self.quantity) + "</small></span>"
         return text
-        
+
     def get_transactions_column_list(self, columnList):
         lst_return = []
         return lst_return
-    
+
     def get_performance_column_list(self, columnList):
         """This function is used to get the display list
         for the watchlistTree. The watchlistCOlumnList controls the
@@ -523,7 +524,7 @@ class PortfolioItem(WatchlistItem):
         @returns list - A list for the watchlistTree.
         """
         lst_return = []
-        # Loop through the columns and create the return list   
+        # Loop through the columns and create the return list
         for item_column in columnList:
             if (item_column.ID == treeviews.COL_OBJECT):
                 lst_return.append(self)
@@ -538,7 +539,7 @@ class PortfolioItem(WatchlistItem):
             elif (item_column.ID == treeviews.COL_BUYSUM):
                 lst_return.append(self.get_buy_sum_text())
             elif (item_column.ID == treeviews.COL_LASTTRADE):
-                lst_return.append(self.stock.get_currentprice_text())    
+                lst_return.append(self.stock.get_currentprice_text())
             elif (item_column.ID == treeviews.COL_PF_CHANGE):
                 lst_return.append(self.get_currentchange_text())
             elif (item_column.ID == treeviews.COL_PF_OVERALL):
@@ -554,5 +555,5 @@ class PortfolioItem(WatchlistItem):
                 lst_return.append("")
         #return the list
         return lst_return
-        
-        
+
+
