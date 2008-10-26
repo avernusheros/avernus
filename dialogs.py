@@ -258,8 +258,8 @@ class BuyDialog(QuoteDialog):
         self.numShares = self.wTree.get_widget("enterBuyNumShares")
         self.enterBuyPrice = self.wTree.get_widget("enterBuyPrice")
         self.buyDate = self.wTree.get_widget("buyDate")
-        self.transactioncosts = self.wTree.get_widget("buyTransactionCosts")
         self.buy_position_name = self.wTree.get_widget("buy_position_name")
+        self.transactioncosts = self.wTree.get_widget("buyTransactionCosts")
         #update dialog
         self.update_dialog_from_object()
         self.autocomplete()
@@ -272,7 +272,6 @@ class BuyDialog(QuoteDialog):
     def update_stock_info(self):
         #if a stock is selected
         if self.stock_id:
-            print "setting stock info.. "
             info = self.db.get_stock_name(self.stock_id) #name, isin, exchange
             color = '#606060'
             text = info[0] +"\n \
@@ -311,8 +310,3 @@ class BuyDialog(QuoteDialog):
             self.position.buyDate  = date
             self.position.transactionCosts = transactionCosts
         self.position.update()
-
-
-
-
-

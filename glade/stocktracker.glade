@@ -936,6 +936,15 @@ You should have received a copy of the GNU General Public License along with XXX
           </packing>
         </child>
         <child>
+          <widget class="GtkHSeparator" id="hseparator3">
+            <property name="visible">True</property>
+          </widget>
+          <packing>
+            <property name="expand">False</property>
+            <property name="position">2</property>
+          </packing>
+        </child>
+        <child>
           <widget class="GtkHBox" id="header1">
             <property name="height_request">75</property>
             <property name="visible">True</property>
@@ -993,80 +1002,102 @@ You should have received a copy of the GNU General Public License along with XXX
           </widget>
           <packing>
             <property name="expand">False</property>
-            <property name="position">2</property>
-          </packing>
-        </child>
-        <child>
-          <widget class="GtkHBox" id="hbox1">
-            <property name="visible">True</property>
-            <child>
-              <widget class="GtkLabel" id="label6">
-                <property name="width_request">30</property>
-                <property name="visible">True</property>
-                <property name="label" translatable="yes">Date:</property>
-              </widget>
-            </child>
-            <child>
-              <widget class="GtkEntry" id="entry1">
-                <property name="visible">True</property>
-                <property name="can_focus">True</property>
-              </widget>
-              <packing>
-                <property name="position">1</property>
-              </packing>
-            </child>
-          </widget>
-          <packing>
             <property name="position">3</property>
           </packing>
         </child>
         <child>
-          <widget class="GtkHBox" id="hbox2">
+          <widget class="GtkHSeparator" id="hseparator2">
+            <property name="visible">True</property>
+          </widget>
+          <packing>
+            <property name="expand">False</property>
+            <property name="position">4</property>
+          </packing>
+        </child>
+        <child>
+          <widget class="GtkHBox" id="hbox5">
             <property name="visible">True</property>
             <child>
-              <widget class="GtkLabel" id="label7">
-                <property name="width_request">30</property>
+              <widget class="GtkVBox" id="vbox5">
                 <property name="visible">True</property>
-                <property name="label" translatable="yes">Quantity:</property>
+                <child>
+                  <widget class="GtkLabel" id="label7">
+                    <property name="width_request">30</property>
+                    <property name="visible">True</property>
+                    <property name="label" translatable="yes">Quantity:</property>
+                  </widget>
+                </child>
+                <child>
+                  <widget class="GtkLabel" id="label8">
+                    <property name="width_request">30</property>
+                    <property name="visible">True</property>
+                    <property name="label" translatable="yes">Price:</property>
+                  </widget>
+                  <packing>
+                    <property name="position">1</property>
+                  </packing>
+                </child>
+                <child>
+                  <widget class="GtkLabel" id="label9">
+                    <property name="width_request">30</property>
+                    <property name="visible">True</property>
+                    <property name="label" translatable="yes">Transactions costs:</property>
+                  </widget>
+                  <packing>
+                    <property name="position">2</property>
+                  </packing>
+                </child>
               </widget>
             </child>
             <child>
-              <widget class="GtkSpinButton" id="spinbutton1">
+              <widget class="GtkVBox" id="vbox6">
                 <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="overwrite_mode">True</property>
-                <property name="adjustment">1 1 100000000 1 10 10</property>
-                <property name="numeric">True</property>
+                <child>
+                  <widget class="GtkSpinButton" id="enterBuyNumShares">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="overwrite_mode">True</property>
+                    <property name="adjustment">1 1 100000000 1 10 10</property>
+                    <property name="numeric">True</property>
+                  </widget>
+                </child>
+                <child>
+                  <widget class="GtkSpinButton" id="enterBuyPrice">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="adjustment">1 0 1000000 0.01 10 10</property>
+                    <property name="climb_rate">10</property>
+                    <property name="numeric">True</property>
+                  </widget>
+                  <packing>
+                    <property name="position">1</property>
+                  </packing>
+                </child>
+                <child>
+                  <widget class="GtkSpinButton" id="buyTransactionCosts">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="adjustment">0 0 100000 0.01 10 10</property>
+                  </widget>
+                  <packing>
+                    <property name="position">2</property>
+                  </packing>
+                </child>
               </widget>
               <packing>
                 <property name="position">1</property>
               </packing>
             </child>
-          </widget>
-          <packing>
-            <property name="position">4</property>
-          </packing>
-        </child>
-        <child>
-          <widget class="GtkHBox" id="hbox3">
-            <property name="visible">True</property>
             <child>
-              <widget class="GtkLabel" id="label8">
-                <property name="width_request">30</property>
-                <property name="visible">True</property>
-                <property name="label" translatable="yes">Price:</property>
-              </widget>
-            </child>
-            <child>
-              <widget class="GtkSpinButton" id="spinbutton2">
+              <widget class="GtkCalendar" id="buyDate">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
-                <property name="adjustment">1 0 1000000 0.01 10 10</property>
-                <property name="climb_rate">10</property>
-                <property name="numeric">True</property>
+                <property name="year">2008</property>
+                <property name="month">9</property>
+                <property name="day">26</property>
               </widget>
               <packing>
-                <property name="position">1</property>
+                <property name="position">2</property>
               </packing>
             </child>
           </widget>
@@ -1075,46 +1106,12 @@ You should have received a copy of the GNU General Public License along with XXX
           </packing>
         </child>
         <child>
-          <widget class="GtkHBox" id="hbox4">
-            <property name="visible">True</property>
-            <child>
-              <widget class="GtkLabel" id="label9">
-                <property name="width_request">30</property>
-                <property name="visible">True</property>
-                <property name="label" translatable="yes">Transactions costs:</property>
-              </widget>
-            </child>
-            <child>
-              <widget class="GtkSpinButton" id="spinbutton3">
-                <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="adjustment">0 0 100000 0.01 10 10</property>
-              </widget>
-              <packing>
-                <property name="position">1</property>
-              </packing>
-            </child>
-          </widget>
-          <packing>
-            <property name="position">6</property>
-          </packing>
-        </child>
-        <child>
           <widget class="GtkHSeparator" id="hseparator1">
             <property name="visible">True</property>
           </widget>
           <packing>
             <property name="expand">False</property>
-            <property name="position">7</property>
-          </packing>
-        </child>
-        <child>
-          <widget class="GtkLabel" id="buySum">
-            <property name="visible">True</property>
-            <property name="justify">GTK_JUSTIFY_RIGHT</property>
-          </widget>
-          <packing>
-            <property name="position">8</property>
+            <property name="position">6</property>
           </packing>
         </child>
         <child>
@@ -1155,7 +1152,7 @@ You should have received a copy of the GNU General Public License along with XXX
             </child>
           </widget>
           <packing>
-            <property name="position">9</property>
+            <property name="position">7</property>
           </packing>
         </child>
         <child internal-child="action_area">
@@ -1168,7 +1165,7 @@ You should have received a copy of the GNU General Public License along with XXX
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
                 <property name="label" translatable="yes">Buy</property>
-                <property name="response_id">0</property>
+                <property name="response_id">-5</property>
               </widget>
             </child>
             <child>
