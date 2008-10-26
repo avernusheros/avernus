@@ -47,7 +47,7 @@ class StockTracker(object):
         #Translation stuff
         #self.initialize_translation()
         #Set the Glade file
-        self.gladefile = os.path.join(self.local_path, "glade/stocktracker.glade")
+        self.gladefile = os.path.join(config.PATH, "share/glade/stocktracker.glade")
         #Get the Main Widget Tree
         self.mainWindow = gtk.glade.XML(self.gladefile, "mainWindow")
         #Connect with main window

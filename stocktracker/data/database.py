@@ -1,6 +1,6 @@
 import sqlite3, os, csv
+path = os.path.join(os.path.expanduser("~"), '.stocktracker/data.db')
 
-path = 'data/data.db'
 instance = None
 
 def get_db():
@@ -90,8 +90,8 @@ class Database():
 
 
 if __name__ == "__main__":
-    path = 'data.db'
-    os.remove(path)
+    if os.path.exists(path):
+        os.remove(path)
     d = Database(path)
     d.connect()
     d.create_tables()
