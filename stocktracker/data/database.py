@@ -55,7 +55,7 @@ class Database():
         #transactions
         self.con.execute('''CREATE TABLE transactions (id INTEGER PRIMARY KEY AUTOINCREMENT
                         , type integer, datetime timestamp, quantity integer
-                                    ,price real, charge real)''')
+                                    , transaction_costs real)''')
         #exchanges
         self.con.execute('''CREATE TABLE exchanges (mic text PRIMARY KEY
                                  ,name text, countrycode text)''')
@@ -63,7 +63,17 @@ class Database():
         self.con.execute('''CREATE TABLE quotations (id INTEGER PRIMARY KEY AUTOINCREMENT, 
                                isin text, mic text,datetime timestamp
                                  ,price real)''')
-
+        #portfolios
+        self.con.execute('''CREATE TABLE portfolios (id INTEGER PRIMARY KEY AUTOINCREMENT, 
+                               name text, comment text,balance real
+                                 ,type int)''')
+        #positions
+        self.con.execute('''CREATE TABLE positions (id INTEGER PRIMARY KEY AUTOINCREMENT, 
+                               porfolio_id integer, stock_id integer,
+                               comment text, buydate timestamp, quantity integer,
+                               buyprice real, type int, buysum real)''')                    
+                                 
+                                 
     def fill_exchanges_table(self):
         #MIC, NAME, COUNTRY_CODE
         f = open('exchanges.csv')

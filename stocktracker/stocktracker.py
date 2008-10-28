@@ -242,7 +242,7 @@ class StockTracker(object):
     def buy_position(self, portfolio):
         dialog = dialogs.BuyDialog(self.gladefile)
         if (dialog.run() == gtk.RESPONSE_OK):
-                dialog.position.update()
+                #dialog.position.update()
                 #Append to the tree
                 dialog.position.add_to_tree(self.portfolio_performance_tree, self.fundamentals_tree, self.transactions_tree)
                 #Add to the portfolio
