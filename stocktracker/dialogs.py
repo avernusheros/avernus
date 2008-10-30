@@ -3,11 +3,13 @@ try:
     import gtk
     import gtk.glade
     import items
+    import config, helper
     from data import *
 except ImportError, e:
-    print _T("Import error in watchlist:"), e
+    print _T("Import error in dialogs:"), e
     sys.exit(1)
 
+db = database.get_db()
 
 class Dialog(object):
     def __init__(self):
@@ -44,7 +46,7 @@ class Dialog(object):
             result = self.dialog.run()
             if (result==gtk.RESPONSE_OK):
                 #Save the date to the object becuase the use pressed ok.
-                self.save_data_to_object()
+                self.save_data_to_db()
                 break_out = True
                 #Validate here eventually
             else:
@@ -59,9 +61,9 @@ class WatchlistDialog(Dialog):
     @param item -  None to create a new 
                    watchlist object, or the object that you wish to edit.
     """
-    def __init__(self, glade_file, item = None):
+    def __init__(self, glade_file):
         self.glade_file = glade_file
-        self.item = item
+        self.item = {}
         #Get the widget tree
         self.wTree = gtk.glade.XML(self.glade_file, "watchlistDialog")
         #Connect with yourself
@@ -70,41 +72,16 @@ class WatchlistDialog(Dialog):
         #get the widgets from the dlg
         self.enterName = self.wTree.get_widget("enterName")
         self.enterDescription = self.wTree.get_widget("enterDescription")
-        #update dialog
-        self.update_dialog_from_object()
-        
-    def update_dialog_from_object(self):
-        """Used to update the settings on the dialog"""
-        if (self.item):
-            #Name
-            self.enterName.set_text(self.item.name)
-            #Comment
-            self.set_description(self.item.description)
     
-    def save_data_to_object(self):
+    def save_data_to_db(self):
         """This function is used to read the data from the dialog
-        and then store it in the watchlist.quote object.
+        and then store it in the db.
         """
-        if (self.item == None):
-            self.item = items.Watchlist(self.enterName.get_text(), self.get_description())
-        else:
-            self.item.name = self.enterName.get_text()
-            self.item.description = self.get_description()
-        
-    def get_description(self):
-        """This function gets the details from the TextView
-        @returns string - The text in the gtk.TextView
-        """
+        self.item['name'] = self.enterName.get_text()
+        self.item['type'] = config.WATCHLIST
         txtBuffer = self.enterDescription.get_buffer()
-        return txtBuffer.get_text(*txtBuffer.get_bounds())
-
-    def set_description(self, description):
-        """This function sets the text in the defails gtk.TextView
-        @param details - string - The text that will be
-        put into the gtk.TextView.
-        """
-        txtBuffer = self.enterDescription.get_buffer()
-        txtBuffer.set_text(description)
+        self.item['comment'] = txtBuffer.get_text(*txtBuffer.get_bounds())
+        self.item['id'] = db.add_portfolio(self.item['name'], self.item['comment'], 0.0,self.item['type'] )
     
  
 class QuoteDialog(Dialog):
@@ -114,14 +91,11 @@ class QuoteDialog(Dialog):
     want to edit an object initialize with the object that
     you want to edit."""
 
-    def __init__(self, glade_file, stock = None):
+    def __init__(self, glade_file):
         """Initialize the quote dialog.
         @param glade_file - string - the glade file for this dialog.
-        @param stock - watchlist.quote - None to create a new 
-                       watchlist.quote object, or the object that you wish to edit.
         """
         self.glade_file = glade_file
-        self.stock = stock
         #Get the widget tree
         self.wTree = gtk.glade.XML(self.glade_file, "quoteDialog")
         #Connect with yourself
@@ -130,10 +104,11 @@ class QuoteDialog(Dialog):
         #get the widgets from the dlg
         self.enterSymbol = self.wTree.get_widget("enterSymbol")
         self.enterComment = self.wTree.get_widget("enterComment")
+        self.header_name = self.wTree.get_widget("add_position_name")
+        self.header_performance = self.wTree.get_widget("add_position_performance")
+        self.header_icon = self.wTree.get_widget("add_postion_icon")
         self.stock_id = None
         self.autocomplete()
-        #update dialog
-        self.update_dialog_from_object()
         
     def autocomplete(self):
         #get db
@@ -168,25 +143,46 @@ class QuoteDialog(Dialog):
         
     def match_cb(self, completion, model, iter):
         self.stock_id = model[iter][0]
-        print self.stock_id, 'was selected'
+        self.update_stock_info()
         return
+    
+    def update_stock_info(self):
+        #if a stock is selected
+        if self.stock_id:
+            item = self.db.get_stock_name(self.stock_id) #name, isin, exchange
+            data = helper.update_stock(self.stock_id)
+            color = '#606060'
+            text = '<span size="medium"><b>' + item['name'] + '</b></span>\n\
+                    <span size="small">' + item['isin'] + '</span>\n\
+                    <span size="small">' + item['exchange'] + '</span>\n\
+                    <span size="small">Volume: ' + data['volume'] + '</span>'
+            self.header_name.set_markup(text)
+            text = '<span size="medium"><b>' + data['price'] + '</b></span>\n<span size="small">' + data['change'] + '</span>\n<span size="small">' + str(data['percent']) + '%</span>'
+            self.header_performance.set_markup(text)
+            self.header_icon.set_from_file(helper.get_arrow_type(float(data['percent'])))
+            self.header_icon.show()
+        else:
+            self.header_icon.hide()
 
-    def update_dialog_from_object(self):
-        """Used to update the settings on the dialog"""
-        if self.stock:
-            #Symbol
-            #self.enterSymbol.set_text(self.quote.symbol)
-            #Comment
-            self.set_comment(self.stock.stock.comment)
-
-    def save_data_to_object(self):
+    def save_data_to_db(self):
         """This function is used to read the data from the dialog
         and then store it in the watchlist.quote object.
         """
-        if not self.stock:
-            self.stock = items.WatchlistItem(self.stock_id, self.get_comment())
-        else:
-            self.stock.comment = self.get_comment()
+        #get data from widgets
+        self.item['stock_id']         = self.stock_id
+        self.item['comment']          = self.get_comment()
+        self.item['quantity']         = 1
+        self.item['price']            = self.enterBuyPrice.get_text()
+        self.item['date']             = self.buyDate.get_date()
+        self.item['transactioncosts'] = 0.0
+        self.item['type']             = config.WATCHLISTITEM
+        self.item['buy_sum']          = float(self.item['price'])
+                                        
+        #insert into positions table
+        self.item['id'] = db.add_position(self.item['portfolio_id']
+                , self.item['stock_id'], self.item['comment']
+                , self.item['date'], self.item['quantity']
+                , self.item['price'], self.item['type'], self.item['buy_sum'])
 
     def get_comment(self):
         """This function gets the details from the TextView
@@ -204,15 +200,12 @@ class QuoteDialog(Dialog):
         txtBuffer.set_text(comment)
         
 
-class PortfolioDialog(WatchlistDialog):
+class PortfolioDialog(Dialog):
     """Initialize the portfolio dialog.
     @param glade_file - string - the glade file for this dialog.
-    @param item - None to create a new 
-                   porfolio object, or the object that you wish to edit.
     """
-    def __init__(self, glade_file, item = None):
+    def __init__(self, glade_file):
         self.glade_file = glade_file
-        self.item = item
         #Get the widget tree
         self.wTree = gtk.glade.XML(self.glade_file, "portfolioDialog")
         #Connect with yourself
@@ -221,32 +214,32 @@ class PortfolioDialog(WatchlistDialog):
         #get the widgets from the dlg
         self.enterName = self.wTree.get_widget("enterPortfolioName")
         self.enterDescription = self.wTree.get_widget("enterPortfolioDescription")
-        #update dialog
-        self.update_dialog_from_object()
+        self.item = {}
     
-    def save_data_to_object(self):
+    def save_data_to_db(self):
         """This function is used to read the data from the dialog
-        and then store it in the watchlist.quote object.
+        and then store it in the db.
         """
-        if (self.item == None):
-            self.item = items.Portfolio(self.enterName.get_text(), self.get_description())
-        else:
-            self.item.name = self.enterName.get_text()
-            self.item.description = self.get_description()
-     
+        self.item['name'] = self.enterName.get_text()
+        self.item['type'] = config.PORTFOLIO
+        txtBuffer = self.enterDescription.get_buffer()
+        self.item['comment'] = txtBuffer.get_text(*txtBuffer.get_bounds())
+        self.item['id'] = db.add_portfolio(self.item['name'], self.item['comment'], 0.0,self.item['type'] )
+  
         
 class BuyDialog(QuoteDialog):
     """
     stock buying dialog
     """
-    def __init__(self, glade_file, position = None):
+    def __init__(self, glade_file, portfolio_id):
         """Initialize the buy dialog.
         @param glade_file - string - the glade file for this dialog.
         @param quote - watchlist.quote - None to create a new 
                        watchlist.quote object, or the object that you wish to edit.
         """
         self.glade_file = glade_file
-        self.position = position
+        self.item = {}
+        self.item['portfolio_id'] = portfolio_id
         #Get the widget tree
         self.wTree = gtk.glade.XML(self.glade_file, "buyDialog")
         #Connect with yourself
@@ -258,55 +251,35 @@ class BuyDialog(QuoteDialog):
         self.numShares = self.wTree.get_widget("enterBuyNumShares")
         self.enterBuyPrice = self.wTree.get_widget("enterBuyPrice")
         self.buyDate = self.wTree.get_widget("buyDate")
-        self.buy_position_name = self.wTree.get_widget("buy_position_name")
+        self.header_name = self.wTree.get_widget("buy_position_name")
+        self.header_performance = self.wTree.get_widget("buy_position_performance")
+        self.header_icon = self.wTree.get_widget("buy_postion_icon")
         self.transactioncosts = self.wTree.get_widget("buyTransactionCosts")
-        #update dialog
-        self.update_dialog_from_object()
         self.autocomplete()
     
-    def match_cb(self, completion, model, iter):
-        self.stock_id = model[iter][0]
-        self.update_stock_info()
-        return
-        
-    def update_stock_info(self):
-        #if a stock is selected
-        if self.stock_id:
-            info = self.db.get_stock_name(self.stock_id) #name, isin, exchange
-            color = '#606060'
-            text = info[0] +"\n \
-                <span foreground=\""+ color +"\"><small>" +info[1]+ "</small></span>\n \
-                 <span foreground=\""+ color +"\"><small>" +info[2]+ "</small></span>"
-            self.buy_position_name.set_markup(text)
-    
-    def update_dialog_from_object(self):
-        """Used to update the settings on the dialog"""
-        if (self.position):
-            #Symbol
-            #self.enterSymbol.set_text(self.quote.symbol)
-            #Comment
-            self.set_comment(self.position.stock.comment)
-
-    def save_data_to_object(self):
+    def save_data_to_db(self):
         """This function is used to read the data from the dialog
-        and then store it in the watchlist.quote object.
+        and then store it in the db.
         """
         #get data from widgets
-        stock_id           = self.stock_id
-        comment          = self.get_comment()
-        quantity         = self.numShares.get_text()
-        price            = self.enterBuyPrice.get_text()
-        date             = self.buyDate.get_date()
-        transactionCosts = self.transactioncosts.get_text()
-        #create new position    
-        if (self.position == None):
-            self.position = items.PortfolioItem(stock_id,quantity,price,date,transactionCosts,comment)
-        #or edit existing position
-        else:
-            self.position.symbol   = stock_id
-            self.position.comment  = comment
-            self.position.quantity = quantity
-            self.position.buyPrice = price
-            self.position.buyDate  = date
-            self.position.transactionCosts = transactionCosts
-        self.position.update()
+        self.item['stock_id']         = self.stock_id
+        self.item['comment']          = self.get_comment()
+        self.item['quantity']         = self.numShares.get_text()
+        self.item['price']            = self.enterBuyPrice.get_text()
+        self.item['date']             = self.buyDate.get_date()
+        self.item['transactioncosts'] = self.transactioncosts.get_text()
+        self.item['type']             = config.PORTFOLIOITEM
+        self.item['buy_sum']          = (float(self.item['price'])  
+                                        * float(self.item['quantity'])
+                                        + float(self.item['transactioncosts']))
+        #insert into positions table
+        self.item['id'] = db.add_position(self.item['portfolio_id']
+                , self.item['stock_id'], self.item['comment']
+                , self.item['date'], self.item['quantity']
+                , self.item['price'], self.item['type'], self.item['buy_sum'])
+        #insert transaction into db
+        self.item['id'] = db.add_transaction(self.item['portfolio_id']
+                        , self.item['id'], config.TRANSACTION_BUY
+                        , self.item['date'], self.item['quantity']
+                        , self.item['transactioncosts'])
+                        

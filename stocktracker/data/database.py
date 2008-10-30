@@ -17,6 +17,7 @@ class Database():
     def connect(self):
         if not self.con:
             self.con = sqlite3.connect(self.path)
+            self.cur = self.con.cursor()
 
     def commit(self):
         self.con.commit()
@@ -24,11 +25,11 @@ class Database():
     def get_stock_list(self):
         self.connect()
         c = self.con.execute('''
-                         SELECT stocks.id, stockdata.isin, stockdata.name, exchanges.name
-                         FROM stocks, stockdata, exchanges
-                         WHERE stocks.isin = stockdata.isin
-                         AND stocks.mic = exchanges.mic
-                         ''')
+            SELECT stocks.id, stockdata.isin, stockdata.name, exchanges.name
+            FROM stocks, stockdata, exchanges
+            WHERE stocks.isin = stockdata.isin
+            AND stocks.mic = exchanges.mic
+            ''')
         ret = []
         for row in c:
             ret.append(list(row))
@@ -37,14 +38,36 @@ class Database():
     def get_stock_name(self, stock_id):
         self.connect()
         c = self.con.execute('''
-        SELECT stockdata.name, stocks.isin, exchanges.name 
-        FROM stockdata, stocks, exchanges
-        WHERE stocks.id = ? 
-        AND stocks.isin = stockdata.isin
-        AND stocks.mic = exchanges.mic
-        ''', (stock_id,) )
-        return c.fetchone()
+            SELECT stockdata.name, stocks.isin, exchanges.name 
+            FROM stockdata, stocks, exchanges
+            WHERE stocks.id = ? 
+            AND stocks.isin = stockdata.isin
+            AND stocks.mic = exchanges.mic
+            ''', (stock_id,) )
+        c = c.fetchone()
+        item = {}
+        item['name']     = c[0]
+        item['isin']     = c[1]
+        item['exchange'] = c[2]
+        return item
     
+    def get_portfolios(self):
+        self.connect()
+        c = self.con.execute('''
+            SELECT *
+            FROM portfolios
+            ''')
+        ret = []
+        for row in c.fetchall():
+            item = {}
+            item['id']      = row[0]
+            item['name']    = row[1]
+            item['comment'] = row[2]
+            item['balance'] = row[3]
+            item['type']    = row[4]
+            ret.append(item)
+        return ret
+              
     def create_tables(self):
         #stockdata
         self.con.execute('''CREATE TABLE stockdata (isin text PRIMARY KEY
@@ -53,16 +76,38 @@ class Database():
         self.con.execute('''CREATE TABLE stocks (id INTEGER PRIMARY KEY, 
                            isin text, mic text ,currency text, yahoo_symbol text)''')
         #transactions
-        self.con.execute('''CREATE TABLE transactions (id INTEGER PRIMARY KEY AUTOINCREMENT
-                        , type integer, datetime timestamp, quantity integer
-                                    , transaction_costs real)''')
+        self.con.execute('''
+            CREATE TABLE transactions (id INTEGER PRIMARY KEY AUTOINCREMENT
+                    , portfolio_id integer
+                    , position_id integer
+                    , type integer
+                    , datetime timestamp
+                    , quantity integer
+                    , transaction_costs real)
+                      ''')
         #exchanges
         self.con.execute('''CREATE TABLE exchanges (mic text PRIMARY KEY
                                  ,name text, countrycode text)''')
         #quotations
-        self.con.execute('''CREATE TABLE quotations (id INTEGER PRIMARY KEY AUTOINCREMENT, 
-                               isin text, mic text,datetime timestamp
-                                 ,price real)''')
+        self.con.execute('''
+            CREATE TABLE quotations (id INTEGER PRIMARY KEY AUTOINCREMENT
+                                    , stock_id integer
+                                    , price real
+                                    , change real
+                                    , volume integer
+                                    , avg_volume integer
+                                    , market_cap real
+                                    , book_value real
+                                    , ebitda real
+                                    , dividend_per_share real
+                                    , dividend_yield real
+                                    , eps real
+                                    , s52_week_high
+                                    , s52_week_low
+                                    , price_earnings_ratio
+                                    , datetime timestamp
+                                    )''')
+                                 
         #portfolios
         self.con.execute('''CREATE TABLE portfolios (id INTEGER PRIMARY KEY AUTOINCREMENT, 
                                name text, comment text,balance real
@@ -98,7 +143,110 @@ class Database():
         for i in input:
             self.con.execute('INSERT INTO stocks VALUES (null,?,?,?,?)', i)
 
+    def add_portfolio(self, name, comment, balance, type):
+        """ insert a portfolio into the database
+        @params name - string - name of the portfolio to be added
+        @params comment - string - comment
+        @params balance - float - cash balance
+        @params type - integer - type 
+        """
+        self.connect()
+        self.cur.execute('''INSERT INTO portfolios
+                            VALUES (null, ?,?,?,?)'''
+                            , (name, comment, balance, type))
+        self.commit()
+        return self.cur.lastrowid
+    
+    def remove_portfolio(self, portfolio_id):
+        """ remove portfolio and all corresponding database entries
+        @params portfolio_id - integer - portfolio id of the portfolio 
+        to be removed
+        """
+        self.con.execute('''
+            DELETE FROM portfolios
+            WHERE portfolios.id = ?
+            ''' , (portfolio_id,))  
+        self.con.execute('''
+            DELETE FROM positions
+            WHERE porfolio_id = ?
+            ''', (portfolio_id,))
+        self.con.execute('''
+            DELETE FROM transactions
+            WHERE portfolio_id = ?
+            ''', (portfolio_id,))
+        self.commit()
+    
+    def add_position(self, portfolio_id, stock_id, comment, buy_date, quantity, buy_price, type, buy_sum):
+        """adds a position to db
+        @params portfolio_id - integer - 
+        @params stock_id - integer - 
+        @params comment - string - 
+        @params buy_date - timestamp - 
+        @params quantity - integer - 
+        @params buy_price - float - 
+        @params type - integer - 
+        @params buy_sum - float - 
+        """
+        self.connect()
+        self.cur.execute('''INSERT INTO positions
+                            VALUES (null, ?,?,?,?,?,?,?,?)'''
+                            , (portfolio_id, stock_id, comment, buy_date
+                                ,quantity, buy_price, type, buy_sum))
+        self.commit()
+        return self.cur.lastrowid
+    
+    def remove_position(self, position_id):
+        self.connect()
+        self.con.execute('''
+            DELETE FROM positions
+            WHERE id = ?
+            ''', (position_id,))
+        self.con.execute('''
+            DELETE FROM transactions
+            WHERE postion_id = ?
+            ''', (position_id,))
+        self.commit()
+        
+    def add_transaction(self, portfolio_id, position_id, type, datetime
+                        , quantity, transaction_costs):
+        self.connect()
+        self.cur.execute('''
+            INSERT INTO transactions
+            VALUES (null, ?,?,?,?,?,?)'''
+            , (portfolio_id, position_id, type, datetime, quantity,
+                transaction_costs))                     
+        self.commit()
+        
+    def remove_transaction(self, id):
+         self.connect()   
+         self.con.execute('''
+            DELETE FROM transactions
+            WHERE id = ?
+            ''', (id,))
+         self.commit()
+    
+    def add_quotation(self, stock_id, price, change, volume, avg_volume
+                        , market_cap, book_value, ebitda
+                        , dividend_per_share, dividend_yield, eps
+                        , s52_week_high, s52_week_low, price_earnings_ratio
+                        , datetime):
+        self.connect()
+        self.cur.execute('''
+            INSERT INTO quotations
+            VALUES (null, ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'''
+            , (stock_id, price, change, volume, avg_volume
+                        , market_cap, book_value, ebitda
+                        , dividend_per_share, dividend_yield, eps
+                        , s52_week_high, s52_week_low, price_earnings_ratio
+                        , datetime))  
+        
+        self.commit()   
+        return self.cur.lastrowid 
+        
 
+        
+        
+        
 if __name__ == "__main__":
     if os.path.exists(path):
         os.remove(path)
@@ -111,5 +259,6 @@ if __name__ == "__main__":
     d.commit()
     
     print d.get_stock_list()
-    
+    print d.add_portfolio("bla", "na", 0, 1)
+    d.remove_portfolio(1)
     

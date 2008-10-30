@@ -1,6 +1,21 @@
 import os, sys
 import yahoo
 
+
+
+TRANSACTION_BUY = 0
+
+
+CATEGORY_P      = 0
+CATEGORY_W      =1
+WATCHLIST     = 2
+PORTFOLIO     = 3
+WATCHLISTITEM = 4
+PORTFOLIOITEM = 5
+
+
+
+
 #the used dada provider. should be changeable in future versions   
 DATA_PROVIDER = yahoo.Yahoo()
 
@@ -22,12 +37,3 @@ ARROWS_SMALL = { "0" : os.path.join(PATH,"share/pixmaps/south16.png"),
            "4" : os.path.join(PATH, "share/pixmaps/north16.png"),
            }
 
-def get_arrow_type(percent, large = False):
-    type = 0
-    for th in TRESHHOLDS:
-        if percent > th:
-            type += 1
-    if large:
-        return ARROWS_LARGE[str(type)]
-    else:
-        return ARROWS_SMALL[str(type)]

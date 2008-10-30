@@ -22,7 +22,6 @@ try:
     import locale
     import gettext
     import config
-    import file
     import items
     import helper
     import pango
@@ -34,8 +33,6 @@ try:
 except ImportError, e:
     print "Import error stocktracker cannot start:", e
     sys.exit(1)
-
-
 
 
 '''A simple python based portfolio manager'''
@@ -53,18 +50,18 @@ class StockTracker(object):
         #Connect with main window
         self.mainWindow.signal_autoconnect(self)
         #Initialize trees
-        self.performance_tree           = treeviews.PerformanceTree(self.mainWindow.get_widget('performanceTree'))
-        self.fundamentals_tree          = treeviews.FundamentalsTree(self.mainWindow.get_widget('fundamentalsTree'))
-        self.portfolio_performance_tree = treeviews.PortfolioPerformanceTree(self.mainWindow.get_widget('portfolioPerformanceTree'))
-        self.left_tree                  = treeviews.LeftTree(self.mainWindow.get_widget('leftTree'))
-        self.transactions_tree          = treeviews.TransactionsTree(self.mainWindow.get_widget('transactionsTree'))
-        #init file
-        self.file = file.File()        
+        self.wl_performance_tree = treeviews.PerformanceTreeWatchlist(self.mainWindow.get_widget('performanceTree'))
+        self.po_performance_tree = treeviews.PerformanceTreePortfolio(self.mainWindow.get_widget('portfolioPerformanceTree'))
+        self.left_tree = treeviews.LeftTree(self.mainWindow.get_widget('leftTree'))
+        self.fundamentals_tree = treeviews.FundamentalsTree(self.mainWindow.get_widget('fundamentalsTree'))
+        self.transactions_tree = treeviews.TransactionsTree(self.mainWindow.get_widget('transactionsTree'))
+   
         #init widgets
         self.initialize_widgets()
 
-        self.watchlists = items.Category('Watchlists', self.left_tree)
-        self.portfolios = items.Category('Portfolios', self.left_tree)
+        #self.watchlists = items.Category('Watchlists', self.left_tree)
+        #self.portfolios = items.Category('Portfolios', self.left_tree)
+        
         self.currentList = None
         
         #current selected item
@@ -72,6 +69,8 @@ class StockTracker(object):
         
         #init database
         self.initialize_db()
+        #reload
+        self.reload_from_data()
 
 
     #************************************************************
@@ -84,7 +83,7 @@ class StockTracker(object):
         """
         #Get the Main Window
         self.main_window = self.mainWindow.get_widget("mainWindow")
-        self.set_window_title_from_file(self.file.filename)
+        #self.set_window_title_from_file(self.file.filename)
         #Get the button widgets
         self.editButton = self.mainWindow.get_widget("editButton")
         self.removeButton = self.mainWindow.get_widget("removeButton")
@@ -104,19 +103,6 @@ class StockTracker(object):
         self.hide_portfolio()
     
     def initialize_db(self):
-        #path = os.path.expanduser("~")
-        #path = os.path.join(path, '.stocktracker/')
-        #if not os.path.exists(path):
-        #        os.mkdir(path)
-        #path = os.path.join(path, 'data.db')
-        #if not os.path.exists(path):
-        #    self.db_conn = sqlite3.connect(path)
-        #    # Create tables
-        #    self.db_conn.execute('''create table stocks (id text, name text, exchange text)''')
-        #    self.db_conn.execute('''create table transactions (id text
-        #    , type integer, datetime timestamp, quantity integer, price real, charge real)''')
-        #    #commit
-        #    self.db_conn.commit()
         self.db = database.get_db()
         self.db.connect()
 
@@ -135,15 +121,15 @@ class StockTracker(object):
         else:
             self.main_window.set_title(_("StockTracker - Untitled"))
         
-    def show_watchlist(self, item):
-        self.reload_watchlist(item)
-        self.currentList = item
+    def show_watchlist(self, id):
+        self.reload_watchlist(id)
+        #self.currentList = item
         self.addButton.set_sensitive(True)
         self.updateButton.set_sensitive(True)
         self.removeButton.set_sensitive(True)
         self.editButton.set_sensitive(True)
-        self.reload_header()
-        self.header.show()
+        #self.reload_header()
+        #self.header.show()
         for tab in self.watchlist_tabs:
             tab.show()
         
@@ -151,15 +137,15 @@ class StockTracker(object):
         for tab in self.watchlist_tabs:
             tab.hide()
             
-    def show_portfolio(self, item):
-        self.reload_portfolio(item)  
-        self.currentList = item
+    def show_portfolio(self, id):
+        self.reload_portfolio(id)  
+        #self.currentList = item
         self.addButton.set_sensitive(True)
         self.updateButton.set_sensitive(True)
         self.removeButton.set_sensitive(True)
         self.editButton.set_sensitive(True)
-        self.reload_header()
-        self.header.show()
+        #self.reload_header()
+        #self.header.show()
         for tab in self.portfolio_tabs:
             tab.show()
              
@@ -204,13 +190,15 @@ class StockTracker(object):
                         , object_iter
                         , self.portfolio_performance_tree.tree_columns)
                         
-    def reload_watchlist(self, watchlist):
-        watchlist.show(self.performance_tree, self.fundamentals_tree)
+    def reload_watchlist(self, id):
+        pass
+        #watchlist.show(self.performance_tree, self.fundamentals_tree)
 
     def reload_portfolio(self, portfolio):
-        portfolio.show(self.portfolio_performance_tree
-                     , self.fundamentals_tree
-                     , self.transactions_tree)
+        pass    
+        #portfolio.show(self.portfolio_performance_tree
+         #            , self.fundamentals_tree
+          #           , self.transactions_tree)
 
     def reload_header(self):
         name            = self.mainWindow.get_widget("header_name")
@@ -227,58 +215,63 @@ class StockTracker(object):
         overall.set_label(oall[0])
         #setting icons
         performance_img.set_from_file(perf[1])
-        overall_img .set_from_file(oall[1])
+        overall_img.set_from_file(oall[1])
 
-    def add_quote(self, watchlist):
+    def add_watchlistitem(self, watchlist_id):
         dialog = dialogs.QuoteDialog(self.gladefile)
         if (dialog.run() == gtk.RESPONSE_OK):
-                dialog.stock.update()
+            pass
+                #dialog.stock.update()
                 #Append to the tree
-                dialog.stock.add_to_tree(self.performance_tree, self.fundamentals_tree)
+                #dialog.stock.add_to_tree(self.performance_tree, self.fundamentals_tree)
                 #Add to the Watchlist
-                watchlist.add_child(dialog.stock)
-        self.reload_header()
+                #watchlist.add_child(dialog.stock)
+                         
+                #self, portfolio_id, stock_id, comment, buy_date, quantity, buy_price, type, buy_sum)
+        #self.reload_header()
     
-    def buy_position(self, portfolio):
-        dialog = dialogs.BuyDialog(self.gladefile)
+    def buy_position(self, portfolio_id):
+        dialog = dialogs.BuyDialog(self.gladefile, portfolio_id)
         if (dialog.run() == gtk.RESPONSE_OK):
+            pass
                 #dialog.position.update()
                 #Append to the tree
-                dialog.position.add_to_tree(self.portfolio_performance_tree, self.fundamentals_tree, self.transactions_tree)
+                #dialog.position.add_to_tree(self.portfolio_performance_tree, self.fundamentals_tree, self.transactions_tree)
                 #Add to the portfolio
-                portfolio.add_child(dialog.position)
-        self.reload_header()
+                #portfolio.add_child(dialog.position)
+        #self.reload_header()
     
-    def add_watchlist(self, selection_iter):
+    def add_watchlist(self):
         dialog = dialogs.WatchlistDialog(self.gladefile)
         if (dialog.run() == gtk.RESPONSE_OK):
                 #Append to the tree
-                dialog.item.add_to_tree(self.left_tree.treestore
-                    , selection_iter
-                    , self.left_tree.tree_columns)
-                self.watchlists.add_child(dialog.item)
+                self.left_tree.insert_after(None, dialog.item)
+    
+    def on_remove_watchlist():
+        pass
+        
                 
-    def add_portfolio(self, selection_iter):
+    def add_portfolio(self):
         dialog = dialogs.PortfolioDialog(self.gladefile)
         if (dialog.run() == gtk.RESPONSE_OK):
                 #Append to the tree
-                dialog.item.add_to_tree(self.left_tree.treestore
-                    , selection_iter
-                    , self.left_tree.tree_columns)
-                self.portfolios.add_child(dialog.item)
+                self.left_tree.insert_after(None, dialog.item)
                 
     def reload_from_data(self):
         """Called when we want to reset everything based
         on internal data.  Probably called when a file has been loaded."""
-        self.performance_tree.treestore.clear()
-        self.left_tree.treestore.clear()
-        self.fundamentals_tree.treestore.clear()
-        self.transactions_tree.treestore.clear()
-        self.portfolio_performance_tree.treestore.clear()
-        self.watchlists.add_to_tree(self.left_tree)
-        self.portfolios.add_to_tree(self.left_tree)
-
-
+        #self.performance_tree.treestore.clear()
+        #self.left_tree.treestore.clear()
+        #self.fundamentals_tree.treestore.clear()
+        #self.transactions_tree.treestore.clear()
+        #self.portfolio_performance_tree.treestore.clear()
+        #self.watchlists.add_to_tree(self.left_tree)
+        #self.portfolios.add_to_tree(self.left_tree)
+        items = self.db.get_portfolios()
+        for item in items:
+            self.left_tree.insert_after(None, item)
+            
+        
     #************************************************************
     #* Signal Handlers
     #************************************************************
@@ -286,12 +279,6 @@ class StockTracker(object):
     def on_mainWindow_destroy(self, widget):
         """Called when the application is going to quit"""
         gtk.main_quit()
-        
-    def on_add_quote(self, widget):
-        pass
-    
-    def on_add_watchlist(self, widget):
-        pass
         
     def on_about(self, widget):
         #load the dialog from the glade file
@@ -301,18 +288,17 @@ class StockTracker(object):
         dlg.run()
 
     def on_add_button(self, widget):
-        item, model, selection_iter = self.selected_item
-        if item:
-            if (item.type == items.CATEGORY):
-                if (item.name == "Watchlists"):
-                    self.add_watchlist(selection_iter)
-                elif (item.name == "Portfolios"):
-                    self.add_portfolio(selection_iter)
-            elif (item.type == items.WATCHLIST):
-                self.add_quote(item)
-            elif (item.type == items.PORTFOLIO):
-                self.buy_position(item)
-            elif (item.type == items.PORTFOLIOITEM or item.type == items.WATCHLISTITEM):
+        type, id, model, selection_iter = self.selected_item
+        if self.selected_item:
+            if (type == config.CATEGORY_W):
+                self.add_watchlist()
+            elif (type == config.CATEGORY_P):
+                self.add_portfolio()
+            elif (type == config.WATCHLIST):
+                self.add_watchlistitem(id)
+            elif (type == config.PORTFOLIO):
+                self.buy_position(id)
+            elif (type == config.PORTFOLIOITEM or type == config.WATCHLISTITEM):
                 self.add_quote(self.currentList)
     
     def on_treeview_cursor_changed(self, widget):
@@ -323,20 +309,21 @@ class StockTracker(object):
         model, selection_iter = selection.get_selected()
         if (selection_iter and model):
             #Something is selected so get the object
-            item = model.get_value(selection_iter, 0)
-        self.selected_item = [item, model, selection_iter]
+            type = model.get_value(selection_iter, 0)
+            id = model.get_value(selection_iter, 1)
+            self.selected_item = [type, id, model, selection_iter]
     
     def on_leftTree_cursor_changed(self, widget):
         self.on_treeview_cursor_changed(widget)
-        model, selection_iter, item = self.left_tree.get_selected_object()
-        self.performance_tree.treestore.clear()
-        self.fundamentals_tree.treestore.clear()
-        self.transactions_tree.treestore.clear()
-        self.portfolio_performance_tree.treestore.clear()
-        if not (item == None):
+        type, id, model, selection_iter = self.selected_item
+        #self.performance_tree.treestore.clear()
+        #self.fundamentals_tree.treestore.clear()
+        #self.transactions_tree.treestore.clear()
+        #self.portfolio_performance_tree.treestore.clear()
+        if not (self.selected_item == None):
             #category selected
-            if (item.type == items.CATEGORY):
-                self.currentList = None
+            if type == config.CATEGORY_W or type == config.CATEGORY_P:
+                #self.currentList = None
                 self.addButton.set_sensitive(True)
                 self.updateButton.set_sensitive(True)
                 self.removeButton.set_sensitive(False)
@@ -344,12 +331,12 @@ class StockTracker(object):
                 self.header.hide()
                 self.hide_portfolio()
                 self.hide_watchlist()
-            elif (item.type == items.WATCHLIST):
+            elif type == config.WATCHLIST:
                 self.hide_portfolio()
-                self.show_watchlist(item)
-            elif (item.type == items.PORTFOLIO):
+                self.show_watchlist(id)
+            elif type == config.PORTFOLIO:
                 self.hide_watchlist()
-                self.show_portfolio(item)
+                self.show_portfolio(id)
             else :
                 self.currentList = None
                 self.addButton.set_sensitive(False)
@@ -377,70 +364,15 @@ class StockTracker(object):
     def on_remove_item(self, widget):
         """called then the remove button is clicked.
         Can also be generally used to remove a items."""
-        item , model, selection_iter = self.selected_item
-        if item:
-            if (item.type == items.CATEGORY):
-                #categories should not be removed
-                pass
-            elif item.type == items.WATCHLIST:
-                self.watchlists.remove_child(item)
-            elif item.type == items.PORTFOLIO:
-                self.portfolios.remove_child(item)
-            elif (item.type == items.WATCHLISTITEM or item.type == items.PORTFOLIOITEM):
-                self.currentList.remove_child(item)
-                self.reload_header()
-            model.remove(selection_iter)
-                    
-    def on_file_new(self, widget):
-        """File | New - Start a new project file, blank out
-        the currnet project and start from scratch"""
-        self.watchlists.clear()
-        self.portfolios.clear()
-        self.file.filename = None
-        self.set_window_title_from_file(self.file.filename)
-        self.reload_from_data()
-
-    def on_file_open(self, widget):
-        """Function called to open a file"""
-        self.file.filename = helper.file_browse(gtk.FILE_CHOOSER_ACTION_OPEN
-            , self.file.get_browse_filter_list()
-            , file.FILE_EXT)
-        data = self.file.load_from_file()
-        if data:
-            self.watchlists = data[0]
-            self.portfolios = data[1]
-            self.set_window_title_from_file(self.file.filename)
-            self.reload_from_data()
-
-    def on_file_save(self, widget):
-        """Save the file"""
-        data = [self.watchlists, self.portfolios]
-        # Let the user browse for the save location and name
-        if (self.file.filename == None):
-            self.file.filename = helper.file_browse(gtk.FILE_CHOOSER_ACTION_SAVE
-            , self.file.get_browse_filter_list()
-            , file.FILE_EXT)
-        #If we have a file
-        if (self.file.filename):
-            if (self.file.save_to_file(data)):
-                #Allright it all worked! Set the Title
-                self.set_window_title_from_file(self.file.filename)
-
-    def on_file_save_as(self, widget):
-        """ Save As function"""
-        data = [self.watchlists, self.portfolios]
-        f = _("Untitled")
-        if (self.file.filename != None):
-            f = os.path.basename(self.file.filename)
-        f = helper.file_browse(gtk.FILE_CHOOSER_ACTION_SAVE
-            , self.file.get_browse_filter_list()
-            , file.FILE_EXT)
-        #If we have a xml_file
-        if (f):
-            self.file.filename = file
-            if (self.file.save_to_file(data)):
-                #set title
-                self.set_window_title_from_file(self.file.filename)
+        if self.selected_item:
+            type, id, model, selection_iter = self.selected_item
+            if type == config.WATCHLIST or type == config.PORTFOLIO:
+                self.db.remove_portfolio(id)
+                self.left_tree.remove(selection_iter)
+            elif item.type == items.WATCHLISTITEM or item.type == items.PORTFOLIOITEM:
+                self.remove_position(id)
+                #self.reload_header()
+            #model.remove(selection_iter)
         
     def on_edit_object(self, widget):
         """Called when we want to edit the selected item"""
