@@ -22,7 +22,6 @@ try:
     import locale
     import gettext
     import config
-    import items
     import helper
     import pango
     import dialogs
@@ -246,11 +245,7 @@ class StockTracker(object):
         if (dialog.run() == gtk.RESPONSE_OK):
                 #Append to the tree
                 self.left_tree.insert_after(None, dialog.item)
-    
-    def on_remove_watchlist():
-        pass
-        
-                
+                   
     def add_portfolio(self):
         dialog = dialogs.PortfolioDialog(self.gladefile)
         if (dialog.run() == gtk.RESPONSE_OK):

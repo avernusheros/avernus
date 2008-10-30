@@ -2,11 +2,10 @@ try:
     import sys, os
     import gtk
     import gtk.glade
-    import items
     import config, helper
     from data import *
 except ImportError, e:
-    print _T("Import error in dialogs:"), e
+    print "Import error in dialogs:", e
     sys.exit(1)
 
 db = database.get_db()
