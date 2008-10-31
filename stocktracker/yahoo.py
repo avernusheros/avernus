@@ -2,7 +2,7 @@
 #
 #  Thanks to Corey Goldberg (corey@goldb.org) for his ystockquote module. http://www.goldb.org/ystockquote.html
 
-from data import *
+from db import *
 import urllib
 import data_provider
 

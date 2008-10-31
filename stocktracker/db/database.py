@@ -67,7 +67,64 @@ class Database():
             item['type']    = row[4]
             ret.append(item)
         return ret
-              
+    
+    def get_portfolio_positions(self, portfolio_id):
+        self.connect()
+        c = self.con.execute('''
+            SELECT *
+            FROM positions
+            WHERE porfolio_id = ?
+            ''', (portfolio_id,))
+        c = c.fetchall()
+        items = []
+        for row in c:
+            item = {}
+            item['portfolio_id'] = portfolio_id
+            item['id'] = row[0]
+            item['stock_id'] = row[1]
+            item['comment'] = row[2]
+            item['buydate'] = row[3]
+            item['timestamp'] = row[4]
+            item['quantity'] = row[5]
+            item['buyprice'] = row[6]
+            item['type'] = row[7]
+            item['buysum'] = row[8]
+            #get stock info
+            info = self.con.execute('''
+            SELECT stockdata.name, stocks.isin, exchanges.name
+            FROM stocks, stockdata, exchanges
+            WHERE stocks.id = ?
+            AND stockdata.isin = stocks.isin
+            AND stocks.mic = exchanges.mic
+            ''', (item['stock_id'],))
+            info = info.fetchone()
+            item['name'] = info[0]
+            item['isin'] = info[1]
+            item['exchange'] = info[2]
+            #get fundamental data
+            data = self.con.execute('''
+            SELECT *, max(id)
+            FROM quotations
+            WHERE stock_id = ?
+            ''', (item['stock_id'],))
+            data = data.fetchall()
+            for row1 in data:
+                item['price'] = row1[2]
+                item['change'] = row1[3]
+                item['avg_daily_volume'] = row1[4]
+                item['market_cap'] = row1[5]
+                item['book_value'] = row1[6]
+                item['ebitda'] = row1[7]
+                item['dividend_per_share'] = row1[8]
+                item['dividend_yield'] = row1[9]
+                item['earnings_per_share'] = row1[10]
+                item['52_week_high'] = row1[11]
+                item['52_week_low'] = row1[12]
+                item['price_earnings_ratio'] = row1[13]
+                item['datetime'] = row1[14]
+            items.append(item)
+        return items
+
     def create_tables(self):
         #stockdata
         self.con.execute('''CREATE TABLE stockdata (isin text PRIMARY KEY
@@ -81,7 +138,7 @@ class Database():
                     , portfolio_id integer
                     , position_id integer
                     , type integer
-                    , datetime timestamp
+                    , datetime string
                     , quantity integer
                     , transaction_costs real)
                       ''')
@@ -102,10 +159,10 @@ class Database():
                                     , dividend_per_share real
                                     , dividend_yield real
                                     , eps real
-                                    , s52_week_high
-                                    , s52_week_low
-                                    , price_earnings_ratio
-                                    , datetime timestamp
+                                    , s52_week_high real
+                                    , s52_week_low real 
+                                    , price_earnings_ratio real 
+                                    , datetime string
                                     )''')
                                  
         #portfolios
@@ -135,7 +192,7 @@ class Database():
         for i in input:
             self.con.execute('INSERT INTO stockdata VALUES (?,?,?)', i)
     
-    def  fill_stocks_table(self):
+    def fill_stocks_table(self):
         #ISIN, MIC, CURRENCY, YAHOO_SYMBOL
         f = open('stocks.csv')
         input = csv.reader(f, delimiter='\t')
@@ -203,7 +260,7 @@ class Database():
             ''', (position_id,))
         self.con.execute('''
             DELETE FROM transactions
-            WHERE postion_id = ?
+            WHERE position_id = ?
             ''', (position_id,))
         self.commit()
         

@@ -7,6 +7,9 @@ import config
 class Tree:
     def remove(self, iter):
         self.model.remove(iter)
+    
+    def insert(self, item):
+        return None
 
 
 class LeftTree(Tree):
@@ -125,9 +128,6 @@ class PerformanceTreeWatchlist(Tree):
         #self.tree.set_search_column(2)
         #self.column_name.set_sort_column_id(2)
 
-    def insert(self, item):
-        iter = self.model.append(None, [item['type'], item['id'], item['name']])
-        return iter
   
 class PerformanceTreePortfolio(Tree):
     def __init__(self, tree):
@@ -261,6 +261,17 @@ class FundamentalsTree(Tree):
         #pe
         self.column_pe = gtk.TreeViewColumn('PE', gtk.CellRendererText(), markup = 8)
         self.tree.append_column(self.column_pe)
+    
+    def insert(self, item):
+        color = '#606060'
+        name = "" + item['name'] +"\n \
+                <span foreground=\""+ color +"\"><small>" +item['isin']+ "</small></span>\n \
+                 <span foreground=\""+ color +"\"><small>" +item['exchange']+ "</small></span>"
+        iter = self.model.append(None, [item['type'], item['id']
+                , name, item['market_cap'], item['avg_daily_volume']
+                , item['52_week_high'], item['52_week_low']
+                , item['earnings_per_share'], item['price_earnings_ratio']])
+        return iter   
 
 
 class TransactionsTree(Tree):

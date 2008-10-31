@@ -3,7 +3,7 @@ try:
     import gtk
     import gtk.glade
     import config, helper
-    from data import *
+    from db import *
 except ImportError, e:
     print "Import error in dialogs:", e
     sys.exit(1)
@@ -90,7 +90,7 @@ class QuoteDialog(Dialog):
     want to edit an object initialize with the object that
     you want to edit."""
 
-    def __init__(self, glade_file):
+    def __init__(self, glade_file, watchlist_id):
         """Initialize the quote dialog.
         @param glade_file - string - the glade file for this dialog.
         """
@@ -108,6 +108,8 @@ class QuoteDialog(Dialog):
         self.header_icon = self.wTree.get_widget("add_postion_icon")
         self.stock_id = None
         self.autocomplete()
+        self.item = {}
+        self.item['portfolio_id'] = watchlist_id
         
     def autocomplete(self):
         #get db
@@ -162,17 +164,20 @@ class QuoteDialog(Dialog):
             self.header_icon.show()
         else:
             self.header_icon.hide()
+        #save data to item which is returned 
+        for k, v in data.iteritems():
+            self.item[k] = v   
+        for k, v in item.iteritems():
+            self.item[k] = v
 
     def save_data_to_db(self):
         """This function is used to read the data from the dialog
         and then store it in the watchlist.quote object.
         """
-        #get data from widgets
+        #get data from widget
         self.item['stock_id']         = self.stock_id
         self.item['comment']          = self.get_comment()
         self.item['quantity']         = 1
-        self.item['price']            = self.enterBuyPrice.get_text()
-        self.item['date']             = self.buyDate.get_date()
         self.item['transactioncosts'] = 0.0
         self.item['type']             = config.WATCHLISTITEM
         self.item['buy_sum']          = float(self.item['price'])
@@ -265,7 +270,7 @@ class BuyDialog(QuoteDialog):
         self.item['comment']          = self.get_comment()
         self.item['quantity']         = self.numShares.get_text()
         self.item['price']            = self.enterBuyPrice.get_text()
-        self.item['date']             = self.buyDate.get_date()
+        self.item['date']             = str(self.buyDate.get_date())
         self.item['transactioncosts'] = self.transactioncosts.get_text()
         self.item['type']             = config.PORTFOLIOITEM
         self.item['buy_sum']          = (float(self.item['price'])  

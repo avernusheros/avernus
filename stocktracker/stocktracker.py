@@ -24,10 +24,8 @@ try:
     import config
     import helper
     import pango
-    import dialogs
-    import treeviews
-    from data import *
-
+    from db import database
+    from ui import dialogs, treeviews
 
 except ImportError, e:
     print "Import error stocktracker cannot start:", e
@@ -190,11 +188,14 @@ class StockTracker(object):
                         , self.portfolio_performance_tree.tree_columns)
                         
     def reload_watchlist(self, id):
-        pass
-        #watchlist.show(self.performance_tree, self.fundamentals_tree)
+        items = self.db.get_portfolio_positions(id)
+        for item in items:
+            self.fundamentals_tree.insert(item)
 
-    def reload_portfolio(self, portfolio):
-        pass    
+    def reload_portfolio(self, id):
+        items = self.db.get_portfolio_positions(id)
+        for item in items:
+            self.fundamentals_tree.insert(item)    
         #portfolio.show(self.portfolio_performance_tree
          #            , self.fundamentals_tree
           #           , self.transactions_tree)
@@ -217,17 +218,11 @@ class StockTracker(object):
         overall_img.set_from_file(oall[1])
 
     def add_watchlistitem(self, watchlist_id):
-        dialog = dialogs.QuoteDialog(self.gladefile)
+        dialog = dialogs.QuoteDialog(self.gladefile, watchlist_id)
         if (dialog.run() == gtk.RESPONSE_OK):
-            pass
-                #dialog.stock.update()
-                #Append to the tree
-                #dialog.stock.add_to_tree(self.performance_tree, self.fundamentals_tree)
-                #Add to the Watchlist
-                #watchlist.add_child(dialog.stock)
-                         
-                #self, portfolio_id, stock_id, comment, buy_date, quantity, buy_price, type, buy_sum)
-        #self.reload_header()
+            self.wl_performance_tree.insert(dialog.item)
+            self.fundamentals_tree.insert(dialog.item) 
+            #self.reload_header()
     
     def buy_position(self, portfolio_id):
         dialog = dialogs.BuyDialog(self.gladefile, portfolio_id)
@@ -309,13 +304,13 @@ class StockTracker(object):
             self.selected_item = [type, id, model, selection_iter]
     
     def on_leftTree_cursor_changed(self, widget):
-        self.on_treeview_cursor_changed(widget)
-        type, id, model, selection_iter = self.selected_item
+        self.on_treeview_cursor_changed(widget) 
         #self.performance_tree.treestore.clear()
         #self.fundamentals_tree.treestore.clear()
         #self.transactions_tree.treestore.clear()
         #self.portfolio_performance_tree.treestore.clear()
         if not (self.selected_item == None):
+            type, id, model, selection_iter = self.selected_item
             #category selected
             if type == config.CATEGORY_W or type == config.CATEGORY_P:
                 #self.currentList = None
@@ -364,8 +359,9 @@ class StockTracker(object):
             if type == config.WATCHLIST or type == config.PORTFOLIO:
                 self.db.remove_portfolio(id)
                 self.left_tree.remove(selection_iter)
-            elif item.type == items.WATCHLISTITEM or item.type == items.PORTFOLIOITEM:
-                self.remove_position(id)
+            elif type == config.WATCHLISTITEM or type == config.PORTFOLIOITEM:
+                self.db.remove_position(id)
+                self.fundamentals_tree.remove(selection_iter)
                 #self.reload_header()
             #model.remove(selection_iter)
         
