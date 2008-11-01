@@ -1,6 +1,6 @@
 import gtk, string
 import gobject
-import config
+import config, helper
 
 
 
@@ -10,6 +10,9 @@ class Tree:
     
     def insert(self, item):
         return None
+    
+    def clear(self):
+        self.model.clear()    
 
 
 class LeftTree(Tree):
@@ -57,86 +60,8 @@ class PerformanceTreeWatchlist(Tree):
         @params tree - treeview
         """
         self.tree = tree
-        #type, id, name, currentprice, currentchange, icon, price, change, icon, comment
-        self.model = gtk.TreeStore(int,int, str, str, str, gtk.gdk.Pixbuf, str, str, gtk.gdk.Pixbuf, str)
-        self.tree.set_model(self.model)
-        #self.tree.set_reorderable(True)
-        #self.tree.set_rules_hint(True)  
-        
-        #name
-        self.column_name = gtk.TreeViewColumn('Name', gtk.CellRendererText(), markup = 2)
-        widget1 = gtk.Label()
-        widget1.set_markup('<span size="medium"><b>Name</b></span>\n<span size="small">ISIN</span>\n<span size="small">Exchange</span>')
-        self.column_name.set_widget(widget1)
-        widget1.show()
-        self.tree.append_column(self.column_name)
-        
-        #current price
-        self.column_currentprice = gtk.TreeViewColumn('Name', gtk.CellRendererText(), markup = 3)
-        widget2 = gtk.Label()
-        widget2.set_markup('<span size="medium"><b>Last Trade</b></span>\n<span size="small">Price</span>\n<span size="small">Trade Time</span>') 
-        self.column_currentprice.set_widget(widget2)
-        widget2.show()
-        self.tree.append_column(self.column_currentprice)
-        
-        #current change
-        self.column_currentchange = gtk.TreeViewColumn('Name', gtk.CellRendererText(), markup = 4)
-        widget3 = gtk.Label()
-        widget3.set_markup('<span size="medium"><b>Change</b></span>\n<span size="small">$</span>\n<span size="small">%</span>') 
-        self.column_currentchange.set_widget(widget3)
-        widget3.show()
-        self.tree.append_column(self.column_currentchange)
-        icon1 = gtk.CellRendererPixbuf()
-        self.column_currentchange.pack_start(icon1, True)
-        self.column_currentchange.add_attribute(icon1, "pixbuf", 5)
-        
-        #price
-        self.column_price = gtk.TreeViewColumn('Name', gtk.CellRendererText(), markup = 6)
-        widget4 = gtk.Label()
-        widget4.set_markup('<span size="medium"><b>Watch Start</b></span>\n<span size="small">Price</span>\n<span size="small">Trade Time</span>') 
-        self.column_price.set_widget(widget4)
-        widget4.show()
-        self.tree.append_column(self.column_price)
-        
-        #change
-        self.column_change = gtk.TreeViewColumn('Name', gtk.CellRendererText(), markup = 7)
-        widget5 = gtk.Label()
-        widget5.set_markup('<span size="medium"><b>Change</b></span>\n<span size="small">$</span>\n<span size="small">%</span>') 
-        self.column_change.set_widget(widget5)
-        widget5.show()
-        self.tree.append_column(self.column_change)
-        icon2 = gtk.CellRendererPixbuf()
-        self.column_change.pack_start(icon2, True)
-        self.column_change.add_attribute(icon2, "pixbuf", 8)
-        
-        #comment
-        self.column_comment = gtk.TreeViewColumn('Name', gtk.CellRendererText(), markup = 9)
-        widget6 = gtk.Label()
-        widget6.set_markup('<span size="medium"><b>Comment</b></span>\n<span size="small"> </span>\n<span size="small"> </span>') 
-        self.column_comment.set_widget(widget6)
-        widget6.show()
-        self.tree.append_column(self.column_comment)
-        
-        #self.cellicon.set_property('xpad', 2)      
-        #self.cell.set_property('editable', False)
-        #self.cell.connect('edited', self.edited_cb, self.model)
-        #self.cell.connect('editing-started', self.editing_started, self.model)
-        #self.column.pack_start(self.cellicon, False)
-        #self.column.pack_start(self.cell, True)
-        #self.column.set_attributes(self.cellicon, pixbuf=2)
-        #self.column_name.add_attribute(self.cell, 'text' ,2)
-        #self.tree.set_search_column(2)
-        #self.column_name.set_sort_column_id(2)
-
-  
-class PerformanceTreePortfolio(Tree):
-    def __init__(self, tree):
-        """
-        @params tree - treeview
-        """
-        self.tree = tree
         #type, id, quantity, name, buyprice, buysum, lasttrade, change, icon, overallchange, icon, comment
-        self.model = gtk.TreeStore(int,int, str, str, str, gtk.gdk.Pixbuf, str, str, gtk.gdk.Pixbuf, str)
+        self.model = gtk.TreeStore(int,int, str, str,str, str,str,str,  gtk.gdk.Pixbuf, str,  gtk.gdk.Pixbuf, str)
         self.tree.set_model(self.model)
         #self.tree.set_reorderable(True)
         #self.tree.set_rules_hint(True)  
@@ -210,6 +135,27 @@ class PerformanceTreePortfolio(Tree):
         self.column_comment.set_widget(widget7)
         widget7.show()
         self.tree.append_column(self.column_comment)
+    
+    def insert(self, item):
+        color = '#606060'
+        name = "" + item['name'] +"\n \
+                <span foreground=\""+ color +"\"><small>" +item['isin']+ "</small></span>\n \
+                 <span foreground=\""+ color +"\"><small>" +item['exchange']+ "</small></span>"
+        icon1 = gtk.gdk.pixbuf_new_from_file(helper.get_arrow_type(item['change']))
+        icon2 = gtk.gdk.pixbuf_new_from_file(helper.get_arrow_type(item['change']))
+        iter = self.model.append(None, [item['type'], item['id']
+                ,  str(item['quantity']), name, str(item['buyprice'])
+                , str(item['buysum']), str(item['price'])
+                , str(item['change']), icon1
+                , str(item['change']), icon2
+                , item['comment']])
+        return iter 
+
+
+
+  
+class PerformanceTreePortfolio(PerformanceTreeWatchlist):
+    pass
 
 
 class FundamentalsTree(Tree):

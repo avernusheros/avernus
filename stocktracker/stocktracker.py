@@ -189,16 +189,20 @@ class StockTracker(object):
                         
     def reload_watchlist(self, id):
         items = self.db.get_portfolio_positions(id)
+        self.fundamentals_tree.clear()
+        self.po_performance_tree.clear()
         for item in items:
             self.fundamentals_tree.insert(item)
+            self.wl_performance_tree.insert(item) 
 
     def reload_portfolio(self, id):
         items = self.db.get_portfolio_positions(id)
+        self.fundamentals_tree.clear()
+        self.po_performance_tree.clear()
         for item in items:
-            self.fundamentals_tree.insert(item)    
-        #portfolio.show(self.portfolio_performance_tree
-         #            , self.fundamentals_tree
-          #           , self.transactions_tree)
+            print item
+            self.fundamentals_tree.insert(item) 
+            self.po_performance_tree.insert(item)   
 
     def reload_header(self):
         name            = self.mainWindow.get_widget("header_name")

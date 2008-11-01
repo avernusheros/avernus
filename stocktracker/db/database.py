@@ -81,10 +81,9 @@ class Database():
             item = {}
             item['portfolio_id'] = portfolio_id
             item['id'] = row[0]
-            item['stock_id'] = row[1]
-            item['comment'] = row[2]
-            item['buydate'] = row[3]
-            item['timestamp'] = row[4]
+            item['stock_id'] = row[2]
+            item['comment'] = row[3]
+            item['buydate'] = row[4]
             item['quantity'] = row[5]
             item['buyprice'] = row[6]
             item['type'] = row[7]
