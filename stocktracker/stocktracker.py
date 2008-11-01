@@ -196,13 +196,19 @@ class StockTracker(object):
             self.wl_performance_tree.insert(item) 
 
     def reload_portfolio(self, id):
+        """ reload a portfolio 
+        @params id - integer - portfolio id
+        """
         items = self.db.get_portfolio_positions(id)
         self.fundamentals_tree.clear()
         self.po_performance_tree.clear()
+        self.transactions_tree.clear()
         for item in items:
-            print item
             self.fundamentals_tree.insert(item) 
-            self.po_performance_tree.insert(item)   
+            self.po_performance_tree.insert(item)
+        trans = self.db.get_transactions(id)
+        for t in trans:   
+            self.transactions_tree.insert(t)
 
     def reload_header(self):
         name            = self.mainWindow.get_widget("header_name")
