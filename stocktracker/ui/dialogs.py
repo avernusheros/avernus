@@ -13,7 +13,7 @@ db = database.get_db()
 class Dialog(object):
     def __init__(self):
         pass
-        
+
     def find_text_in_combo(self, combobox, text):
         """This is a helper function use to find text in a gtk.ComboBox.
         @param combobox gtk.ComboBox - This should contain text.
@@ -37,7 +37,7 @@ class Dialog(object):
                 else:
                     search_iter = combo_model.iter_next(search_iter)
         return found_iter
-    
+
     def run(self):
         """Show the dialog"""
         break_out = False
@@ -52,12 +52,12 @@ class Dialog(object):
                 break_out = True
         self.dialog.hide()
         return result;
-    
-    
+
+
 class WatchlistDialog(Dialog):
     """Initialize the quote dialog.
     @param glade_file - string - the glade file for this dialog.
-    @param item -  None to create a new 
+    @param item -  None to create a new
                    watchlist object, or the object that you wish to edit.
     """
     def __init__(self, glade_file):
@@ -71,7 +71,7 @@ class WatchlistDialog(Dialog):
         #get the widgets from the dlg
         self.enterName = self.wTree.get_widget("enterName")
         self.enterDescription = self.wTree.get_widget("enterDescription")
-    
+
     def save_data_to_db(self):
         """This function is used to read the data from the dialog
         and then store it in the db.
@@ -81,8 +81,8 @@ class WatchlistDialog(Dialog):
         txtBuffer = self.enterDescription.get_buffer()
         self.item['comment'] = txtBuffer.get_text(*txtBuffer.get_bounds())
         self.item['id'] = db.add_portfolio(self.item['name'], self.item['comment'], 0.0,self.item['type'] )
-    
- 
+
+
 class QuoteDialog(Dialog):
     """This is a class that is used to show a quoteDialog.  It
     can be used to create or edit a watchlist.quote.  To create one
@@ -110,7 +110,7 @@ class QuoteDialog(Dialog):
         self.autocomplete()
         self.item = {}
         self.item['portfolio_id'] = watchlist_id
-        
+
     def autocomplete(self):
         #get db
         self.db = database.get_db()
@@ -140,13 +140,13 @@ class QuoteDialog(Dialog):
         completion.set_model(self.liststore)
         self.enterSymbol.set_completion(completion)
         completion.set_text_column(2)
-        completion.connect('match-selected', self.match_cb)      
-        
+        completion.connect('match-selected', self.match_cb)
+
     def match_cb(self, completion, model, iter):
         self.stock_id = model[iter][0]
         self.update_stock_info()
         return
-    
+
     def update_stock_info(self):
         #if a stock is selected
         if self.stock_id:
@@ -164,9 +164,9 @@ class QuoteDialog(Dialog):
             self.header_icon.show()
         else:
             self.header_icon.hide()
-        #save data to item which is returned 
+        #save data to item which is returned
         for k, v in data.iteritems():
-            self.item[k] = v   
+            self.item[k] = v
         for k, v in item.iteritems():
             self.item[k] = v
 
@@ -181,7 +181,7 @@ class QuoteDialog(Dialog):
         self.item['transactioncosts'] = 0.0
         self.item['type']             = config.WATCHLISTITEM
         self.item['buy_sum']          = float(self.item['price'])
-                                        
+
         #insert into positions table
         self.item['id'] = db.add_position(self.item['portfolio_id']
                 , self.item['stock_id'], self.item['comment']
@@ -202,7 +202,7 @@ class QuoteDialog(Dialog):
         """
         txtBuffer = self.enterComment.get_buffer()
         txtBuffer.set_text(comment)
-        
+
 
 class PortfolioDialog(Dialog):
     """Initialize the portfolio dialog.
@@ -219,7 +219,7 @@ class PortfolioDialog(Dialog):
         self.enterName = self.wTree.get_widget("enterPortfolioName")
         self.enterDescription = self.wTree.get_widget("enterPortfolioDescription")
         self.item = {}
-    
+
     def save_data_to_db(self):
         """This function is used to read the data from the dialog
         and then store it in the db.
@@ -229,8 +229,8 @@ class PortfolioDialog(Dialog):
         txtBuffer = self.enterDescription.get_buffer()
         self.item['comment'] = txtBuffer.get_text(*txtBuffer.get_bounds())
         self.item['id'] = db.add_portfolio(self.item['name'], self.item['comment'], 0.0,self.item['type'] )
-  
-        
+
+
 class BuyDialog(QuoteDialog):
     """
     stock buying dialog
@@ -238,7 +238,7 @@ class BuyDialog(QuoteDialog):
     def __init__(self, glade_file, portfolio_id):
         """Initialize the buy dialog.
         @param glade_file - string - the glade file for this dialog.
-        @param quote - watchlist.quote - None to create a new 
+        @param quote - watchlist.quote - None to create a new
                        watchlist.quote object, or the object that you wish to edit.
         """
         self.glade_file = glade_file
@@ -260,7 +260,7 @@ class BuyDialog(QuoteDialog):
         self.header_icon = self.wTree.get_widget("buy_postion_icon")
         self.transactioncosts = self.wTree.get_widget("buyTransactionCosts")
         self.autocomplete()
-    
+
     def save_data_to_db(self):
         """This function is used to read the data from the dialog
         and then store it in the db.
@@ -270,10 +270,10 @@ class BuyDialog(QuoteDialog):
         self.item['comment']          = self.get_comment()
         self.item['quantity']         = self.numShares.get_text()
         self.item['price']            = self.enterBuyPrice.get_text()
-        self.item['date']             = str(self.buyDate.get_date())
+        self.item['date']             = str(helper.makeTimeFromGTK(self.buyDate.get_date()))
         self.item['transactioncosts'] = self.transactioncosts.get_text()
         self.item['type']             = config.PORTFOLIOITEM
-        self.item['buy_sum']          = (float(self.item['price'])  
+        self.item['buy_sum']          = (float(self.item['price'])
                                         * float(self.item['quantity'])
                                         + float(self.item['transactioncosts']))
         #insert into positions table
@@ -287,4 +287,4 @@ class BuyDialog(QuoteDialog):
                         , self.item['date'], self.item['quantity']
                         , self.item['price']
                         , self.item['transactioncosts'])
-                        
+

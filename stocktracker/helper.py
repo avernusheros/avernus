@@ -51,6 +51,7 @@ def getDayOfWeekFromTime(value):
     return config.Weekday[makeTupleFromTime[6]]
 
 def makeTimeTuple(timeString, format = "%m/%d/%Y %H:%M:%S"):
+    #print timeString, format
     return time.strptime(timeString, format)
 
 def makeTimeFromTuple(tuple):
@@ -136,6 +137,18 @@ def makeTimeFromGTK(input):
 
     (yyyy, mm, dd) , beispiel (2008, 10, 30)
     """
-    return makeTimeFromTuple(makeTimeTuple(input, "(%Y,%m,%d)"))
+    #print input
+    #gtk months start with 0
+    input = (input[0], input[1]+1, input[2])
+    return makeTimeFromTuple(makeTimeTuple(str(input), "(%Y, %m, %d)"))
+
+def makeStringFromTime(aTime, format = "%d.%B %Y"):
+    return time.strftime(format, makeTupleFromTime(aTime))
 
 """Format String options: http://www.python.org/doc/2.5.2/lib/module-time.html"""
+
+def makePangoStringSmall(color, text, newline = False):
+    suffix = ""
+    if newline:
+        suffix = "\n"
+    return "<span foreground=\""+ color +"\"><small>" +text+ "</small></span>" + suffix
