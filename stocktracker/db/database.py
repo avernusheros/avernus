@@ -68,6 +68,35 @@ class Database():
             ret.append(item)
         return ret
     
+    def get_transactions(self, portfolio_id):
+        self.connect()
+        c = self.con.execute('''
+            SELECT transactions.*, exchanges.name, stocks.isin, stockdata.name
+            FROM transactions, exchanges, stockdata, stocks, positions
+            WHERE transactions.portfolio_id = ?
+            AND transactions.position_id = positions.id
+            AND positions.stock_id = stocks.id
+            AND stocks.isin = stockdata.isin
+            AND stocks.mic = exchanges.mic
+            ''', (portfolio_id,))
+        c = c.fetchall()
+        items = []
+        for row in c:
+            item = {}
+            item['id'] = row[0]
+            item['portfolio_id'] = row[1]
+            item['position_id'] = row[2]
+            item['type'] = row[3]
+            item['datetime'] = row[4]
+            item['quantity'] = row[5]
+            item['price'] = row[6]
+            item['transaction_costs'] = row[7]
+            item['exchange'] = row[8]
+            item['isin'] = row[9]
+            item['name'] = row[10]
+            items.append(item)
+        return items
+           
     def get_portfolio_positions(self, portfolio_id):
         self.connect()
         c = self.con.execute('''
@@ -139,7 +168,9 @@ class Database():
                     , type integer
                     , datetime string
                     , quantity integer
-                    , transaction_costs real)
+                    , price real
+                    , transaction_costs real
+                    )
                       ''')
         #exchanges
         self.con.execute('''CREATE TABLE exchanges (mic text PRIMARY KEY
@@ -264,12 +295,12 @@ class Database():
         self.commit()
         
     def add_transaction(self, portfolio_id, position_id, type, datetime
-                        , quantity, transaction_costs):
+                        , quantity,price,  transaction_costs):
         self.connect()
         self.cur.execute('''
             INSERT INTO transactions
-            VALUES (null, ?,?,?,?,?,?)'''
-            , (portfolio_id, position_id, type, datetime, quantity,
+            VALUES (null, ?,?,?,?,?,?, ?)'''
+            , (portfolio_id, position_id, type, datetime, quantity, price, 
                 transaction_costs))                     
         self.commit()
         

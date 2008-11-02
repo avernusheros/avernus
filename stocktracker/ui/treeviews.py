@@ -226,8 +226,8 @@ class TransactionsTree(Tree):
         @params tree - treeview
         """
         self.tree = tree
-        #type, id,datetime, name, type, quantity, price, transaction costs, value, comment
-        self.model = gtk.TreeStore(int,int, str, str, str, str, str, str, str, str)
+        #type, id,datetime, name, type, quantity, price, transaction costs, value
+        self.model = gtk.TreeStore(int,int, str, str, str, str, str, str, str)
         self.tree.set_model(self.model)
         
         #pe
@@ -262,7 +262,17 @@ class TransactionsTree(Tree):
         self.column_value = gtk.TreeViewColumn('value', gtk.CellRendererText(), markup = 8)
         self.tree.append_column(self.column_value)
         
-        #comment
-        self.column_comment = gtk.TreeViewColumn('comment', gtk.CellRendererText(), markup = 9)
-        self.tree.append_column(self.column_comment)
         
+    def insert(self, item):        #type, id,datetime, name, type, quantity, price, transaction costs, value, comment
+
+        color = '#606060'
+        name = "" + item['name'] +"\n \
+                <span foreground=\""+ color +"\"><small>" +item['isin']+ "</small></span>\n \
+                 <span foreground=\""+ color +"\"><small>" +item['exchange']+ "</small></span>"
+        value = float(item['transaction_costs']) + int(item['quantity'])*float(item['price'])
+        iter = self.model.append(None, [item['type'], item['id']
+                ,  str(item['datetime']), name, str(item['type'])
+                , str(item['quantity']), str(item['price'])
+                , str(item['transaction_costs']), value
+                ])        
+        return iter

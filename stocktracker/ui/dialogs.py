@@ -285,5 +285,6 @@ class BuyDialog(QuoteDialog):
         self.item['id'] = db.add_transaction(self.item['portfolio_id']
                         , self.item['id'], config.TRANSACTION_BUY
                         , self.item['date'], self.item['quantity']
+                        , self.item['price']
                         , self.item['transactioncosts'])
                         
