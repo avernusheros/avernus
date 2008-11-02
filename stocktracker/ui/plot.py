@@ -1,108 +1,5 @@
 #!/usr/bin/env python
-import gtk, cairo, time, calendar
-
-
-def _get_extremum_length(list, max = True):
-    """get the longest/shortest item of a list without changing the list"""
-    op = None
-    if max:
-        op = lambda a,b: a > b
-    else:
-        op = lambda a,b: a < b
-    if len(list) == 1:
-        return list[0]
-    res = list[0]
-    for item in list:
-        if op(len(item),len(res)):
-            res = item
-    return item
-
-Weekday = ['Monday', 'Tuesday', 'Wednesday', 'Thursday',
-  'Friday', 'Saturday', 'Sunday']
-
-"""Second values"""
-MINUTE  = 60
-HOUR    = 3600
-DAY     = 86400
-WEEK    = 604800
-# for a month and year this is not so trivial
-
-def getDayOfWeekFromTime(value):
-    return Weekday[makeTupleFromTime[6]]
-
-def makeTimeTuple(timeString, format = "%m/%d/%Y %H:%M:%S"):
-    return time.strptime(timeString, format)
-
-def makeTimeFromTuple(tuple):
-    return time.mktime(tuple)
-
-def makeTupleFromTime(aTime):
-    return time.localtime(aTime)
-
-def _makeMonthSecondsFromTime(aTime):
-    tuple   = makeTupleFromTime(aTime)
-    month   = tuple[1]
-    year    = tuple[0]
-    return calendar.monthrange(year, month)[1] * DAY
-
-def makeDayDifference(aTime, bTime):
-    return _makeDifference(aTime, bTime, DAY)
-
-def makeMinuteDifference(aTime, bTime):
-    return _makeDifference(aTime, bTime, MINUTE)
-
-def makeHourDifference(aTime, bTime):
-    return _makeDifference(aTime, bTime, MINUTE)
-
-def makeWeekDifference(aTime, bTime):
-    return _makeDifference(aTime, bTime, WEEK)
-
-def makeYearDifference(aTime, bTime):
-    aYears = makeTupleFromTime(aTime)[0]
-    bYears = makeTupleFromTime(bTime)[0]
-    return aYears - bYears
-
-def makeMonthDifference(aTime, bTime):
-    aMonth = makeTupleFromTime(aTime)[1]
-    bMonth = makeTupleFromTime(bTime)[1]
-    yearMonths = makeYearDifference(aTime, bTime) * 12
-    return yearMonths + (aMonth - bMonth)
-
-def _makeDifference(aTime, bTime, scale):
-    return int(aTime - bTime) / scale
-
-def makeScaleListFromTimelist(list):
-    """constructs a list of scale points for the plot from the list of times"""
-    list.sort()
-    pivot = list[0]
-    scales = [l - pivot for l in list[1:]]
-    erg = [0]
-    erg.extend(scales)
-    return erg
-
-def _normalizeScales(list, unit):
-    return [int(item / unit) for item in list]
-
-def normalizeToMinutes(list):
-    return _normalizeScales(list, MINUTE)
-
-def normalizeToHours(list):
-    return _normalizeScales(list, HOUR)
-
-def normalizeToDays(list):
-    return _normalizeScales(list, DAY)
-
-def normalizeToWeeks(list):
-    return _normalizeScales(list, WEEK)
-
-def makePlotGraph(scaleList, values):
-    erg = []
-    if not len(scaleList) == len(values):
-        raise Exception("Unequal list lenght in makePlotGraph")
-    for i in range(0,len(values)):
-        erg.append((scaleList[i], values[i]))
-    return erg
-
+import gtk, cairo, helper
 
 class Plot(gtk.DrawingArea):
 
@@ -437,8 +334,8 @@ class Graph(Plot):
 class StockGraph(Graph):
 
     def setScaleFromDates(self, dates, unit):
-        scales = makeScaleListFromTimelist(dates)
-        scales = _normalizeScales(scales, unit)
+        scales = helper.makeScaleListFromTimelist(dates)
+        scales = helper.normalizeScales(scales, unit)
         self._x_scale = scales
         return scales
 
@@ -456,6 +353,7 @@ class StockGraph(Graph):
 
 
 if __name__ == "__main__":
+    #will probably not work due to config/helper imports...
     def button_pressed(plot, event):
         plot.graphs.append([(1, 120), (3, 120), (5, 90)])
         plot.x_unit = 'km'
@@ -473,9 +371,9 @@ if __name__ == "__main__":
     plot.set_events(gtk.gdk.BUTTON_PRESS_MASK)
     window.show_all()
 
-    aTime = makeTimeFromTuple(makeTimeTuple("10/15/2008 18:36:00"))
-    bTime = makeTimeFromTuple(makeTimeTuple("11/13/2007 14:38:23"))
-    cTime = makeTimeFromTuple(makeTimeTuple("10/17/2007 14:38:23"))
+    aTime = helper.makeTimeFromTuple(makeTimeTuple("10/15/2008 18:36:00"))
+    bTime = helper.makeTimeFromTuple(makeTimeTuple("11/13/2007 14:38:23"))
+    cTime = helper.makeTimeFromTuple(makeTimeTuple("10/17/2007 14:38:23"))
     timeList = [aTime, bTime, cTime]
     #scaleList = makeScaleListFromTimelist(timeList)
     #dayList = normalizeToDays(scaleList)
@@ -484,7 +382,7 @@ if __name__ == "__main__":
     #plot.graphs = [graphPlot]
     #plot.x_scale = dayList
     #plot.y_scale = values
-    plot.drawTimeValues([(aTime, 1), (bTime, 3), (cTime, 5)], WEEK)
+    plot.drawTimeValues([(aTime, 1), (bTime, 3), (cTime, 5)], config.WEEK)
     gtk.main()
 
-"""Format String options: http://www.python.org/doc/2.5.2/lib/module-time.html"""
+

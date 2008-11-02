@@ -16,7 +16,7 @@ PORTFOLIOITEM = 5
 
 
 
-#the used dada provider. should be changeable in future versions   
+#the used dada provider. should be changeable in future versions
 DATA_PROVIDER = yahoo.Yahoo()
 
 PATH = os.path.join(sys.path[0], "../")
@@ -37,3 +37,15 @@ ARROWS_SMALL = { "0" : os.path.join(PATH,"share/pixmaps/south16.png"),
            "4" : os.path.join(PATH, "share/pixmaps/north16.png"),
            }
 
+
+### DATE related stuff ###
+
+Weekday = ['Monday', 'Tuesday', 'Wednesday', 'Thursday',
+  'Friday', 'Saturday', 'Sunday']
+
+"""Second values"""
+MINUTE  = 60
+HOUR    = 3600
+DAY     = 86400
+WEEK    = 604800
+# for a month and year this is not so trivial

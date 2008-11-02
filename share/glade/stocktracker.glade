@@ -6,7 +6,7 @@
     <property name="width_request">800</property>
     <property name="height_request">450</property>
     <property name="visible">True</property>
-    <property name="title" translatable="yes">window1</property>
+    <property name="title" translatable="yes">StockTracker</property>
     <child>
       <widget class="GtkVBox" id="vbox1">
         <property name="visible">True</property>
