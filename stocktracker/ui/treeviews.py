@@ -13,6 +13,11 @@ class Tree:
 
     def clear(self):
         self.model.clear()
+    
+    def remove_id(self, id):
+        for row in self.model:
+            if row[1] == id:
+                self.remove(row.iter)                   
 
 
 class LeftTree(Tree):
@@ -140,7 +145,10 @@ class PerformanceTreeWatchlist(Tree):
         color = '#606060'
         #print item
         name = "" + item['name'] +"\n<span foreground=\""+ color +"\"><small>" +item['isin']+ "</small></span>\n<span foreground=\""+ color +"\"><small>" +item['exchange']+ "</small></span>"
-        buy = "" + str(item['buyprice']) + "\n<span foreground=\""+ color +"\"><small>" +helper.makeStringFromTime(item['buydate'])+ "</small></span>"
+        #TODO time does not work
+        #buy = "" + str(item['buyprice']) + "\n<span foreground=\""+ color +"\"><small>" +helper.makeStringFromTime(item['buydate'])+ "</small></span>"
+        buy = "" + str(item['buyprice']) + "\n<span foreground=\""+ color +"\"><small>" +str(item['buydate'])+ "</small></span>"
+
         icon1 = gtk.gdk.pixbuf_new_from_file(helper.get_arrow_type(item['change']))
         icon2 = gtk.gdk.pixbuf_new_from_file(helper.get_arrow_type(item['change']))
         iter = self.model.append(None, [item['type'], item['id']
@@ -150,9 +158,7 @@ class PerformanceTreeWatchlist(Tree):
                 , str(item['change']), icon2
                 , item['comment']])
         return iter
-
-
-
+    
 
 class PerformanceTreePortfolio(PerformanceTreeWatchlist):
     pass
@@ -267,8 +273,11 @@ class TransactionsTree(Tree):
         color = '#606060'
         name = "" + item['name'] +"\n"+ helper.makePangoStringSmall(color, item['isin'], True) + helper.makePangoStringSmall(color,item['exchange'])
         value = float(item['transaction_costs']) + int(item['quantity'])*float(item['price'])
+        #TODO does not work
+        #datetime = helper.makePangoStringSmall(color, helper.makeStringFromTime(item['datetime']))
+        datetime = item['datetime']
         iter = self.model.append(None, [item['type'], item['id']
-                ,  helper.makePangoStringSmall(color, helper.makeStringFromTime(item['datetime'])), name, str(item['type'])
+                , datetime , name, str(item['type'])
                 , str(item['quantity']), str(item['price'])
                 , str(item['transaction_costs']), value
                 ])

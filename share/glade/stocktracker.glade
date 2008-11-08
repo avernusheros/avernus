@@ -211,16 +211,6 @@
           </packing>
         </child>
         <child>
-          <widget class="GtkStatusbar" id="statusbar1">
-            <property name="visible">True</property>
-            <property name="spacing">2</property>
-          </widget>
-          <packing>
-            <property name="expand">False</property>
-            <property name="position">2</property>
-          </packing>
-        </child>
-        <child>
           <widget class="GtkHPaned" id="hpaned1">
             <property name="visible">True</property>
             <property name="can_focus">True</property>
@@ -241,69 +231,87 @@
               <widget class="GtkVBox" id="vbox4">
                 <property name="visible">True</property>
                 <child>
-                  <widget class="GtkHBox" id="header">
-                    <property name="height_request">75</property>
+                  <widget class="GtkVBox" id="header">
+                    <property name="height_request">95</property>
                     <child>
                       <widget class="GtkLabel" id="header_name">
                         <property name="visible">True</property>
                         <property name="label" translatable="yes">Portfolio</property>
                         <property name="use_markup">True</property>
                       </widget>
+                      <packing>
+                        <property name="expand">False</property>
+                      </packing>
                     </child>
                     <child>
-                      <widget class="GtkVSeparator" id="vseparator1">
+                      <widget class="GtkHBox" id="header123">
                         <property name="visible">True</property>
+                        <child>
+                          <widget class="GtkLabel" id="header_info">
+                            <property name="visible">True</property>
+                          </widget>
+                        </child>
+                        <child>
+                          <widget class="GtkVSeparator" id="vseparator1">
+                            <property name="visible">True</property>
+                          </widget>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="position">1</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <widget class="GtkLabel" id="header_performance">
+                            <property name="visible">True</property>
+                            <property name="use_markup">True</property>
+                          </widget>
+                          <packing>
+                            <property name="position">2</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <widget class="GtkImage" id="header_performance_img">
+                            <property name="visible">True</property>
+                            <property name="stock">gtk-missing-image</property>
+                            <property name="icon_size">3</property>
+                          </widget>
+                          <packing>
+                            <property name="position">3</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <widget class="GtkVSeparator" id="vseparator2">
+                            <property name="visible">True</property>
+                          </widget>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="position">4</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <widget class="GtkLabel" id="header_overall">
+                            <property name="visible">True</property>
+                            <property name="use_markup">True</property>
+                          </widget>
+                          <packing>
+                            <property name="position">5</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <widget class="GtkImage" id="header_overall_img">
+                            <property name="visible">True</property>
+                            <property name="stock">gtk-missing-image</property>
+                            <property name="icon_size">3</property>
+                          </widget>
+                          <packing>
+                            <property name="position">6</property>
+                          </packing>
+                        </child>
                       </widget>
                       <packing>
                         <property name="expand">False</property>
+                        <property name="fill">False</property>
                         <property name="position">1</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <widget class="GtkLabel" id="header_performance">
-                        <property name="visible">True</property>
-                        <property name="use_markup">True</property>
-                      </widget>
-                      <packing>
-                        <property name="position">2</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <widget class="GtkImage" id="header_performance_img">
-                        <property name="visible">True</property>
-                        <property name="stock">gtk-missing-image</property>
-                        <property name="icon_size">3</property>
-                      </widget>
-                      <packing>
-                        <property name="position">3</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <widget class="GtkVSeparator" id="vseparator2">
-                        <property name="visible">True</property>
-                      </widget>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="position">4</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <widget class="GtkLabel" id="header_overall">
-                        <property name="visible">True</property>
-                        <property name="use_markup">True</property>
-                      </widget>
-                      <packing>
-                        <property name="position">5</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <widget class="GtkImage" id="header_overall_img">
-                        <property name="visible">True</property>
-                        <property name="stock">gtk-missing-image</property>
-                        <property name="icon_size">3</property>
-                      </widget>
-                      <packing>
-                        <property name="position">6</property>
                       </packing>
                     </child>
                   </widget>
@@ -456,6 +464,16 @@
           </widget>
           <packing>
             <property name="position">2</property>
+          </packing>
+        </child>
+        <child>
+          <widget class="GtkStatusbar" id="statusbar1">
+            <property name="visible">True</property>
+            <property name="spacing">2</property>
+          </widget>
+          <packing>
+            <property name="expand">False</property>
+            <property name="position">3</property>
           </packing>
         </child>
       </widget>
@@ -766,7 +784,7 @@ You should have received a copy of the GNU General Public License along with XXX
   </widget>
   <widget class="GtkDialog" id="quoteDialog">
     <property name="width_request">410</property>
-    <property name="title" translatable="yes">New Portfolio</property>
+    <property name="title" translatable="yes">Add Position to Watchlist</property>
     <property name="window_position">GTK_WIN_POS_CENTER_ON_PARENT</property>
     <property name="type_hint">GDK_WINDOW_TYPE_HINT_DIALOG</property>
     <child internal-child="vbox">

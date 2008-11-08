@@ -119,8 +119,8 @@ class StockTracker(object):
             self.main_window.set_title(_("StockTracker - Untitled"))
 
     def show_watchlist(self, id):
+        self.currentList = id
         self.reload_watchlist(id)
-        #self.currentList = item
         self.addButton.set_sensitive(True)
         self.updateButton.set_sensitive(True)
         self.removeButton.set_sensitive(True)
@@ -135,14 +135,12 @@ class StockTracker(object):
             tab.hide()
 
     def show_portfolio(self, id):
+        self.currentList = id
         self.reload_portfolio(id)
-        #self.currentList = item
         self.addButton.set_sensitive(True)
         self.updateButton.set_sensitive(True)
         self.removeButton.set_sensitive(True)
         self.editButton.set_sensitive(True)
-        #self.reload_header()
-        #self.header.show()
         for tab in self.portfolio_tabs:
             tab.show()
 
@@ -190,10 +188,13 @@ class StockTracker(object):
     def reload_watchlist(self, id):
         items = self.db.get_portfolio_positions(id)
         self.fundamentals_tree.clear()
-        self.po_performance_tree.clear()
+        self.wl_performance_tree.clear()
         for item in items:
             self.fundamentals_tree.insert(item)
             self.wl_performance_tree.insert(item)
+        #reload and show the header
+        self.reload_header()
+        self.header.show()
 
     def reload_portfolio(self, id):
         """ reload a portfolio
@@ -207,26 +208,36 @@ class StockTracker(object):
         for item in items:
             self.fundamentals_tree.insert(item)
             self.po_performance_tree.insert(item)
-        trans = self.db.get_transactions(id)
-        for t in trans:
-            self.transactions_tree.insert(t)
+        transactions = self.db.get_transactions(id)
+        for trans in transactions:
+            self.transactions_tree.insert(trans)
+        #reload and show the header
+        self.reload_header()
+        self.header.show()
 
     def reload_header(self):
+        #get performance information from current list
+        data = self.db.get_portfolio_info(self.currentList)
+        #get widgets
         name            = self.mainWindow.get_widget("header_name")
+        info            = self.mainWindow.get_widget("header_info")
         performance     = self.mainWindow.get_widget("header_performance")
         overall         = self.mainWindow.get_widget("header_overall")
         performance_img = self.mainWindow.get_widget("header_performance_img")
         overall_img     = self.mainWindow.get_widget("header_overall_img")
-        name.set_label('<span size="medium"><b>' + self.currentList.name+ ' </b></span>\n')
-        #get performance information from current list
-        perf = self.currentList.get_performance()
-        oall = self.currentList.get_overall_performance()
         #setting labels
-        performance.set_label(perf[0])
-        overall.set_label(oall[0])
-        #setting icons
-        performance_img.set_from_file(perf[1])
-        overall_img.set_from_file(oall[1])
+        name.set_label('<span size="medium"><b>' + data['name']+ '</b></span>\n')
+        if data['count']>0:
+            info.set_label('# '+str(data['count'])+'\nValue: '+str(data['value'])
+                        +'\nCash: '+str(data['cash'])+'\nOverall: '
+                        +str(data['value']+data['cash']))
+            performance.set_label('Today\n$ '+str(data['change'])+'\n% '
+                                +str(data['percent']))
+            overall.set_label('Overall\n$ '+str(data['overall_change'])+'\n% '
+                                +str(data['overall_percent']))
+            #setting icons
+            performance_img.set_from_file(helper.get_arrow_type(data['change'], True))
+            overall_img.set_from_file(helper.get_arrow_type(data['overall_change'], True))
 
     def add_watchlistitem(self, watchlist_id):
         dialog = dialogs.QuoteDialog(self.gladefile, watchlist_id)
@@ -289,18 +300,22 @@ class StockTracker(object):
         dlg.run()
 
     def on_add_button(self, widget):
-        type, id, model, selection_iter = self.selected_item
         if self.selected_item:
-            if (type == config.CATEGORY_W):
+            type, id, model, selection_iter = self.selected_item
+            if type == config.CATEGORY_W:
                 self.add_watchlist()
-            elif (type == config.CATEGORY_P):
+            elif type == config.CATEGORY_P:
                 self.add_portfolio()
-            elif (type == config.WATCHLIST):
+            elif type == config.WATCHLIST:
                 self.add_watchlistitem(id)
-            elif (type == config.PORTFOLIO):
+            elif type == config.PORTFOLIO:
                 self.buy_position(id)
-            elif (type == config.PORTFOLIOITEM or type == config.WATCHLISTITEM):
-                self.add_quote(self.currentList)
+            elif type == config.PORTFOLIOITEM:
+                self.buy_position(self.currentList)
+            elif type == config.WATCHLISTITEM:
+                 self.add_watchlistitem(self.currentList)
+        else:
+            print "nothing selected"
 
     def on_treeview_cursor_changed(self, widget):
         self.selected_item = None
@@ -324,7 +339,7 @@ class StockTracker(object):
             type, id, model, selection_iter = self.selected_item
             #category selected
             if type == config.CATEGORY_W or type == config.CATEGORY_P:
-                #self.currentList = None
+                self.currentList = None
                 self.addButton.set_sensitive(True)
                 self.updateButton.set_sensitive(True)
                 self.removeButton.set_sensitive(False)
@@ -370,11 +385,16 @@ class StockTracker(object):
             if type == config.WATCHLIST or type == config.PORTFOLIO:
                 self.db.remove_portfolio(id)
                 self.left_tree.remove(selection_iter)
-            elif type == config.WATCHLISTITEM or type == config.PORTFOLIOITEM:
+            elif type == config.WATCHLISTITEM:
                 self.db.remove_position(id)
-                self.fundamentals_tree.remove(selection_iter)
+                self.fundamentals_tree.remove_id(id)
+                self.wl_performance_tree.remove_id(id)
+            elif type == config.PORTFOLIOITEM:
+                self.db.remove_position(id)
+                self.fundamentals_tree.remove_id(id)
+                self.pf_performance_tree.remove_id(id)
+                self.transactions_tree.remove_id(id)
                 #self.reload_header()
-            #model.remove(selection_iter)
 
     def on_edit_object(self, widget):
         """Called when we want to edit the selected item"""

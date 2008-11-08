@@ -180,13 +180,15 @@ class QuoteDialog(Dialog):
         self.item['quantity']         = 1
         self.item['transactioncosts'] = 0.0
         self.item['type']             = config.WATCHLISTITEM
-        self.item['buy_sum']          = float(self.item['price'])
+        self.item['buyprice']         = float(self.item['price'])
+        self.item['buysum']          = float(self.item['price'])
+        self.item['buydate']          = self.item['date']
 
         #insert into positions table
         self.item['id'] = db.add_position(self.item['portfolio_id']
                 , self.item['stock_id'], self.item['comment']
                 , self.item['date'], self.item['quantity']
-                , self.item['price'], self.item['type'], self.item['buy_sum'])
+                , self.item['buyprice'], self.item['type'], self.item['buysum'])
 
     def get_comment(self):
         """This function gets the details from the TextView
@@ -269,22 +271,24 @@ class BuyDialog(QuoteDialog):
         self.item['stock_id']         = self.stock_id
         self.item['comment']          = self.get_comment()
         self.item['quantity']         = self.numShares.get_text()
-        self.item['price']            = self.enterBuyPrice.get_text()
+        self.item['buyprice']            = self.enterBuyPrice.get_text()
         self.item['date']             = str(helper.makeTimeFromGTK(self.buyDate.get_date()))
         self.item['transactioncosts'] = self.transactioncosts.get_text()
         self.item['type']             = config.PORTFOLIOITEM
-        self.item['buy_sum']          = (float(self.item['price'])
+        self.item['buy_sum']          = (float(self.item['buyprice'])
                                         * float(self.item['quantity'])
                                         + float(self.item['transactioncosts']))
         #insert into positions table
         self.item['id'] = db.add_position(self.item['portfolio_id']
                 , self.item['stock_id'], self.item['comment']
                 , self.item['date'], self.item['quantity']
-                , self.item['price'], self.item['type'], self.item['buy_sum'])
+                , self.item['buyprice'], self.item['type'], self.item['buy_sum'])
         #insert transaction into db
         self.item['id'] = db.add_transaction(self.item['portfolio_id']
                         , self.item['id'], config.TRANSACTION_BUY
                         , self.item['date'], self.item['quantity']
-                        , self.item['price']
+                        , self.item['buyprice']
                         , self.item['transactioncosts'])
+                        
+    
 

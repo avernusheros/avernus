@@ -63,7 +63,7 @@ class Database():
             item['id']      = row[0]
             item['name']    = row[1]
             item['comment'] = row[2]
-            item['balance'] = row[3]
+            item['cash'] = row[3]
             item['type']    = row[4]
             ret.append(item)
         return ret
@@ -95,7 +95,6 @@ class Database():
             item['isin'] = row[9]
             item['name'] = row[10]
             items.append(item)
-            #print item['datetime']
         return items
 
     def get_portfolio_positions(self, portfolio_id):
@@ -103,7 +102,7 @@ class Database():
         c = self.con.execute('''
             SELECT *
             FROM positions
-            WHERE porfolio_id = ?
+            WHERE portfolio_id = ?
             ''', (portfolio_id,))
         c = c.fetchall()
         items = []
@@ -154,6 +153,53 @@ class Database():
             items.append(item)
         return items
 
+    def get_portfolio_info(self, id):
+        """
+        @params id - integer - portfolio or watchlist ID
+        """
+        self.connect()
+        c = self.con.execute('''
+            SELECT portfolios.name
+                  , portfolios.cash
+                  , TOTAL(positions.buysum)
+                  , COUNT(positions.id)
+            FROM portfolios, positions
+            WHERE positions.portfolio_id = portfolios.id
+            AND portfolios.id = ?
+            ''', (id,))
+        c = c.fetchone()
+        item = {}
+        item['name']   = c[0]
+        item['cash']   = c[1]
+        item['buysum'] = c[2]
+        item['count']  = c[3]
+        if item['count'] > 0:
+            c = self.con.execute('''
+                SELECT p.quantity, q.price, q.change
+                FROM positions as p
+                , (SELECT stock_id, change, price, max(id)
+                   FROM quotations
+                   GROUP BY stock_id) as q
+                WHERE p.stock_id = q.stock_id
+                AND p.portfolio_id = ?
+                ''', (id,))
+            c = c.fetchall()
+            item['value']  = 0.0
+            item['change'] = 0.0
+            for row in c:
+                item['value']  += row[0] * row[1]
+                item['change'] += row[0] * row[2]
+            item['overall_change']  = item['value'] - item['buysum']
+            item['percent']         = 100/(item['value']-item['change'])*item['change']
+            item['overall_percent'] = 100*item['overall_change']/item['buysum']
+        else:
+            item['value'] = 0.0
+            item['change'] = 0.0
+            item['overall_change'] = 0.0
+            item['percent'] = 0.0
+            item['overall_percent'] = 0.0
+        return item
+
     def create_tables(self):
         #stockdata
         self.con.execute('''CREATE TABLE stockdata (isin text PRIMARY KEY
@@ -198,13 +244,19 @@ class Database():
 
         #portfolios
         self.con.execute('''CREATE TABLE portfolios (id INTEGER PRIMARY KEY AUTOINCREMENT,
-                               name text, comment text,balance real
+                               name text, comment text,cash real
                                  ,type int)''')
         #positions
-        self.con.execute('''CREATE TABLE positions (id INTEGER PRIMARY KEY AUTOINCREMENT,
-                               porfolio_id integer, stock_id integer,
-                               comment text, buydate timestamp, quantity integer,
-                               buyprice real, type int, buysum real)''')
+        self.con.execute('''
+            CREATE TABLE positions (id INTEGER PRIMARY KEY AUTOINCREMENT
+                    , portfolio_id integer
+                    , stock_id integer
+                    , comment text
+                    , buydate timestamp
+                    , quantity integer
+                    , buyprice real
+                    , type int
+                    , buysum real)''')
 
 
     def fill_exchanges_table(self):
@@ -231,17 +283,17 @@ class Database():
         for i in input:
             self.con.execute('INSERT INTO stocks VALUES (null,?,?,?,?)', i)
 
-    def add_portfolio(self, name, comment, balance, type):
+    def add_portfolio(self, name, comment, cash, type):
         """ insert a portfolio into the database
         @params name - string - name of the portfolio to be added
         @params comment - string - comment
-        @params balance - float - cash balance
+        @params cash - float - cash balance
         @params type - integer - type
         """
         self.connect()
         self.cur.execute('''INSERT INTO portfolios
                             VALUES (null, ?,?,?,?)'''
-                            , (name, comment, balance, type))
+                            , (name, comment, cash, type))
         self.commit()
         return self.cur.lastrowid
 
@@ -256,7 +308,7 @@ class Database():
             ''' , (portfolio_id,))
         self.con.execute('''
             DELETE FROM positions
-            WHERE porfolio_id = ?
+            WHERE portfolio_id = ?
             ''', (portfolio_id,))
         self.con.execute('''
             DELETE FROM transactions
