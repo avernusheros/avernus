@@ -25,10 +25,10 @@ class Database():
     def get_stock_list(self):
         self.connect()
         c = self.con.execute('''
-            SELECT stocks.id, stockdata.isin, stockdata.name, exchanges.name
-            FROM stocks, stockdata, exchanges
-            WHERE stocks.isin = stockdata.isin
-            AND stocks.mic = exchanges.mic
+            SELECT stock.id, security.isin, security.name, exchange.name
+            FROM stock, security, exchange
+            WHERE stock.security_id = security.id
+            AND stock.exchange_id = exchange.id
             ''')
         ret = []
         for row in c:
@@ -201,88 +201,104 @@ class Database():
         return item
 
     def create_tables(self):
-        #stockdata
-        self.con.execute('''CREATE TABLE stockdata (isin text PRIMARY KEY
-                            , name text, type text)''')
-        #stocks
-        self.con.execute('''CREATE TABLE stocks (id INTEGER PRIMARY KEY,
-                           isin text, mic text ,currency text, yahoo_symbol text)''')
-        #transactions
-        self.con.execute('''
-            CREATE TABLE transactions (id INTEGER PRIMARY KEY AUTOINCREMENT
-                    , portfolio_id integer
+        self.connect()
+        self.cur.executescript('''
+            CREATE TABLE TRANSACTIONS (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT
                     , position_id integer
                     , type integer
-                    , datetime string
+                    , datetime timestamp
                     , quantity integer
                     , price real
                     , transaction_costs real
-                    )
-                      ''')
-        #exchanges
-        self.con.execute('''CREATE TABLE exchanges (mic text PRIMARY KEY
-                                 ,name text, countrycode text)''')
-        #quotations
-        self.con.execute('''
-            CREATE TABLE quotations (id INTEGER PRIMARY KEY AUTOINCREMENT
-                                    , stock_id integer
-                                    , price real
-                                    , change real
-                                    , volume integer
-                                    , avg_volume integer
-                                    , market_cap real
-                                    , book_value real
-                                    , ebitda real
-                                    , dividend_per_share real
-                                    , dividend_yield real
-                                    , eps real
-                                    , s52_week_high real
-                                    , s52_week_low real
-                                    , price_earnings_ratio real
-                                    , datetime string
-                                    )''')
+                    );
+            CREATE TABLE PORTFOLIO (
+                id INTEGER PRIMARY KEY AUTOINCREMENT
+                , type integer
+                , name text
+                , comment text
+                , cash real
+                );
+            CREATE TABLE POSITION (
+                id INTEGER PRIMARY KEY AUTOINCREMENT
+                , portfolio_id integer
+                , stock_id integer
+                , comment text
+                , buydate timestamp
+                , quantity integer
+                , buyprice real
+                , type integer
+                , buysum real
+                );
+            CREATE TABLE STOCK (
+                id INTEGER PRIMARY KEY AUTOINCREMENT
+                , security_id text
+                , exchange_id text
+                , currency text
+                );
+            CREATE TABLE YAHOO (
+                stock_id integer PRIMARY KEY
+                , yahoo_symbol real
+                );
+            CREATE TABLE SECURITY (
+                id INTEGER PRIMARY KEY AUTOINCREMENT
+                , isin text
+                , name text
+                , type integer
+                );
+            CREATE TABLE EXCHANGE (
+                id INTEGER PRIMARY KEY AUTOINCREMENT
+                , name text
+                , mic text
+                , country_code text
+                );
+            CREATE TABLE QUOTATION (
+                id INTEGER PRIMARY KEY AUTOINCREMENT
+                , datetime timestamp
+                , stock_id integer
+                , price real
+                , change real
+                , volume integer
+                );
+            CREATE TABLE STOCKDATA (
+                stock_id integer PRIMARY KEY
+                , avg_volume integer
+                , market_cap real
+                , book_value real
+                , ebitda real
+                , dividend_per_share real
+                , dividend_yield real
+                , eps real
+                , s52_week_high real
+                , s52_week_low real
+                , price_earnings_ratio real
+                , last_update timestamp
+                );                
+            ''')
 
-        #portfolios
-        self.con.execute('''CREATE TABLE portfolios (id INTEGER PRIMARY KEY AUTOINCREMENT,
-                               name text, comment text,cash real
-                                 ,type int)''')
-        #positions
-        self.con.execute('''
-            CREATE TABLE positions (id INTEGER PRIMARY KEY AUTOINCREMENT
-                    , portfolio_id integer
-                    , stock_id integer
-                    , comment text
-                    , buydate timestamp
-                    , quantity integer
-                    , buyprice real
-                    , type int
-                    , buysum real)''')
-
-
-    def fill_exchanges_table(self):
-        #MIC, NAME, COUNTRY_CODE
+    def fill_tables(self):
         f = open(os.path.join(sys.path[0], '../../share/stockdata/exchanges.csv'))
         input = csv.reader(f, delimiter='\t')
         self.connect()
         for i in input:
-            self.con.execute('INSERT INTO exchanges VALUES (?,?,?)', i)
+            self.con.execute('INSERT INTO EXCHANGE VALUES (null, ?,?,?)', (i[1],i[0],i[2]))
 
-    def fill_stockdata_table(self):
-        #ISIN, NAME, TYPE, INDUSTRY
         f = open(os.path.join(sys.path[0], '../../share/stockdata/stockdata.csv'))
         input = csv.reader(f, delimiter='\t')
-        self.connect()
         for i in input:
-            self.con.execute('INSERT INTO stockdata VALUES (?,?,?)', i)
-
-    def fill_stocks_table(self):
-        #ISIN, MIC, CURRENCY, YAHOO_SYMBOL
-        
+            self.con.execute('INSERT INTO SECURITY VALUES (NULL, ?,?,?)', i)
+                
         f = open(os.path.join(sys.path[0], '../../share/stockdata/stocks.csv'))
         input = csv.reader(f, delimiter='\t')
-        self.connect()
         for i in input:
-            self.con.execute('INSERT INTO stocks VALUES (null,?,?,?,?)', i)
+            d = self.cur.execute('SELECT id FROM exchange WHERE mic = ?', (i[1],))
+            d = d.fetchone()
+            exchange_id = d[0]
+            d = self.cur.execute('SELECT id FROM security WHERE isin = ?', (i[0],))
+            d = d.fetchone()
+            security_id = d[0]
+            self.cur.execute('INSERT INTO STOCK VALUES (null,?,?,?)', (security_id,exchange_id,i[2] ))
+            self.cur.execute('INSERT INTO YAHOO VALUES (?,? )', (self.cur.lastrowid, i[3]))
 
     def add_portfolio(self, name, comment, cash, type):
         """ insert a portfolio into the database
@@ -292,7 +308,7 @@ class Database():
         @params type - integer - type
         """
         self.connect()
-        self.cur.execute('''INSERT INTO portfolios
+        self.cur.execute('''INSERT INTO portfolio
                             VALUES (null, ?,?,?,?)'''
                             , (name, comment, cash, type))
         self.commit()
@@ -304,11 +320,11 @@ class Database():
         to be removed
         """
         self.con.execute('''
-            DELETE FROM portfolios
-            WHERE portfolios.id = ?
+            DELETE FROM portfolio
+            WHERE portfolio.id = ?
             ''' , (portfolio_id,))
         self.con.execute('''
-            DELETE FROM positions
+            DELETE FROM position
             WHERE portfolio_id = ?
             ''', (portfolio_id,))
         self.con.execute('''
@@ -396,9 +412,7 @@ if __name__ == "__main__":
     d = Database(path)
     d.connect()
     d.create_tables()
-    d.fill_exchanges_table()
-    d.fill_stockdata_table()
-    d.fill_stocks_table()
+    d.fill_tables()
     d.commit()
 
     print d.get_stock_list()
