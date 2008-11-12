@@ -1,4 +1,4 @@
-import sqlite3, os, csv
+import sqlite3, os, csv, sys
 path = os.path.join(os.path.expanduser("~"), '.stocktracker/data.db')
 
 instance = None
@@ -261,7 +261,7 @@ class Database():
 
     def fill_exchanges_table(self):
         #MIC, NAME, COUNTRY_CODE
-        f = open('exchanges.csv')
+        f = open(os.path.join(sys.path[0], '../../share/stockdata/exchanges.csv'))
         input = csv.reader(f, delimiter='\t')
         self.connect()
         for i in input:
@@ -269,7 +269,7 @@ class Database():
 
     def fill_stockdata_table(self):
         #ISIN, NAME, TYPE, INDUSTRY
-        f = open('stockdata.csv')
+        f = open(os.path.join(sys.path[0], '../../share/stockdata/stockdata.csv'))
         input = csv.reader(f, delimiter='\t')
         self.connect()
         for i in input:
@@ -277,7 +277,8 @@ class Database():
 
     def fill_stocks_table(self):
         #ISIN, MIC, CURRENCY, YAHOO_SYMBOL
-        f = open('stocks.csv')
+        
+        f = open(os.path.join(sys.path[0], '../../share/stockdata/stocks.csv'))
         input = csv.reader(f, delimiter='\t')
         self.connect()
         for i in input:
@@ -384,7 +385,9 @@ class Database():
         return self.cur.lastrowid
 
 
-
+    def test_sql(self):
+        self.con.executescript('''
+        ''')
 
 
 if __name__ == "__main__":
