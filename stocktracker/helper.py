@@ -1,5 +1,6 @@
-import config, time, calendar
-from db import *
+from stocktracker import config
+import time, calendar
+from stocktracker.database import *
 
 db = database.get_db()
 

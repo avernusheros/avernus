@@ -1,6 +1,11 @@
-import gtk, string
-import gobject
-import config, helper
+try:
+    import gtk, string
+    import gobject
+    from stocktracker import config, helper
+except ImportError, e:
+    print "Import error in treeviews.py, cannot start:", e
+    sys.exit(1)
+    
 
 
 

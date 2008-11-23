@@ -2,9 +2,9 @@
 #
 #  Thanks to Corey Goldberg (corey@goldb.org) for his ystockquote module. http://www.goldb.org/ystockquote.html
 
-from db import *
+from stocktracker.database import database
 import urllib
-import data_provider
+from stocktracker import data_provider
 
 def yahoo(stock_id):
     db = database.get_db()

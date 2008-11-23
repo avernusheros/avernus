@@ -2,8 +2,8 @@ try:
     import sys, os
     import gtk
     import gtk.glade
-    import config, helper
-    from db import *
+    from stocktracker import config, helper
+    from stocktracker.database import *
 except ImportError, e:
     print "Import error in dialogs:", e
     sys.exit(1)

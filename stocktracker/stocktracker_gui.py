@@ -1,12 +1,4 @@
-__author__ = "Wolfgang Steitz <wsteitz@gmail.com>"
-__version__ = "0.1"
-__date__ = "Date: 2008/09/08"
-__copyright__ = "Copyright (c) 2008 Wolfgang Steitz"
-__license__ = "GPL v3"
-
-
 _ = lambda x : x
-
 
 try:
     import pygtk
@@ -21,14 +13,13 @@ try:
     import os
     import locale
     import gettext
-    import config
-    import helper
     import pango
-    from db import database
-    from ui import dialogs, treeviews
+    from stocktracker import helper, config
+    from stocktracker.ui import dialogs, treeviews
+    from stocktracker.database import database
 
 except ImportError, e:
-    print "Import error stocktracker cannot start:", e
+    print "Import error in stocktracker_gui.py, cannot start:", e
     sys.exit(1)
 
 
@@ -41,7 +32,7 @@ class StockTracker(object):
         #Translation stuff
         #self.initialize_translation()
         #Set the Glade file
-        self.gladefile = os.path.join(config.PATH, "share/glade/stocktracker.glade")
+        self.gladefile = os.path.join("share/glade/stocktracker.glade")
         #Get the Main Widget Tree
         self.mainWindow = gtk.glade.XML(self.gladefile, "mainWindow")
         #Connect with main window
@@ -450,8 +441,4 @@ class StockTracker(object):
         self.portfolios.update()
         self.reload_from_data()
 
-
-if __name__ == '__main__':
-    StockTracker()
-    gtk.main()
 
