@@ -80,7 +80,8 @@ class WatchlistDialog(Dialog):
         self.item['type'] = config.WATCHLIST
         txtBuffer = self.enterDescription.get_buffer()
         self.item['comment'] = txtBuffer.get_text(*txtBuffer.get_bounds())
-        self.item['id'] = db.add_portfolio(self.item['name'], self.item['comment'], 0.0,self.item['type'] )
+        self.item['cash'] = 0.0
+        self.item['id'] = db.add_portfolio(self.item)
 
 
 class QuoteDialog(Dialog):
@@ -182,13 +183,8 @@ class QuoteDialog(Dialog):
         self.item['type']             = config.WATCHLISTITEM
         self.item['buyprice']         = float(self.item['price'])
         self.item['buysum']          = float(self.item['price'])
-        self.item['buydate']          = self.item['date']
-
         #insert into positions table
-        self.item['id'] = db.add_position(self.item['portfolio_id']
-                , self.item['stock_id'], self.item['comment']
-                , self.item['date'], self.item['quantity']
-                , self.item['buyprice'], self.item['type'], self.item['buysum'])
+        self.item['id'] = db.add_position(self.item)
 
     def get_comment(self):
         """This function gets the details from the TextView
@@ -230,7 +226,8 @@ class PortfolioDialog(Dialog):
         self.item['type'] = config.PORTFOLIO
         txtBuffer = self.enterDescription.get_buffer()
         self.item['comment'] = txtBuffer.get_text(*txtBuffer.get_bounds())
-        self.item['id'] = db.add_portfolio(self.item['name'], self.item['comment'], 0.0,self.item['type'] )
+        self.item['cash'] = 0.0
+        self.item['id'] = db.add_portfolio(self.item)
 
 
 class BuyDialog(QuoteDialog):
@@ -273,22 +270,14 @@ class BuyDialog(QuoteDialog):
         self.item['quantity']         = self.numShares.get_text()
         self.item['buyprice']            = self.enterBuyPrice.get_text()
         self.item['date']             = str(helper.makeTimeFromGTK(self.buyDate.get_date()))
-        self.item['transactioncosts'] = self.transactioncosts.get_text()
+        self.item['transaction_costs'] = self.transactioncosts.get_text()
         self.item['type']             = config.PORTFOLIOITEM
         self.item['buy_sum']          = (float(self.item['buyprice'])
                                         * float(self.item['quantity'])
-                                        + float(self.item['transactioncosts']))
+                                        + float(self.item['transaction_costs']))
         #insert into positions table
-        self.item['id'] = db.add_position(self.item['portfolio_id']
-                , self.item['stock_id'], self.item['comment']
-                , self.item['date'], self.item['quantity']
-                , self.item['buyprice'], self.item['type'], self.item['buy_sum'])
+        self.item['position_id'] = db.add_position(self.item)
         #insert transaction into db
-        self.item['id'] = db.add_transaction(self.item['portfolio_id']
-                        , self.item['id'], config.TRANSACTION_BUY
-                        , self.item['date'], self.item['quantity']
-                        , self.item['buyprice']
-                        , self.item['transactioncosts'])
-                        
-    
+        db.add_transaction(self.item)
+
 

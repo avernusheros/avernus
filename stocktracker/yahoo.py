@@ -7,13 +7,12 @@ import urllib
 import data_provider
 
 def yahoo(stock_id):
-    #print "getting yahoo id for ", stock_id
     db = database.get_db()
     db.connect()
     c = db.con.execute('''
         SELECT yahoo_symbol
-        FROM stocks
-        WHERE id = ?
+        FROM yahoo
+        WHERE stock_id = ?
         ''', (stock_id,) )
     return c.fetchone()[0]
     
@@ -42,7 +41,7 @@ class Yahoo(data_provider.DataProvider):
         data['ebitda'] = values[7]
         data['dividend_per_share'] = values[8]
         data['dividend_yield'] = values[9]
-        data['earnings_per_share'] = values[10]
+        data['eps'] = values[10]
         data['52_week_high'] = values[11]
         data['52_week_low'] = values[12]
         data['50day_moving_avg'] = values[13]

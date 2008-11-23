@@ -5,20 +5,14 @@ db = database.get_db()
 
 
 def update_stock(id):
-        item = {}
-        #get data from data provider
-        data = config.DATA_PROVIDER.get_all(id)
-        data['percent'] = 100*float(data['price'])/(float(data['price'])-float(data['change'])) -100
-        data['date'] = "%s %s" % (data['price_date'], data['price_time'])
-        db.add_quotation(id, float(data['price']), float(data['change'])
-                        , data['volume'], data['avg_daily_volume']
-                        , data['market_cap'], data['book_value']
-                        , data['ebitda'], data['dividend_per_share']
-                        , data['dividend_yield'], data['earnings_per_share']
-                        , data['52_week_high'], data['52_week_low']
-                        , data['price_earnings_ratio']
-                        , data['date'])
-        return data
+    item = {}
+    #get data from data provider
+    data = config.DATA_PROVIDER.get_all(id)
+    data['percent'] = 100*float(data['price'])/(float(data['price'])-float(data['change'])) -100
+    data['datetime'] = "%s %s" % (data['price_date'], data['price_time'])
+    data['stock_id'] = id
+    db.add_quotation(data)
+    return data
 
 
 def get_arrow_type(percent, large = False):

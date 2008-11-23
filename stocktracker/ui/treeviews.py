@@ -147,7 +147,7 @@ class PerformanceTreeWatchlist(Tree):
         name = "" + item['name'] +"\n<span foreground=\""+ color +"\"><small>" +item['isin']+ "</small></span>\n<span foreground=\""+ color +"\"><small>" +item['exchange']+ "</small></span>"
         #TODO time does not work
         #buy = "" + str(item['buyprice']) + "\n<span foreground=\""+ color +"\"><small>" +helper.makeStringFromTime(item['buydate'])+ "</small></span>"
-        buy = "" + str(item['buyprice']) + "\n<span foreground=\""+ color +"\"><small>" +str(item['buydate'])+ "</small></span>"
+        buy = "" + str(item['buyprice']) + "\n<span foreground=\""+ color +"\"><small>" +str(item['datetime'])+ "</small></span>"
 
         icon1 = gtk.gdk.pixbuf_new_from_file(helper.get_arrow_type(item['change']))
         icon2 = gtk.gdk.pixbuf_new_from_file(helper.get_arrow_type(item['change']))
@@ -222,7 +222,7 @@ class FundamentalsTree(Tree):
         iter = self.model.append(None, [item['type'], item['id']
                 , name, item['market_cap'], item['avg_daily_volume']
                 , item['52_week_high'], item['52_week_low']
-                , item['earnings_per_share'], item['price_earnings_ratio']])
+                , item['eps'], item['price_earnings_ratio']])
         return iter
 
 
