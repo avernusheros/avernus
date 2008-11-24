@@ -10,6 +10,7 @@ try:
     import gtk
     import gtk.glade
     import gobject
+    import logging
     import os
     import locale
     import gettext
@@ -25,12 +26,11 @@ except ImportError, e:
 
 '''A simple python based portfolio manager'''
 class StockTracker(object):
-
+    logger = logging.getLogger('stocktracker')
+    
     def __init__(self):
         #Get the local path
         self.local_path = os.path.realpath(os.path.dirname(sys.argv[0]))
-        #Translation stuff
-        #self.initialize_translation()
         #Set the Glade file
         self.gladefile = os.path.join("share/glade/stocktracker.glade")
         #Get the Main Widget Tree
@@ -69,6 +69,7 @@ class StockTracker(object):
         """Initialize any widgets that we want.  Basically
         grab widgets that you want to have access to later on in the program.
         """
+        self.logger.debug('Initialize widgets')
         #Get the Main Window
         self.main_window = self.mainWindow.get_widget("mainWindow")
         #self.set_window_title_from_file(self.file.filename)

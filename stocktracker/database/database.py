@@ -66,7 +66,6 @@ class Database():
             item['comment'] = row[3]
             item['cash']    = row[4]
             ret.append(item)
-            print item
         return ret
 
     def get_transactions(self, portfolio_id):
