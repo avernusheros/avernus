@@ -355,7 +355,7 @@ class Database():
         self.cur.execute('''INSERT INTO position
                             VALUES (null, ?,?,?,?,?,?,?,?)'''
                             , (item['portfolio_id'],item['stock_id']
-                                , item['comment'], item['datetime']
+                                , item['comment'], item['buydate']
                                 , item['quantity'], item['buyprice']
                                 , item['type'], item['buy_sum']))
         self.commit()

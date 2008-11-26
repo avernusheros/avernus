@@ -1,19 +1,24 @@
 from stocktracker import config
 import time, calendar
 from stocktracker.database import *
+import logging
 
 db = database.get_db()
-
+logger = logging.getLogger('stocktracker')
 
 def update_stock(id):
     item = {}
     #get data from data provider
     data = config.DATA_PROVIDER.get_all(id)
-    data['percent'] = 100*float(data['price'])/(float(data['price'])-float(data['change'])) -100
-    data['datetime'] = "%s %s" % (data['price_date'], data['price_time'])
-    data['stock_id'] = id
-    db.add_quotation(data)
-    return data
+    if data:
+        data['percent'] = 100*float(data['price'])/(float(data['price'])-float(data['change'])) -100
+        data['datetime'] = "%s %s" % (data['price_date'], data['price_time'])
+        data['stock_id'] = id
+        db.add_quotation(data)
+        return data
+    else:
+        logger.warning('could not retrive stock information from yahoo finance')
+        return False
 
 
 def get_arrow_type(percent, large = False):

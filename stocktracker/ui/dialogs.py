@@ -154,20 +154,26 @@ class QuoteDialog(Dialog):
             item = self.db.get_stock_name(self.stock_id) #name, isin, exchange
             data = helper.update_stock(self.stock_id)
             color = '#606060'
-            text = '<span size="medium"><b>' + item['name'] + '</b></span>\n\
+            text1 = '<span size="medium"><b>' + item['name'] + '</b></span>\n\
                     <span size="small">' + item['isin'] + '</span>\n\
-                    <span size="small">' + item['exchange'] + '</span>\n\
-                    <span size="small">Volume: ' + data['volume'] + '</span>'
-            self.header_name.set_markup(text)
-            text = '<span size="medium"><b>' + data['price'] + '</b></span>\n<span size="small">' + data['change'] + '</span>\n<span size="small">' + str(data['percent']) + '%</span>'
-            self.header_performance.set_markup(text)
-            self.header_icon.set_from_file(helper.get_arrow_type(float(data['percent'])))
-            self.header_icon.show()
+                    <span size="small">' + item['exchange'] + '</span>'
+            text2 = ''
+            if data: #data available
+                text1 += '\n<span size="small">Volume: ' + data['volume'] + '</span>'
+                text2 += ''''<span size="medium"><b>' + data['price'] +
+                   '</b></span>\n<span size="small">' + data['change'] + 
+                   '</span>\n<span size="small">' + str(data['percent']) + 
+                   '%</span>'''
+                self.header_icon.set_from_file(helper.get_arrow_type(float(data['percent'])))
+                self.header_icon.show()
+            self.header_name.set_markup(text1)
+            self.header_performance.set_markup(text2)
         else:
             self.header_icon.hide()
         #save data to item which is returned
-        for k, v in data.iteritems():
-            self.item[k] = v
+        if data:
+            for k, v in data.iteritems():
+                self.item[k] = v
         for k, v in item.iteritems():
             self.item[k] = v
 
@@ -265,14 +271,16 @@ class BuyDialog(QuoteDialog):
         and then store it in the db.
         """
         #get data from widgets
-        self.item['stock_id']         = self.stock_id
-        self.item['comment']          = self.get_comment()
-        self.item['quantity']         = self.numShares.get_text()
-        self.item['buyprice']            = self.enterBuyPrice.get_text()
-        self.item['date']             = str(helper.makeTimeFromGTK(self.buyDate.get_date()))
+        self.item['stock_id']          = self.stock_id
+        self.item['comment']           = self.get_comment()
+        self.item['quantity']          = self.numShares.get_text()
+        self.item['buyprice']          = self.enterBuyPrice.get_text()
+        self.item['price']             = self.item['buyprice']
+        self.item['buydate']           = str(helper.makeTimeFromGTK(self.buyDate.get_date()))
+        self.item['datetime']          = self.item['buydate']
         self.item['transaction_costs'] = self.transactioncosts.get_text()
-        self.item['type']             = config.PORTFOLIOITEM
-        self.item['buy_sum']          = (float(self.item['buyprice'])
+        self.item['type']              = config.PORTFOLIOITEM
+        self.item['buy_sum']           = (float(self.item['buyprice'])
                                         * float(self.item['quantity'])
                                         + float(self.item['transaction_costs']))
         #insert into positions table
