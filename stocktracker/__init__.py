@@ -31,7 +31,6 @@ class stocktracker():
         handler.setFormatter(logging.Formatter("%(levelname)s %(asctime)s %(funcName)s %(lineno)d %(message)s"))
         self.logger.addHandler(handler)
     
-
         #set log levels
         if verbose:
             self.logger.info('logger lever = verbose')

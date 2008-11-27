@@ -366,14 +366,18 @@ class StockTracker(object):
                 self.header.hide()
                 self.hide_portfolio()
                 self.hide_watchlist()
+                self.hide_index()
             elif type == config.WATCHLIST:
                 self.hide_portfolio()
+                self.hide_index()
                 self.show_watchlist(id)
             elif type == config.PORTFOLIO:
                 self.hide_watchlist()
+                self.hide_index()
                 self.show_portfolio(id)
             elif type == config.INDEX:
                 self.hide_portfolio()
+                self.hide_watchlist()
                 self.show_index(id)
             else :
                 self.currentList = None

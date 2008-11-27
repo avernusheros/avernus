@@ -1,4 +1,3 @@
-
 try:
     import sqlite3, os, csv, sys
     import stocktracker.config
@@ -505,6 +504,3 @@ if __name__ == "__main__":
     d.create_tables()
     d.fill_tables()
     d.commit()
-
-    print d.get_stock_list()
-
