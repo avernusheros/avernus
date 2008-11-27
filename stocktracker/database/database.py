@@ -1,5 +1,14 @@
-import sqlite3, os, csv, sys
+
+try:
+    import sqlite3, os, csv, sys
+    import stocktracker.config
+except ImportError, e:
+    print "Import error in database.py:", e
+    #sys.exit(1)
+    
+
 path = os.path.join(os.path.expanduser("~"), '.stocktracker/data.db')
+
 
 instance = None
 
@@ -68,6 +77,23 @@ class Database():
             ret.append(item)
         return ret
 
+    def get_indices(self):
+        self.connect()
+        c = self.con.execute('''
+            SELECT *
+            FROM indices
+            ''')
+        ret = []
+        for row in c.fetchall():
+            item = {}
+            item['id']      = row[0]
+            item['type']    = stocktracker.config.INDEX
+            item['name']    = row[1]
+            item['comment'] = row[2]
+            item['cash']    = 0
+            ret.append(item)
+        return ret
+
     def get_transactions(self, portfolio_id):
         self.connect()
         c = self.con.execute('''
@@ -96,6 +122,26 @@ class Database():
             items.append(item)
         return items
 
+    def get_index_positions(self, index_id):
+        self.connect()
+        c = self.con.execute('''
+            SELECT *
+            FROM index_of_stock
+            WHERE index_id = ?            
+                ''', (index_id,))
+        c = c.fetchall()
+        items = []
+        for row in c:
+            item = {}
+            item['index_id'] = index_id
+            item['stock_id'] = row[0]
+            #we need type and id to make the fundamentals treeview work
+            item['id']       = index_id
+            item['type']     = stocktracker.config.INDEXITEM
+            item.update(self.get_stock_info(item['stock_id']))
+            items.append(item)
+        return items
+            
     def get_portfolio_positions(self, portfolio_id):
         self.connect()
         c = self.con.execute('''
@@ -116,48 +162,61 @@ class Database():
             item['buyprice'] = row[6]
             item['type'] = row[7]
             item['buysum'] = row[8]
-            #get stock info
-            info = self.con.execute('''
-            SELECT security.name, security.isin, exchange.name
-            FROM stock, security, exchange
-            WHERE stock.id = ?
-            AND security.id = stock.security_id
-            AND stock.exchange_id = exchange.id
-            ''', (item['stock_id'],))
-            info = info.fetchone()
-            item['name'] = info[0]
-            item['isin'] = info[1]
-            item['exchange'] = info[2]
-            #get fundamental data
-            data = self.con.execute('''
-            SELECT *, max(id)
-            FROM quotation
-            WHERE stock_id = ?
-            ''', (item['stock_id'],))
-            data = data.fetchone()
+            item.update(self.get_stock_info(item['stock_id']))
+            items.append(item)
+        return items
+            
+    def get_stock_info(self, stock_id):
+        """
+        @param stock_id: 
+        """
+        item = {}
+        info = self.con.execute('''
+        SELECT security.name, security.isin, exchange.name
+        FROM stock, security, exchange
+        WHERE stock.id = ?
+        AND security.id = stock.security_id
+        AND stock.exchange_id = exchange.id
+        ''', (stock_id,))
+        info = info.fetchone()
+        item['name'] = info[0]
+        item['isin'] = info[1]
+        item['exchange'] = info[2]
+        #get fundamental data
+        data = self.con.execute('''
+        SELECT *, max(id)
+        FROM quotation
+        WHERE stock_id = ?
+        ''', (stock_id,))
+        data = data.fetchone()
+        if data[0]:
+            print 'here' 
             item['price'] = data[3]
             item['change'] = data[4] 
-            item['datetime'] = data[1]
+            item['datetime'] = data[1] 
             
             data = self.con.execute('''
             SELECT *
             FROM stockdata
             WHERE stock_id = ?
-            ''', (item['stock_id'],))
+            ''', (stock_id,))
             data = data.fetchone()
-            item['avg_daily_volume'] = data[2]
-            item['market_cap'] = data[3]
-            item['book_value'] = data[4]
-            item['ebitda'] = data[5]
-            item['dividend_per_share'] = data[6]
-            item['dividend_yield'] = data[7]
-            item['eps'] = data[8]
-            item['52_week_high'] = data[9]
-            item['52_week_low'] = data[10]
-            item['price_earnings_ratio'] = data[11]
-            
-            items.append(item)
-        return items
+            if data[0]:
+                item['avg_daily_volume'] = data[2]
+                item['market_cap'] = data[3]
+                item['book_value'] = data[4]
+                item['ebitda'] = data[5]
+                item['dividend_per_share'] = data[6]
+                item['dividend_yield'] = data[7]
+                item['eps'] = data[8]
+                item['52_week_high'] = data[9]
+                item['52_week_low'] = data[10]
+                item['price_earnings_ratio'] = data[11]
+            item['updated'] = True
+        else:
+            item['updated'] = False
+        #return the stock item
+        return item
 
     def get_portfolio_info(self, id):
         """
@@ -210,7 +269,7 @@ class Database():
 
     def create_tables(self):
         """
-        Create statements
+        sqlite create statements
         """
         self.connect()
         self.cur.executescript('''
@@ -246,6 +305,16 @@ class Database():
                 , security_id text
                 , exchange_id text
                 , currency text
+                );
+            CREATE TABLE INDICES (
+                id INTEGER PRIMARY KEY AUTOINCREMENT
+                , symbol text
+                , name text
+                , country_code text
+                );
+            CREATE TABLE INDEX_OF_STOCK (
+                stock_id integer
+                , index_id integer
                 );
             CREATE TABLE YAHOO (
                 stock_id integer PRIMARY KEY
@@ -298,18 +367,31 @@ class Database():
         input = csv.reader(f, delimiter='\t')
         for i in input:
             self.con.execute('INSERT INTO SECURITY VALUES (NULL, ?,?,?)', i)
+            
+        f = open(os.path.join(sys.path[0], '../../share/stockdata/index.csv'))
+        input = csv.reader(f, delimiter='\t')
+        for i in input:
+            self.con.execute('INSERT INTO indices VALUES (NULL, ?,?,?)', i)
                 
         f = open(os.path.join(sys.path[0], '../../share/stockdata/stocks.csv'))
         input = csv.reader(f, delimiter='\t')
         for i in input:
             d = self.cur.execute('SELECT id FROM exchange WHERE mic = ?', (i[1],))
-            d = d.fetchone()
-            exchange_id = d[0]
+            exchange_id = d.fetchone()[0]
             d = self.cur.execute('SELECT id FROM security WHERE isin = ?', (i[0],))
-            d = d.fetchone()
-            security_id = d[0]
+            security_id = d.fetchone()[0]
             self.cur.execute('INSERT INTO STOCK VALUES (null,?,?,?)', (security_id,exchange_id,i[2] ))
-            self.cur.execute('INSERT INTO YAHOO VALUES (?,? )', (self.cur.lastrowid, i[3]))
+            stock_id = self.cur.lastrowid
+            self.cur.execute('INSERT INTO YAHOO VALUES (?,? )', (stock_id, i[3]))
+            if i[4]: #we know the index of the stock
+                d = self.cur.execute('''SELECT id
+                                        FROM indices
+                                        WHERE symbol = ?''', (i[4],))
+                index_id = d.fetchone()[0]
+                if index_id: #index exists in our table indexS
+                    self.cur.execute('''INSERT INTO index_of_stock 
+                                        VALUES (?,?)'''
+                                        , (stock_id, index_id))
 
     def add_portfolio(self, item):
         """ insert a portfolio into the database
@@ -348,8 +430,9 @@ class Database():
         self.commit()
 
     def add_position(self, item):
-        """adds a position to db
-        @params item - the item to add
+        """
+        adds a position to db
+        @param item - the item to add
         """
         self.connect()
         self.cur.execute('''INSERT INTO position

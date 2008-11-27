@@ -40,6 +40,7 @@ class StockTracker(object):
         #Initialize trees
         self.wl_performance_tree = treeviews.PerformanceTreeWatchlist(self.mainWindow.get_widget('performanceTree'))
         self.po_performance_tree = treeviews.PerformanceTreePortfolio(self.mainWindow.get_widget('portfolioPerformanceTree'))
+        self.in_performance_tree = treeviews.PerformanceTreeIndex(self.mainWindow.get_widget('indexPerformanceTree'))
         self.left_tree = treeviews.LeftTree(self.mainWindow.get_widget('leftTree'))
         self.fundamentals_tree = treeviews.FundamentalsTree(self.mainWindow.get_widget('fundamentalsTree'))
         self.transactions_tree = treeviews.TransactionsTree(self.mainWindow.get_widget('transactionsTree'))
@@ -86,11 +87,16 @@ class StockTracker(object):
         self.hide_watchlist()
         #get portfolio tabs
         self.portfolio_tabs = []
-        self.portfolio_tabs.append(self.mainWindow.get_widget("tab_fundamentals"))
         self.portfolio_tabs.append(self.mainWindow.get_widget("tab_portfolio_performance"))
+        self.portfolio_tabs.append(self.mainWindow.get_widget("tab_fundamentals"))
         self.portfolio_tabs.append(self.mainWindow.get_widget("tab_transactions"))
         self.hide_portfolio()
-
+        #get index tabs
+        self.index_tabs = []
+        self.index_tabs.append(self.mainWindow.get_widget("tab_fundamentals"))
+        self.index_tabs.append(self.mainWindow.get_widget("tab_index_performance"))
+        self.hide_index()
+        
     def initialize_db(self):
         self.db = database.get_db()
         self.db.connect()
@@ -126,6 +132,16 @@ class StockTracker(object):
         for tab in self.watchlist_tabs:
             tab.hide()
 
+    def hide_index(self):
+        for tab in self.index_tabs:
+            tab.hide()
+
+    def show_index(self, id):
+        self.currentList = None
+        self.reload_index(id)
+        for tab in self.index_tabs:
+            tab.show()
+            
     def show_portfolio(self, id):
         self.currentList = id
         self.reload_portfolio(id)
@@ -187,7 +203,17 @@ class StockTracker(object):
         #reload and show the header
         self.reload_header()
         self.header.show()
-
+    
+    def reload_index(self, id):
+        self.logger.info('reload index '+str(id))
+        items = self.db.get_index_positions(id)
+        self.fundamentals_tree.clear()
+        self.in_performance_tree.clear()
+        for item in items:
+            #self.fundamentals_tree.insert(item)
+            self.in_performance_tree.insert(item)
+        #TODO show header
+    
     def reload_portfolio(self, id):
         """ reload a portfolio
         @params id - integer - portfolio id
@@ -272,6 +298,7 @@ class StockTracker(object):
         #self.watchlists.add_to_tree(self.left_tree)
         #self.portfolios.add_to_tree(self.left_tree)
         items = self.db.get_portfolios()
+        items.extend(self.db.get_indices())
         for item in items:
             self.left_tree.insert_after(None, item)
 
@@ -345,6 +372,9 @@ class StockTracker(object):
             elif type == config.PORTFOLIO:
                 self.hide_watchlist()
                 self.show_portfolio(id)
+            elif type == config.INDEX:
+                self.hide_portfolio()
+                self.show_index(id)
             else :
                 self.currentList = None
                 self.addButton.set_sensitive(False)

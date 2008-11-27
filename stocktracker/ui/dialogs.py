@@ -267,7 +267,8 @@ class BuyDialog(QuoteDialog):
         self.autocomplete()
 
     def save_data_to_db(self):
-        """This function is used to read the data from the dialog
+        """
+        This function is used to read the data from the dialog
         and then store it in the db.
         """
         #get data from widgets

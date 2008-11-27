@@ -8,7 +8,6 @@ except ImportError, e:
     
 
 
-
 class Tree:
     def remove(self, iter):
         self.model.remove(iter)
@@ -53,16 +52,70 @@ class LeftTree(Tree):
         #self.tree.connect("drag_data_received", self.drag_data_received_data)
         self.watchlist_iter = self.model.append(None, [config.CATEGORY_W, -1,"<b>Watchlists</b>"])
         self.portfolio_iter = self.model.append(None, [config.CATEGORY_P, -1,"<b>Portfolios</b>"])
-
+        self.index_iter     = self.model.append(None, [config.CATEGORY_I, -1,"<b>Indices</b>"])
+ 
     def insert_after(self, iter, item):
         if not iter:
             if item['type'] == config.WATCHLIST:
                 iter = self.watchlist_iter
             elif item['type'] == config.PORTFOLIO:
                 iter = self.portfolio_iter
+            elif item['type'] == config.INDEX:
+                iter = self.index_iter
         iter = self.model.append(iter, [item['type'], item['id'], item['name']])
         return iter
 
+class PerformanceTreeIndex(Tree):
+    def __init__(self, tree):
+        """
+        @params tree - treeview
+        """
+        self.tree = tree
+        #name, lasttrade, change, icon
+        self.model = gtk.TreeStore(str,str,str,gtk.gdk.Pixbuf)
+        self.tree.set_model(self.model)
+    
+        #name
+        self.column_name = gtk.TreeViewColumn('Name', 
+                            gtk.CellRendererText(), markup = 0)
+        widget1 = gtk.Label()
+        widget1.set_markup('<span size="medium"><b>Name</b></span>\n<span size="small">ISIN</span>\n<span size="small">Exchange</span>')
+        self.column_name.set_widget(widget1)
+        widget1.show()
+        self.tree.append_column(self.column_name)
+
+        #lasttrade
+        self.column_lasttrade = gtk.TreeViewColumn('lasttrade',
+                         gtk.CellRendererText(), markup = 1)
+        widget2 = gtk.Label()
+        widget2.set_markup('<span size="medium"><b>Last Trade</b></span>\n<span size="small">Price</span>\n<span size="small">Trade Time</span>')
+        self.column_lasttrade.set_widget(widget2)
+        widget2.show()
+        self.tree.append_column(self.column_lasttrade)
+
+        #change
+        self.column_change = gtk.TreeViewColumn('change', 
+                    gtk.CellRendererText(), markup = 2)
+        widget3 = gtk.Label()
+        widget3.set_markup('<span size="medium"><b>Change</b></span>\n<span size="small">$</span>\n<span size="small">%</span>')
+        self.column_change.set_widget(widget3)
+        widget3.show()
+        self.tree.append_column(self.column_change)
+        icon1 = gtk.CellRendererPixbuf()
+        self.column_change.pack_start(icon1, True)
+        self.column_change.add_attribute(icon1, "pixbuf", 3)
+
+    def insert(self, item):
+        color = '#606060'
+        name = "" + item['name'] +"\n<span foreground=\""+ color +"\"><small>" +item['isin']+ "</small></span>\n<span foreground=\""+ color +"\"><small>" +item['exchange']+ "</small></span>"
+        if not item['updated']:
+            item['change'] = 0
+            item['price'] = 0
+        icon1 = gtk.gdk.pixbuf_new_from_file(helper.get_arrow_type(item['change']))
+        iter = self.model.append(None, (name, str(item['price'])
+                , str(item['change']), icon1))
+        return iter
+    
 
 class PerformanceTreeWatchlist(Tree):
     def __init__(self, tree):
@@ -224,12 +277,12 @@ class FundamentalsTree(Tree):
         name = "" + item['name'] +"\n \
                 <span foreground=\""+ color +"\"><small>" +item['isin']+ "</small></span>\n \
                  <span foreground=\""+ color +"\"><small>" +item['exchange']+ "</small></span>"
-        iter = self.model.append(None, [item['type'], item['id']
+        if item['updated']:
+            iter = self.model.append(None, [item['type'], item['id']
                 , name, item['market_cap'], item['avg_daily_volume']
                 , item['52_week_high'], item['52_week_low']
                 , item['eps'], item['price_earnings_ratio']])
-        return iter
-
+            return iter
 
 class TransactionsTree(Tree):
     def __init__(self, tree):
