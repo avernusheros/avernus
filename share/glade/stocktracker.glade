@@ -386,6 +386,37 @@
                       </packing>
                     </child>
                     <child>
+                      <widget class="GtkScrolledWindow" id="tab_index_performance">
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="hscrollbar_policy">GTK_POLICY_AUTOMATIC</property>
+                        <property name="vscrollbar_policy">GTK_POLICY_AUTOMATIC</property>
+                        <child>
+                          <widget class="GtkTreeView" id="indexPerformanceTree">
+                            <property name="width_request">400</property>
+                            <property name="visible">True</property>
+                            <property name="can_focus">True</property>
+                            <property name="reorderable">True</property>
+                          </widget>
+                        </child>
+                      </widget>
+                      <packing>
+                        <property name="position">2</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <widget class="GtkLabel" id="label11">
+                        <property name="visible">True</property>
+                        <property name="label" translatable="yes">&lt;b&gt;Performance&lt;/b&gt;</property>
+                        <property name="use_markup">True</property>
+                      </widget>
+                      <packing>
+                        <property name="type">tab</property>
+                        <property name="position">2</property>
+                        <property name="tab_fill">False</property>
+                      </packing>
+                    </child>
+                    <child>
                       <widget class="GtkScrolledWindow" id="tab_fundamentals">
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
@@ -403,18 +434,18 @@
                         </child>
                       </widget>
                       <packing>
-                        <property name="position">2</property>
+                        <property name="position">3</property>
                       </packing>
                     </child>
                     <child>
-                      <widget class="GtkLabel" id="label_fundamentals">
+                      <widget class="GtkLabel" id="label6">
                         <property name="visible">True</property>
                         <property name="label" translatable="yes">&lt;b&gt;Fundamentals&lt;/b&gt;</property>
                         <property name="use_markup">True</property>
                       </widget>
                       <packing>
                         <property name="type">tab</property>
-                        <property name="position">2</property>
+                        <property name="position">3</property>
                         <property name="tab_fill">False</property>
                       </packing>
                     </child>
@@ -435,44 +466,13 @@
                         </child>
                       </widget>
                       <packing>
-                        <property name="position">3</property>
+                        <property name="position">4</property>
                       </packing>
                     </child>
                     <child>
                       <widget class="GtkLabel" id="label5">
                         <property name="visible">True</property>
                         <property name="label" translatable="yes">&lt;b&gt;Transactions&lt;/b&gt;</property>
-                        <property name="use_markup">True</property>
-                      </widget>
-                      <packing>
-                        <property name="type">tab</property>
-                        <property name="position">3</property>
-                        <property name="tab_fill">False</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <widget class="GtkScrolledWindow" id="tab_index_performance">
-                        <property name="visible">True</property>
-                        <property name="can_focus">True</property>
-                        <property name="hscrollbar_policy">GTK_POLICY_AUTOMATIC</property>
-                        <property name="vscrollbar_policy">GTK_POLICY_AUTOMATIC</property>
-                        <child>
-                          <widget class="GtkTreeView" id="indexPerformanceTree">
-                            <property name="width_request">400</property>
-                            <property name="visible">True</property>
-                            <property name="can_focus">True</property>
-                            <property name="reorderable">True</property>
-                          </widget>
-                        </child>
-                      </widget>
-                      <packing>
-                        <property name="position">4</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <widget class="GtkLabel" id="label6">
-                        <property name="visible">True</property>
-                        <property name="label" translatable="yes">&lt;b&gt;Performance&lt;/b&gt;</property>
                         <property name="use_markup">True</property>
                       </widget>
                       <packing>

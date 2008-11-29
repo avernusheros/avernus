@@ -1,5 +1,3 @@
-_ = lambda x : x
-
 try:
     import pygtk
     pygtk.require("2.0")
@@ -23,10 +21,10 @@ except ImportError, e:
     print "Import error in stocktracker_gui.py, cannot start:", e
     sys.exit(1)
 
+logger = logging.getLogger('stocktracker')
 
 '''A simple python based portfolio manager'''
 class StockTracker(object):
-    logger = logging.getLogger('stocktracker')
     
     def __init__(self):
         #Get the local path
@@ -44,23 +42,19 @@ class StockTracker(object):
         self.left_tree = treeviews.LeftTree(self.mainWindow.get_widget('leftTree'))
         self.fundamentals_tree = treeviews.FundamentalsTree(self.mainWindow.get_widget('fundamentalsTree'))
         self.transactions_tree = treeviews.TransactionsTree(self.mainWindow.get_widget('transactionsTree'))
-
+        self.trees = [self.wl_performance_tree, self.po_performance_tree, self.left_tree,
+                         self.fundamentals_tree, self.transactions_tree]
         #init widgets
         self.initialize_widgets()
-
-        #self.watchlists = items.Category('Watchlists', self.left_tree)
-        #self.portfolios = items.Category('Portfolios', self.left_tree)
-
-        self.currentList = None
-
+        #saves the current watchlist or portfolio
+        self.current_list = None
+        self.current_type = None
         #current selected item
         self.selected_item = None
-
         #init database
         self.initialize_db()
-        #reload
+        #reload from data
         self.reload_from_data()
-
 
     #************************************************************
     #* Initialize
@@ -70,7 +64,7 @@ class StockTracker(object):
         """Initialize any widgets that we want.  Basically
         grab widgets that you want to have access to later on in the program.
         """
-        self.logger.debug('Initialize widgets')
+        logger.debug('Initialize widgets')
         #Get the Main Window
         self.main_window = self.mainWindow.get_widget("mainWindow")
         #self.set_window_title_from_file(self.file.filename)
@@ -117,7 +111,8 @@ class StockTracker(object):
             self.main_window.set_title(_("StockTracker - Untitled"))
 
     def show_watchlist(self, id):
-        self.currentList = id
+        self.current_list = id
+        self.current_type = config.WATCHLIST
         self.reload_watchlist(id)
         self.addButton.set_sensitive(True)
         self.updateButton.set_sensitive(True)
@@ -137,13 +132,15 @@ class StockTracker(object):
             tab.hide()
 
     def show_index(self, id):
-        self.currentList = None
+        self.current_list = id
+        self.current_type = config.INDEX
         self.reload_index(id)
         for tab in self.index_tabs:
             tab.show()
             
     def show_portfolio(self, id):
-        self.currentList = id
+        self.current_list = id
+        self.current_type = config.PORTFOLIO
         self.reload_portfolio(id)
         self.addButton.set_sensitive(True)
         self.updateButton.set_sensitive(True)
@@ -205,14 +202,15 @@ class StockTracker(object):
         self.header.show()
     
     def reload_index(self, id):
-        self.logger.info('reload index '+str(id))
+        logger.info('reload index '+str(id))
         items = self.db.get_index_positions(id)
         self.fundamentals_tree.clear()
         self.in_performance_tree.clear()
         for item in items:
-            #self.fundamentals_tree.insert(item)
+            self.fundamentals_tree.insert(item)
             self.in_performance_tree.insert(item)
-        #TODO show header
+        self.reload_header()
+        self.header.hide()
     
     def reload_portfolio(self, id):
         """ reload a portfolio
@@ -234,8 +232,13 @@ class StockTracker(object):
         self.header.show()
 
     def reload_header(self):
-        #get performance information from current list
-        data = self.db.get_portfolio_info(self.currentList)
+        if self.current_type == config.INDEX:
+            logger.debug('index header not implemented')
+            #data = self.db.get_index_info(self.current_list)
+            return
+        else:
+            #get performance information from current list
+            data = self.db.get_portfolio_info(self.current_list)
         #get widgets
         name            = self.mainWindow.get_widget("header_name")
         info            = self.mainWindow.get_widget("header_info")
@@ -267,13 +270,8 @@ class StockTracker(object):
     def buy_position(self, portfolio_id):
         dialog = dialogs.BuyDialog(self.gladefile, portfolio_id)
         if (dialog.run() == gtk.RESPONSE_OK):
-            pass
-                #dialog.position.update()
-                #Append to the tree
-                #dialog.position.add_to_tree(self.portfolio_performance_tree, self.fundamentals_tree, self.transactions_tree)
-                #Add to the portfolio
-                #portfolio.add_child(dialog.position)
-        #self.reload_header()
+            self.reload_portfolio(portfolio_id)
+            self.reload_header()
 
     def add_watchlist(self):
         dialog = dialogs.WatchlistDialog(self.gladefile)
@@ -289,19 +287,14 @@ class StockTracker(object):
 
     def reload_from_data(self):
         """Called when we want to reset everything based
-        on internal data.  Probably called when a file has been loaded."""
-        #self.performance_tree.treestore.clear()
-        #self.left_tree.treestore.clear()
-        #self.fundamentals_tree.treestore.clear()
-        #self.transactions_tree.treestore.clear()
-        #self.portfolio_performance_tree.treestore.clear()
-        #self.watchlists.add_to_tree(self.left_tree)
-        #self.portfolios.add_to_tree(self.left_tree)
+        on internal data."""
+        for tree in self.trees:
+            tree.clear()
+        self.left_tree.insert_categories()
         items = self.db.get_portfolios()
         items.extend(self.db.get_indices())
         for item in items:
             self.left_tree.insert_after(None, item)
-
 
     #************************************************************
     #* Signal Handlers
@@ -330,11 +323,11 @@ class StockTracker(object):
             elif type == config.PORTFOLIO:
                 self.buy_position(id)
             elif type == config.PORTFOLIOITEM:
-                self.buy_position(self.currentList)
+                self.buy_position(self.current_list)
             elif type == config.WATCHLISTITEM:
-                 self.add_watchlistitem(self.currentList)
+                 self.add_watchlistitem(self.current_list)
         else:
-            print "nothing selected"
+            logger.error('nothing selected to add to')
 
     def on_treeview_cursor_changed(self, widget):
         self.selected_item = None
@@ -358,7 +351,7 @@ class StockTracker(object):
             type, id, model, selection_iter = self.selected_item
             #category selected
             if type == config.CATEGORY_W or type == config.CATEGORY_P:
-                self.currentList = None
+                self.current_list = None
                 self.addButton.set_sensitive(True)
                 self.updateButton.set_sensitive(True)
                 self.removeButton.set_sensitive(False)
@@ -380,7 +373,7 @@ class StockTracker(object):
                 self.hide_watchlist()
                 self.show_index(id)
             else :
-                self.currentList = None
+                self.current_list = None
                 self.addButton.set_sensitive(False)
                 self.updateButton.set_sensitive(False)
                 self.removeButton.set_sensitive(False)
@@ -454,8 +447,8 @@ class StockTracker(object):
         """This is called when a row is "activated" in the tree
         view.  It happens when the user double clicks on an item
         in the tree.  We will use it to edit the items.
-        @param tree_view gtk.TreeView - The Tree
-        @param path - string - The path string
+        @param tree_view gtk.TreeView - the Tree
+        @param path - string - the path string
         @param tree_column - gtk.TreeViewColumn - The column that was clicked on.
         """
         #Get the column of the object
@@ -472,8 +465,14 @@ class StockTracker(object):
 
     def on_update(self, widget):
         """called when update button is clicked"""
-        self.watchlists.update()
-        self.portfolios.update()
-        self.reload_from_data()
+        if self.current_list:
+            if self.current_type == config.INDEX:
+                stocks = self.db.get_stock_ids_of_index(self.current_list)
+            else:
+                stocks = self.db.get_stock_ids_of_portfolio(self.current_list)
+            for id in stocks:
+                helper.update_stock(id[0])
+            self.reload_from_data()
+            
 
 

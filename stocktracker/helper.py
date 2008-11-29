@@ -11,9 +11,10 @@ def update_stock(id):
     #get data from data provider
     data = config.DATA_PROVIDER.get_all(id)
     if data:
-        data['percent'] = 100*float(data['price'])/(float(data['price'])-float(data['change'])) -100
+        data['percent']  = 100*float(data['price'])/(float(data['price'])-float(data['change'])) -100
         data['datetime'] = "%s %s" % (data['price_date'], data['price_time'])
         data['stock_id'] = id
+        data['updated']  = True
         db.add_quotation(data)
         return data
     else:

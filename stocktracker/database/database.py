@@ -8,7 +8,6 @@ except ImportError, e:
 
 path = os.path.join(os.path.expanduser("~"), '.stocktracker/data.db')
 
-
 instance = None
 
 def get_db():
@@ -140,7 +139,25 @@ class Database():
             item.update(self.get_stock_info(item['stock_id']))
             items.append(item)
         return items
-            
+          
+    def get_stock_ids_of_portfolio(self, portfolio_id):
+        self.connect()
+        c = self.con.execute('''
+            SELECT stock_id
+            FROM position
+            WHERE portfolio_id = ?
+            ''', (portfolio_id,))
+        return c.fetchall()
+    
+    def get_stock_ids_of_index(self, index_id):
+        self.connect()
+        c = self.con.execute('''
+            SELECT stock_id
+            FROM index_of_stock
+            WHERE index_id = ?
+            ''', (index_id,))
+        return c.fetchall()
+           
     def get_portfolio_positions(self, portfolio_id):
         self.connect()
         c = self.con.execute('''
@@ -189,7 +206,6 @@ class Database():
         ''', (stock_id,))
         data = data.fetchone()
         if data[0]:
-            print 'here' 
             item['price'] = data[3]
             item['change'] = data[4] 
             item['datetime'] = data[1] 
@@ -439,7 +455,7 @@ class Database():
                             , (item['portfolio_id'],item['stock_id']
                                 , item['comment'], item['buydate']
                                 , item['quantity'], item['buyprice']
-                                , item['type'], item['buy_sum']))
+                                , item['type'], item['buysum']))
         self.commit()
         return self.cur.lastrowid
 

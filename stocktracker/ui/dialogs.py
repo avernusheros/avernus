@@ -86,10 +86,7 @@ class WatchlistDialog(Dialog):
 
 class QuoteDialog(Dialog):
     """This is a class that is used to show a quoteDialog.  It
-    can be used to create or edit a watchlist.quote.  To create one
-    simply initialize the class and do not pass a quote.  If you
-    want to edit an object initialize with the object that
-    you want to edit."""
+    can be used to create a watchlist.quote."""
 
     def __init__(self, glade_file, watchlist_id):
         """Initialize the quote dialog.
@@ -188,7 +185,9 @@ class QuoteDialog(Dialog):
         self.item['transactioncosts'] = 0.0
         self.item['type']             = config.WATCHLISTITEM
         self.item['buyprice']         = float(self.item['price'])
-        self.item['buysum']          = float(self.item['price'])
+        self.item['buysum']           = float(self.item['price'])
+        import datetime
+        self.item['buydate']          = datetime.date.today()
         #insert into positions table
         self.item['id'] = db.add_position(self.item)
 
@@ -281,11 +280,12 @@ class BuyDialog(QuoteDialog):
         self.item['datetime']          = self.item['buydate']
         self.item['transaction_costs'] = self.transactioncosts.get_text()
         self.item['type']              = config.PORTFOLIOITEM
-        self.item['buy_sum']           = (float(self.item['buyprice'])
+        self.item['buysum']            = (float(self.item['buyprice'])
                                         * float(self.item['quantity'])
                                         + float(self.item['transaction_costs']))
         #insert into positions table
-        self.item['position_id'] = db.add_position(self.item)
+        self.item['id']                = db.add_position(self.item)
+        self.item['position_id']       = self.item['id']
         #insert transaction into db
         db.add_transaction(self.item)
 

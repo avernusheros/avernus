@@ -7,7 +7,6 @@ except ImportError, e:
     sys.exit(1)
     
 
-
 class Tree:
     def remove(self, iter):
         self.model.remove(iter)
@@ -50,10 +49,12 @@ class LeftTree(Tree):
         self.tree.set_search_column(2)
         self.column.set_sort_column_id(2)
         #self.tree.connect("drag_data_received", self.drag_data_received_data)
+ 
+    def insert_categories(self):
         self.watchlist_iter = self.model.append(None, [config.CATEGORY_W, -1,"<b>Watchlists</b>"])
         self.portfolio_iter = self.model.append(None, [config.CATEGORY_P, -1,"<b>Portfolios</b>"])
         self.index_iter     = self.model.append(None, [config.CATEGORY_I, -1,"<b>Indices</b>"])
- 
+    
     def insert_after(self, iter, item):
         if not iter:
             if item['type'] == config.WATCHLIST:
