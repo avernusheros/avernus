@@ -9,34 +9,11 @@ except ImportError, e:
     sys.exit(1)
 
 db = database.get_db()
+main_application_window = None
 
 class Dialog(object):
     def __init__(self):
         pass
-
-    def find_text_in_combo(self, combobox, text):
-        """This is a helper function use to find text in a gtk.ComboBox.
-        @param combobox gtk.ComboBox - This should contain text.
-        @param text - string - the text that we are looking to find.
-        @returns - gtk.TreeIter - The iter at the found position or None if nothing was found.
-        """
-        found_iter = None #The Iter where text is found
-        #Get the gtk.TreeModel associated with the combo
-        combo_model = combobox.get_model()
-        if (combo_model):
-            #Get the first iter in the model
-            search_iter = combo_model.get_iter_first()
-            """Now loop through the model checking for
-            matches until one is found.  Or until
-            we have ran out of iters."""
-            while ((found_iter == None)
-                and (search_iter)):
-                if (text == combo_model[search_iter][0]):
-                    #Found!
-                    found_iter = search_iter
-                else:
-                    search_iter = combo_model.iter_next(search_iter)
-        return found_iter
 
     def run(self):
         """Show the dialog"""
@@ -44,13 +21,13 @@ class Dialog(object):
         while (not break_out):
             result = self.dialog.run()
             if (result==gtk.RESPONSE_OK):
-                #Save the date to the object becuase the use pressed ok.
+                #Save the date to the object because the user pressed ok.
                 self.save_data_to_db()
                 break_out = True
                 #Validate here eventually
             else:
                 break_out = True
-        self.dialog.hide()
+        self.dialog.destroy()
         return result;
 
 
@@ -157,10 +134,10 @@ class QuoteDialog(Dialog):
             text2 = ''
             if data: #data available
                 text1 += '\n<span size="small">Volume: ' + data['volume'] + '</span>'
-                text2 += ''''<span size="medium"><b>' + data['price'] +
-                   '</b></span>\n<span size="small">' + data['change'] + 
-                   '</span>\n<span size="small">' + str(data['percent']) + 
-                   '%</span>'''
+                text2 += '<span size="medium"><b>' + data['price'] \
+                   + '</b></span>\n<span size="small">' + data['change'] \
+                   + '</span>\n<span size="small">' + str(data['percent']) \
+                   + '%</span>'
                 self.header_icon.set_from_file(helper.get_arrow_type(float(data['percent'])))
                 self.header_icon.show()
             self.header_name.set_markup(text1)
@@ -179,15 +156,16 @@ class QuoteDialog(Dialog):
         and then store it in the watchlist.quote object.
         """
         #get data from widget
-        self.item['stock_id']         = self.stock_id
-        self.item['comment']          = self.get_comment()
-        self.item['quantity']         = 1
-        self.item['transactioncosts'] = 0.0
-        self.item['type']             = config.WATCHLISTITEM
-        self.item['buyprice']         = float(self.item['price'])
-        self.item['buysum']           = float(self.item['price'])
+        self.item['stock_id']          = self.stock_id
+        self.item['comment']           = self.get_comment()
+        self.item['quantity']          = 1
+        self.item['transaction_costs'] = 0.0
+        self.item['type']              = config.WATCHLISTITEM
+        self.item['buyprice']          = float(self.item['price'])
+        self.item['buysum']            = float(self.item['price'])
         import datetime
-        self.item['buydate']          = datetime.date.today()
+        self.item['buydate']           = datetime.date.today()
+        self.item['transaction_type']  = config.TRANSACTION_BUY
         #insert into positions table
         self.item['id'] = db.add_position(self.item)
 
@@ -209,9 +187,12 @@ class QuoteDialog(Dialog):
 
 class PortfolioDialog(Dialog):
     """Initialize the portfolio dialog.
-    @param glade_file - string - the glade file for this dialog.
     """
     def __init__(self, glade_file):
+        """
+        @param glade_file: the glade file for this dialog.
+        @type glade_file: text
+        """
         self.glade_file = glade_file
         #Get the widget tree
         self.wTree = gtk.glade.XML(self.glade_file, "portfolioDialog")
@@ -220,6 +201,7 @@ class PortfolioDialog(Dialog):
         self.dialog = self.wTree.get_widget("portfolioDialog")
         #get the widgets from the dlg
         self.enterName = self.wTree.get_widget("enterPortfolioName")
+        self.enterCash = self.wTree.get_widget("enterPortfolioCash")
         self.enterDescription = self.wTree.get_widget("enterPortfolioDescription")
         self.item = {}
 
@@ -231,8 +213,62 @@ class PortfolioDialog(Dialog):
         self.item['type'] = config.PORTFOLIO
         txtBuffer = self.enterDescription.get_buffer()
         self.item['comment'] = txtBuffer.get_text(*txtBuffer.get_bounds())
-        self.item['cash'] = 0.0
+        self.item['cash'] = self.enterCash.get_text()
         self.item['id'] = db.add_portfolio(self.item)
+
+
+class SellDialog(Dialog):
+    """
+    dialog to sell a portfolio position
+    """
+    def __init__(self,glade_file, position_id):
+        """
+        Initialize the sell dialog
+        @param glade_file - string - the glade file for this dialog.
+        @param position_id: position to sell
+        @type position_id: integer
+        """
+        self.glade_file = glade_file
+        #Get the widget tree
+        self.wTree = gtk.glade.XML(self.glade_file, "sellDialog")
+        #Connect with yourself
+        self.wTree.signal_autoconnect(self)
+        self.dialog = self.wTree.get_widget("sellDialog")
+        #get the widgets from the dialog
+        self.enterComment = self.wTree.get_widget("enterSellComment")
+        self.numShares = self.wTree.get_widget("enterSellNumShares")
+        self.enterBuyPrice = self.wTree.get_widget("enterSellPrice")
+        self.buyDate = self.wTree.get_widget("sellDate")
+        self.header_name = self.wTree.get_widget("sell_position_name")
+        self.header_performance = self.wTree.get_widget("sell_position_performance")
+        self.header_icon = self.wTree.get_widget("sell_postion_icon")
+        self.transactioncosts = self.wTree.get_widget("sellTransactionCosts")
+        self.item = {}
+        self.item['position_id'] = position_id
+    
+    def save_data_to_db(self):
+        """
+        This function is used to read the data from the dialog
+        and then store it in the db.
+        """
+        pass
+
+class RemovePortfolio(Dialog):
+    def __init__(self, portfolio_id):
+        self.portfolio_id = portfolio_id
+        info = db.get_portfolio_name(portfolio_id)
+        text1 = 'Do you wish to permanently delete the following portfolio and all contained positions?'
+        text2 = info['name']+' - '+info['comment']
+        self.dialog = gtk.MessageDialog(main_application_window,
+                                  gtk.DIALOG_DESTROY_WITH_PARENT,
+                                  gtk.MESSAGE_QUESTION,
+                                  gtk.BUTTONS_OK_CANCEL,
+                                  text1
+                                  )
+        self.dialog.format_secondary_text(text2)
+        
+    def save_data_to_db(self):
+        db.remove_portfolio(self.portfolio_id)
 
 
 class BuyDialog(QuoteDialog):
@@ -242,8 +278,7 @@ class BuyDialog(QuoteDialog):
     def __init__(self, glade_file, portfolio_id):
         """Initialize the buy dialog.
         @param glade_file - string - the glade file for this dialog.
-        @param quote - watchlist.quote - None to create a new
-                       watchlist.quote object, or the object that you wish to edit.
+        @param portfolio_id
         """
         self.glade_file = glade_file
         self.item = {}
@@ -280,6 +315,7 @@ class BuyDialog(QuoteDialog):
         self.item['datetime']          = self.item['buydate']
         self.item['transaction_costs'] = self.transactioncosts.get_text()
         self.item['type']              = config.PORTFOLIOITEM
+        self.item['transaction_type']  = config.TRANSACTION_BUY
         self.item['buysum']            = (float(self.item['buyprice'])
                                         * float(self.item['quantity'])
                                         + float(self.item['transaction_costs']))
@@ -288,5 +324,7 @@ class BuyDialog(QuoteDialog):
         self.item['position_id']       = self.item['id']
         #insert transaction into db
         db.add_transaction(self.item)
+        #update cash of portfolio
+        db.update_cash(self.item['portfolio_id'], self.item['buysum'])
 
 

@@ -67,6 +67,7 @@ class StockTracker(object):
         logger.debug('Initialize widgets')
         #Get the Main Window
         self.main_window = self.mainWindow.get_widget("mainWindow")
+        dialogs.main_application_window = self.main_window
         #self.set_window_title_from_file(self.file.filename)
         #Get the button widgets
         self.editButton = self.mainWindow.get_widget("editButton")
@@ -272,7 +273,20 @@ class StockTracker(object):
         if (dialog.run() == gtk.RESPONSE_OK):
             self.reload_portfolio(portfolio_id)
             self.reload_header()
-
+    
+    def sell_position(self, position_id):
+        dialog = dialogs.SellDialog(self.gladefile, position_id)
+        if (dialog.run() == gtk.RESPONSE_OK):
+            self.reload_portfolio(self.current_list)
+            self.reload_header()
+    
+    def remove_portfolio(self, portfolio_id):
+        dialog = dialogs.RemovePortfolio(portfolio_id)
+        if (dialog.run() == gtk.RESPONSE_OK):
+            type, id, model, selection_iter = self.selected_item
+            self.left_tree.remove(selection_iter)    
+            logger.info('deleted portfolio '+str(portfolio_id))
+    
     def add_watchlist(self):
         dialog = dialogs.WatchlistDialog(self.gladefile)
         if (dialog.run() == gtk.RESPONSE_OK):
@@ -402,17 +416,17 @@ class StockTracker(object):
         if self.selected_item:
             type, id, model, selection_iter = self.selected_item
             if type == config.WATCHLIST or type == config.PORTFOLIO:
-                self.db.remove_portfolio(id)
-                self.left_tree.remove(selection_iter)
+                self.remove_portfolio(id)
             elif type == config.WATCHLISTITEM:
                 self.db.remove_position(id)
                 self.fundamentals_tree.remove_id(id)
                 self.wl_performance_tree.remove_id(id)
             elif type == config.PORTFOLIOITEM:
-                self.db.remove_position(id)
-                self.fundamentals_tree.remove_id(id)
-                self.pf_performance_tree.remove_id(id)
-                self.transactions_tree.remove_id(id)
+                self.sell_position(id)
+                #self.db.remove_position(id)
+                #self.fundamentals_tree.remove_id(id)
+                #self.po_performance_tree.remove_id(id)
+                #self.transactions_tree.remove_id(id)
                 #self.reload_header()
 
     def on_edit_object(self, widget):
@@ -473,6 +487,3 @@ class StockTracker(object):
             for id in stocks:
                 helper.update_stock(id[0])
             self.reload_from_data()
-            
-
-

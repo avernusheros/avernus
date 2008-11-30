@@ -11,6 +11,11 @@ path = os.path.join(os.path.expanduser("~"), '.stocktracker/data.db')
 instance = None
 
 def get_db():
+    """
+    FIXME
+    @param :
+    @type :
+    """
     global instance
     if not instance:
         instance = Database(path)
@@ -18,18 +23,32 @@ def get_db():
 
 class Database():
     def __init__(self, path):
+        """
+        FIXME
+        @param path:
+        @type path:
+        """
         self.path = path
         self.con = None
 
     def connect(self):
+        """
+        FIXME
+        """
         if not self.con:
             self.con = sqlite3.connect(self.path)
             self.cur = self.con.cursor()
 
     def commit(self):
+        """
+        FIXME
+        """
         self.con.commit()
 
     def get_stock_list(self):
+        """
+        FIXME
+        """
         self.connect()
         c = self.con.execute('''
             SELECT stock.id, security.isin, security.name, exchange.name
@@ -43,6 +62,11 @@ class Database():
         return ret
 
     def get_stock_name(self, stock_id):
+        """
+        FIXME
+        @param stock_id:
+        @type stock_id:
+        """
         self.connect()
         c = self.con.execute('''
             SELECT security.name, security.isin, exchange.name
@@ -59,6 +83,9 @@ class Database():
         return item
 
     def get_portfolios(self):
+        """
+        FIXME
+        """
         self.connect()
         c = self.con.execute('''
             SELECT *
@@ -76,6 +103,9 @@ class Database():
         return ret
 
     def get_indices(self):
+        """
+        FIXME
+        """
         self.connect()
         c = self.con.execute('''
             SELECT *
@@ -93,6 +123,11 @@ class Database():
         return ret
 
     def get_transactions(self, portfolio_id):
+        """
+        FIXME
+        @param portfolio_id:
+        @type portfolio_id:
+        """
         self.connect()
         c = self.con.execute('''
             SELECT transactions.*, exchange.name, security.isin, security.name
@@ -121,6 +156,11 @@ class Database():
         return items
 
     def get_index_positions(self, index_id):
+        """
+        FIXME
+        @param index_id:
+        @type index_id:
+        """
         self.connect()
         c = self.con.execute('''
             SELECT *
@@ -141,6 +181,11 @@ class Database():
         return items
           
     def get_stock_ids_of_portfolio(self, portfolio_id):
+        """
+        FIXME
+        @param portfolio_id:
+        @type portfolio_id:
+        """
         self.connect()
         c = self.con.execute('''
             SELECT stock_id
@@ -150,6 +195,11 @@ class Database():
         return c.fetchall()
     
     def get_stock_ids_of_index(self, index_id):
+        """
+        FIXME
+        @param index_id:
+        @type index_id:
+        """
         self.connect()
         c = self.con.execute('''
             SELECT stock_id
@@ -159,6 +209,11 @@ class Database():
         return c.fetchall()
            
     def get_portfolio_positions(self, portfolio_id):
+        """
+        FIXME
+        @param portfolio_id:
+        @type portfolio_id:
+        """
         self.connect()
         c = self.con.execute('''
             SELECT *
@@ -233,6 +288,18 @@ class Database():
         #return the stock item
         return item
 
+    def get_portfolio_name(self, id):
+        c = self.con.execute('''
+            SELECT name, comment
+            FROM portfolio
+            WHERE id = ?
+            ''', (id,))
+        c = c.fetchone()
+        item = {}
+        item['name']    = c[0]
+        item['comment'] = c[1]
+        return item
+
     def get_portfolio_info(self, id):
         """
         @params id - integer - portfolio or watchlist ID
@@ -241,7 +308,7 @@ class Database():
         c = self.con.execute('''
             SELECT name, cash
             FROM portfolio
-            WHERE portfolio.id = ?
+            WHERE id = ?
             ''', (id,))
         c = c.fetchone()
         item = {}
@@ -372,6 +439,9 @@ class Database():
             ''')
 
     def fill_tables(self):
+        """
+        FIXME
+        """
         f = open(os.path.join(sys.path[0], '../../share/stockdata/exchanges.csv'))
         input = csv.reader(f, delimiter='\t')
         self.connect()
@@ -443,6 +513,35 @@ class Database():
                 WHERE position.portfolio_id = ?)
             ''', (portfolio_id,))
         self.commit()
+        
+    def get_cash(self, portfolio_id):
+        """
+        FIXME
+        @param portfolio_id:
+        @type portfolio_id:
+        """
+        c = self.cur.execute('''
+                SELECT cash
+                FROM portfolio
+                WHERE id = ?
+                ''', (portfolio_id,))
+        c = c.fetchone()
+        return c[0]    
+        
+    def update_cash(self, portfolio_id, change):
+        """
+        FIXME
+        @param portfolio_id:
+        @type portfolio_id:
+        @param change:
+        @type change:
+        """
+        old = self.get_cash(portfolio_id)
+        self.con.execute('''
+                UPDATE portfolio
+                SET cash = ?
+                WHERE id = ?
+                ''', (old-change, portfolio_id))
 
     def add_position(self, item):
         """
@@ -460,6 +559,11 @@ class Database():
         return self.cur.lastrowid
 
     def remove_position(self, position_id):
+        """
+        FIXME
+        @param position_id:
+        @type position_id:
+        """
         self.connect()
         self.con.execute('''
             DELETE FROM position
@@ -472,24 +576,39 @@ class Database():
         self.commit()
 
     def add_transaction(self, item):
+        """
+        FIXME
+        @param item:
+        @type item:
+        """
         self.connect()
         self.cur.execute('''
             INSERT INTO transactions
             VALUES (null, ?,?,?,?,?,?)'''
             , (item['position_id']
-            , item['type'], item['datetime'], item['quantity']
+            , item['transaction_type'], item['datetime'], item['quantity']
             , item['price'], item['transaction_costs']))
         self.commit()
 
     def remove_transaction(self, id):
-         self.connect()
-         self.con.execute('''
-            DELETE FROM transactions
-            WHERE id = ?
-            ''', (id,))
-         self.commit()
+        """
+        FIXME
+        @param id:
+        @type id:
+        """
+        self.connect()
+        self.con.execute('''
+           DELETE FROM transactions
+           WHERE id = ?
+           ''', (id,))
+        self.commit()
 
     def add_quotation(self, item):
+        """
+        FIXME
+        @param item:
+        @type item:
+        """
         self.connect()
         self.cur.execute('''
             INSERT INTO quotation

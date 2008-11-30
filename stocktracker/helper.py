@@ -21,7 +21,6 @@ def update_stock(id):
         logger.warning('could not retrive stock information from yahoo finance')
         return False
 
-
 def get_arrow_type(percent, large = False):
     type = 0
     for th in config.TRESHHOLDS:
