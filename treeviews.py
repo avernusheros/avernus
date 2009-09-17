@@ -15,7 +15,8 @@ def to_local_time(date):
         date = date.astimezone(pytz.timezone(config.timezone))
         return date.replace(tzinfo = None)
         
-
+def get_name_string(stock):
+    return '<b>'+stock.name+'</b>' + '\n' + '<small>'+stock.symbol+'</small>' + '\n' + '<small>'+stock.exchange+'</small>'
 
 class Category(object):
     def __init__(self, name):
@@ -227,9 +228,6 @@ class PositionsTree(Tree):
             return 'n/a'
         return str(item.price) + item.currency +'\n' +'<small>'+str(to_local_time(item.date))+'</small>'
         
-    def get_name_string(self, stock):
-        return '<b>'+stock.name+'</b>' + '\n' + '<small>'+stock.symbol+'</small>' + '\n' + '<small>'+stock.exchange+'</small>'
-        
     def get_change_string(self, item):
         if item.change is None:
             return 'n/a'
@@ -238,7 +236,7 @@ class PositionsTree(Tree):
                
     def insert_position(self, position):
         stock = self.model.stocks[position.stock_id]
-        self.get_model().append(None, [position.id, position, self.get_name_string(stock), self.get_price_string(position), self.get_price_string(stock), self.get_change_string(stock),self.get_change_string(position),position.amount])
+        self.get_model().append(None, [position.id, position, get_name_string(stock), self.get_price_string(position), self.get_price_string(stock), self.get_change_string(stock),self.get_change_string(position),position.amount])
 
     def find_position(self, sid):
         def search(rows):
@@ -250,3 +248,76 @@ class PositionsTree(Tree):
                 if result: return result
             return None
         return search(self.get_model())
+
+
+class TransactionsTree(Tree):
+    def __init__(self, portfolio, model):
+        self.model = model
+        self.portfolio = portfolio
+        Tree.__init__(self)
+        #id, object, name, price, change
+        self.set_model(gtk.TreeStore(int, object,str, str, str,str, str, str))
+        
+        column = gtk.TreeViewColumn('Action')
+        self.append_column(column)
+        cell = gtk.CellRendererText()
+        column.pack_start(cell, expand = True)
+        column.add_attribute(cell, "markup", 2)
+        
+        column = gtk.TreeViewColumn('Name')
+        self.append_column(column)
+        cell = gtk.CellRendererText()
+        column.pack_start(cell, expand = True)
+        column.add_attribute(cell, "markup", 3)
+        
+        column = gtk.TreeViewColumn('Date')
+        self.append_column(column)
+        cell = gtk.CellRendererText()
+        column.pack_start(cell, expand = True)
+        column.add_attribute(cell, "markup", 4)
+        
+        column = gtk.TreeViewColumn('Shares')
+        self.append_column(column)
+        cell = gtk.CellRendererText()
+        column.pack_start(cell, expand = True)
+        column.add_attribute(cell, "markup", 5)
+        
+        column = gtk.TreeViewColumn('Price')
+        self.append_column(column)
+        cell = gtk.CellRendererText()
+        column.pack_start(cell, expand = True)
+        column.add_attribute(cell, "markup", 6)
+        
+        column = gtk.TreeViewColumn('Transaction Costs')
+        self.append_column(column)
+        cell = gtk.CellRendererText()
+        column.pack_start(cell, expand = True)
+        column.add_attribute(cell, "markup", 7)
+        
+        
+        self.load_transactions()
+        pub.subscribe(self.on_transaction_created, 'position.transaction.added')
+        
+        
+    def load_transactions(self):
+        for pos in self.portfolio:
+            for ta in pos:
+                self.insert_transaction(ta, pos)
+    
+    def on_transaction_created(self, item, position):
+        if position.container_id == self.portfolio.id:
+            self.insert_transaction(item, position)    
+    
+    def get_action_string(self, type):
+        if type == 1:
+            return 'BUY'
+        elif type == 0:
+            return 'SELL'
+        else:
+            return ''
+        
+    def insert_transaction(self, ta, pos):
+        stock = self.model.stocks[pos.stock_id]
+        self.get_model().append(None, [ta.id, ta, self.get_action_string(ta.type), get_name_string(stock), to_local_time(ta.date), ta.quantity, ta.price, ta.ta_costs])
+
+

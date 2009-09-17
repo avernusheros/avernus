@@ -130,7 +130,9 @@ class BuyDialog(gtk.Dialog):
             stock = self.model.get_stock(symbol, update = True)
             year, month, day = self.calendar.get_date()
             date = datetime(year, month, day)
+            ta_costs = 0.0
             position = self.pf.add_position(symbol, price, date, shares)
+            position.add_transaction(1, date, shares, price, ta_costs)
 
 class NewWatchlistPositionDialog(gtk.Dialog):
     def __init__(self, wl, model):

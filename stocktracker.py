@@ -129,7 +129,6 @@ class MainWindow(gtk.Window):
         #the main menu
         vbox.pack_start(MenuBar(self), expand=False, fill=False)
         
-        
         hpaned = gtk.HPaned()
         hpaned.set_position(int(width*0.15))
         vbox.pack_start(hpaned)
@@ -174,8 +173,10 @@ class MainWindow(gtk.Window):
             vbox.pack_start(positions_tree)
             vbox.show_all()
             self.notebook.append_page(vbox, gtk.Label('Positions'))
-
-        
+        if type == 1:
+            transactions_tree = treeviews.TransactionsTree(item, self.model)
+            transactions_tree.show_all()
+            self.notebook.append_page(transactions_tree, gtk.Label('Transactions'))
 
 
 def start():

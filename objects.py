@@ -15,11 +15,11 @@ class Model(object):
     
     def create_watchlist(self, name):
         id = self.store.create_container(name,'',0,0.0)
-        self.watchlists[id] = Watchlist(id, name, self)
+        self.watchlists[id] = Watchlist(id, name, self, {})
         
     def create_portfolio(self, name, cash = 0.0):
         id = self.store.create_container(name,'',1,cash)
-        self.portfolios[id] = Portfolio(cash, id, name, self)
+        self.portfolios[id] = Portfolio(cash, id, name, self, {})
         
     def get_stock(self, symbol, update = False):
         stock = None
@@ -41,11 +41,8 @@ class Model(object):
     def create_position(self, symbol, buy_price, buy_date, amount, container_id):
         stock = self.get_stock(symbol)
         id = self.store.create_position(container_id, stock.id, buy_price, buy_date, amount)
-        return Position(id, container_id, stock.id, self, buy_price, buy_date, amount)
-        
-    def get_positions(self, container_id):
-        return self.store.get_positions(container_id)
-    
+        return Position(id, container_id, stock.id, self, buy_price, buy_date, {}, amount)
+           
     def remove(self, item):
         if isinstance(item, Watchlist):
             del self.watchlists[item.id] 
@@ -59,12 +56,12 @@ class Model(object):
 
 
 class Container(object):
-    def __init__(self, id, name, model, comment = '', **kwargs):
+    def __init__(self, id, name, model, positions, comment = '', **kwargs):
         self.id = id
         self._name = name
         self.comment = comment
         self.model = model
-        self.positions = model.get_positions(id)
+        self.positions = positions
             
     def get_name(self):
         return self._name
@@ -79,6 +76,7 @@ class Container(object):
         pos = self.model.create_position(symbol, buy_price, buy_date, amount, self.id)
         self.positions[pos.id] = pos
         pub.sendMessage("container.position.added", item = pos, container = self)
+        return pos
         
     def remove_position(self, position):
         del self.positions[position.id]
@@ -105,6 +103,18 @@ class Watchlist(Container):
         Container.__init__(self, *args, **kwargs)
         pub.sendMessage("watchlist.created", item = self)
     
+   
+class Transaction(object):
+    def __init__(self, id, pos_id, type, date, quantity, price, ta_costs):
+        self.id = id
+        self.pos_id = pos_id
+        self.type = type
+        self.date = date
+        self.quantity = quantity
+        self.price = price
+        self.ta_costs = ta_costs
+        
+        pub.sendMessage("transaction.created", item = self)
         
 class Stock(object):
     def __init__(self, id, name, symbol, isin, exchange, currency, price, date, change):
@@ -132,7 +142,7 @@ class Stock(object):
              
         
 class Position(object):
-    def __init__(self, id, container_id, stock_id, model, price, date, amount = 1):
+    def __init__(self, id, container_id, stock_id, model, price, date, transactions, amount = 1):
         self.id = id
         self.container_id = container_id
         self.stock_id = stock_id
@@ -140,7 +150,8 @@ class Position(object):
         self.model = model
         self.price = price
         self.date = date
-        pub.sendMessage("position.created",item =  self)
+        self.transactions = transactions
+        pub.sendMessage("position.created",item = self)
         
     def get_change(self):
         return self.model.stocks[self.stock_id].price - self.price
@@ -150,6 +161,20 @@ class Position(object):
     
     change = property(get_change)
     currency = property(get_currency)
-
+     
+    def add_transaction(self, type, date, quantity, price, ta_costs):
+        id = self.model.store.create_transaction(self.id, type, date, quantity, price, ta_costs)
+        ta = Transaction(id, self.id, type, date, quantity, price, ta_costs) 
+        self.transactions[ta.id] = ta
+        pub.sendMessage("position.transaction.added", item = ta, position = self)
+        
+    def remove_transaction(self, transaction):
+        del self.positions[transaction.id]
+        pub.sendMessage("position.transaction.removed", item = transaction, position = self)
+    
+    def __iter__(self):
+        return self.transactions.itervalues()  
+        
+        
 if __name__ == "__main__":
     pass    

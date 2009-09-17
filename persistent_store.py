@@ -75,14 +75,16 @@ class Store:
         wl = {}
         for result in self.dbconn.cursor().execute("SELECT * FROM container WHERE type =?", (0,)).fetchall():
             id, type, name, comment, cash = result
-            wl[id] = objects.Watchlist(id, name, self.model, comment)
+            positions = self.get_positions(id)
+            wl[id] = objects.Watchlist(id, name, self.model,positions, comment)
         return wl
            
     def get_portfolios(self):
         pf = {}
         for result in self.dbconn.cursor().execute("SELECT * FROM container WHERE type =?", (1,)).fetchall():
             id, type, name, comment, cash = result
-            pf[id] = objects.Portfolio(cash, id, name, self.model, comment)
+            positions = self.get_positions(id)
+            pf[id] = objects.Portfolio(cash, id, name, self.model,positions, comment)
         return pf
     
     def get_stocks(self):
@@ -97,8 +99,17 @@ class Store:
         pos = {}
         for result in self.dbconn.cursor().execute("SELECT * FROM position WHERE container_id=?",(cid,)).fetchall():
             id, cid, sid, buy_price, buy_date, amount = result
-            pos[id] = objects.Position(id, cid, sid, self.model, buy_price, buy_date, amount)
+            transactions = self.get_transactions(id)
+            pos[id] = objects.Position(id, cid, sid, self.model, buy_price, buy_date, transactions, amount)
         return pos
+    
+    def get_transactions(self, pid):
+        tas = {}
+        for result in self.dbconn.cursor().execute("SELECT * FROM transactions WHERE position_id=?",(pid,)).fetchall():
+            id, pos_id, type, date, quantity, price, ta_costs = result
+            tas[id] = objects.Transaction(id, pos_id, type, date, quantity, price, ta_costs)
+        return tas
+
                
     def create_container(self, name, comment, type = 0, cash = 0.0):
         cursor = self.dbconn.cursor()
@@ -124,8 +135,15 @@ class Store:
         self.dirty = True
         self.commit_if_appropriate()
         return id 
+        
+    def create_transaction(self, pid, type, date, quantity, price, ta_costs):
+        cursor = self.dbconn.cursor()
+        cursor.execute('INSERT INTO transactions VALUES (null,?,?,?,?,?,?)', (pid, type, date, quantity, price, ta_costs))
+        id = cursor.lastrowid
+        self.dirty = True
+        self.commit_if_appropriate()
+        return id 
 
-     
     def initialize(self):
         """
         sqlite create statements
