@@ -1,121 +1,197 @@
-#!/usr/bin/python
+#!/bin/env python
+# -*- coding: utf8 -*-
 
-'''This script parses commandline options for stocktracker and hands 
-them off to the apropriate application object.
+# Bunch of meta data, used at least in the about dialog
+
+__appname__ = 'stocktracker'
+__version__ = '0.2'
+__description__ = 'A program to easily track stock quotes'
+__url__='https://launchpad.net/stocktracker'
+__authors__ = ['Wolfgang Steitz (wsteitz(at)gmail.com)']
+__copyright__ = '''\
+Copyright (c) 2008-2009 Wolfgang Steitz
+
+'''
+__license__='''\
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 '''
 
-import sys
-from getopt import gnu_getopt, GetoptError
+
 
 try:
-    version_info = sys.version_info
-    assert version_info >= (2, 5)
+    import pygtk
+    pygtk.require("2.0")
 except:
-    print >> sys.stderror, 'stocktracker needs python >= 2.5'
-    sys.exit(1)
+    raise Exception("PyGTK Version >=2.0 required")
 
-# Used in error messages and is passed on the the app as
-# the command to call to spawn a new instance.
-executable = 'stocktracker'
-
-# All commandline options in various groups
-longopts = ('verbose', 'debug')
-cmdopts = ('help', 'version', 'gui')
-guiopts = ()
-shortopts = {
-    'v': 'version', 'h': 'help',
-    'V': 'verbose', 'D': 'debug',
-}
-
-# Inline help 
-usagehelp = '''\
-usage: stocktracker
-'''
-optionhelp = '''\
-General Options:
-  --gui       run the gui (this is the default)
-  --verbose   print information to terminal
-  --debug     print debug messages
-  --version   print version and exit
-  --help      print this text
-
-Go to 'www.stocktracker.launchpad.net' for more help.
-'''
+import logging, gtk, gobject
+import treeviews, toolbars, persistent_store, objects, config
+from webbrowser import open as web
+from pubsub import pub
 
 
-class UsageError(Exception):
-    pass
+logger = logging.getLogger(__name__)
 
-def main(argv):
-    '''
-    Run the main program.
-    '''
-    # Let getopt parse the option list
-    short = ''.join(shortopts.keys())
-    long = list(longopts)
-    long.extend(cmdopts)
 
-    opts, args = gnu_getopt(argv[1:], short, long)
+class AboutDialog(gtk.AboutDialog):
+    def __init__(self):
+        gtk.AboutDialog.__init__(self)
+        
+        self.set_name(__appname__)
+        self.set_version(__version__)
+        self.set_copyright(__copyright__)
+        self.set_comments(__description__)
+        self.set_license(__license__)
+        self.set_authors(__authors__)
+        self.set_website(__url__)
+        #self.set_logo(gtk.gdk.pixbuf_new_from_file(config.DATA_DIR+"blam.png"))
 
-    # First figure out which command to execute
-    try:
-        cmd = opts[0][0].lstrip('-')
-        if cmd in shortopts:
-            cmd = shortopts[cmd]
-        assert cmd in cmdopts
-        opts.pop(0)
-    except:
-        cmd = 'gui' # default command
 
-    # If it is a simple command execute it and return
-    if cmd == 'version':
-        import stocktracker
-        print 'stocktracker %s\n' % stocktracker.__version__
-        print stocktracker.__copyright__, '\n'
-        print stocktracker.__license__
-        return
-    elif cmd == 'help':
-        print usagehelp.replace('stocktracker', executable)
-        print optionhelp
-        return
 
-    # Now figure out which options are allowed for this command
-    allowedopts = list(longopts)
-    if cmd == 'gui':
-        allowedopts.extend(guiopts)
+
+class MenuBar(gtk.MenuBar):
+    def __init__(self, parent):
+        gtk.MenuBar.__init__(self)
+        file_menu_items = (('----'  , None, None),
+                           ("Quit", gtk.STOCK_QUIT, lambda x: parent.destroy()),
+                           )
+        help_menu_items = (("Help"  , gtk.STOCK_HELP, None),
+                            ("Website", None, lambda x:web("https://launchpad.net/stocktracker")),
+                            ("Request a Feature", None, lambda x:web("https://blueprints.launchpad.net/stocktracker")),
+                            ("Report a Bug", None, lambda x:web("https://bugs.launchpad.net/stocktracker")),
+                            ('----', None, None),
+                           ("About", gtk.STOCK_ABOUT , self.on_about),
+                           )
+
+        filemenu = gtk.MenuItem("File")
+        filemenu.set_submenu(self.build_menu(file_menu_items))
+
+        helpmenu = gtk.MenuItem("Help")
+        helpmenu.set_submenu(self.build_menu(help_menu_items))
+
+        self.append(filemenu)
+        self.append(helpmenu)
+        
+    def build_menu(self, menu_items):
+        menu = gtk.Menu()
+        
+        for label,icon, func in menu_items:
+            if label == '----':
+                s = gtk.SeparatorMenuItem()
+                s.show()
+                menu.add(s)
+
+            else:
+                
+                if icon is not None:
+                    item = gtk.ImageMenuItem(icon)
+                    item.get_children()[0].set_label(label)
+                else:
+                    item = gtk.MenuItem(label) 
+                
+                if func is not None:
+                    item.connect("activate", func)
+                item.show()
+                menu.add(item)
+        return menu
+
+    def on_about(self, widget):
+        AboutDialog().run()
+
+
+class MainWindow(gtk.Window):
     
-    # Convert options into a proper dict
-    optsdict = {'executable': executable}
-    for o, a in opts:
-        o = o.lstrip('-')
-        if o in shortopts:
-            o = shortopts[o]
+    def __init__(self, model):
+        self.model = model
+        
+        # Create the toplevel window
+        gtk.Window.__init__(self)
+        
+        self.set_title(__appname__)
 
-        if o+'=' in allowedopts:
-            optsdict[o] = a
-        elif o in allowedopts:
-            optsdict[o] = True
+        # Use two thirds of the screen by default
+        screen = self.get_screen()
+        monitor = screen.get_monitor_geometry(0)
+        width = int(monitor.width * 0.8)
+        height = int(monitor.height * 0.66)
+        self.set_default_size(width, height)
+
+        vbox = gtk.VBox()
+        self.add(vbox)
+        
+        #the main menu
+        vbox.pack_start(MenuBar(self), expand=False, fill=False)
+        
+        
+        hpaned = gtk.HPaned()
+        hpaned.set_position(int(width*0.15))
+        vbox.pack_start(hpaned)
+
+        main_tree_vbox = gtk.VBox()
+        main_tree = treeviews.MainTree(self.model)
+        main_tree_vbox.pack_start(main_tree)
+        main_tree_toolbar = toolbars.MainTreeToolbar(self.model)
+        main_tree_vbox.pack_start(main_tree_toolbar, expand=False, fill=False)
+        
+        hpaned.pack1(main_tree_vbox)
+        
+        self.notebook = gtk.Notebook()
+        hpaned.pack2(self.notebook)
+        
+        
+        #subscribe
+        self.connect("destroy", lambda x: gtk.main_quit())
+        pub.subscribe(self.on_maintree_selection, 'maintree.selection')
+        
+        #display everything    
+        self.show_all()
+
+    def clear_notebook(self):
+        for child in self.notebook.get_children():
+            self.notebook.remove(child)
+
+    def on_maintree_selection(self, item):
+        self.clear_notebook()
+        if isinstance(item, objects.Watchlist):
+            type = 0
+        elif isinstance(item, objects.Portfolio):
+            type = 1
         else:
-            raise GetoptError, ("--%s no allowed in combination with --%s" % (o, cmd), o)
+            type = -1
 
-    # Now we can start the application
-    if cmd == 'gui':
-        import stocktracker
-        app = stocktracker.stocktracker(**optsdict)
-        app.start()
-    else:
-        pass
+        if type == 0 or type == 1:
+            positions_tree = treeviews.PositionsTree(item, self.model, type)
+            tb = toolbars.PositionsToolbar(item)
+            vbox = gtk.VBox()
+            vbox.pack_start(tb, expand=False, fill=False)
+            vbox.pack_start(positions_tree)
+            vbox.show_all()
+            self.notebook.append_page(vbox, gtk.Label('Positions'))
+
+        
 
 
-if __name__  == '__main__':
-    executable = sys.argv[0]
-    try:
-        main(sys.argv)
-    except GetoptError, err:
-        print >>sys.stderr, executable+':', err
-        sys.exit(1)
-    except UsageError, err:
-        print >>sys.stderr, usagehelp.replace('stocktracker', executable)
-        sys.exit(1)
-    else:
-        sys.exit(0)
+def start():
+    store = persistent_store.Store(config.db_path)
+    model = objects.Model(store)
+    store.model = model
+    
+    main_window = MainWindow(model)
+    model.initialize()
+    
+    gobject.threads_init()
+    gtk.main()    
+
+
+if __name__ == "__main__":
+    logging.basicConfig(level=logging.DEBUG, 
+         format="%(levelname)s %(asctime)s %(funcName)s %(lineno)d %(message)s")
+    start()
+
