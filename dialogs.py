@@ -144,7 +144,11 @@ class BuyDialog(gtk.Dialog):
         vbox.pack_start(hbox)
         hbox.pack_start(gtk.Label('Symbol:'))
         self.symbol_entry = gtk.Entry()
+        self.symbol_entry.set_icon_from_stock(1, gtk.STOCK_NO)
         hbox.pack_start(self.symbol_entry)
+        self.symbol_entry.connect("activate", self.on_entry)
+        self.symbol_entry.connect("focus-out-event", self.on_entry)
+        self.symbol_entry.connect("changed", self.on_change)
 
         #shares entry
         hbox = gtk.HBox()
@@ -164,11 +168,26 @@ class BuyDialog(gtk.Dialog):
         self.calendar = gtk.Calendar()
         vbox.pack_start(self.calendar)
         
+        
+        self.set_response_sensitive(gtk.RESPONSE_ACCEPT, False)
         self.show_all()
         response = self.run()  
         self.process_result(response)
         
         self.destroy()
+
+    def on_change(self, widget):
+        self.symbol_entry.set_icon_from_stock(1, gtk.STOCK_DIALOG_QUESTION)
+        self.set_response_sensitive(gtk.RESPONSE_ACCEPT, False)  
+        
+    def on_entry(self, widget, event = None):
+        symbol = self.symbol_entry.get_text()
+        if updater.check_symbol(symbol):
+            self.symbol_entry.set_icon_from_stock(1, gtk.STOCK_YES)
+            self.set_response_sensitive(gtk.RESPONSE_ACCEPT, True)
+        else:
+            self.symbol_entry.set_icon_from_stock(1, gtk.STOCK_NO)
+            self.set_response_sensitive(gtk.RESPONSE_ACCEPT, False)
         
     def process_result(self, response):
         if response == gtk.RESPONSE_ACCEPT:
@@ -181,6 +200,7 @@ class BuyDialog(gtk.Dialog):
             ta_costs = 0.0
             position = self.pf.add_position(symbol, price, date, shares)
             position.add_transaction(1, date, shares, price, ta_costs)
+
 
 class NewWatchlistPositionDialog(gtk.Dialog):
     def __init__(self, wl, model):
@@ -196,16 +216,33 @@ class NewWatchlistPositionDialog(gtk.Dialog):
         #symbol entry
         hbox = gtk.HBox()
         vbox.pack_start(hbox)
-        label = gtk.Label('Symbol:')
-        hbox.pack_start(label)
+        hbox.pack_start(gtk.Label('Symbol:'))
         self.symbol_entry = gtk.Entry()
+        self.symbol_entry.set_icon_from_stock(1, gtk.STOCK_NO)
         hbox.pack_start(self.symbol_entry)
+        self.symbol_entry.connect("activate", self.on_entry)
+        self.symbol_entry.connect("focus-out-event", self.on_entry)
+        self.symbol_entry.connect("changed", self.on_change)
+        self.set_response_sensitive(gtk.RESPONSE_ACCEPT, False)
 
         self.show_all()
         response = self.run()  
         self.process_result(response)
         
         self.destroy()
+    
+    def on_change(self, widget):
+        self.symbol_entry.set_icon_from_stock(1, gtk.STOCK_DIALOG_QUESTION)
+        self.set_response_sensitive(gtk.RESPONSE_ACCEPT, False)
+   
+    def on_entry(self, widget, event = None):
+        symbol = self.symbol_entry.get_text()
+        if updater.check_symbol(symbol):
+            self.symbol_entry.set_icon_from_stock(1, gtk.STOCK_YES)
+            self.set_response_sensitive(gtk.RESPONSE_ACCEPT, True)
+        else:
+            self.symbol_entry.set_icon_from_stock(1, gtk.STOCK_NO)
+            self.set_response_sensitive(gtk.RESPONSE_ACCEPT, False)
 
     def process_result(self, response):
         if response == gtk.RESPONSE_ACCEPT:

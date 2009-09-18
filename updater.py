@@ -41,6 +41,8 @@ def get_info(symbol):
     for row in csv.reader(__request(symbol, 'nxc4')):
         return row[0], 'n/a', row[1], row[2]
      
+def check_symbol(symbol):
+    return __request(symbol, 'e1').read().strip().strip('"') == "N/A"
     
     
 if __name__ == "__main__":
@@ -49,3 +51,4 @@ if __name__ == "__main__":
     s = [objects.Stock(0, "ge", 'ge.de', 0.0, None, None, None, None, None), objects.Stock(0, "test1", 'goog', 0.0, None, None, None, None, None)]
     update_stocks(s)
     print get_info('cbk.de')
+    print check_symbol('ge.de')

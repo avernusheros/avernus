@@ -21,6 +21,7 @@ class PositionsToolbar(gtk.Toolbar):
         #button.set_label('Remove tag'
         button.connect('clicked', self.on_edit_clicked)
         self.insert(button,-1)
+        button.set_sensitive(False)
         
         self.insert(gtk.SeparatorToolItem(),-1)
         
