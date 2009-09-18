@@ -226,8 +226,8 @@ class PositionsTree(Tree):
         row = self.find_position_from_stock(item.id)
         if row:
             row[4] = self.get_price_string(item)
-            row[5] = self.get_change_string(item)
-            row[6] = self.get_change_string(row[1])
+            row[5] = get_change_string(row[1].current_change)
+            row[6] = get_change_string(row[1].overall_change)
                 
     def on_position_created(self, item):
         if item.container_id == self.container.id:

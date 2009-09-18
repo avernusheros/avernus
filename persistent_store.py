@@ -58,6 +58,9 @@ class Store:
         for callback, topic in self.subscriptions:
             pub.unsubscribe(callback)
     
+    def upgrade_db(self, version):
+        print "db upgrading not implemented yet"
+    
     def get_meta(self):
         try:
             results = self.dbconn.cursor().execute('SELECT * FROM meta').fetchall()
