@@ -14,6 +14,15 @@ def to_local_time(date):
         date = date.replace(tzinfo = pytz.utc)
         date = date.astimezone(pytz.timezone(config.timezone))
         return date.replace(tzinfo = None)
+
+def get_datetime_string(date):
+    if date is not None:
+        if date.hour == 0 and date.minute == 0 and date.second == 0:
+            return str(to_local_time(date).date())
+        else:
+            return str(to_local_time(date))
+    return ''
+    
         
 def get_name_string(stock):
     return '<b>'+stock.name+'</b>' + '\n' + '<small>'+stock.symbol+'</small>' + '\n' + '<small>'+stock.exchange+'</small>'
@@ -269,7 +278,7 @@ class PositionsTree(Tree):
     def get_price_string(self, item):
         if item.price is None:
             return 'n/a'
-        return str(item.price) + item.currency +'\n' +'<small>'+str(to_local_time(item.date))+'</small>'
+        return str(item.price) + item.currency +'\n' +'<small>'+get_datetime_string(item.date)+'</small>'
         
     def insert_position(self, position):
         if position.quantity != 0:
@@ -373,6 +382,6 @@ class TransactionsTree(Tree):
         
     def insert_transaction(self, ta, pos):
         stock = self.model.stocks[pos.stock_id]
-        self.get_model().append(None, [ta.id, ta, self.get_action_string(ta.type), get_name_string(stock), to_local_time(ta.date), ta.quantity, ta.price, ta.ta_costs])
+        self.get_model().append(None, [ta.id, ta, self.get_action_string(ta.type), get_name_string(stock), get_datetime_string(ta.date), ta.quantity, ta.price, ta.ta_costs])
 
 

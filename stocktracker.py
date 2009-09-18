@@ -88,15 +88,12 @@ class MenuBar(gtk.MenuBar):
                 s = gtk.SeparatorMenuItem()
                 s.show()
                 menu.add(s)
-
             else:
-                
                 if icon is not None:
                     item = gtk.ImageMenuItem(icon)
                     item.get_children()[0].set_label(label)
                 else:
                     item = gtk.MenuItem(label) 
-                
                 if func is not None:
                     item.connect("activate", func)
                 item.show()
