@@ -51,9 +51,10 @@ class AboutDialog(gtk.AboutDialog):
         self.set_license(__license__)
         self.set_authors(__authors__)
         self.set_website(__url__)
-        #self.set_logo(gtk.gdk.pixbuf_new_from_file(config.DATA_DIR+"blam.png"))
-
-
+        #self.set_logo(gtk.gdk.pixbuf_new_from_file("xyz.png"))
+        
+        self.run()
+        self.hide()
 
 
 class MenuBar(gtk.MenuBar):
@@ -103,7 +104,7 @@ class MenuBar(gtk.MenuBar):
         return menu
 
     def on_about(self, widget):
-        AboutDialog().run()
+        AboutDialog()
 
 
 class PositionsTab(gtk.VBox):

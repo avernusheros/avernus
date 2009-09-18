@@ -159,6 +159,7 @@ class PositionsTree(Tree):
         cell = gtk.CellRendererText()
         column.pack_start(cell, expand = True)
         column.add_attribute(cell, "markup", 7)
+        column.set_sort_column_id(7)
         if type == 0:
             column.set_visible(False)
         
@@ -167,30 +168,35 @@ class PositionsTree(Tree):
         cell = gtk.CellRendererText()
         column.pack_start(cell, expand = True)
         column.add_attribute(cell, "markup", 2)
+        column.set_sort_column_id(2)
         
         column = gtk.TreeViewColumn('Start')
         self.append_column(column)
         cell = gtk.CellRendererText()
         column.pack_start(cell, expand = True)
         column.add_attribute(cell, "markup", 3)
+        column.set_sort_column_id(3)
         
         column = gtk.TreeViewColumn('Current Price')
         self.append_column(column)
         cell = gtk.CellRendererText()
         column.pack_start(cell, expand = True)
         column.add_attribute(cell, "markup", 4)
+        column.set_sort_column_id(4)
         
         column = gtk.TreeViewColumn('Current Change')
         self.append_column(column)
         cell = gtk.CellRendererText()
         column.pack_start(cell, expand = True)
         column.add_attribute(cell, "markup", 5)
+        column.set_sort_column_id(5)
         
         column = gtk.TreeViewColumn('Overall Change')
         self.append_column(column)
         cell = gtk.CellRendererText()
         column.pack_start(cell, expand = True)
         column.add_attribute(cell, "markup", 6)
+        column.set_sort_column_id(6)
           
         self.load_positions()
         
@@ -306,36 +312,42 @@ class TransactionsTree(Tree):
         cell = gtk.CellRendererText()
         column.pack_start(cell, expand = True)
         column.add_attribute(cell, "markup", 2)
+        column.set_sort_column_id(2)
         
         column = gtk.TreeViewColumn('Name')
         self.append_column(column)
         cell = gtk.CellRendererText()
         column.pack_start(cell, expand = True)
         column.add_attribute(cell, "markup", 3)
+        column.set_sort_column_id(3)
         
         column = gtk.TreeViewColumn('Date')
         self.append_column(column)
         cell = gtk.CellRendererText()
         column.pack_start(cell, expand = True)
         column.add_attribute(cell, "markup", 4)
+        column.set_sort_column_id(4)
         
         column = gtk.TreeViewColumn('Shares')
         self.append_column(column)
         cell = gtk.CellRendererText()
         column.pack_start(cell, expand = True)
         column.add_attribute(cell, "markup", 5)
+        column.set_sort_column_id(5)
         
         column = gtk.TreeViewColumn('Price')
         self.append_column(column)
         cell = gtk.CellRendererText()
         column.pack_start(cell, expand = True)
         column.add_attribute(cell, "markup", 6)
+        column.set_sort_column_id(6)
         
         column = gtk.TreeViewColumn('Transaction Costs')
         self.append_column(column)
         cell = gtk.CellRendererText()
         column.pack_start(cell, expand = True)
         column.add_attribute(cell, "markup", 7)
+        column.set_sort_column_id(7)
         
         
         self.load_transactions()
