@@ -106,6 +106,31 @@ class MenuBar(gtk.MenuBar):
         AboutDialog().run()
 
 
+class PositionsTab(gtk.VBox):
+    def __init__(self, pf, model, type):
+        gtk.VBox.__init__(self)
+        
+        positions_tree = treeviews.PositionsTree(pf, model, type)
+        hbox = gtk.HBox()
+        tb = toolbars.PositionsToolbar(pf)
+        hbox.pack_start(tb)
+        
+        text = '<b>Performance Today</b>\n'+treeviews.get_change_string(pf.current_change)
+        label = gtk.Label()
+        label.set_markup(text)
+        hbox.pack_start(label)
+        hbox.pack_start(gtk.VSeparator())
+        text = '<b>Overall</b>\n'+treeviews.get_change_string(pf.overall_change)
+        label = gtk.Label()
+        label.set_markup(text)
+        hbox.pack_start(label)
+        
+        self.pack_start(hbox, expand=False, fill=False)
+        self.pack_start(positions_tree)
+        self.show_all()
+        
+
+
 class MainWindow(gtk.Window):
     
     def __init__(self, model):
@@ -166,13 +191,8 @@ class MainWindow(gtk.Window):
             type = -1
 
         if type == 0 or type == 1:
-            positions_tree = treeviews.PositionsTree(item, self.model, type)
-            tb = toolbars.PositionsToolbar(item)
-            vbox = gtk.VBox()
-            vbox.pack_start(tb, expand=False, fill=False)
-            vbox.pack_start(positions_tree)
-            vbox.show_all()
-            self.notebook.append_page(vbox, gtk.Label('Positions'))
+            self.notebook.append_page(PositionsTab(item, self.model, type), gtk.Label('Positions'))
+            
         if type == 1:
             transactions_tree = treeviews.TransactionsTree(item, self.model)
             transactions_tree.show_all()

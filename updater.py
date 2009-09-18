@@ -22,7 +22,10 @@ def update_stocks(stocks):
     for row in csv.reader(res):
         print stocks[s].name, row
         stocks[s].price = float(row[0])
-        date = datetime.strptime(row[1] + ' ' + row[2], '%m/%d/%Y %H:%M%p')
+        try:
+            date = datetime.strptime(row[1] + ' ' + row[2], '%m/%d/%Y %H:%M%p')
+        except:
+            date = datetime.strptime(row[1], '%m/%d/%Y')
         date = pytz.timezone('US/Eastern').localize(date)
         stocks[s].date = date.astimezone(pytz.utc)
         stocks[s].date = stocks[s].date.replace(tzinfo = None)

@@ -81,9 +81,57 @@ class NewContainerDialog(gtk.Dialog):
                 self.model.create_watchlist(name)
 
 
+class SellDialog(gtk.Dialog):
+    def __init__(self, pf, pos):
+        gtk.Dialog.__init__(self, "Sell a position", None
+                            , gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
+                     (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
+                      gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
+        self.pf = pf              
+        self.pos = pos
+        
+        vbox = self.get_content_area()
+
+        #shares entry
+        hbox = gtk.HBox()
+        vbox.pack_start(hbox)
+        hbox.pack_start(gtk.Label('Shares:'))
+        self.shares_entry = gtk.Entry()
+        hbox.pack_start(self.shares_entry)
+        
+        #price entry
+        hbox = gtk.HBox()
+        vbox.pack_start(hbox)
+        hbox.pack_start(gtk.Label('Price:'))
+        self.price_entry = gtk.Entry()
+        hbox.pack_start(self.price_entry)
+        
+        #date 
+        self.calendar = gtk.Calendar()
+        vbox.pack_start(self.calendar)
+        
+        self.show_all()
+        response = self.run()  
+        self.process_result(response)
+        
+        self.destroy()
+        
+    def process_result(self, response):
+        if response == gtk.RESPONSE_ACCEPT:
+            shares = float(self.shares_entry.get_text())
+            price = float(self.price_entry.get_text())
+            year, month, day = self.calendar.get_date()
+            date = datetime(year, month, day)
+            ta_costs = 0.0
+
+            self.pos.quantity -= shares    
+            
+            self.pos.add_transaction(0, date, shares, price, ta_costs)
+
+
 class BuyDialog(gtk.Dialog):
     def __init__(self, pf, model):
-        gtk.Dialog.__init__(self, "Buy a stock", None
+        gtk.Dialog.__init__(self, "Buy a position", None
                             , gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
                      (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
                       gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))

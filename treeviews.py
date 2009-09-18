@@ -18,6 +18,25 @@ def to_local_time(date):
 def get_name_string(stock):
     return '<b>'+stock.name+'</b>' + '\n' + '<small>'+stock.symbol+'</small>' + '\n' + '<small>'+stock.exchange+'</small>'
 
+
+def fix(item):
+    if len(item) == 2:
+        a, b = item
+        return a,b, None
+    else:
+        return item
+
+
+def get_change_string(item):
+    change, percent, absolute = fix(item)
+    if change is None:
+        return 'n/a'
+    text = str(percent) + '%' + '\n' + str(change) + config.currency
+    if absolute is not None:
+        text += '\n' + str(absolute) + config.currency
+    return text
+
+
 class Category(object):
     def __init__(self, name):
         self.name = name
@@ -70,6 +89,8 @@ class MainTree(Tree):
         pub.subscribe(self.on_remove, "maintoolbar.remove")
         pub.subscribe(self.on_edit, "maintoolbar.edit")
         pub.subscribe(self.on_updated, "container.updated")
+        
+        self.selected_item = None
 
 
     def insert_categories(self):
@@ -83,6 +104,8 @@ class MainTree(Tree):
         self.get_model().append(self.pf_iter, [item.id, item, None, item.name])
          
     def on_remove(self):
+        if self.selected_item is None:
+            return
         obj, iter = self.selected_item
         if isinstance(obj, objects.Watchlist) or isinstance(obj, objects.Portfolio):
             dlg = gtk.MessageDialog(None, 
@@ -112,6 +135,8 @@ class MainTree(Tree):
             pub.sendMessage('maintree.selection', item = obj)        
         
     def on_edit(self):
+        if self.selected_item is None:
+            return
         obj, iter = self.selected_item
         if isinstance(obj, objects.Watchlist):
             dialogs.EditWatchlist(obj)
@@ -155,7 +180,7 @@ class PositionsTree(Tree):
         column.pack_start(cell, expand = True)
         column.add_attribute(cell, "markup", 4)
         
-        column = gtk.TreeViewColumn('Change')
+        column = gtk.TreeViewColumn('Current Change')
         self.append_column(column)
         cell = gtk.CellRendererText()
         column.pack_start(cell, expand = True)
@@ -166,9 +191,7 @@ class PositionsTree(Tree):
         cell = gtk.CellRendererText()
         column.pack_start(cell, expand = True)
         column.add_attribute(cell, "markup", 6)
-        
-        
-        
+          
         self.load_positions()
         
         self.connect('cursor_changed', self.on_cursor_changed)
@@ -177,26 +200,38 @@ class PositionsTree(Tree):
         pub.subscribe(self.on_position_created, 'position.created')
         pub.subscribe(self.on_remove_position, 'positionstoolbar.remove')
         pub.subscribe(self.on_stock_updated, 'stock.updated')
+        pub.subscribe(self.on_position_updated, 'position.updated')
+        
+        self.selected_item = None
 
     def load_positions(self):
         for pos in self.container:
             self.insert_position(pos)
     
-    def on_stock_updated(self, item):
+    def on_position_updated(self, item):
         row = self.find_position(item.id)
+        if row:
+            if item.quantity == 0:
+                self.get_model().remove(row.iter)
+            else:
+                row[7] = item.quantity
+    
+    def on_stock_updated(self, item):
+        row = self.find_position_from_stock(item.id)
         if row:
             row[4] = self.get_price_string(item)
             row[5] = self.get_change_string(item)
             row[6] = self.get_change_string(row[1])
-    
                 
     def on_position_created(self, item):
         if item.container_id == self.container.id:
             self.insert_position(item)
      
     def on_remove_position(self):
+        if self.selected_item is None:
+            return
         obj, iter = self.selected_item
-        if isinstance(obj, objects.Position):
+        if self.type == 0:
             dlg = gtk.MessageDialog(None, 
                  gtk.DIALOG_DESTROY_WITH_PARENT, gtk.MESSAGE_QUESTION, 
                     gtk.BUTTONS_OK_CANCEL, "Are you sure?")
@@ -205,6 +240,8 @@ class PositionsTree(Tree):
             if response == gtk.RESPONSE_OK:
                 self.container.remove_position(obj)
                 self.get_model().remove(iter)  
+        elif self.type == 1:
+            dialogs.SellDialog(self.container, obj)    
        
     def on_add_position(self):
         if self.type == 0:
@@ -228,21 +265,27 @@ class PositionsTree(Tree):
             return 'n/a'
         return str(item.price) + item.currency +'\n' +'<small>'+str(to_local_time(item.date))+'</small>'
         
-    def get_change_string(self, item):
-        if item.change is None:
-            return 'n/a'
-        percent = str(round(item.change / item.price * 100,2))
-        return percent + '%' + '\n' + str(item.change)+item.currency
-               
     def insert_position(self, position):
-        stock = self.model.stocks[position.stock_id]
-        self.get_model().append(None, [position.id, position, get_name_string(stock), self.get_price_string(position), self.get_price_string(stock), self.get_change_string(stock),self.get_change_string(position),position.amount])
+        if position.quantity != 0:
+            stock = self.model.stocks[position.stock_id]
+            self.get_model().append(None, [position.id, position, get_name_string(stock), self.get_price_string(position), self.get_price_string(stock), get_change_string(position.current_change),get_change_string(position.overall_change),position.quantity])
 
-    def find_position(self, sid):
+    def find_position_from_stock(self, sid):
         def search(rows):
             if not rows: return None
             for row in rows:
                 if row[1].stock_id == sid:
+                    return row 
+                result = search(row.iterchildren())
+                if result: return result
+            return None
+        return search(self.get_model())
+        
+    def find_position(self, pid):
+        def search(rows):
+            if not rows: return None
+            for row in rows:
+                if row[0] == pid:
                     return row 
                 result = search(row.iterchildren())
                 if result: return result

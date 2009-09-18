@@ -36,6 +36,7 @@ class Store:
             (self.on_remove_container, "watchlist.removed"),
             (self.on_remove_container, "portfolio.removed"),
             (self.on_update_container, 'container.updated'),
+            (self.on_update_position, 'position.updated'),
             (self.on_remove_position, 'container.position.removed'),
             (self.on_update_stock, 'stock.updated')
         )
@@ -98,9 +99,9 @@ class Store:
     def get_positions(self, cid):
         pos = {}
         for result in self.dbconn.cursor().execute("SELECT * FROM position WHERE container_id=?",(cid,)).fetchall():
-            id, cid, sid, buy_price, buy_date, amount = result
+            id, cid, sid, buy_price, buy_date, quantity = result
             transactions = self.get_transactions(id)
-            pos[id] = objects.Position(id, cid, sid, self.model, buy_price, buy_date, transactions, amount)
+            pos[id] = objects.Position(id, cid, sid, self.model, buy_price, buy_date, transactions, quantity)
         return pos
     
     def get_transactions(self, pid):
@@ -128,9 +129,9 @@ class Store:
         self.commit_if_appropriate()
         return id 
         
-    def create_position(self, cid, sid, buy_price, buy_date, amount):
+    def create_position(self, cid, sid, buy_price, buy_date, quantity):
         cursor = self.dbconn.cursor()
-        cursor.execute('INSERT INTO position VALUES (null,?,?,?,?,?)', (cid, sid, buy_price, buy_date, amount))
+        cursor.execute('INSERT INTO position VALUES (null,?,?,?,?,?)', (cid, sid, buy_price, buy_date, quantity))
         id = cursor.lastrowid
         self.dirty = True
         self.commit_if_appropriate()
@@ -176,7 +177,7 @@ class Store:
                 , stock_id integer
                 , buy_price real
                 , buy_date timestamp
-                , amount integer
+                , quantity integer
                 );
                 ''')
         cursor.execute('''
@@ -208,6 +209,11 @@ class Store:
 
     def on_update_container(self, item):
         self.dbconn.cursor().execute('UPDATE container SET name=? WHERE id=?', (item.name, item.id))
+        self.dirty = True
+        self.commit_if_appropriate()
+        
+    def on_update_position(self, item):
+        self.dbconn.cursor().execute('UPDATE position SET quantity=? WHERE id=?', (item.quantity, item.id))
         self.dirty = True
         self.commit_if_appropriate()
 

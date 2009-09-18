@@ -38,10 +38,10 @@ class Model(object):
     def on_update_clicked(self):
         updater.update_stocks([stock for key, stock in self.stocks.iteritems()])
     
-    def create_position(self, symbol, buy_price, buy_date, amount, container_id):
+    def create_position(self, symbol, buy_price, buy_date, quantity, container_id):
         stock = self.get_stock(symbol)
-        id = self.store.create_position(container_id, stock.id, buy_price, buy_date, amount)
-        return Position(id, container_id, stock.id, self, buy_price, buy_date, {}, amount)
+        id = self.store.create_position(container_id, stock.id, buy_price, buy_date, quantity)
+        return Position(id, container_id, stock.id, self, buy_price, buy_date, {}, quantity)
            
     def remove(self, item):
         if isinstance(item, Watchlist):
@@ -72,8 +72,8 @@ class Container(object):
         
     name = property(get_name, set_name)
     
-    def add_position(self, symbol, buy_price, buy_date, amount):
-        pos = self.model.create_position(symbol, buy_price, buy_date, amount, self.id)
+    def add_position(self, symbol, buy_price, buy_date, quantity):
+        pos = self.model.create_position(symbol, buy_price, buy_date, quantity, self.id)
         self.positions[pos.id] = pos
         pub.sendMessage("container.position.added", item = pos, container = self)
         return pos
@@ -81,7 +81,46 @@ class Container(object):
     def remove_position(self, position):
         del self.positions[position.id]
         pub.sendMessage("container.position.removed", item = position, container = self)
+   
+    def get_bvalue(self):
+        value = 0.0
+        for pos in self.positions.itervalues():
+            value += pos.bvalue
+        return value
+    
+    def get_cvalue(self):
+        value = 0.0
+        for pos in self.positions.itervalues():
+            value += pos.cvalue
+        return value
         
+    def get_overall_change(self):
+        end = self.get_cvalue()
+        start = self.get_bvalue()
+        absolute = end - start
+        if start == 0:
+            percent = 0
+        else:
+            percent = round(100.0 / start * absolute,2)
+        return absolute, percent 
+    
+    def get_current_change(self):
+        change = 0.0
+        for pos in self.positions.itervalues():
+            stock, percent, absolute = pos.current_change
+            change +=absolute
+        start = self.get_cvalue() - change
+        if start == 0.0:
+            percent = 0
+        else:
+            percent = round(100.0 / start * change,2)
+        return change, percent    
+    
+    overall_change = property(get_overall_change)
+    current_change = property(get_current_change)
+    bvalue = property(get_bvalue)
+    cvalue = property(get_cvalue)        
+  
     def __cmp__(self, other):
         return cmp(self.id, other.id)
 
@@ -97,6 +136,9 @@ class Portfolio(Container):
         Container.__init__(self, *args, **kwargs)
         self.cash = cash
         pub.sendMessage("portfolio.created",item =  self)
+        
+
+    
     
 class Watchlist(Container):
     def __init__(self, *args, **kwargs):
@@ -138,28 +180,58 @@ class Stock(object):
         else:
             return ''
           
+    def get_percent(self):
+        return round(self.change * 100 / (self.price - self.change),2)
+          
+    percent_change = property(get_percent)
     currency = property(get_currency)
              
-        
+
 class Position(object):
-    def __init__(self, id, container_id, stock_id, model, price, date, transactions, amount = 1):
+    def __init__(self, id, container_id, stock_id, model, price, date, transactions, quantity = 1):
         self.id = id
         self.container_id = container_id
         self.stock_id = stock_id
-        self.amount = amount 
+        self.__quantity = quantity 
         self.model = model
         self.price = price
         self.date = date
         self.transactions = transactions
         pub.sendMessage("position.created",item = self)
         
-    def get_change(self):
-        return self.model.stocks[self.stock_id].price - self.price
+    def get_overall_change(self):
+        stock = self.model.stocks[self.stock_id].price - self.price
+        absolute = stock * self.__quantity
+        percent = round(absolute * 100 / (self.price*self.__quantity),2)
+        return stock, percent, absolute
     
+    def get_current_change(self):
+        stock = self.model.stocks[self.stock_id].change
+        absolute = stock * self.__quantity
+        percent = round(self.model.stocks[self.stock_id].percent_change,2)
+        return stock, percent, absolute
+        
     def get_currency(self):
         return self.model.stocks[self.stock_id].currency
     
-    change = property(get_change)
+    def get_quantity(self):
+        return self.__quantity
+        
+    def set_quantity(self, x):
+        self.__quantity = x
+        pub.sendMessage("position.updated", item = self)
+    
+    def get_bvalue(self):
+        return self.__quantity * self.price
+    
+    def get_cvalue(self):
+        return self.__quantity * self.model.stocks[self.stock_id].price
+    
+    current_change =  property(get_current_change)
+    cvalue = property(get_cvalue)
+    bvalue = property(get_bvalue)
+    quantity = property(get_quantity, set_quantity)
+    overall_change = property(get_overall_change)
     currency = property(get_currency)
      
     def add_transaction(self, type, date, quantity, price, ta_costs):
@@ -174,7 +246,8 @@ class Position(object):
     
     def __iter__(self):
         return self.transactions.itervalues()  
-        
+
+ 
         
 if __name__ == "__main__":
     pass    
