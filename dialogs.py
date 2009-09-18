@@ -96,14 +96,14 @@ class SellDialog(gtk.Dialog):
         hbox = gtk.HBox()
         vbox.pack_start(hbox)
         hbox.pack_start(gtk.Label('Shares:'))
-        self.shares_entry = gtk.Entry()
+        self.shares_entry = gtk.SpinButton(gtk.Adjustment(lower=0, upper=pos.quantity,step_incr=1, value = 0), digits=2)
         hbox.pack_start(self.shares_entry)
         
         #price entry
         hbox = gtk.HBox()
         vbox.pack_start(hbox)
         hbox.pack_start(gtk.Label('Price:'))
-        self.price_entry = gtk.Entry()
+        self.price_entry = gtk.SpinButton(gtk.Adjustment(lower=0, upper=100000,step_incr=0.1, value = 1.0), digits=2)
         hbox.pack_start(self.price_entry)
         
         #date 
@@ -118,8 +118,8 @@ class SellDialog(gtk.Dialog):
         
     def process_result(self, response):
         if response == gtk.RESPONSE_ACCEPT:
-            shares = float(self.shares_entry.get_text())
-            price = float(self.price_entry.get_text())
+            shares = self.shares_entry.get_value()
+            price = self.price_entry.get_text()
             year, month, day = self.calendar.get_date()
             date = datetime(year, month, day)
             ta_costs = 0.0
@@ -150,14 +150,14 @@ class BuyDialog(gtk.Dialog):
         hbox = gtk.HBox()
         vbox.pack_start(hbox)
         hbox.pack_start(gtk.Label('Shares:'))
-        self.shares_entry = gtk.Entry()
+        self.shares_entry = gtk.SpinButton(gtk.Adjustment(lower=0, upper=100000,step_incr=1.0, value = 0), digits=2)
         hbox.pack_start(self.shares_entry)
         
         #price entry
         hbox = gtk.HBox()
         vbox.pack_start(hbox)
         hbox.pack_start(gtk.Label('Price:'))
-        self.price_entry = gtk.Entry()
+        self.price_entry = gtk.SpinButton(gtk.Adjustment(lower=0, upper=100000,step_incr=0.1, value = 1.0), digits=2)
         hbox.pack_start(self.price_entry)
         
         #date 
@@ -173,8 +173,8 @@ class BuyDialog(gtk.Dialog):
     def process_result(self, response):
         if response == gtk.RESPONSE_ACCEPT:
             symbol = self.symbol_entry.get_text()
-            shares = float(self.shares_entry.get_text())
-            price = float(self.price_entry.get_text())
+            shares = self.shares_entry.get_value()
+            price = self.price_entry.get_value()
             stock = self.model.get_stock(symbol, update = True)
             year, month, day = self.calendar.get_date()
             date = datetime(year, month, day)
