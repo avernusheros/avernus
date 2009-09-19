@@ -1,7 +1,6 @@
 import sqlite3, logging, os
 from sqlite3 import dbapi2 as sqlite
-from pubsub import pub
-import objects
+import objects, pubsub
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +40,7 @@ class Store:
             (self.on_update_stock, 'stock.updated')
         )
         for callback, topic in self.subscriptions:
-            pub.subscribe(callback, topic)
+            pubsub.subscribe(topic, callback)
     
     def commit_if_appropriate(self):
         if self.dirty:
@@ -56,7 +55,7 @@ class Store:
     def close(self):
         self.dbconn.close()
         for callback, topic in self.subscriptions:
-            pub.unsubscribe(callback)
+            pubsub.unsubscribe(callback)
     
     def upgrade_db(self, version):
         print "db upgrading not implemented yet"
@@ -79,7 +78,7 @@ class Store:
         wl = {}
         for result in self.dbconn.cursor().execute("SELECT * FROM container WHERE type =?", (0,)).fetchall():
             id, type, name, comment, cash = result
-            positions = self.get_positions(id)
+            positions = self.get_positions(id, 0)
             wl[id] = objects.Watchlist(id, name, self.model,positions, comment)
         return wl
            
@@ -87,7 +86,7 @@ class Store:
         pf = {}
         for result in self.dbconn.cursor().execute("SELECT * FROM container WHERE type =?", (1,)).fetchall():
             id, type, name, comment, cash = result
-            positions = self.get_positions(id)
+            positions = self.get_positions(id, 1)
             pf[id] = objects.Portfolio(cash, id, name, self.model,positions, comment)
         return pf
     
@@ -99,12 +98,15 @@ class Store:
         return stx
          
         
-    def get_positions(self, cid):
+    def get_positions(self, cid, type):
         pos = {}
         for result in self.dbconn.cursor().execute("SELECT * FROM position WHERE container_id=?",(cid,)).fetchall():
             id, cid, sid, buy_price, buy_date, quantity = result
             transactions = self.get_transactions(id)
-            pos[id] = objects.Position(id, cid, sid, self.model, buy_price, buy_date, transactions, quantity)
+            if type == 0:
+                pos[id] = objects.WatchlistPosition(id, cid, sid, self.model, buy_price, buy_date, transactions, quantity)
+            elif type == 1:
+                pos[id] = objects.PortfolioPosition(id, cid, sid, self.model, buy_price, buy_date, transactions, quantity)
         return pos
     
     def get_transactions(self, pid):

@@ -1,8 +1,8 @@
 # -*- coding: iso-8859-15 -*-
 
 import gtk, string,  logging, pytz
-from pubsub import pub
-import objects, dialogs, config
+
+import objects, dialogs, config, pubsub
 
 
 
@@ -40,7 +40,7 @@ def get_change_string(item):
     change, percent, absolute = fix(item)
     if change is None:
         return 'n/a'
-    text = str(percent) + '%' + '\n' + str(change) + config.currency
+    text = str(percent) + '%' + ' | ' + str(change) + config.currency
     if absolute is not None:
         text += '\n' + str(absolute) + config.currency
     return text
@@ -93,11 +93,11 @@ class MainTree(Tree):
         self.insert_categories()
 
         self.connect('cursor_changed', self.on_cursor_changed)
-        pub.subscribe(self.insert_watchlist, "watchlist.created")
-        pub.subscribe(self.insert_portfolio, "portfolio.created")
-        pub.subscribe(self.on_remove, "maintoolbar.remove")
-        pub.subscribe(self.on_edit, "maintoolbar.edit")
-        pub.subscribe(self.on_updated, "container.updated")
+        pubsub.subscribe("watchlist.created", self.insert_watchlist)
+        pubsub.subscribe("portfolio.created", self.insert_portfolio)
+        pubsub.subscribe( "maintoolbar.remove", self.on_remove)
+        pubsub.subscribe("maintoolbar.edit", self.on_edit)
+        pubsub.subscribe( "container.updated", self.on_updated)
         
         self.selected_item = None
 
@@ -141,7 +141,7 @@ class MainTree(Tree):
             #Something is selected so get the object
             obj = model.get_value(selection_iter, 1)
             self.selected_item = obj, selection_iter
-            pub.sendMessage('maintree.selection', item = obj)        
+            pubsub.publish('maintree.selection', obj)        
         
     def on_edit(self):
         if self.selected_item is None:
@@ -161,63 +161,40 @@ class PositionsTree(Tree):
         self.type = type
         Tree.__init__(self)
         #id, object, name, price, change
-        self.set_model(gtk.TreeStore(int, object,str, str, str,str, str, str))
+        self.set_model(gtk.TreeStore(int, object,str, str, str,str, str, str, str, str))
         
-        column = gtk.TreeViewColumn('Shares')
-        self.append_column(column)
-        cell = gtk.CellRendererText()
-        column.pack_start(cell, expand = True)
-        column.add_attribute(cell, "markup", 7)
-        column.set_sort_column_id(7)
-        if type == 0:
-            column.set_visible(False)
+        if type == 1:
+            self.__append_column('Shares', 7)
+        self.__append_column('Name', 2)
+        self.__append_column('Start', 3)
+        if type == 1:
+            self.__append_column('Buy Value', 8)
+        self.__append_column('Current Price', 4)
+        if type == 1:
+            self.__append_column('Current Value', 9)
+        self.__append_column('Current Change', 5)
+        self.__append_column('Overall Change', 6)
         
-        column = gtk.TreeViewColumn('Name')
-        self.append_column(column)
-        cell = gtk.CellRendererText()
-        column.pack_start(cell, expand = True)
-        column.add_attribute(cell, "markup", 2)
-        column.set_sort_column_id(2)
         
-        column = gtk.TreeViewColumn('Start')
-        self.append_column(column)
-        cell = gtk.CellRendererText()
-        column.pack_start(cell, expand = True)
-        column.add_attribute(cell, "markup", 3)
-        column.set_sort_column_id(3)
-        
-        column = gtk.TreeViewColumn('Current Price')
-        self.append_column(column)
-        cell = gtk.CellRendererText()
-        column.pack_start(cell, expand = True)
-        column.add_attribute(cell, "markup", 4)
-        column.set_sort_column_id(4)
-        
-        column = gtk.TreeViewColumn('Current Change')
-        self.append_column(column)
-        cell = gtk.CellRendererText()
-        column.pack_start(cell, expand = True)
-        column.add_attribute(cell, "markup", 5)
-        column.set_sort_column_id(5)
-        
-        column = gtk.TreeViewColumn('Overall Change')
-        self.append_column(column)
-        cell = gtk.CellRendererText()
-        column.pack_start(cell, expand = True)
-        column.add_attribute(cell, "markup", 6)
-        column.set_sort_column_id(6)
-          
         self.load_positions()
         
         self.connect('cursor_changed', self.on_cursor_changed)
-        pub.subscribe(self.on_add_position, 'positionstoolbar.add')
-        
-        pub.subscribe(self.on_position_created, 'position.created')
-        pub.subscribe(self.on_remove_position, 'positionstoolbar.remove')
-        pub.subscribe(self.on_stock_updated, 'stock.updated')
-        pub.subscribe(self.on_position_updated, 'position.updated')
+        pubsub.subscribe('positionstoolbar.add', self.on_add_position)
+        pubsub.subscribe( 'position.created', self.on_position_created)
+        pubsub.subscribe('positionstoolbar.remove', self.on_remove_position)
+        pubsub.subscribe('stock.updated', self.on_stock_updated)
+        pubsub.subscribe('position.updated', self.on_position_updated)
         
         self.selected_item = None
+
+
+    def __append_column(self, name, attribute):
+        column = gtk.TreeViewColumn(name)
+        self.append_column(column)
+        cell = gtk.CellRendererText()
+        column.pack_start(cell, expand = True)
+        column.add_attribute(cell, "markup", attribute)
+        column.set_sort_column_id(attribute)
 
     def load_positions(self):
         for pos in self.container:
@@ -273,17 +250,29 @@ class PositionsTree(Tree):
             #Something is selected so get the object
             obj = model.get_value(selection_iter, 1)
             self.selected_item = obj, selection_iter
-            pub.sendMessage('watchlistpositionstree.selection', item = obj)   
+            pubsub.publish('watchlistpositionstree.selection', obj)   
             
     def get_price_string(self, item):
         if item.price is None:
             return 'n/a'
         return str(item.price) + item.currency +'\n' +'<small>'+get_datetime_string(item.date)+'</small>'
         
+    def get_value_string(self, item):
+        return str(item)+config.currency 
+        
     def insert_position(self, position):
         if position.quantity != 0:
             stock = self.model.stocks[position.stock_id]
-            self.get_model().append(None, [position.id, position, get_name_string(stock), self.get_price_string(position), self.get_price_string(stock), get_change_string(position.current_change),get_change_string(position.overall_change),position.quantity])
+            self.get_model().append(None, [position.id, 
+                                           position, 
+                                           get_name_string(stock), 
+                                           self.get_price_string(position), 
+                                           self.get_price_string(stock), 
+                                           get_change_string(position.current_change),
+                                           get_change_string(position.overall_change),
+                                           position.quantity,
+                                           self.get_value_string(position.bvalue),
+                                           self.get_value_string(position.cvalue)])
 
     def find_position_from_stock(self, sid):
         def search(rows):
@@ -360,7 +349,7 @@ class TransactionsTree(Tree):
         
         
         self.load_transactions()
-        pub.subscribe(self.on_transaction_created, 'position.transaction.added')
+        pubsub.subscribe('position.transaction.added', self.on_transaction_created)
         
         
     def load_transactions(self):

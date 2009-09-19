@@ -1,6 +1,6 @@
 import gtk
-import dialogs, objects
-from pubsub import pub
+import dialogs, objects, pubsub
+
 
 
 class PositionsToolbar(gtk.Toolbar):
@@ -32,13 +32,13 @@ class PositionsToolbar(gtk.Toolbar):
         
            
     def on_add_clicked(self, widget):
-        pub.sendMessage('positionstoolbar.add')  
+        pub.publish('positionstoolbar.add')  
       
     def on_update_clicked(self, widget):
-        pub.sendMessage('positionstoolbar.update')
+        pub.publish('positionstoolbar.update')
         
     def on_remove_clicked(self, widget):
-        pub.sendMessage('positionstoolbar.remove')  
+        pub.publish('positionstoolbar.remove')  
            
     def on_edit_clicked(self, widget):
         print "todo"
@@ -68,7 +68,7 @@ class MainTreeToolbar(gtk.Toolbar):
         dialogs.NewContainerDialog(self.model)
     
     def on_remove_clicked(self, widget):
-        pub.sendMessage('maintoolbar.remove')  
+        pub.publish('maintoolbar.remove')  
            
     def on_edit_clicked(self, widget):
-        pub.sendMessage('maintoolbar.edit')
+        pub.publish('maintoolbar.edit')

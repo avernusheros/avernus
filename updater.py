@@ -1,6 +1,6 @@
 from urllib import urlopen
 import csv, pytz
-from pubsub import pub
+import pubsub
 from datetime import datetime
 
 
@@ -30,7 +30,7 @@ def update_stocks(stocks):
         stocks[s].date = date.astimezone(pytz.utc)
         stocks[s].date = stocks[s].date.replace(tzinfo = None)
         stocks[s].change = float(row[3])
-        pub.sendMessage('stock.updated',item = stocks[s])
+        pub.publish('stock.updated', stocks[s])
         s+=1
      
 def update_stock(stock):

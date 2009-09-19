@@ -32,9 +32,8 @@ except:
     raise Exception("PyGTK Version >=2.0 required")
 
 import logging, gtk, gobject
-import treeviews, toolbars, persistent_store, objects, config
+import treeviews, toolbars, persistent_store, objects, config, pubsub
 from webbrowser import open as web
-from pubsub import pub
 
 
 logger = logging.getLogger(__name__)
@@ -63,7 +62,7 @@ class MenuBar(gtk.MenuBar):
         file_menu_items = (('----'  , None, None),
                            ("Quit", gtk.STOCK_QUIT, lambda x: parent.destroy()),
                            )
-        help_menu_items = (("Help"  , gtk.STOCK_HELP, None),
+        help_menu_items = (#("Help"  , gtk.STOCK_HELP, None),
                             ("Website", None, lambda x:web("https://launchpad.net/stocktracker")),
                             ("Request a Feature", None, lambda x:web("https://blueprints.launchpad.net/stocktracker")),
                             ("Report a Bug", None, lambda x:web("https://bugs.launchpad.net/stocktracker")),
@@ -170,7 +169,7 @@ class MainWindow(gtk.Window):
         
         #subscribe
         self.connect("destroy", lambda x: gtk.main_quit())
-        pub.subscribe(self.on_maintree_selection, 'maintree.selection')
+        pubsub.subscribe('maintree.selection', self.on_maintree_selection)
         
         #display everything    
         self.show_all()

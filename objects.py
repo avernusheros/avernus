@@ -1,12 +1,11 @@
 # -*- coding: iso-8859-15 -*-
 
-from pubsub import pub
-import updater
+import updater, pubsub
 
 class Model(object):
     def __init__(self, store):
         self.store = store
-        pub.subscribe(self.on_update_clicked, 'positionstoolbar.update')
+        pubsub.subscribe( 'positionstoolbar.update', self.on_update_clicked)
         
     def initialize(self):
         self.watchlists = self.store.get_watchlists()
@@ -38,18 +37,21 @@ class Model(object):
     def on_update_clicked(self):
         updater.update_stocks([stock for key, stock in self.stocks.iteritems()])
     
-    def create_position(self, symbol, buy_price, buy_date, quantity, container_id):
+    def create_position(self, symbol, buy_price, buy_date, quantity, container_id, type):
         stock = self.get_stock(symbol)
         id = self.store.create_position(container_id, stock.id, buy_price, buy_date, quantity)
-        return Position(id, container_id, stock.id, self, buy_price, buy_date, {}, quantity)
+        if type == 0:
+            return WatchlistPosition(id, container_id, stock.id, self, buy_price, buy_date, {}, quantity)
+        elif type ==1:
+            return PortfolioPosition(id, container_id, stock.id, self, buy_price, buy_date, {}, quantity)
            
     def remove(self, item):
         if isinstance(item, Watchlist):
             del self.watchlists[item.id] 
-            pub.sendMessage("watchlist.removed", item = item)
+            pubsub.publish("watchlist.removed", item)
         elif isinstance(item, Portfolio):
             del self.portfolios[item.id]
-            pub.sendMessage("portfolio.removed", item = item)
+            pubsub.publish("portfolio.removed",  item)
      
     def save(self):
         self.store.save()
@@ -68,19 +70,15 @@ class Container(object):
         
     def set_name(self, name):
         self._name = name
-        pub.sendMessage('container.updated.name', item = self)
+        pubsub.publish('container.updated.name',  self)
         
     name = property(get_name, set_name)
     
-    def add_position(self, symbol, buy_price, buy_date, quantity):
-        pos = self.model.create_position(symbol, buy_price, buy_date, quantity, self.id)
-        self.positions[pos.id] = pos
-        pub.sendMessage("container.position.added", item = pos, container = self)
-        return pos
+
         
     def remove_position(self, position):
         del self.positions[position.id]
-        pub.sendMessage("container.position.removed", item = position, container = self)
+        pubsub.publish("container.position.removed", position,  self)
    
     def get_bvalue(self):
         value = 0.0
@@ -135,15 +133,25 @@ class Portfolio(Container):
     def __init__(self,cash, *args, **kwargs):
         Container.__init__(self, *args, **kwargs)
         self.cash = cash
-        pub.sendMessage("portfolio.created",item =  self)
+        pubsub.publish("portfolio.created",  self)
         
-
+    def add_position(self, symbol, buy_price, buy_date, quantity):
+        pos = self.model.create_position(symbol, buy_price, buy_date, quantity, self.id,1)
+        self.positions[pos.id] = pos
+        pubsub.publish("container.position.added",  pos,  self)
+        return pos
     
     
 class Watchlist(Container):
     def __init__(self, *args, **kwargs):
         Container.__init__(self, *args, **kwargs)
-        pub.sendMessage("watchlist.created", item = self)
+        pubsub.publish("watchlist.created",  self)
+
+    def add_position(self, symbol, buy_price, buy_date, quantity):
+        pos = self.model.create_position(symbol, buy_price, buy_date, quantity, self.id, 0)
+        self.positions[pos.id] = pos
+        pubsub.publish("container.position.added",  pos,  self)
+        return pos
     
    
 class Transaction(object):
@@ -156,7 +164,7 @@ class Transaction(object):
         self.price = price
         self.ta_costs = ta_costs
         
-        pub.sendMessage("transaction.created", item = self)
+        pubsub.publish("transaction.created",  self)
         
 class Stock(object):
     def __init__(self, id, name, symbol, isin, exchange, currency, price, date, change):
@@ -170,7 +178,7 @@ class Stock(object):
         self.date = date
         self.change = change
         
-        pub.sendMessage("stock.created", item = self)
+        pubsub.publish("stock.created",  self)
           
     def get_currency(self):
         if self._currency == 'EUR':
@@ -197,7 +205,7 @@ class Position(object):
         self.price = price
         self.date = date
         self.transactions = transactions
-        pub.sendMessage("position.created",item = self)
+        pubsub.publish("position.created", self)
         
     def get_overall_change(self):
         stock = self.model.stocks[self.stock_id].price - self.price
@@ -219,7 +227,7 @@ class Position(object):
         
     def set_quantity(self, x):
         self.__quantity = x
-        pub.sendMessage("position.updated", item = self)
+        pubsub.publish("position.updated", self)
     
     def get_bvalue(self):
         return self.__quantity * self.price
@@ -238,15 +246,22 @@ class Position(object):
         id = self.model.store.create_transaction(self.id, type, date, quantity, price, ta_costs)
         ta = Transaction(id, self.id, type, date, quantity, price, ta_costs) 
         self.transactions[ta.id] = ta
-        pub.sendMessage("position.transaction.added", item = ta, position = self)
+        pubsub.publish("position.transaction.added", ta, self)
         
     def remove_transaction(self, transaction):
         del self.positions[transaction.id]
-        pub.sendMessage("position.transaction.removed", item = transaction, position = self)
+        pubsub.publish("position.transaction.removed", transaction, self)
     
     def __iter__(self):
         return self.transactions.itervalues()  
 
+class WatchlistPosition(Position):
+    def __init__(self, *args, **kwargs):
+        Position.__init__(self, *args, **kwargs)
+
+class PortfolioPosition(Position):
+    def __init__(self, *args, **kwargs):
+        Position.__init__(self, *args, **kwargs)
  
         
 if __name__ == "__main__":
