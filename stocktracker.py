@@ -176,7 +176,10 @@ class MainWindow(gtk.Window):
 
     def clear_notebook(self):
         for child in self.notebook.get_children():
-            self.notebook.remove(child)
+            self.notebook.remove_page(-1)
+            child.destroy()
+            
+            
 
     def on_maintree_selection(self, item):
         self.clear_notebook()

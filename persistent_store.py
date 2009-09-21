@@ -209,8 +209,13 @@ class Store:
                 ,('version', self.version))
         self.dirty = True
 
-    def clear_container(self, container):
-        print "TODO: clear everything connected to this container"
+    def clear_container(self, cid):
+        for result in self.dbconn.cursor().execute("SELECT * FROM position WHERE container_id=?",(cid,)).fetchall():
+            pid, cid, sid, buy_price, buy_date, quantity = result
+            self.dbconn.cursor().execute('DELETE FROM transactions WHERE position_id=?',(pid,))
+        self.dbconn.cursor().execute("DELETE FROM position WHERE container_id=?",(cid,))
+        self.dirty = True
+        self.commit_if_appropriate()
 
     def on_update_container(self, item):
         self.dbconn.cursor().execute('UPDATE container SET name=? WHERE id=?', (item.name, item.id))
@@ -230,7 +235,7 @@ class Store:
         self.commit_if_appropriate()
 
     def on_remove_container(self, item):
-        self.clear_container(item)
+        self.clear_container(item.id)
         self.dbconn.cursor().execute('DELETE FROM container WHERE id=?',(item.id,))
         self.dirty = True
         self.commit_if_appropriate()
@@ -242,7 +247,7 @@ class Store:
 
     def on_exit(self, message):
         if self.dirty:
-            pub.sendMessage("warning.dirty_exit", message.data)
+            pubsub.publish("warning.dirty_exit", message.data)
 
     def __del__(self):
         self.commit_if_appropriate()

@@ -30,7 +30,7 @@ def update_stocks(stocks):
         stocks[s].date = date.astimezone(pytz.utc)
         stocks[s].date = stocks[s].date.replace(tzinfo = None)
         stocks[s].change = float(row[3])
-        pub.publish('stock.updated', stocks[s])
+        pubsub.publish('stock.updated', stocks[s])
         s+=1
      
 def update_stock(stock):

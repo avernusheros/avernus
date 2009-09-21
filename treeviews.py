@@ -35,14 +35,18 @@ def fix(item):
     else:
         return item
 
-
 def get_change_string(item):
     change, percent, absolute = fix(item)
     if change is None:
         return 'n/a'
+    
     text = str(percent) + '%' + ' | ' + str(change) + config.currency
     if absolute is not None:
         text += '\n' + str(absolute) + config.currency
+    if change < 0.0:
+        text = '<span foreground="red">'+ text + '</span>'
+    else:
+        text = '<span foreground="dark green">'+ text + '</span>'
     return text
 
 
@@ -179,14 +183,24 @@ class PositionsTree(Tree):
         self.load_positions()
         
         self.connect('cursor_changed', self.on_cursor_changed)
-        pubsub.subscribe('positionstoolbar.add', self.on_add_position)
-        pubsub.subscribe( 'position.created', self.on_position_created)
-        pubsub.subscribe('positionstoolbar.remove', self.on_remove_position)
-        pubsub.subscribe('stock.updated', self.on_stock_updated)
-        pubsub.subscribe('position.updated', self.on_position_updated)
+        self.connect("destroy", self.on_destroy)
         
+        self.subscriptions = (
+            ('position.updated', self.on_position_updated),
+            ('stock.updated', self.on_stock_updated),
+            ('positionstoolbar.remove', self.on_remove_position),
+            ('positionstoolbar.add', self.on_add_position),
+            ( 'position.created', self.on_position_created)
+        )
+        for topic, callback in self.subscriptions:
+            pubsub.subscribe(topic, callback)
+            
         self.selected_item = None
 
+    def on_destroy(self, x):
+        for topic, callback in self.subscriptions:
+            pubsub.unsubscribe(topic, callback)
+        
 
     def __append_column(self, name, attribute):
         column = gtk.TreeViewColumn(name)
@@ -295,6 +309,9 @@ class PositionsTree(Tree):
                 if result: return result
             return None
         return search(self.get_model())
+        
+    def __del__(self):
+        pass
 
 
 class TransactionsTree(Tree):

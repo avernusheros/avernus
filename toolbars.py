@@ -32,13 +32,13 @@ class PositionsToolbar(gtk.Toolbar):
         
            
     def on_add_clicked(self, widget):
-        pub.publish('positionstoolbar.add')  
+        pubsub.publish('positionstoolbar.add')  
       
     def on_update_clicked(self, widget):
-        pub.publish('positionstoolbar.update')
+        pubsub.publish('positionstoolbar.update')
         
     def on_remove_clicked(self, widget):
-        pub.publish('positionstoolbar.remove')  
+        pubsub.publish('positionstoolbar.remove')  
            
     def on_edit_clicked(self, widget):
         print "todo"
@@ -68,7 +68,7 @@ class MainTreeToolbar(gtk.Toolbar):
         dialogs.NewContainerDialog(self.model)
     
     def on_remove_clicked(self, widget):
-        pub.publish('maintoolbar.remove')  
+        pubsub.publish('maintoolbar.remove')  
            
     def on_edit_clicked(self, widget):
-        pub.publish('maintoolbar.edit')
+        pubsub.publish('maintoolbar.edit')
