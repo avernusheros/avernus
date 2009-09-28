@@ -1,13 +1,32 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+#    https://launchpad.net/stocktracker
+#    dialogs.py: Copyright 2009 Wolfgang Steitz <wsteitz(at)gmail.com>
+#
+#    This file is part of stocktracker.
+#
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
 import gtk
 import objects, updater
 from datetime import datetime
 
-#TODO dialogen immer parent window mitgeben
-
 
 class EditWatchlist(gtk.Dialog):
-    def __init__(self, wl):
-        gtk.Dialog.__init__(self, "Edit...", None
+    def __init__(self, wl, parent = None):
+        gtk.Dialog.__init__(self, _("Edit..."), parent
                             , gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
                      (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
                       gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
@@ -18,7 +37,7 @@ class EditWatchlist(gtk.Dialog):
         #name entry
         hbox = gtk.HBox()
         vbox.pack_start(hbox)
-        label = gtk.Label('Name:')
+        label = gtk.Label(_('Name:'))
         hbox.pack_start(label)
         self.name_entry = gtk.Entry()
         hbox.pack_start(self.name_entry)
@@ -34,12 +53,12 @@ class EditWatchlist(gtk.Dialog):
             self.wl.name = self.name_entry.get_text()    
 
 class EditPortfolio(EditWatchlist):
-    def __init__(self, pf):
-        EditWatchlist.__init__(self, pf)
+    def __init__(self, pf, parent = None):
+        EditWatchlist.__init__(self, pf, parent)
 
 class NewContainerDialog(gtk.Dialog):
-    def __init__(self, model):
-        gtk.Dialog.__init__(self, "Create...", None
+    def __init__(self, model, parent = None):
+        gtk.Dialog.__init__(self, _("Create..."), parent
                             , gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
                      (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
                       gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
@@ -50,16 +69,16 @@ class NewContainerDialog(gtk.Dialog):
         
         hbox = gtk.HBox()
         vbox.pack_start(hbox)
-        self.radiobutton = button = gtk.RadioButton(None, "Portfolio")
+        self.radiobutton = button = gtk.RadioButton(None, _("Portfolio"))
         hbox.pack_start(button, True, True, 0)
         
-        button = gtk.RadioButton(button, "Watchlist")
+        button = gtk.RadioButton(button, _("Watchlist"))
         hbox.pack_start(button, True, True, 0)
                
         #name entry
         hbox = gtk.HBox()
         vbox.pack_start(hbox)
-        label = gtk.Label('Name:')
+        label = gtk.Label(_('Name:'))
         hbox.pack_start(label)
         self.name_entry = gtk.Entry()
         hbox.pack_start(self.name_entry)
@@ -82,8 +101,8 @@ class NewContainerDialog(gtk.Dialog):
 
 
 class SellDialog(gtk.Dialog):
-    def __init__(self, pf, pos):
-        gtk.Dialog.__init__(self, "Sell a position", None
+    def __init__(self, pf, pos, parent = None):
+        gtk.Dialog.__init__(self, _("Sell a position"), parent
                             , gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
                      (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
                       gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
@@ -95,14 +114,14 @@ class SellDialog(gtk.Dialog):
         #shares entry
         hbox = gtk.HBox()
         vbox.pack_start(hbox)
-        hbox.pack_start(gtk.Label('Shares:'))
+        hbox.pack_start(gtk.Label(_('Shares:')))
         self.shares_entry = gtk.SpinButton(gtk.Adjustment(lower=0, upper=pos.quantity,step_incr=1, value = 0), digits=2)
         hbox.pack_start(self.shares_entry)
         
         #price entry
         hbox = gtk.HBox()
         vbox.pack_start(hbox)
-        hbox.pack_start(gtk.Label('Price:'))
+        hbox.pack_start(gtk.Label(_('Price:')))
         self.price_entry = gtk.SpinButton(gtk.Adjustment(lower=0, upper=100000,step_incr=0.1, value = 1.0), digits=2)
         hbox.pack_start(self.price_entry)
         
@@ -119,6 +138,8 @@ class SellDialog(gtk.Dialog):
     def process_result(self, response):
         if response == gtk.RESPONSE_ACCEPT:
             shares = self.shares_entry.get_value()
+            if shares == 0.0:
+                return
             price = self.price_entry.get_text()
             year, month, day = self.calendar.get_date()
             date = datetime(year, month, day)
@@ -130,8 +151,8 @@ class SellDialog(gtk.Dialog):
 
 
 class BuyDialog(gtk.Dialog):
-    def __init__(self, pf, model):
-        gtk.Dialog.__init__(self, "Buy a position", None
+    def __init__(self, pf, model, parent = None):
+        gtk.Dialog.__init__(self, _("Buy a position"), parent
                             , gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
                      (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
                       gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
@@ -142,7 +163,7 @@ class BuyDialog(gtk.Dialog):
         #symbol entry
         hbox = gtk.HBox()
         vbox.pack_start(hbox)
-        hbox.pack_start(gtk.Label('Symbol:'))
+        hbox.pack_start(gtk.Label(_('Symbol:')))
         self.symbol_entry = gtk.Entry()
         self.symbol_entry.set_icon_from_stock(1, gtk.STOCK_NO)
         hbox.pack_start(self.symbol_entry)
@@ -153,21 +174,27 @@ class BuyDialog(gtk.Dialog):
         #shares entry
         hbox = gtk.HBox()
         vbox.pack_start(hbox)
-        hbox.pack_start(gtk.Label('Shares:'))
+        hbox.pack_start(gtk.Label(_('Shares:')))
         self.shares_entry = gtk.SpinButton(gtk.Adjustment(lower=0, upper=100000,step_incr=1.0, value = 0), digits=2)
         hbox.pack_start(self.shares_entry)
         
         #price entry
         hbox = gtk.HBox()
         vbox.pack_start(hbox)
-        hbox.pack_start(gtk.Label('Price:'))
+        hbox.pack_start(gtk.Label(_('Price:')))
         self.price_entry = gtk.SpinButton(gtk.Adjustment(lower=0, upper=100000,step_incr=0.1, value = 1.0), digits=2)
         hbox.pack_start(self.price_entry)
+        
+        #ta_costs entry
+        hbox = gtk.HBox()
+        vbox.pack_start(hbox)
+        hbox.pack_start(gtk.Label(_('Transaction Costs:')))
+        self.tacosts_entry = gtk.SpinButton(gtk.Adjustment(lower=0, upper=100000,step_incr=0.1, value = 1.0), digits=2)
+        hbox.pack_start(self.tacosts_entry)
         
         #date 
         self.calendar = gtk.Calendar()
         vbox.pack_start(self.calendar)
-        
         
         self.set_response_sensitive(gtk.RESPONSE_ACCEPT, False)
         self.show_all()
@@ -193,18 +220,20 @@ class BuyDialog(gtk.Dialog):
         if response == gtk.RESPONSE_ACCEPT:
             symbol = self.symbol_entry.get_text()
             shares = self.shares_entry.get_value()
+            if shares == 0.0:
+                return
             price = self.price_entry.get_value()
             stock = self.model.get_stock(symbol, update = True)
             year, month, day = self.calendar.get_date()
             date = datetime(year, month, day)
-            ta_costs = 0.0
+            ta_costs = self.tacosts_entry.get_value()
             position = self.pf.add_position(symbol, price, date, shares)
             position.add_transaction(1, date, shares, price, ta_costs)
 
 
 class NewWatchlistPositionDialog(gtk.Dialog):
-    def __init__(self, wl, model):
-        gtk.Dialog.__init__(self, "Create...", None
+    def __init__(self, wl, model, parent = None):
+        gtk.Dialog.__init__(self, _("Create..."), parent
                             , gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
                      (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
                       gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
@@ -216,7 +245,7 @@ class NewWatchlistPositionDialog(gtk.Dialog):
         #symbol entry
         hbox = gtk.HBox()
         vbox.pack_start(hbox)
-        hbox.pack_start(gtk.Label('Symbol:'))
+        hbox.pack_start(gtk.Label(_('Symbol:')))
         self.symbol_entry = gtk.Entry()
         self.symbol_entry.set_icon_from_stock(1, gtk.STOCK_NO)
         hbox.pack_start(self.symbol_entry)

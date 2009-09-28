@@ -20,9 +20,10 @@ def publish(message, *args, **kwargs):
         except Exception, e:
             logger.error("Subscriber " + str(subscriber) + " could not handle message " + str(message) + ": " + str(args) + str(kwargs) + ". Error: " + str(e))
             
+            
 def unsubscribe(message, subscriber):
     if not message in subscriptions:
-        logger.info("No Message to unsibscribe from: " + str(message))
+        logger.info("No Message to unsubscribe from: " + str(message))
     elif not subscriber in subscriptions[message]:
         logger.info("Subscriber " + str(subscriber) + " not subscribed for message " + str(message))
     else:

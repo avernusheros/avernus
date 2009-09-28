@@ -1,13 +1,28 @@
-# -*- coding: iso-8859-15 -*-
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+#    https://launchpad.net/stocktracker
+#    treeviews.py: Copyright 2009 Wolfgang Steitz <wsteitz(at)gmail.com>
+#
+#    This file is part of stocktracker.
+#
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import gtk, string,  logging, pytz
-
 import objects, dialogs, config, pubsub
 
-
-
-
 logger = logging.getLogger(__name__)
+
 
 def to_local_time(date):
     if date is not None:
@@ -23,10 +38,8 @@ def get_datetime_string(date):
             return str(to_local_time(date))
     return ''
     
-        
 def get_name_string(stock):
     return '<b>'+stock.name+'</b>' + '\n' + '<small>'+stock.symbol+'</small>' + '\n' + '<small>'+stock.exchange+'</small>'
-
 
 def fix(item):
     if len(item) == 2:
@@ -58,6 +71,15 @@ class Tree(gtk.TreeView):
     def __init__(self):
         self.selected_item = None
         gtk.TreeView.__init__(self)
+
+    
+    def create_column(self, name, attribute):
+        column = gtk.TreeViewColumn(name)
+        self.append_column(column)
+        cell = gtk.CellRendererText()
+        column.pack_start(cell, expand = True)
+        column.add_attribute(cell, "markup", attribute)
+        column.set_sort_column_id(attribute)
 
     
     def find_item(self, id):
@@ -107,8 +129,8 @@ class MainTree(Tree):
 
 
     def insert_categories(self):
-        self.pf_iter = self.get_model().append(None, [-1, Category('Portfolios'),None,"<b>Portfolios</b>"])
-        self.wl_iter = self.get_model().append(None, [-1, Category('Watchlists'),None,"<b>Watchlists</b>"])
+        self.pf_iter = self.get_model().append(None, [-1, Category('Portfolios'),None,_("<b>Portfolios</b>")])
+        self.wl_iter = self.get_model().append(None, [-1, Category('Watchlists'),None,_("<b>Watchlists</b>")])
 
     def insert_watchlist(self, item):
         self.get_model().append(self.wl_iter, [item.id, item, None, item.name])
@@ -123,7 +145,7 @@ class MainTree(Tree):
         if isinstance(obj, objects.Watchlist) or isinstance(obj, objects.Portfolio):
             dlg = gtk.MessageDialog(None, 
                  gtk.DIALOG_DESTROY_WITH_PARENT, gtk.MESSAGE_QUESTION, 
-                    gtk.BUTTONS_OK_CANCEL, "Are you sure?")
+                    gtk.BUTTONS_OK_CANCEL, _("Are you sure?"))
             response = dlg.run()
             dlg.destroy()
             if response == gtk.RESPONSE_OK:
@@ -168,16 +190,16 @@ class PositionsTree(Tree):
         self.set_model(gtk.TreeStore(int, object,str, str, str,str, str, str, str, str))
         
         if type == 1:
-            self.__append_column('Shares', 7)
-        self.__append_column('Name', 2)
-        self.__append_column('Start', 3)
+            self.create_column(_('Shares'), 7)
+        self.create_column(_('Name'), 2)
+        self.create_column(_('Start'), 3)
         if type == 1:
-            self.__append_column('Buy Value', 8)
-        self.__append_column('Current Price', 4)
+            self.create_column(_('Buy Value'), 8)
+        self.create_column(_('Current Price'), 4)
         if type == 1:
-            self.__append_column('Current Value', 9)
-        self.__append_column('Current Change', 5)
-        self.__append_column('Overall Change', 6)
+            self.create_column(_('Current Value'), 9)
+        self.create_column(_('Current Change'), 5)
+        self.create_column(_('Overall Change'), 6)
         
         
         self.load_positions()
@@ -200,15 +222,6 @@ class PositionsTree(Tree):
     def on_destroy(self, x):
         for topic, callback in self.subscriptions:
             pubsub.unsubscribe(topic, callback)
-        
-
-    def __append_column(self, name, attribute):
-        column = gtk.TreeViewColumn(name)
-        self.append_column(column)
-        cell = gtk.CellRendererText()
-        column.pack_start(cell, expand = True)
-        column.add_attribute(cell, "markup", attribute)
-        column.set_sort_column_id(attribute)
 
     def load_positions(self):
         for pos in self.container:
@@ -240,7 +253,7 @@ class PositionsTree(Tree):
         if self.type == 0:
             dlg = gtk.MessageDialog(None, 
                  gtk.DIALOG_DESTROY_WITH_PARENT, gtk.MESSAGE_QUESTION, 
-                    gtk.BUTTONS_OK_CANCEL, "Are you sure?")
+                    gtk.BUTTONS_OK_CANCEL, _("Are you sure?"))
             response = dlg.run()
             dlg.destroy()
             if response == gtk.RESPONSE_OK:
@@ -322,48 +335,12 @@ class TransactionsTree(Tree):
         #id, object, name, price, change
         self.set_model(gtk.TreeStore(int, object,str, str, str,str, str, str))
         
-        column = gtk.TreeViewColumn('Action')
-        self.append_column(column)
-        cell = gtk.CellRendererText()
-        column.pack_start(cell, expand = True)
-        column.add_attribute(cell, "markup", 2)
-        column.set_sort_column_id(2)
-        
-        column = gtk.TreeViewColumn('Name')
-        self.append_column(column)
-        cell = gtk.CellRendererText()
-        column.pack_start(cell, expand = True)
-        column.add_attribute(cell, "markup", 3)
-        column.set_sort_column_id(3)
-        
-        column = gtk.TreeViewColumn('Date')
-        self.append_column(column)
-        cell = gtk.CellRendererText()
-        column.pack_start(cell, expand = True)
-        column.add_attribute(cell, "markup", 4)
-        column.set_sort_column_id(4)
-        
-        column = gtk.TreeViewColumn('Shares')
-        self.append_column(column)
-        cell = gtk.CellRendererText()
-        column.pack_start(cell, expand = True)
-        column.add_attribute(cell, "markup", 5)
-        column.set_sort_column_id(5)
-        
-        column = gtk.TreeViewColumn('Price')
-        self.append_column(column)
-        cell = gtk.CellRendererText()
-        column.pack_start(cell, expand = True)
-        column.add_attribute(cell, "markup", 6)
-        column.set_sort_column_id(6)
-        
-        column = gtk.TreeViewColumn('Transaction Costs')
-        self.append_column(column)
-        cell = gtk.CellRendererText()
-        column.pack_start(cell, expand = True)
-        column.add_attribute(cell, "markup", 7)
-        column.set_sort_column_id(7)
-        
+        self.create_column(_('Action', 2))
+        self.create_column(_('Name', 3))
+        self.create_column(_('Date', 4))
+        self.create_column(_('Shares', 5))
+        self.create_column(_('Price', 6))
+        self.create_column(_('Transaction Costs', 7))
         
         self.load_transactions()
         pubsub.subscribe('position.transaction.added', self.on_transaction_created)
@@ -389,5 +366,3 @@ class TransactionsTree(Tree):
     def insert_transaction(self, ta, pos):
         stock = self.model.stocks[pos.stock_id]
         self.get_model().append(None, [ta.id, ta, self.get_action_string(ta.type), get_name_string(stock), get_datetime_string(ta.date), ta.quantity, ta.price, ta.ta_costs])
-
-

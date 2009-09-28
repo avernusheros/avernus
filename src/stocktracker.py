@@ -1,13 +1,47 @@
-#!/bin/env python
-# -*- coding: utf8 -*-
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+#    https://launchpad.net/stocktracker
+#    stocktracker.py: Copyright 2009 Wolfgang Steitz <wsteitz(at)gmail.com>
+#
+#    This file is part of stocktracker.
+#
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-# Bunch of meta data, used at least in the about dialog
+
+
+try:
+    import pygtk
+    pygtk.require("2.0")
+except:
+    raise Exception("PyGTK Version >=2.0 required")
+
+import logging, gtk,os #, gobject
+import treeviews, toolbars, persistent_store, objects, config, pubsub
+from webbrowser import open as web
+if __name__ == "__main__":
+    import __init__
+
+logger = logging.getLogger(__name__)
+
+
 
 __appname__ = 'stocktracker'
 __version__ = '0.2'
-__description__ = 'A program to easily track stock quotes'
+__description__ = _('A lightweight program to easily track your investments.')
 __url__='https://launchpad.net/stocktracker'
 __authors__ = ['Wolfgang Steitz (wsteitz(at)gmail.com)']
+__mail__ = 'wsteitz(at)gmail.com'
 __copyright__ = '''\
 Copyright (c) 2008-2009 Wolfgang Steitz
 
@@ -24,19 +58,6 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 '''
 
 
-
-try:
-    import pygtk
-    pygtk.require("2.0")
-except:
-    raise Exception("PyGTK Version >=2.0 required")
-
-import logging, gtk, gobject
-import treeviews, toolbars, persistent_store, objects, config, pubsub
-from webbrowser import open as web
-
-
-logger = logging.getLogger(__name__)
 
 
 class AboutDialog(gtk.AboutDialog):
@@ -60,20 +81,20 @@ class MenuBar(gtk.MenuBar):
     def __init__(self, parent):
         gtk.MenuBar.__init__(self)
         file_menu_items = (('----'  , None, None),
-                           ("Quit", gtk.STOCK_QUIT, lambda x: parent.destroy()),
+                           (_("Quit"), gtk.STOCK_QUIT, lambda x: parent.destroy()),
                            )
         help_menu_items = (#("Help"  , gtk.STOCK_HELP, None),
-                            ("Website", None, lambda x:web("https://launchpad.net/stocktracker")),
-                            ("Request a Feature", None, lambda x:web("https://blueprints.launchpad.net/stocktracker")),
-                            ("Report a Bug", None, lambda x:web("https://bugs.launchpad.net/stocktracker")),
+                            (_("Website"), None, lambda x:web("https://launchpad.net/stocktracker")),
+                            (_("Request a Feature"), None, lambda x:web("https://blueprints.launchpad.net/stocktracker")),
+                            (_("Report a Bug"), None, lambda x:web("https://bugs.launchpad.net/stocktracker")),
                             ('----', None, None),
-                           ("About", gtk.STOCK_ABOUT , self.on_about),
+                            (_("About"), gtk.STOCK_ABOUT , self.on_about),
                            )
 
-        filemenu = gtk.MenuItem("File")
+        filemenu = gtk.MenuItem(_("File"))
         filemenu.set_submenu(self.build_menu(file_menu_items))
 
-        helpmenu = gtk.MenuItem("Help")
+        helpmenu = gtk.MenuItem(_("Help"))
         helpmenu.set_submenu(self.build_menu(help_menu_items))
 
         self.append(filemenu)
@@ -112,12 +133,12 @@ class PositionsTab(gtk.VBox):
         tb = toolbars.PositionsToolbar(pf)
         hbox.pack_start(tb)
         
-        text = '<b>Performance Today</b>\n'+treeviews.get_change_string(pf.current_change)
+        text = '<b>' + _('Performance Today')+'</b>\n'+treeviews.get_change_string(pf.current_change)
         label = gtk.Label()
         label.set_markup(text)
         hbox.pack_start(label)
         hbox.pack_start(gtk.VSeparator())
-        text = '<b>Overall</b>\n'+treeviews.get_change_string(pf.overall_change)
+        text = '<b>'+_('Overall')+'</b>\n'+treeviews.get_change_string(pf.overall_change)
         label = gtk.Label()
         label.set_markup(text)
         hbox.pack_start(label)
@@ -179,8 +200,6 @@ class MainWindow(gtk.Window):
             self.notebook.remove_page(-1)
             child.destroy()
             
-            
-
     def on_maintree_selection(self, item):
         self.clear_notebook()
         if isinstance(item, objects.Watchlist):
@@ -191,25 +210,30 @@ class MainWindow(gtk.Window):
             type = -1
 
         if type == 0 or type == 1:
-            self.notebook.append_page(PositionsTab(item, self.model, type), gtk.Label('Positions'))
+            self.notebook.append_page(PositionsTab(item, self.model, type), gtk.Label(_('Positions')))
             
         if type == 1:
             transactions_tree = treeviews.TransactionsTree(item, self.model)
             transactions_tree.show_all()
-            self.notebook.append_page(transactions_tree, gtk.Label('Transactions'))
+            self.notebook.append_page(transactions_tree, gtk.Label(_('Transactions')))
 
 
+def check_path(path):
+    if not os.path.isdir(path):
+        os.mkdir(path)    
+    
+    
 def start():
-    store = persistent_store.Store(config.db_path)
+    check_path(config.config_path)
+    store = persistent_store.Store(config.db_file)
     model = objects.Model(store)
     store.model = model
     
     main_window = MainWindow(model)
     model.initialize()
     
-    gobject.threads_init()
+    #gobject.threads_init()
     gtk.main()    
-
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG, 
