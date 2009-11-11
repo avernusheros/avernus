@@ -128,7 +128,6 @@ class PositionsTab(gtk.VBox):
     def __init__(self, pf, model, type):
         gtk.VBox.__init__(self)
         self.pf = pf
-        
         positions_tree = treeviews.PositionsTree(pf, model, type)
         hbox = gtk.HBox()
         tb = toolbars.PositionsToolbar(pf)
@@ -148,7 +147,7 @@ class PositionsTab(gtk.VBox):
         
         self.on_stock_update()
         pubsub.subscribe('stock.updated', self.on_stock_update)
-        
+       
         self.show_all()
         
     def on_stock_update(self, item = None):

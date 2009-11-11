@@ -15,10 +15,10 @@ def publish(message, *args, **kwargs):
         #logger.info("Message with no Subscribers: " + str(message))
         return
     for subscriber in subscriptions[message]:
-        try:
+        #try:
             subscriber(*args, **kwargs)
-        except Exception, e:
-            logger.error("Subscriber " + str(subscriber) + " could not handle message " + str(message) + ": " + str(args) + str(kwargs) + ". Error: " + str(e))
+        #except Exception, e:
+         #   logger.error("Subscriber " + str(subscriber) + " could not handle message " + str(message) + ": " + str(args) + str(kwargs) + ". Error: " + str(e))
             
             
 def unsubscribe(message, subscriber):

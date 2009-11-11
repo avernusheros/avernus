@@ -44,6 +44,11 @@ class PositionsToolbar(gtk.Toolbar):
         self.insert(button,-1)
         button.set_sensitive(False)
         
+        button = gtk.ToolButton('gtk-paste')
+        #button.set_label('Remove tag'
+        button.connect('clicked', self.on_tag_clicked)
+        self.insert(button,-1)
+        
         self.insert(gtk.SeparatorToolItem(),-1)
         
         button = gtk.ToolButton('gtk-refresh')
@@ -59,7 +64,10 @@ class PositionsToolbar(gtk.Toolbar):
         pubsub.publish('positionstoolbar.update')
         
     def on_remove_clicked(self, widget):
-        pubsub.publish('positionstoolbar.remove')  
+        pubsub.publish('positionstoolbar.remove') 
+    
+    def on_tag_clicked(self, widget):
+        pubsub.publish('positionstoolbar.tag')   
            
     def on_edit_clicked(self, widget):
         print "todo"

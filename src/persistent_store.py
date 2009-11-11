@@ -34,7 +34,7 @@ class Store:
     def __init__(self, path):
         self.path = path
         print path
-        self.version = 1
+        self.version = 2
         self.dirty = False
         init = False
         if not os.path.exists(self.path):
@@ -60,7 +60,8 @@ class Store:
             (self.on_update_container, 'container.updated'),
             (self.on_update_position, 'position.updated'),
             (self.on_remove_position, 'container.position.removed'),
-            (self.on_update_stock, 'stock.updated')
+            (self.on_update_stock, 'stock.updated'),
+            (self.on_positon_tags_change, 'position.tags.changed')
         )
         for callback, topic in self.subscriptions:
             pubsub.subscribe(topic, callback)
@@ -81,7 +82,25 @@ class Store:
             pubsub.unsubscribe(callback)
     
     def upgrade_db(self, version):
-        print "db upgrading not implemented yet"
+        if version == 1:
+            cursor = self.dbconn.cursor()
+            cursor.execute('''
+                CREATE TABLE tag (
+                    id INTEGER PRIMARY KEY
+                    , name text
+                    );  
+                    ''') 
+            cursor.execute('''
+                CREATE TABLE has_tag (
+                    id INTEGER PRIMARY KEY
+                    , position_id integer
+                    , tag_id integer
+                    );  
+                    ''') 
+            cursor.execute('UPDATE meta SET value=? WHERE name=?', (2, 'version' ))
+            self.save()
+        else:
+            print "upgrade to version not implemented", version
     
     def get_meta(self):
         try:
@@ -119,17 +138,31 @@ class Store:
             id, name, symbol, isin, exchange, currency, price, date, change = result
             stx[id] = objects.Stock(id, name, symbol, isin, exchange, currency, price, date, change)
         return stx
-         
+    
+    def get_tags(self):
+        tags = {}
+        for result in self.dbconn.cursor().execute("SELECT * FROM tag").fetchall():
+            id, name = result
+            tags[name] = objects.Tag(id, name)
+        return tags
+    
+    def get_tags_from_position(self, id):
+        tags = []
+        for result in self.dbconn.cursor().execute("SELECT name FROM tag, has_tag WHERE tag.id = has_tag.tag_id AND has_tag.position_id = ? ",(id,)).fetchall():
+            name = result[0]
+            tags.append(name)
+        return tags
         
     def get_positions(self, cid, type):
         pos = {}
         for result in self.dbconn.cursor().execute("SELECT * FROM position WHERE container_id=?",(cid,)).fetchall():
             id, cid, sid, buy_price, buy_date, quantity = result
             transactions = self.get_transactions(id)
+            tags = self.get_tags_from_position(id)
             if type == 0:
-                pos[id] = objects.WatchlistPosition(id, cid, sid, self.model, buy_price, buy_date, transactions, quantity)
+                pos[id] = objects.WatchlistPosition(id, cid, sid, self.model, buy_price, buy_date, transactions, quantity, tags)
             elif type == 1:
-                pos[id] = objects.PortfolioPosition(id, cid, sid, self.model, buy_price, buy_date, transactions, quantity)
+                pos[id] = objects.PortfolioPosition(id, cid, sid, self.model, buy_price, buy_date, transactions, quantity, tags)
         return pos
     
     def get_transactions(self, pid):
@@ -160,6 +193,14 @@ class Store:
     def create_position(self, cid, sid, buy_price, buy_date, quantity):
         cursor = self.dbconn.cursor()
         cursor.execute('INSERT INTO position VALUES (null,?,?,?,?,?)', (cid, sid, buy_price, buy_date, quantity))
+        id = cursor.lastrowid
+        self.dirty = True
+        self.commit_if_appropriate()
+        return id 
+    
+    def create_tag(self, name):
+        cursor = self.dbconn.cursor()
+        cursor.execute('INSERT INTO tag VALUES (null,?)', (name,))
         id = cursor.lastrowid
         self.dirty = True
         self.commit_if_appropriate()
@@ -228,6 +269,20 @@ class Store:
                 , value text
                 );  
                 ''') 
+        cursor.execute('''
+            CREATE TABLE tag (
+                id INTEGER PRIMARY KEY
+                , name text
+                );  
+                ''') 
+        cursor.execute('''
+            CREATE TABLE has_tag (
+                id INTEGER PRIMARY KEY
+                , position_id integer
+                , tag_id integer
+                );  
+                ''') 
+
         cursor.execute('INSERT INTO meta VALUES (null, ?, ?)'
                 ,('version', self.version))
         self.dirty = True
@@ -265,6 +320,14 @@ class Store:
         
     def on_remove_position(self, item, container):
         self.dbconn.cursor().execute('DELETE FROM position WHERE id=?',(item.id,))
+        self.dirty = True
+        self.commit_if_appropriate()
+
+    def on_positon_tags_change(self, tags, position):
+        c = self.dbconn.cursor()
+        c.execute('DELETE FROM has_tag WHERE position_id=?',(position.id,))
+        for t in tags:
+            c.execute('INSERT INTO has_tag VALUES (null, ?,?)', (position.id, t.id))
         self.dirty = True
         self.commit_if_appropriate()
 

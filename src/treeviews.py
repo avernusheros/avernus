@@ -80,6 +80,7 @@ class Tree(gtk.TreeView):
         column.pack_start(cell, expand = True)
         column.add_attribute(cell, "markup", attribute)
         column.set_sort_column_id(attribute)
+        return column, cell
 
     
     def find_item(self, id):
@@ -131,6 +132,7 @@ class MainTree(Tree):
     def insert_categories(self):
         self.pf_iter = self.get_model().append(None, [-1, Category('Portfolios'),None,_("<b>Portfolios</b>")])
         self.wl_iter = self.get_model().append(None, [-1, Category('Watchlists'),None,_("<b>Watchlists</b>")])
+        self.tag_iter = self.get_model().append(None, [-1, Category('Tags'),None,_("<b>Tags</b>")])
 
     def insert_watchlist(self, item):
         self.get_model().append(self.wl_iter, [item.id, item, None, item.name])
@@ -187,7 +189,7 @@ class PositionsTree(Tree):
         self.type = type
         Tree.__init__(self)
         #id, object, name, price, change
-        self.set_model(gtk.TreeStore(int, object,str, str, str,str, str, str, str, str))
+        self.set_model(gtk.TreeStore(int, object,str, str, str,str, str, str, str, str, str))
         
         if type == 1:
             self.create_column(_('Shares'), 7)
@@ -200,8 +202,10 @@ class PositionsTree(Tree):
             self.create_column(_('Current Value'), 9)
         self.create_column(_('Current Change'), 5)
         self.create_column(_('Overall Change'), 6)
-        
-        
+        col, cell = self.create_column(_('Tags'), 10)
+        cell.set_property('editable', True)
+        cell.connect('edited', self.on_tag_edited)
+
         self.load_positions()
         
         self.connect('cursor_changed', self.on_cursor_changed)
@@ -212,6 +216,7 @@ class PositionsTree(Tree):
             ('stock.updated', self.on_stock_updated),
             ('positionstoolbar.remove', self.on_remove_position),
             ('positionstoolbar.add', self.on_add_position),
+            ('positionstoolbar.tag', self.on_tag),
             ( 'position.created', self.on_position_created)
         )
         for topic, callback in self.subscriptions:
@@ -226,6 +231,12 @@ class PositionsTree(Tree):
     def load_positions(self):
         for pos in self.container:
             self.insert_position(pos)
+    
+    def on_tag_edited(self, cellrenderertext, path, new_text):
+        if self.selected_item is None:
+            return
+        obj, iter = self.selected_item
+        obj.tag(new_text.split())
     
     def on_position_updated(self, item):
         row = self.find_position(item.id)
@@ -267,6 +278,13 @@ class PositionsTree(Tree):
             dialogs.NewWatchlistPositionDialog(self.container, self.model)  
         elif self.type == 1:
             dialogs.BuyDialog(self.container, self.model)
+    
+    def on_tag(self):
+        if self.selected_item is None:
+            return
+        obj, iter = self.selected_item
+        print "tagging!", obj
+    
         
     def on_cursor_changed(self, widget):
         #Get the current selection in the gtk.TreeView
@@ -299,7 +317,8 @@ class PositionsTree(Tree):
                                            get_change_string(position.overall_change),
                                            position.quantity,
                                            self.get_value_string(position.bvalue),
-                                           self.get_value_string(position.cvalue)])
+                                           self.get_value_string(position.cvalue),
+                                           position.tags])
 
     def find_position_from_stock(self, sid):
         def search(rows):
@@ -335,12 +354,12 @@ class TransactionsTree(Tree):
         #id, object, name, price, change
         self.set_model(gtk.TreeStore(int, object,str, str, str,str, str, str))
         
-        self.create_column(_('Action', 2))
-        self.create_column(_('Name', 3))
-        self.create_column(_('Date', 4))
-        self.create_column(_('Shares', 5))
-        self.create_column(_('Price', 6))
-        self.create_column(_('Transaction Costs', 7))
+        self.create_column(_('Action'), 2)
+        self.create_column(_('Name'), 3)
+        self.create_column(_('Date'), 4)
+        self.create_column(_('Shares'), 5)
+        self.create_column(_('Price'), 6)
+        self.create_column(_('Transaction Costs'), 7)
         
         self.load_transactions()
         pubsub.subscribe('position.transaction.added', self.on_transaction_created)

@@ -29,6 +29,7 @@ class Model(object):
         self.watchlists = self.store.get_watchlists()
         self.portfolios = self.store.get_portfolios()
         self.stocks = self.store.get_stocks()
+        self.tags = self.store.get_tags()
     
     def create_watchlist(self, name):
         id = self.store.create_container(name,'',0,0.0)
@@ -37,6 +38,15 @@ class Model(object):
     def create_portfolio(self, name, cash = 0.0):
         id = self.store.create_container(name,'',1,cash)
         self.portfolios[id] = Portfolio(cash, id, name, self, {})
+     
+    def get_tag(self,tag):
+        if tag in self.tags:
+            return self.tags[tag]
+        else:
+            id = self.store.create_tag(tag)
+            new_tag = Tag(id, tag)
+            self.tags[tag] = new_tag
+            return new_tag
         
     def get_stock(self, symbol, update = False):
         stock = None
@@ -171,6 +181,13 @@ class Watchlist(Container):
         pubsub.publish("container.position.added",  pos,  self)
         return pos
     
+class Tag(object):
+    def __init__(self, id, name):
+        self.id = id
+        self.name = name
+        
+        pubsub.publish("tag.created", self)
+
    
 class Transaction(object):
     def __init__(self, id, pos_id, type, date, quantity, price, ta_costs):
@@ -214,7 +231,7 @@ class Stock(object):
              
 
 class Position(object):
-    def __init__(self, id, container_id, stock_id, model, price, date, transactions, quantity = 1):
+    def __init__(self, id, container_id, stock_id, model, price, date, transactions, quantity = 1, tags = None):
         self.id = id
         self.container_id = container_id
         self.stock_id = stock_id
@@ -223,7 +240,13 @@ class Position(object):
         self.price = price
         self.date = date
         self.transactions = transactions
+        if tags == None: 
+            self.__tags = []
+        else: self.__tags = tags
         pubsub.publish("position.created", self)
+      
+    def get_name(self):
+        return self.model.stocks[self.stock_id].name
         
     def get_overall_change(self):
         stock = self.model.stocks[self.stock_id].price - self.price
@@ -253,12 +276,20 @@ class Position(object):
     def get_cvalue(self):
         return self.__quantity * self.model.stocks[self.stock_id].price
     
+    def get_tags(self):
+        ret = ''
+        for t in self.__tags:
+            ret += t + ' '
+        return ret
+    
     current_change =  property(get_current_change)
     cvalue = property(get_cvalue)
     bvalue = property(get_bvalue)
     quantity = property(get_quantity, set_quantity)
     overall_change = property(get_overall_change)
     currency = property(get_currency)
+    name = property(get_name)
+    tags = property(get_tags)
      
     def add_transaction(self, type, date, quantity, price, ta_costs):
         id = self.model.store.create_transaction(self.id, type, date, quantity, price, ta_costs)
@@ -270,6 +301,13 @@ class Position(object):
         del self.positions[transaction.id]
         pubsub.publish("position.transaction.removed", transaction, self)
     
+    def tag(self, tags):
+        for tagstring in tags:
+            #ensure tag exists
+            tag = self.model.get_tag(tagstring)
+        pubsub.publish("position.tags.changed", [self.model.tags[t] for t in tags], self)
+        self.__tags = tags
+            
     def __iter__(self):
         return self.transactions.itervalues()  
 
