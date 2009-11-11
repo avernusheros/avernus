@@ -139,9 +139,12 @@ class PositionsTab(gtk.VBox):
         hbox.pack_start(gtk.VSeparator())
         self.overall_label = label = gtk.Label()
         hbox.pack_start(label)
-        
+        sw = gtk.ScrolledWindow()
+        sw.set_property('hscrollbar-policy', gtk.POLICY_AUTOMATIC)
+        sw.set_property('vscrollbar-policy', gtk.POLICY_AUTOMATIC)
+        sw.add(positions_tree)
         self.pack_start(hbox, expand=False, fill=False)
-        self.pack_start(positions_tree)
+        self.pack_start(sw)
         
         self.on_stock_update()
         pubsub.subscribe('stock.updated', self.on_stock_update)
