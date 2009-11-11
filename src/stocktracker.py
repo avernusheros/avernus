@@ -127,27 +127,33 @@ class MenuBar(gtk.MenuBar):
 class PositionsTab(gtk.VBox):
     def __init__(self, pf, model, type):
         gtk.VBox.__init__(self)
+        self.pf = pf
         
         positions_tree = treeviews.PositionsTree(pf, model, type)
         hbox = gtk.HBox()
         tb = toolbars.PositionsToolbar(pf)
         hbox.pack_start(tb)
         
-        text = '<b>' + _('Performance Today')+'</b>\n'+treeviews.get_change_string(pf.current_change)
-        label = gtk.Label()
-        label.set_markup(text)
+        self.today_label = label = gtk.Label()
         hbox.pack_start(label)
         hbox.pack_start(gtk.VSeparator())
-        text = '<b>'+_('Overall')+'</b>\n'+treeviews.get_change_string(pf.overall_change)
-        label = gtk.Label()
-        label.set_markup(text)
+        self.overall_label = label = gtk.Label()
         hbox.pack_start(label)
         
         self.pack_start(hbox, expand=False, fill=False)
         self.pack_start(positions_tree)
+        
+        self.on_stock_update()
+        pubsub.subscribe('stock.updated', self.on_stock_update)
+        
         self.show_all()
         
-
+    def on_stock_update(self, item = None):
+        text = '<b>' + _('Performance Today')+'</b>\n'+treeviews.get_change_string(self.pf.current_change)
+        self.today_label.set_markup(text)
+        text = '<b>'+_('Overall')+'</b>\n'+treeviews.get_change_string(self.pf.overall_change)
+        self.overall_label.set_markup(text)
+        
 
 class MainWindow(gtk.Window):
     
