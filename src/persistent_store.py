@@ -57,6 +57,7 @@ class Store:
             (self.on_exit, "exit"),
             (self.on_remove_container, "watchlist.removed"),
             (self.on_remove_container, "portfolio.removed"),
+            (self.on_remove_tag, "tag.removed"),
             (self.on_update_container, 'container.updated'),
             (self.on_update_position, 'position.updated'),
             (self.on_remove_position, 'container.position.removed'),
@@ -143,7 +144,7 @@ class Store:
         tags = {}
         for result in self.dbconn.cursor().execute("SELECT * FROM tag").fetchall():
             id, name = result
-            tags[name] = objects.Tag(id, name)
+            tags[name] = objects.Tag(id, name, self.model)
         return tags
     
     def get_tags_from_position(self, id):
@@ -317,6 +318,12 @@ class Store:
         self.dbconn.cursor().execute('DELETE FROM container WHERE id=?',(item.id,))
         self.dirty = True
         self.commit_if_appropriate()
+        
+    def on_remove_tag(self, item):
+        self.dbconn.cursor().execute('DELETE FROM has_tag WHERE tag_id=?',(item.id,))
+        self.dbconn.cursor().execute('DELETE FROM tag WHERE id=?',(item.id,))
+        self.dirty = True
+        self.commit_if_appropriate()    
         
     def on_remove_position(self, item, container):
         self.dbconn.cursor().execute('DELETE FROM position WHERE id=?',(item.id,))

@@ -44,9 +44,17 @@ class Model(object):
             return self.tags[tag]
         else:
             id = self.store.create_tag(tag)
-            new_tag = Tag(id, tag)
+            new_tag = Tag(id, tag, self)
             self.tags[tag] = new_tag
             return new_tag
+    
+    def get_positions_from_tag(self, tag):
+        pos = []
+        for key, pf in self.portfolios.iteritems():
+            for p in pf:
+                if tag in p.tags:
+                    pos.append(p)
+        return pos
         
     def get_stock(self, symbol, update = False):
         stock = None
@@ -80,6 +88,9 @@ class Model(object):
         elif isinstance(item, Portfolio):
             del self.portfolios[item.id]
             pubsub.publish("portfolio.removed",  item)
+        elif isinstance(item, Tag):
+            del self.tags[item.name]
+            pubsub.publish("tag.removed", item)
      
     def save(self):
         self.store.save()
@@ -102,7 +113,6 @@ class Container(object):
         
     name = property(get_name, set_name)
     
-
         
     def remove_position(self, position):
         del self.positions[position.id]
@@ -110,13 +120,13 @@ class Container(object):
    
     def get_bvalue(self):
         value = 0.0
-        for pos in self.positions.itervalues():
+        for pos in self:
             value += pos.bvalue
         return value
     
     def get_cvalue(self):
         value = 0.0
-        for pos in self.positions.itervalues():
+        for pos in self:
             value += pos.cvalue
         return value
         
@@ -132,7 +142,7 @@ class Container(object):
     
     def get_current_change(self):
         change = 0.0
-        for pos in self.positions.itervalues():
+        for pos in self:
             stock, percent, absolute = pos.current_change
             change +=absolute
         start = self.get_cvalue() - change
@@ -181,13 +191,16 @@ class Watchlist(Container):
         pubsub.publish("container.position.added",  pos,  self)
         return pos
     
-class Tag(object):
-    def __init__(self, id, name):
+class Tag(Container):
+    def __init__(self, id, name, model):
         self.id = id
         self.name = name
+        self.model = model
         
         pubsub.publish("tag.created", self)
 
+    def __iter__(self):
+        return iter(self.model.get_positions_from_tag(self.name))
    
 class Transaction(object):
     def __init__(self, id, pos_id, type, date, quantity, price, ta_costs):
@@ -305,8 +318,9 @@ class Position(object):
         for tagstring in tags:
             #ensure tag exists
             tag = self.model.get_tag(tagstring)
-        pubsub.publish("position.tags.changed", [self.model.tags[t] for t in tags], self)
         self.__tags = tags
+        pubsub.publish("position.tags.changed", [self.model.tags[t] for t in tags], self)
+        
             
     def __iter__(self):
         return self.transactions.itervalues()  

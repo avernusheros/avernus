@@ -122,9 +122,11 @@ class MainTree(Tree):
         self.connect('cursor_changed', self.on_cursor_changed)
         pubsub.subscribe("watchlist.created", self.insert_watchlist)
         pubsub.subscribe("portfolio.created", self.insert_portfolio)
+        pubsub.subscribe("tag.created", self.insert_tag)
         pubsub.subscribe( "maintoolbar.remove", self.on_remove)
         pubsub.subscribe("maintoolbar.edit", self.on_edit)
         pubsub.subscribe( "container.updated", self.on_updated)
+        
         
         self.selected_item = None
 
@@ -140,11 +142,14 @@ class MainTree(Tree):
     def insert_portfolio(self, item):
         self.get_model().append(self.pf_iter, [item.id, item, None, item.name])
          
+    def insert_tag(self, item):
+        self.get_model().append(self.tag_iter, [item.id, item, None, item.name])
+         
     def on_remove(self):
         if self.selected_item is None:
             return
         obj, iter = self.selected_item
-        if isinstance(obj, objects.Watchlist) or isinstance(obj, objects.Portfolio):
+        if isinstance(obj, objects.Watchlist) or isinstance(obj, objects.Portfolio) or isinstance(obj, objects.Tag):
             dlg = gtk.MessageDialog(None, 
                  gtk.DIALOG_DESTROY_WITH_PARENT, gtk.MESSAGE_QUESTION, 
                     gtk.BUTTONS_OK_CANCEL, _("Are you sure?"))
@@ -191,14 +196,14 @@ class PositionsTree(Tree):
         #id, object, name, price, change
         self.set_model(gtk.TreeStore(int, object,str, str, str,str, str, str, str, str, str))
         
-        if type == 1:
+        if type == 1 or type == 2:
             self.create_column(_('Shares'), 7)
         self.create_column(_('Name'), 2)
         self.create_column(_('Start'), 3)
-        if type == 1:
+        if type == 1 or type == 2:
             self.create_column(_('Buy Value'), 8)
         self.create_column(_('Current Price'), 4)
-        if type == 1:
+        if type == 1 or type == 2:
             self.create_column(_('Current Value'), 9)
         self.create_column(_('Current Change'), 5)
         self.create_column(_('Overall Change'), 6)
@@ -217,7 +222,8 @@ class PositionsTree(Tree):
             ('positionstoolbar.remove', self.on_remove_position),
             ('positionstoolbar.add', self.on_add_position),
             ('positionstoolbar.tag', self.on_tag),
-            ( 'position.created', self.on_position_created)
+            ( 'position.created', self.on_position_created),
+            ('position.tags.changed', self.on_positon_tags_changed)
         )
         for topic, callback in self.subscriptions:
             pubsub.subscribe(topic, callback)
@@ -245,6 +251,11 @@ class PositionsTree(Tree):
                 self.get_model().remove(row.iter)
             else:
                 row[7] = item.quantity
+    
+    def on_positon_tags_changed(self, tags, item):
+        row = self.find_position(item.id)
+        if row:
+            row[10] = item.tags
     
     def on_stock_updated(self, item):
         row = self.find_position_from_stock(item.id)

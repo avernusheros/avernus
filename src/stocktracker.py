@@ -214,10 +214,12 @@ class MainWindow(gtk.Window):
             type = 0
         elif isinstance(item, objects.Portfolio):
             type = 1
+        elif isinstance(item, objects.Tag):
+            type = 2
         else:
             type = -1
 
-        if type == 0 or type == 1:
+        if type == 0 or type == 1 or type == 2:
             self.notebook.append_page(PositionsTab(item, self.model, type), gtk.Label(_('Positions')))
             
         if type == 1:
