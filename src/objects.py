@@ -30,6 +30,7 @@ class Model(object):
         self.portfolios = self.store.get_portfolios()
         self.stocks = self.store.get_stocks()
         self.tags = self.store.get_tags()
+        pubsub.publish('model.database.loaded')
     
     def create_watchlist(self, name):
         id = self.store.create_container(name,'',0,0.0)
@@ -155,7 +156,7 @@ class Container(object):
     overall_change = property(get_overall_change)
     current_change = property(get_current_change)
     bvalue = property(get_bvalue)
-    cvalue = property(get_cvalue)        
+    total = cvalue = property(get_cvalue)        
   
     def __cmp__(self, other):
         return cmp(self.id, other.id)
@@ -288,6 +289,9 @@ class Position(object):
     
     def get_cvalue(self):
         return self.__quantity * self.model.stocks[self.stock_id].price
+        
+    def get_current_price(self):
+        return self.model.stocks[self.stock_id].price
     
     def get_tags(self):
         ret = ''
@@ -295,6 +299,7 @@ class Position(object):
             ret += t + ' '
         return ret
     
+    current_price = property(get_current_price)
     current_change =  property(get_current_change)
     cvalue = property(get_cvalue)
     bvalue = property(get_bvalue)

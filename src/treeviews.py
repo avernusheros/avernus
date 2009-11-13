@@ -118,6 +118,7 @@ class MainTree(Tree):
         self.append_column(column)
         
         self.insert_categories()
+       
 
         self.connect('cursor_changed', self.on_cursor_changed)
         pubsub.subscribe("watchlist.created", self.insert_watchlist)
@@ -126,7 +127,7 @@ class MainTree(Tree):
         pubsub.subscribe( "maintoolbar.remove", self.on_remove)
         pubsub.subscribe("maintoolbar.edit", self.on_edit)
         pubsub.subscribe( "container.updated", self.on_updated)
-        
+        pubsub.subscribe("model.database.loaded", self.on_database_loaded)
         
         self.selected_item = None
 
@@ -185,6 +186,8 @@ class MainTree(Tree):
         elif isinstance(obj, objects.Portfolio):
             dialogs.EditPortfolio(obj)
 
+    def on_database_loaded(self):
+        self.expand_all()
     
 class PositionsTree(Tree):
     def __init__(self, container, model, type):
@@ -194,7 +197,7 @@ class PositionsTree(Tree):
         self.type = type
         Tree.__init__(self)
         #id, object, name, price, change
-        self.set_model(gtk.TreeStore(int, object,str, str, str,str, str, str, str, str, str))
+        self.set_model(gtk.TreeStore(int, object,str, str, str,str, str, int, str, str, str))
         
         if type == 1 or type == 2:
             self.create_column(_('Shares'), 7)
@@ -210,6 +213,31 @@ class PositionsTree(Tree):
         col, cell = self.create_column(_('Tags'), 10)
         cell.set_property('editable', True)
         cell.connect('edited', self.on_tag_edited)
+        
+        def sort_buy_value(model, iter1, iter2):
+            item1 = model.get_value(iter1, 1)
+            item2 = model.get_value(iter2, 1)
+            return item1.bvalue - item2.bvalue
+        
+        def sort_current_value(model, iter1, iter2):
+            item1 = model.get_value(iter1, 1)
+            item2 = model.get_value(iter2, 1)
+            return item1.cvalue - item2.cvalue
+        
+        def sort_start_price(model, iter1, iter2):
+            item1 = model.get_value(iter1, 1)
+            item2 = model.get_value(iter2, 1)
+            return item1.price - item2.price
+        
+        def sort_current_price(model, iter1, iter2):
+            item1 = model.get_value(iter1, 1)
+            item2 = model.get_value(iter2, 1)
+            return item1.current_price - item2.current_price
+                
+        self.get_model().set_sort_func(8, sort_buy_value)
+        self.get_model().set_sort_func(9, sort_current_value)
+        self.get_model().set_sort_func(3, sort_start_price)
+        self.get_model().set_sort_func(4, sort_current_price)
 
         self.load_positions()
         
@@ -293,9 +321,11 @@ class PositionsTree(Tree):
     def on_tag(self):
         if self.selected_item is None:
             return
+        path, col = self.get_cursor()
         obj, iter = self.selected_item
-        print "tagging!", obj
-    
+        cell = self.get_column(8).get_cell_renderers()[0]
+        self.set_cursor(path, focus_column = self.get_column(8), start_editing=True)
+        #self.grab_focus()
         
     def on_cursor_changed(self, widget):
         #Get the current selection in the gtk.TreeView

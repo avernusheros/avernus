@@ -27,7 +27,7 @@ except:
     raise Exception("PyGTK Version >=2.0 required")
 
 import logging, gtk,os #, gobject
-import treeviews, toolbars, persistent_store, objects, config, pubsub
+import treeviews, toolbars, persistent_store, objects, config, pubsub, chart_tab
 from webbrowser import open as web
 if __name__ == "__main__":
     import __init__
@@ -122,6 +122,7 @@ class MenuBar(gtk.MenuBar):
 
     def on_about(self, widget):
         AboutDialog()
+    
 
 
 class PositionsTab(gtk.VBox):
@@ -131,11 +132,14 @@ class PositionsTab(gtk.VBox):
         positions_tree = treeviews.PositionsTree(pf, model, type)
         hbox = gtk.HBox()
         tb = toolbars.PositionsToolbar(pf)
-        hbox.pack_start(tb)
+        hbox.pack_start(tb, expand = True, fill = True)
         
+        self.total_label = label = gtk.Label()
+        hbox.pack_start(label)
+        hbox.pack_start(gtk.VSeparator(), expand = False, fill = False)
         self.today_label = label = gtk.Label()
         hbox.pack_start(label)
-        hbox.pack_start(gtk.VSeparator())
+        hbox.pack_start(gtk.VSeparator(), expand = False, fill = False)
         self.overall_label = label = gtk.Label()
         hbox.pack_start(label)
         sw = gtk.ScrolledWindow()
@@ -155,7 +159,8 @@ class PositionsTab(gtk.VBox):
         self.today_label.set_markup(text)
         text = '<b>'+_('Overall')+'</b>\n'+treeviews.get_change_string(self.pf.overall_change)
         self.overall_label.set_markup(text)
-        
+        text = '<b>'+_('Total')+'</b>\n'+str(round(self.pf.total,2))+ config.currency
+        self.total_label.set_markup(text)
 
 class MainWindow(gtk.Window):
     
@@ -195,7 +200,7 @@ class MainWindow(gtk.Window):
         self.notebook = gtk.Notebook()
         hpaned.pack2(self.notebook)
         
-        
+        self.notebook.connect('switch-page', self.on_notebook_selection)
         #subscribe
         self.connect("destroy", lambda x: gtk.main_quit())
         pubsub.subscribe('maintree.selection', self.on_maintree_selection)
@@ -207,6 +212,9 @@ class MainWindow(gtk.Window):
         for child in self.notebook.get_children():
             self.notebook.remove_page(-1)
             child.destroy()
+    
+    def on_notebook_selection(self, notebook, page, page_num):
+        notebook.get_nth_page(page_num).show()
             
     def on_maintree_selection(self, item):
         self.clear_notebook()
@@ -221,11 +229,12 @@ class MainWindow(gtk.Window):
 
         if type == 0 or type == 1 or type == 2:
             self.notebook.append_page(PositionsTab(item, self.model, type), gtk.Label(_('Positions')))
-            
-        if type == 1:
+        
+        if type == 1 or type == 2:
             transactions_tree = treeviews.TransactionsTree(item, self.model)
             transactions_tree.show_all()
             self.notebook.append_page(transactions_tree, gtk.Label(_('Transactions')))
+            self.notebook.append_page(chart_tab.ChartTab(item, self.model), gtk.Label(_('Charts')))
 
 
 def check_path(path):
