@@ -3,22 +3,28 @@ import gtk
 
 
 
-class ChartTab(gtk.VBox):
+class ChartTab(gtk.ScrolledWindow):
     def __init__(self, pf, model):
-        gtk.VBox.__init__(self)
+        gtk.ScrolledWindow.__init__(self)
         self.pf = pf
         self.model = model
+        
+        
+        self.set_property('hscrollbar-policy', gtk.POLICY_AUTOMATIC)
+        self.set_property('vscrollbar-policy', gtk.POLICY_AUTOMATIC)
         self.show_all()
 
     
     def show(self):
         self.clear()
-        self.pack_start(gtk.Label(_('Current')), False, False)
-        self.pack_start(self.current_pie())
+        vbox = gtk.VBox()
+       
+        vbox.pack_start(gtk.Label(_('Current')), False, False)
+        vbox.pack_start(self.current_pie())
         
-        self.pack_start(gtk.Label(_('Buy')), False, False)
-        self.pack_start(self.buy_pie())
-        
+        vbox.pack_start(gtk.Label(_('Buy')), False, False)
+        vbox.pack_start(self.buy_pie())
+        self.add_with_viewport(vbox)
         self.show_all()
         
     def clear(self):

@@ -40,26 +40,13 @@ def get_datetime_string(date):
     
 def get_name_string(stock):
     return '<b>'+stock.name+'</b>' + '\n' + '<small>'+stock.symbol+'</small>' + '\n' + '<small>'+stock.exchange+'</small>'
+ 
 
-def fix(item):
-    if len(item) == 2:
-        a, b = item
-        return a,b, None
+def get_green_red_string(num):
+    if num < 0.0:
+        text = '<span foreground="red">'+ str(num) + '</span>'
     else:
-        return item
-
-def get_change_string(item):
-    change, percent, absolute = fix(item)
-    if change is None:
-        return 'n/a'
-    
-    text = str(percent) + '%' + ' | ' + str(change) + config.currency
-    if absolute is not None:
-        text += '\n' + str(absolute) + config.currency
-    if change < 0.0:
-        text = '<span foreground="red">'+ text + '</span>'
-    else:
-        text = '<span foreground="dark green">'+ text + '</span>'
+        text = '<span foreground="dark green">'+ str(num) + '</span>'
     return text
 
 
@@ -196,48 +183,95 @@ class PositionsTree(Tree):
         self.container = container
         self.type = type
         Tree.__init__(self)
+        self.cols = {'id':0,
+                     'obj':1,
+                     'name':2, 
+                     'start':3, 
+                     'last_price':4, 
+                     'change':5, 
+                     'gain':6,
+                     'shares':7, 
+                     'buy_value':8,
+                     'mkt_value':9,
+                     'tags':10,
+                     'days_gain':11,
+                     'gain_percent':12,
+                     'change_percent':13
+                      }
+        
         #id, object, name, price, change
-        self.set_model(gtk.TreeStore(int, object,str, str, str,str, str, int, str, str, str))
+        self.set_model(gtk.TreeStore(int, object,str, str, str,str, str, int, str, str, str, str, str, str))
         
         if type == 1 or type == 2:
             self.create_column(_('Shares'), 7)
         self.create_column(_('Name'), 2)
         self.create_column(_('Start'), 3)
         if type == 1 or type == 2:
-            self.create_column(_('Buy Value'), 8)
-        self.create_column(_('Current Price'), 4)
+            self.create_column(_('Buy value'), 8)
+        self.create_column(_('Last price'), 4)
+        self.create_column(_('Change'), 5)
+        self.create_column(_('Change %'), 13)
         if type == 1 or type == 2:
-            self.create_column(_('Current Value'), 9)
-        self.create_column(_('Current Change'), 5)
-        self.create_column(_('Overall Change'), 6)
+            self.create_column(_('Mkt value'), 9)
+        
+        self.create_column(_('Gain'), 6)
+        self.create_column(_('Gain %'), 12)
+        self.create_column(_('Day\'s gain'), 11)
         col, cell = self.create_column(_('Tags'), 10)
         cell.set_property('editable', True)
         cell.connect('edited', self.on_tag_edited)
         
-        def sort_buy_value(model, iter1, iter2):
-            item1 = model.get_value(iter1, 1)
-            item2 = model.get_value(iter2, 1)
-            return item1.bvalue - item2.bvalue
-        
-        def sort_current_value(model, iter1, iter2):
-            item1 = model.get_value(iter1, 1)
-            item2 = model.get_value(iter2, 1)
-            return item1.cvalue - item2.cvalue
+        def sort_string_float(model, iter1, iter2, col):
+            item1 = float(model.get_value(iter1, col))
+            item2 = float(model.get_value(iter2, col))
+            if item1 == item2: return 0
+            elif item1 < item2: return -1
+            else: return 1
         
         def sort_start_price(model, iter1, iter2):
-            item1 = model.get_value(iter1, 1)
-            item2 = model.get_value(iter2, 1)
-            return item1.price - item2.price
+            item1 = model.get_value(iter1, self.cols['obj'])
+            item2 = model.get_value(iter2, self.cols['obj'])
+            if item1.price == item2.price: return 0
+            elif item1.price < item2.price: return -1
+            else: return 1
         
         def sort_current_price(model, iter1, iter2):
-            item1 = model.get_value(iter1, 1)
-            item2 = model.get_value(iter2, 1)
-            return item1.current_price - item2.current_price
+            item1 = model.get_value(iter1, self.cols['obj'])
+            item2 = model.get_value(iter2, self.cols['obj'])
+            if item1.current_price == item2.current_price: return 0
+            elif item1.current_price < item2.current_price: return -1
+            else: return 1
+        
+        def sort_days_gain(model, iter1, iter2):
+            item1 = model.get_value(iter1, self.cols['obj'])
+            item2 = model.get_value(iter2, self.cols['obj'])
+            if item1.days_gain == item2.days_gain: return 0
+            elif item1.days_gain < item2.days_gain: return -1
+            else: return 1
+
+        def sort_gain(model, iter1, iter2, i):
+            item1 = model.get_value(iter1, self.cols['obj'])
+            item2 = model.get_value(iter2, self.cols['obj'])
+            if item1.gain[i] == item2.gain[i]: return 0
+            elif item1.gain[i] < item2.gain[i]: return -1
+            else: return 1
+        
+        def sort_change(model, iter1, iter2, i):
+            item1 = model.get_value(iter1, self.cols['obj'])
+            item2 = model.get_value(iter2, self.cols['obj'])
+            if item1.current_change[i] == item2.current_change[i]: return 0
+            elif item1.current_change[i] < item2.current_change[i]: return -1
+            else: return 1
                 
-        self.get_model().set_sort_func(8, sort_buy_value)
-        self.get_model().set_sort_func(9, sort_current_value)
-        self.get_model().set_sort_func(3, sort_start_price)
-        self.get_model().set_sort_func(4, sort_current_price)
+        self.get_model().set_sort_func(self.cols['buy_value'], sort_string_float, self.cols['buy_value'])
+        self.get_model().set_sort_func(self.cols['mkt_value'], sort_string_float, self.cols['mkt_value'])
+        self.get_model().set_sort_func(self.cols['days_gain'], sort_days_gain)
+        self.get_model().set_sort_func(self.cols['gain'], sort_gain, 0)
+        self.get_model().set_sort_func(self.cols['gain_percent'], sort_gain, 1)
+        self.get_model().set_sort_func(self.cols['change'], sort_change, 0)
+        self.get_model().set_sort_func(self.cols['change_percent'], sort_change, 1)
+        self.get_model().set_sort_func(self.cols['start'], sort_start_price)
+        self.get_model().set_sort_func(self.cols['last_price'], sort_current_price)
 
         self.load_positions()
         
@@ -278,19 +312,23 @@ class PositionsTree(Tree):
             if item.quantity == 0:
                 self.get_model().remove(row.iter)
             else:
-                row[7] = item.quantity
+                row[self.cols['quantity']] = item.quantity
     
     def on_positon_tags_changed(self, tags, item):
         row = self.find_position(item.id)
         if row:
-            row[10] = item.tags
+            row[self.cols['tags']] = item.tags
     
     def on_stock_updated(self, item):
         row = self.find_position_from_stock(item.id)
         if row:
-            row[4] = self.get_price_string(item)
-            row[5] = get_change_string(row[1].current_change)
-            row[6] = get_change_string(row[1].overall_change)
+            row[self.cols['last_price']] = self.get_price_string(item)
+            row[self.cols['change']] = get_green_red_string(row[1].current_change[0])
+            row[self.cols['change_percent']] = get_green_red_string(row[1].current_change[1])
+            row[self.cols['gain']] = get_green_red_string(row[1].gain[0])
+            row[self.cols['gain']] = get_green_red_string(row[1].gain[1])
+            row[self.cols['days_gain']] = get_green_red_string(row[1].days_gain)
+            row[self.cols['mkt_value']] = str(round(position.cvalue,2))
                 
     def on_position_created(self, item):
         if item.container_id == self.container.id:
@@ -341,25 +379,27 @@ class PositionsTree(Tree):
     def get_price_string(self, item):
         if item.price is None:
             return 'n/a'
-        return str(item.price) + item.currency +'\n' +'<small>'+get_datetime_string(item.date)+'</small>'
-        
-    def get_value_string(self, item):
-        return str(item)+config.currency 
+        return str(item.price) +'\n' +'<small>'+get_datetime_string(item.date)+'</small>'
         
     def insert_position(self, position):
         if position.quantity != 0:
             stock = self.model.stocks[position.stock_id]
+            gain = position.gain
+            c_change = position.current_change
             self.get_model().append(None, [position.id, 
                                            position, 
                                            get_name_string(stock), 
                                            self.get_price_string(position), 
                                            self.get_price_string(stock), 
-                                           get_change_string(position.current_change),
-                                           get_change_string(position.overall_change),
+                                           get_green_red_string(c_change[0]),
+                                           get_green_red_string(gain[0]),
                                            position.quantity,
-                                           self.get_value_string(position.bvalue),
-                                           self.get_value_string(position.cvalue),
-                                           position.tags])
+                                           str(round(position.bvalue,2)),
+                                           str(round(position.cvalue,2)),
+                                           position.tags,
+                                           get_green_red_string(position.days_gain),
+                                           get_green_red_string(gain[1]),
+                                           get_green_red_string(c_change[1])])
 
     def find_position_from_stock(self, sid):
         def search(rows):
@@ -376,7 +416,7 @@ class PositionsTree(Tree):
         def search(rows):
             if not rows: return None
             for row in rows:
-                if row[0] == pid:
+                if self.cols['id'] == pid:
                     return row 
                 result = search(row.iterchildren())
                 if result: return result

@@ -123,7 +123,14 @@ class MenuBar(gtk.MenuBar):
     def on_about(self, widget):
         AboutDialog()
     
-
+class TransactionsTab(gtk.ScrolledWindow):
+    def __init__(self, item, model):
+        gtk.ScrolledWindow.__init__(self)
+        transactions_tree = treeviews.TransactionsTree(item, model)
+        self.set_property('hscrollbar-policy', gtk.POLICY_AUTOMATIC)
+        self.set_property('vscrollbar-policy', gtk.POLICY_AUTOMATIC)
+        self.add(transactions_tree)
+        self.show_all()
 
 class PositionsTab(gtk.VBox):
     def __init__(self, pf, model, type):
@@ -155,12 +162,23 @@ class PositionsTab(gtk.VBox):
         self.show_all()
         
     def on_stock_update(self, item = None):
-        text = '<b>' + _('Performance Today')+'</b>\n'+treeviews.get_change_string(self.pf.current_change)
+        text = '<b>' + _('Performance Today')+'</b>\n'+self.get_change_string(self.pf.current_change)
         self.today_label.set_markup(text)
-        text = '<b>'+_('Overall')+'</b>\n'+treeviews.get_change_string(self.pf.overall_change)
+        text = '<b>'+_('Overall')+'</b>\n'+self.get_change_string(self.pf.overall_change)
         self.overall_label.set_markup(text)
         text = '<b>'+_('Total')+'</b>\n'+str(round(self.pf.total,2))+ config.currency
         self.total_label.set_markup(text)
+        
+    def get_change_string(self, item):
+        change, percent = item
+        if change is None:
+            return 'n/a'
+        text = str(percent) + '%' + ' | ' + str(round(change,2))
+        if change < 0.0:
+            text = '<span foreground="red">'+ text + '</span>'
+        else:
+            text = '<span foreground="dark green">'+ text + '</span>'
+        return text
 
 class MainWindow(gtk.Window):
     
@@ -231,9 +249,8 @@ class MainWindow(gtk.Window):
             self.notebook.append_page(PositionsTab(item, self.model, type), gtk.Label(_('Positions')))
         
         if type == 1 or type == 2:
-            transactions_tree = treeviews.TransactionsTree(item, self.model)
-            transactions_tree.show_all()
-            self.notebook.append_page(transactions_tree, gtk.Label(_('Transactions')))
+            
+            self.notebook.append_page(TransactionsTab(item, self.model), gtk.Label(_('Transactions')))
             self.notebook.append_page(chart_tab.ChartTab(item, self.model), gtk.Label(_('Charts')))
 
 

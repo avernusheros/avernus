@@ -144,8 +144,8 @@ class Container(object):
     def get_current_change(self):
         change = 0.0
         for pos in self:
-            stock, percent, absolute = pos.current_change
-            change +=absolute
+            stock, percent = pos.current_change
+            change +=stock * pos.quantity
         start = self.get_cvalue() - change
         if start == 0.0:
             percent = 0
@@ -262,17 +262,19 @@ class Position(object):
     def get_name(self):
         return self.model.stocks[self.stock_id].name
         
-    def get_overall_change(self):
+    def get_gain(self):
         stock = self.model.stocks[self.stock_id].price - self.price
-        absolute = stock * self.__quantity
+        absolute = stock * self.quantity
         percent = round(absolute * 100 / (self.price*self.__quantity),2)
-        return stock, percent, absolute
+        return absolute, percent
     
     def get_current_change(self):
         stock = self.model.stocks[self.stock_id].change
-        absolute = stock * self.__quantity
         percent = round(self.model.stocks[self.stock_id].percent_change,2)
-        return stock, percent, absolute
+        return stock, percent
+        
+    def get_days_gain(self):
+        return self.model.stocks[self.stock_id].change * self.quantity
         
     def get_currency(self):
         return self.model.stocks[self.stock_id].currency
@@ -304,7 +306,8 @@ class Position(object):
     cvalue = property(get_cvalue)
     bvalue = property(get_bvalue)
     quantity = property(get_quantity, set_quantity)
-    overall_change = property(get_overall_change)
+    gain = property(get_gain)
+    days_gain = property(get_days_gain)
     currency = property(get_currency)
     name = property(get_name)
     tags = property(get_tags)
