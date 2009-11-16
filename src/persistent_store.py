@@ -30,11 +30,12 @@ WATCHLIST = 0
 PORTFOLIO = 1
 
 
+
 class Store:
     def __init__(self, path):
         self.path = path
         print path
-        self.version = 2
+        self.version = 3
         self.dirty = False
         init = False
         if not os.path.exists(self.path):
@@ -62,7 +63,8 @@ class Store:
             (self.on_update_position, 'position.updated'),
             (self.on_remove_position, 'container.position.removed'),
             (self.on_update_stock, 'stock.updated'),
-            (self.on_positon_tags_change, 'position.tags.changed')
+            (self.on_positon_tags_change, 'position.tags.changed'),
+            (self.on_positon_merge, 'container.position.merged')
         )
         for callback, topic in self.subscriptions:
             pubsub.subscribe(topic, callback)
@@ -83,6 +85,7 @@ class Store:
             pubsub.unsubscribe(callback)
     
     def upgrade_db(self, version):
+        upgrade = False
         if version == 1:
             cursor = self.dbconn.cursor()
             cursor.execute('''
@@ -97,11 +100,21 @@ class Store:
                     , position_id integer
                     , tag_id integer
                     );  
-                    ''') 
-            cursor.execute('UPDATE meta SET value=? WHERE name=?', (2, 'version' ))
-            self.save()
+                    ''')
+            upgrade = True 
+            
+        if version == 2:
+            cursor = self.dbconn.cursor()
+            cursor.execute('''
+                ALTER TABLE stock
+                ADD type integer;  
+                    ''')
+            upgrade = True 
         else:
             print "upgrade to version not implemented", version
+        if upgrade:
+            cursor.execute('UPDATE meta SET value=? WHERE name=?', (version+1, 'version' ))
+            self.save()
     
     def get_meta(self):
         try:
@@ -136,8 +149,8 @@ class Store:
     def get_stocks(self):
         stx = {}
         for result in self.dbconn.cursor().execute("SELECT * FROM stock").fetchall():
-            id, name, symbol, isin, exchange, currency, price, date, change = result
-            stx[id] = objects.Stock(id, name, symbol, isin, exchange, currency, price, date, change)
+            id, name, symbol, isin, exchange, currency, price, date, change, type = result
+            stx[id] = objects.Stock(id, name, symbol, isin, exchange, type, currency, price, date, change)
         return stx
     
     def get_tags(self):
@@ -183,9 +196,10 @@ class Store:
         return id   
        
 
-    def create_stock(self, name, symbol,isin,exchange,currency, price, date,change):
+    def create_stock(self, name, symbol,isin,exchange, type,currency, price, date,change):
+        print "TYPE", type
         cursor = self.dbconn.cursor()
-        cursor.execute('INSERT INTO stock VALUES (null,?,?,?,?,?,?,?,?)', (name,symbol,isin, exchange, currency, price, date, change))
+        cursor.execute('INSERT INTO stock VALUES (null,?,?,?,?,?,?,?,?,?)', (name,symbol,isin, exchange,  currency, price, date, change, type))
         id = cursor.lastrowid
         self.dirty = True
         self.commit_if_appropriate()
@@ -261,6 +275,7 @@ class Store:
                 , price real
                 , date timestamp
                 , change real
+                , type integer
                 );
                 ''')
         cursor.execute('''
@@ -327,6 +342,8 @@ class Store:
         
     def on_remove_position(self, item, container):
         self.dbconn.cursor().execute('DELETE FROM position WHERE id=?',(item.id,))
+        self.dbconn.cursor().execute('DELETE FROM transactions WHERE position_id=?',(item.id,))
+        self.dbconn.cursor().execute('DELETE FROM has_tag WHERE position_id=?',(item.id,))
         self.dirty = True
         self.commit_if_appropriate()
 
@@ -337,7 +354,13 @@ class Store:
             c.execute('INSERT INTO has_tag VALUES (null, ?,?)', (position.id, t.id))
         self.dirty = True
         self.commit_if_appropriate()
-
+    
+    def on_positon_merge(self, pos1, pos2, new_pos):
+        c = self.dbconn.cursor()
+        c.execute('UPDATE transactions SET position_id=? WHERE position_id=? OR position_id=?', (new_pos.id, pos1.id, pos2.id))
+        self.dirty = True
+        self.commit_if_appropriate()
+        
     def on_exit(self, message):
         if self.dirty:
             pubsub.publish("warning.dirty_exit", message.data)

@@ -196,15 +196,17 @@ class PositionsTree(Tree):
                      'tags':10,
                      'days_gain':11,
                      'gain_percent':12,
-                     'change_percent':13
+                     'change_percent':13,
+                     'type': 14
                       }
         
         #id, object, name, price, change
-        self.set_model(gtk.TreeStore(int, object,str, str, str,str, str, int, str, str, str, str, str, str))
+        self.set_model(gtk.TreeStore(int, object,str, str, str,str, str, int, str, str, str, str, str, str, str))
         
         if type == 1 or type == 2:
             self.create_column(_('Shares'), 7)
         self.create_column(_('Name'), 2)
+        self.create_column(_('Type'), self.cols['type'])
         self.create_column(_('Start'), 3)
         if type == 1 or type == 2:
             self.create_column(_('Buy value'), 8)
@@ -284,8 +286,9 @@ class PositionsTree(Tree):
             ('positionstoolbar.remove', self.on_remove_position),
             ('positionstoolbar.add', self.on_add_position),
             ('positionstoolbar.tag', self.on_tag),
-            ( 'position.created', self.on_position_created),
-            ('position.tags.changed', self.on_positon_tags_changed)
+            ('position.created', self.on_position_created),
+            ('position.tags.changed', self.on_positon_tags_changed),
+            ('container.position.removed', self.on_position_deleted)
         )
         for topic, callback in self.subscriptions:
             pubsub.subscribe(topic, callback)
@@ -317,7 +320,7 @@ class PositionsTree(Tree):
     def on_positon_tags_changed(self, tags, item):
         row = self.find_position(item.id)
         if row:
-            row[self.cols['tags']] = item.tags
+            row[self.cols['tags']] = item.tags_string
     
     def on_stock_updated(self, item):
         row = self.find_position_from_stock(item.id)
@@ -328,7 +331,7 @@ class PositionsTree(Tree):
             row[self.cols['gain']] = get_green_red_string(row[1].gain[0])
             row[self.cols['gain']] = get_green_red_string(row[1].gain[1])
             row[self.cols['days_gain']] = get_green_red_string(row[1].days_gain)
-            row[self.cols['mkt_value']] = str(round(position.cvalue,2))
+            row[self.cols['mkt_value']] = str(round(row[1].cvalue,2))
                 
     def on_position_created(self, item):
         if item.container_id == self.container.id:
@@ -346,9 +349,14 @@ class PositionsTree(Tree):
             dlg.destroy()
             if response == gtk.RESPONSE_OK:
                 self.container.remove_position(obj)
-                self.get_model().remove(iter)  
         elif self.type == 1:
             dialogs.SellDialog(self.container, obj)    
+    
+    def on_position_deleted(self, pos, pf):
+        if pf.id == self.container.id:
+            row = self.find_position(pos.id)
+            if row is not None:
+                self.get_model().remove(row.iter)   
        
     def on_add_position(self):
         if self.type == 0:
@@ -396,10 +404,11 @@ class PositionsTree(Tree):
                                            position.quantity,
                                            str(round(position.bvalue,2)),
                                            str(round(position.cvalue,2)),
-                                           position.tags,
+                                           position.tags_string,
                                            get_green_red_string(position.days_gain),
                                            get_green_red_string(gain[1]),
-                                           get_green_red_string(c_change[1])])
+                                           get_green_red_string(c_change[1]),
+                                           position.type_string])
 
     def find_position_from_stock(self, sid):
         def search(rows):
@@ -416,7 +425,7 @@ class PositionsTree(Tree):
         def search(rows):
             if not rows: return None
             for row in rows:
-                if self.cols['id'] == pid:
+                if row[0] == pid:
                     return row 
                 result = search(row.iterchildren())
                 if result: return result

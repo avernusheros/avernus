@@ -1,6 +1,6 @@
-from cairoplot.gtkcairoplot import gtk_pie_plot
+from cairoplot.gtkcairoplot import gtk_pie_plot,gtk_vertical_bar_plot
 import gtk
-
+from objects import TYPES
 
 
 class ChartTab(gtk.ScrolledWindow):
@@ -17,14 +17,19 @@ class ChartTab(gtk.ScrolledWindow):
     
     def show(self):
         self.clear()
-        vbox = gtk.VBox()
-       
-        vbox.pack_start(gtk.Label(_('Current')), False, False)
-        vbox.pack_start(self.current_pie())
+        table = gtk.Table(rows = 4, columns =2)
+               
+        table.attach(gtk.Label(_('Market value')), 0, 1, 0, 1)
+        table.attach(self.current_pie(),0,1,1,2)
         
-        vbox.pack_start(gtk.Label(_('Buy')), False, False)
-        vbox.pack_start(self.buy_pie())
-        self.add_with_viewport(vbox)
+        table.attach(gtk.Label(_('Buy value')),1,2,0,1)
+        table.attach(self.buy_pie(),1,2,1,2)
+        
+        table.attach(gtk.Label(_('Investment types')),0,2,2,3)
+        table.attach(self.types_chart('pie'),0,1,3,4)
+        table.attach(self.types_chart('vertical_bars'),1,2,3,4)
+        
+        self.add_with_viewport(table)
         self.show_all()
         
     def clear(self):
@@ -38,7 +43,7 @@ class ChartTab(gtk.ScrolledWindow):
             if val != 0:
                 data[pos.name] = val
         pie = gtk_pie_plot()        
-        pie.set_args({'data':data, 'width':200, 'height':200})
+        pie.set_args({'data':data, 'width':300, 'height':300})
         return pie
 
     def buy_pie(self):
@@ -48,5 +53,19 @@ class ChartTab(gtk.ScrolledWindow):
             if val != 0:
                 data[pos.name] = val
         pie = gtk_pie_plot()        
-        pie.set_args({'data':data, 'width':200, 'height':200})
+        pie.set_args({'data':data, 'width':300, 'height':300})
         return pie
+   
+    def types_chart(self, chart_type):
+        sum = {0:0.0, 1:0.0}
+        for pos in self.pf:
+            sum[pos.type] += pos.cvalue
+        data = {'stock':sum[0], 'fund':sum[1]}    
+        if chart_type == 'pie':
+            chart = gtk_pie_plot()  
+        elif chart_type == 'vertical_bars':
+            chart = gtk_vertical_bar_plot()
+        chart.set_args({'data':data, 'width':300, 'height':300})
+        return chart
+
+    

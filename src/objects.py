@@ -19,6 +19,11 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import updater, pubsub
+from utils import unique
+
+
+TYPES = {None: 'n/a', 0:'stock', 1:'fund'}
+
 
 class Model(object):
     def __init__(self, store):
@@ -57,15 +62,15 @@ class Model(object):
                     pos.append(p)
         return pos
         
-    def get_stock(self, symbol, update = False):
+    def get_stock(self, symbol, type, update = False):
         stock = None
         for key, val in self.stocks.iteritems():
             if val.symbol == symbol:
                 stock = val
         if stock is None:
             name, isin, exchange, currency = updater.get_info(symbol)
-            id = self.store.create_stock(name,symbol,isin, exchange, currency, None, None, None)
-            stock = Stock(id, name, symbol,isin, exchange, currency, None, None, None)
+            id = self.store.create_stock(name,symbol,isin, exchange, type, currency, None, None, None)
+            stock = Stock(id, name, symbol,isin, exchange, type, currency, None, None, None)
             self.stocks[id] = stock
         if update:
             updater.update_stock(stock)
@@ -75,7 +80,7 @@ class Model(object):
         updater.update_stocks([stock for key, stock in self.stocks.iteritems()])
     
     def create_position(self, symbol, buy_price, buy_date, quantity, container_id, type):
-        stock = self.get_stock(symbol)
+        stock = self.get_stock(symbol, type)
         id = self.store.create_position(container_id, stock.id, buy_price, buy_date, quantity)
         if type == 0:
             return WatchlistPosition(id, container_id, stock.id, self, buy_price, buy_date, {}, quantity)
@@ -156,7 +161,9 @@ class Container(object):
     overall_change = property(get_overall_change)
     current_change = property(get_current_change)
     bvalue = property(get_bvalue)
-    total = cvalue = property(get_cvalue)        
+    total = cvalue = property(get_cvalue)
+    
+    
   
     def __cmp__(self, other):
         return cmp(self.id, other.id)
@@ -179,6 +186,20 @@ class Portfolio(Container):
         self.positions[pos.id] = pos
         pubsub.publish("container.position.added",  pos,  self)
         return pos
+    
+    def merge_positions(self, pos1, pos2):
+        quantity = pos1.quantity + pos2.quantity
+        buy_price = (pos1.quantity*pos1.price + pos2.quantity*pos2.price) / quantity
+        if pos1.date < pos2.date:
+            buy_date = pos2.date
+        else:
+            buy_date = pos1.date
+        symbol = self.model.stocks[pos1.stock_id].symbol
+        new_pos = self.add_position(symbol, buy_price, buy_date, quantity)
+        new_pos.tag(unique(pos1.tags + pos2.tags))
+        pubsub.publish('container.position.merged', pos1, pos2, new_pos)
+        self.remove_position(pos1)
+        self.remove_position(pos2)
     
     
 class Watchlist(Container):
@@ -216,7 +237,7 @@ class Transaction(object):
         pubsub.publish("transaction.created",  self)
         
 class Stock(object):
-    def __init__(self, id, name, symbol, isin, exchange, currency, price, date, change):
+    def __init__(self, id, name, symbol, isin, exchange,type, currency, price, date, change):
         self.id = id
         self.name = name
         self.symbol = symbol
@@ -226,6 +247,7 @@ class Stock(object):
         self.price = price
         self.date = date
         self.change = change
+        self.type = type
         
         pubsub.publish("stock.created",  self)
           
@@ -255,8 +277,8 @@ class Position(object):
         self.date = date
         self.transactions = transactions
         if tags == None: 
-            self.__tags = []
-        else: self.__tags = tags
+            self.tags = []
+        else: self.tags = tags
         pubsub.publish("position.created", self)
       
     def get_name(self):
@@ -295,11 +317,18 @@ class Position(object):
     def get_current_price(self):
         return self.model.stocks[self.stock_id].price
     
-    def get_tags(self):
+    def get_tags_string(self):
         ret = ''
-        for t in self.__tags:
+        for t in self.tags:
             ret += t + ' '
         return ret
+        
+    def get_type(self):
+        return self.model.stocks[self.stock_id].type
+    
+    def get_type_string(self):
+        return TYPES[self.model.stocks[self.stock_id].type]
+        
     
     current_price = property(get_current_price)
     current_change =  property(get_current_change)
@@ -310,7 +339,9 @@ class Position(object):
     days_gain = property(get_days_gain)
     currency = property(get_currency)
     name = property(get_name)
-    tags = property(get_tags)
+    tags_string = property(get_tags_string)
+    type = property(get_type)
+    type_string = property(get_type_string)
      
     def add_transaction(self, type, date, quantity, price, ta_costs):
         id = self.model.store.create_transaction(self.id, type, date, quantity, price, ta_costs)
@@ -326,7 +357,7 @@ class Position(object):
         for tagstring in tags:
             #ensure tag exists
             tag = self.model.get_tag(tagstring)
-        self.__tags = tags
+        self.tags = tags
         pubsub.publish("position.tags.changed", [self.model.tags[t] for t in tags], self)
         
             

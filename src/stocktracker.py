@@ -27,7 +27,7 @@ except:
     raise Exception("PyGTK Version >=2.0 required")
 
 import logging, gtk,os #, gobject
-import treeviews, toolbars, persistent_store, objects, config, pubsub, chart_tab
+import treeviews, toolbars, persistent_store, objects, config, pubsub, chart_tab, dialogs
 from webbrowser import open as web
 if __name__ == "__main__":
     import __init__
@@ -37,7 +37,7 @@ logger = logging.getLogger(__name__)
 
 
 __appname__ = 'stocktracker'
-__version__ = '0.2'
+__version__ = '0.3'
 __description__ = _('A lightweight program to easily track your investments.')
 __url__='https://launchpad.net/stocktracker'
 __authors__ = ['Wolfgang Steitz (wsteitz(at)gmail.com)']
@@ -78,12 +78,17 @@ class AboutDialog(gtk.AboutDialog):
 
 
 class MenuBar(gtk.MenuBar):
-    def __init__(self, parent):
+    def __init__(self, model, parent=None):
+        self.model = model
+        
         gtk.MenuBar.__init__(self)
-        file_menu_items = (('----'  , None, None),
+        file_menu_items  = (('----'  , None, None),
                            (_("Quit"), gtk.STOCK_QUIT, lambda x: parent.destroy()),
                            )
-        help_menu_items = (#("Help"  , gtk.STOCK_HELP, None),
+        tools_menu_items = ( (_("Merge two positions"), None, self.on_merge),
+                             (_('Split'), None, self.on_split)
+                           )                   
+        help_menu_items  = (#("Help"  , gtk.STOCK_HELP, None),
                             (_("Website"), None, lambda x:web("https://launchpad.net/stocktracker")),
                             (_("Request a Feature"), None, lambda x:web("https://blueprints.launchpad.net/stocktracker")),
                             (_("Report a Bug"), None, lambda x:web("https://bugs.launchpad.net/stocktracker")),
@@ -93,11 +98,15 @@ class MenuBar(gtk.MenuBar):
 
         filemenu = gtk.MenuItem(_("File"))
         filemenu.set_submenu(self.build_menu(file_menu_items))
+        
+        toolsmenu = gtk.MenuItem(_('Tools'))
+        toolsmenu.set_submenu(self.build_menu(tools_menu_items))
 
         helpmenu = gtk.MenuItem(_("Help"))
         helpmenu.set_submenu(self.build_menu(help_menu_items))
 
         self.append(filemenu)
+        self.append(toolsmenu)
         self.append(helpmenu)
         
     def build_menu(self, menu_items):
@@ -122,6 +131,12 @@ class MenuBar(gtk.MenuBar):
 
     def on_about(self, widget):
         AboutDialog()
+    
+    def on_merge(self, widget):
+        d = dialogs.MergeDialog(self.model)
+    
+    def on_split(self, widget):
+        print "SPLIT!"
     
 class TransactionsTab(gtk.ScrolledWindow):
     def __init__(self, item, model):
@@ -162,9 +177,9 @@ class PositionsTab(gtk.VBox):
         self.show_all()
         
     def on_stock_update(self, item = None):
-        text = '<b>' + _('Performance Today')+'</b>\n'+self.get_change_string(self.pf.current_change)
+        text = '<b>' + _('Day\'s gain')+'</b>\n'+self.get_change_string(self.pf.current_change)
         self.today_label.set_markup(text)
-        text = '<b>'+_('Overall')+'</b>\n'+self.get_change_string(self.pf.overall_change)
+        text = '<b>'+_('Gain')+'</b>\n'+self.get_change_string(self.pf.overall_change)
         self.overall_label.set_markup(text)
         text = '<b>'+_('Total')+'</b>\n'+str(round(self.pf.total,2))+ config.currency
         self.total_label.set_markup(text)
@@ -201,7 +216,7 @@ class MainWindow(gtk.Window):
         self.add(vbox)
         
         #the main menu
-        vbox.pack_start(MenuBar(self), expand=False, fill=False)
+        vbox.pack_start(MenuBar(model, parent = self), expand=False, fill=False)
         
         hpaned = gtk.HPaned()
         hpaned.set_position(int(width*0.15))
@@ -249,7 +264,6 @@ class MainWindow(gtk.Window):
             self.notebook.append_page(PositionsTab(item, self.model, type), gtk.Label(_('Positions')))
         
         if type == 1 or type == 2:
-            
             self.notebook.append_page(TransactionsTab(item, self.model), gtk.Label(_('Transactions')))
             self.notebook.append_page(chart_tab.ChartTab(item, self.model), gtk.Label(_('Charts')))
 
