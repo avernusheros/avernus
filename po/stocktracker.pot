@@ -1,0 +1,246 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2009-11-24 11:20+0100\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=CHARSET\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: ../stocktracker/chart_tab.py:21
+msgid "Market value"
+msgstr ""
+
+#: ../stocktracker/chart_tab.py:24 ../stocktracker/positions_tab.py:92
+msgid "Buy value"
+msgstr ""
+
+#: ../stocktracker/chart_tab.py:27
+msgid "Investment types"
+msgstr ""
+
+#: ../stocktracker/overview_tab.py:8 ../stocktracker/positions_tab.py:88
+#: ../stocktracker/treeviews.py:188
+msgid "Name"
+msgstr ""
+
+#: ../stocktracker/overview_tab.py:9 ../stocktracker/positions_tab.py:99
+#: ../stocktracker/positions_tab.py:360
+msgid "Gain"
+msgstr ""
+
+#: ../stocktracker/mainwindow.py:63
+msgid "Quit"
+msgstr ""
+
+#: ../stocktracker/mainwindow.py:65 ../stocktracker/dialogs.py:403
+msgid "Merge two positions"
+msgstr ""
+
+#. ("Help"  , gtk.STOCK_HELP, None),
+#: ../stocktracker/mainwindow.py:68
+msgid "Website"
+msgstr ""
+
+#: ../stocktracker/mainwindow.py:69
+msgid "Request a Feature"
+msgstr ""
+
+#: ../stocktracker/mainwindow.py:70
+msgid "Report a Bug"
+msgstr ""
+
+#: ../stocktracker/mainwindow.py:72
+msgid "About"
+msgstr ""
+
+#: ../stocktracker/mainwindow.py:75
+msgid "File"
+msgstr ""
+
+#: ../stocktracker/mainwindow.py:78
+msgid "Tools"
+msgstr ""
+
+#: ../stocktracker/mainwindow.py:81
+msgid "Help"
+msgstr ""
+
+#: ../stocktracker/mainwindow.py:230
+msgid "Overview"
+msgstr ""
+
+#: ../stocktracker/mainwindow.py:231
+msgid "Positions"
+msgstr ""
+
+#: ../stocktracker/mainwindow.py:234
+msgid "Transactions"
+msgstr ""
+
+#: ../stocktracker/mainwindow.py:235
+msgid "Charts"
+msgstr ""
+
+#: ../stocktracker/positions_tab.py:87 ../stocktracker/treeviews.py:190
+msgid "Shares"
+msgstr ""
+
+#: ../stocktracker/positions_tab.py:89
+msgid "Type"
+msgstr ""
+
+#: ../stocktracker/positions_tab.py:90
+msgid "Start"
+msgstr ""
+
+#: ../stocktracker/positions_tab.py:93
+msgid "Last price"
+msgstr ""
+
+#: ../stocktracker/positions_tab.py:94
+msgid "Change"
+msgstr ""
+
+#: ../stocktracker/positions_tab.py:95
+msgid "Change %"
+msgstr ""
+
+#: ../stocktracker/positions_tab.py:97
+msgid "Mkt value"
+msgstr ""
+
+#: ../stocktracker/positions_tab.py:100
+msgid "Gain %"
+msgstr ""
+
+#: ../stocktracker/positions_tab.py:102 ../stocktracker/positions_tab.py:358
+msgid "Day's gain"
+msgstr ""
+
+#: ../stocktracker/positions_tab.py:103
+msgid "Tags"
+msgstr ""
+
+#: ../stocktracker/positions_tab.py:229 ../stocktracker/treeviews.py:141
+msgid "Are you sure?"
+msgstr ""
+
+#: ../stocktracker/positions_tab.py:362
+msgid "Total"
+msgstr ""
+
+#: ../stocktracker/treeviews.py:121
+msgid "<b>Portfolios</b>"
+msgstr ""
+
+#: ../stocktracker/treeviews.py:122
+msgid "<b>Watchlists</b>"
+msgstr ""
+
+#: ../stocktracker/treeviews.py:123
+msgid "<b>Tags</b>"
+msgstr ""
+
+#: ../stocktracker/treeviews.py:187
+msgid "Action"
+msgstr ""
+
+#: ../stocktracker/treeviews.py:189
+msgid "Date"
+msgstr ""
+
+#: ../stocktracker/treeviews.py:191
+msgid "Price"
+msgstr ""
+
+#: ../stocktracker/treeviews.py:192
+msgid "Transaction Costs"
+msgstr ""
+
+#: ../stocktracker/dialogs.py:29
+msgid "Edit..."
+msgstr ""
+
+#: ../stocktracker/dialogs.py:40 ../stocktracker/dialogs.py:81
+msgid "Name:"
+msgstr ""
+
+#: ../stocktracker/dialogs.py:61 ../stocktracker/dialogs.py:270
+msgid "Create..."
+msgstr ""
+
+#: ../stocktracker/dialogs.py:72 ../stocktracker/dialogs.py:411
+msgid "Portfolio"
+msgstr ""
+
+#: ../stocktracker/dialogs.py:75
+msgid "Watchlist"
+msgstr ""
+
+#: ../stocktracker/dialogs.py:105
+msgid "Sell a position"
+msgstr ""
+
+#: ../stocktracker/dialogs.py:117 ../stocktracker/dialogs.py:190
+msgid "Shares:"
+msgstr ""
+
+#: ../stocktracker/dialogs.py:124 ../stocktracker/dialogs.py:198
+msgid "Price:"
+msgstr ""
+
+#: ../stocktracker/dialogs.py:155
+msgid "Buy a position"
+msgstr ""
+
+#: ../stocktracker/dialogs.py:166 ../stocktracker/dialogs.py:282
+msgid "Symbol:"
+msgstr ""
+
+#: ../stocktracker/dialogs.py:181 ../stocktracker/dialogs.py:294
+msgid "Stock"
+msgstr ""
+
+#: ../stocktracker/dialogs.py:184 ../stocktracker/dialogs.py:297
+msgid "Fond"
+msgstr ""
+
+#: ../stocktracker/dialogs.py:207
+msgid "Transaction Costs:"
+msgstr ""
+
+#: ../stocktracker/dialogs.py:215
+msgid "Total:"
+msgstr ""
+
+#: ../stocktracker/dialogs.py:366
+msgid "Split a position"
+msgstr ""
+
+#: ../stocktracker/dialogs.py:369
+msgid "Split"
+msgstr ""
+
+#: ../stocktracker/dialogs.py:416
+msgid "First Position"
+msgstr ""
+
+#: ../stocktracker/dialogs.py:421
+msgid "Second Position"
+msgstr ""
+
+#: ../stocktracker/dialogs.py:426
+msgid ""
+"Only positions with identical stocks can be merged. This action can not be "
+"undone!"
+msgstr ""

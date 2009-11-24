@@ -20,7 +20,7 @@
 
 
 import gtk
-import objects, updater
+from stocktracker import objects, updater
 from datetime import datetime
 
 
@@ -261,6 +261,8 @@ class BuyDialog(gtk.Dialog):
             ta_costs = self.tacosts_entry.get_value()
             position = self.pf.add_position(symbol, price, date, shares)
             position.add_transaction(1, date, shares, price, ta_costs)
+        else:
+            print "ELSE"
 
 
 class NewWatchlistPositionDialog(gtk.Dialog):
@@ -358,7 +360,41 @@ class PosSelector(gtk.ComboBox):
             liststore.append([pos.id, str(pos.quantity) +' ' +pos.name])
         self.set_model(liststore)
             
+
+class SplitDialog(gtk.Dialog):
+    def __init__(self, pos, parent = None):
+        gtk.Dialog.__init__(self, _("Split a position"), parent
+                            , gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
+                     (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
+                      _('Split'), gtk.RESPONSE_ACCEPT))
+        self.pos = pos
         
+        vbox = self.get_content_area()
+        
+        vbox.pack_start(str(pos))
+
+        hbox = gtk.HBox()
+        vbox.pack_start(hbox)
+        self.val1 = gtk.SpinButton(gtk.Adjustment(lower=1, upper= 1000,step_incr=1, value = 0), digits=0)
+        hbox.pack_start(self.val1)
+        hbox.pack_start(gtk.Label(' - '))
+        self.val2 = gtk.SpinButton(gtk.Adjustment(lower=1, upper=1000,step_incr=1, value = 0), digits=0)
+        hbox.pack_start(self.val1)        
+
+        self.show_all()
+        response = self.run()  
+        self.process_result(response)
+        
+        self.destroy()
+        
+    def process_result(self, response):
+        if response == gtk.RESPONSE_ACCEPT:
+            val1 = self.val1.get_value()
+            val2 = self.val2.get_value()
+            print val1, val2
+            self.pos.split(val1, val2)
+        
+ 
             
 class MergeDialog(gtk.Dialog):
     def __init__(self,  model, parent = None):

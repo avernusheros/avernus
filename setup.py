@@ -1,61 +1,106 @@
 #!/usr/bin/env python
-# -*- coding:utf-8 -*-
+# -*- coding: utf-8 -*-
+### BEGIN LICENSE
+# Copyright (C) 2008-2009 Wolfgang Steitz <wsteitz(at)gmail.com>
+#This program is free software: you can redistribute it and/or modify it 
+#under the terms of the GNU General Public License version 3, as published 
+#by the Free Software Foundation.
+#
+#This program is distributed in the hope that it will be useful, but 
+#WITHOUT ANY WARRANTY; without even the implied warranties of 
+#MERCHANTABILITY, SATISFACTORY QUALITY, or FITNESS FOR A PARTICULAR 
+#PURPOSE.  See the GNU General Public License for more details.
+#
+#You should have received a copy of the GNU General Public License along 
+#with this program.  If not, see <http://www.gnu.org/licenses/>.
+### END LICENSE
 
-from distutils.core import setup
-from distutils.command.install_data import install_data
+###################### DO NOT TOUCH THIS (HEAD TO THE SECOND PART) ######################
+
+try:
+    import DistUtilsExtra.auto
+except ImportError:
+    import sys
+    print >> sys.stderr, 'To build stocktracker you need https://launchpad.net/python-distutils-extra'
+    sys.exit(1)
+
+assert DistUtilsExtra.auto.__version__ >= '2.10', 'needs DistUtilsExtra.auto >= 2.10'
 import os
-import glob
-from subprocess import call
-from src import stocktracker
 
-PO_DIR = 'locales'
-MO_DIR = os.path.join('build', 'locales')
 
-for po in glob.glob(os.path.join(PO_DIR, '*.po')):
-    lang = os.path.basename(po[:-3])[7:]
-    mo = os.path.join(MO_DIR, lang, 'LC_MESSAGES', 'stocktracker.mo')
-    target_dir = os.path.dirname(mo)
-    if not os.path.isdir(target_dir):
-        os.makedirs(target_dir)
+def update_data_path(prefix, oldvalue=None):
+
     try:
-        return_code = call(['msgfmt', '-o', mo, po])
-    except OSError:
-        print 'Translation not available, please install gettext'
-        break
-    if return_code:
-        raise Warning('Error building locales')
+        fin = file('stocktracker/stocktrackerconfig.py', 'r')
+        fout = file(fin.name + '.new', 'w')
 
-class InstallData(install_data):
+        for line in fin:            
+            fields = line.split(' = ') # Separate variable from value
+            if fields[0] == '__stocktracker_data_directory__':
+                # update to prefix, store oldvalue
+                if not oldvalue:
+                    oldvalue = fields[1]
+                    line = "%s = '%s'\n" % (fields[0], prefix)
+                else: # restore oldvalue
+                    line = "%s = %s" % (fields[0], oldvalue)
+            fout.write(line)
+
+        fout.flush()
+        fout.close()
+        fin.close()
+        os.rename(fout.name, fin.name)
+    except (OSError, IOError), e:
+        print ("ERROR: Can't find stocktracker/stocktrackerconfig.py")
+        sys.exit(1)
+    return oldvalue
+
+
+def update_desktop_file(datadir):
+
+    try:
+        fin = file('stocktracker.desktop.in', 'r')
+        fout = file(fin.name + '.new', 'w')
+
+        for line in fin:            
+            if 'Icon=' in line:
+                line = "Icon=%s\n" % (datadir + 'media/icon.png')
+            fout.write(line)
+        fout.flush()
+        fout.close()
+        fin.close()
+        os.rename(fout.name, fin.name)
+    except (OSError, IOError), e:
+        print ("ERROR: Can't find stocktracker.desktop.in")
+        sys.exit(1)
+
+
+class InstallAndUpdateDataDirectory(DistUtilsExtra.auto.install_auto):
     def run(self):
-        self.data_files.extend(self.find_mo_files())
-        install_data.run(self)
-    
-    def find_mo_files(self):
-        data_files = []
-        for mo in glob.glob(os.path.join(MO_DIR, '*', 'LC_MESSAGES', 'stocktracker.mo')):
-            lang = os.path.basename(os.path.dirname(mo))
-            lang = os.path.basename(
-                os.path.realpath(os.path.join(os.path.dirname(mo), '..'))
-            )
-            dest = os.path.join('share', 'locale', lang, 'LC_MESSAGES')
-            data_files.append((dest, [mo]))
-        return data_files
+        if self.root or self.home:
+            print "WARNING: You don't use a standard --prefix installation, take care that you eventually " \
+            "need to update quickly/quicklyconfig.py file to adjust __quickly_data_directory__. You can " \
+            "ignore this warning if you are packaging and uses --prefix."
+        previous_value = update_data_path(self.prefix + '/share/stocktracker/')
+        update_desktop_file(self.prefix + '/share/stocktracker/')
+        DistUtilsExtra.auto.install_auto.run(self)
+        update_data_path(self.prefix, previous_value)
 
 
-setup(
-    name=stocktracker.__name__,
-    version=stocktracker.__version__,
-    author=stocktracker.__authors__ ,
-    author_email=stocktracker.__mail__,
-    url=stocktracker.__url__,
-    description=stocktracker.__description__,
-    license=stocktracker.__license__,
-    packages=['stocktracker'],
-    package_dir={'stocktracker': 'src'},
-    data_files=[#('/usr/share/pixmaps', ['stocktracker.png']),
-            ('/usr/share/applications', ['stocktracker.desktop']),
-    ],
-    scripts=['stocktracker'],
-    cmdclass={'install_data': InstallData},
-)
+        
+##################################################################################
+###################### YOU SHOULD MODIFY ONLY WHAT IS BELOW ######################
+##################################################################################
+
+
+DistUtilsExtra.auto.setup(
+    name='stocktracker',
+    version='0.3',
+    license='GPL v3',
+    author='Wolfgang Steitz',
+    author_email='wsteitz(at)gmail.com',
+    description='A lightweight program to easily track your investments.',
+    #long_description='Here a longer description',
+    url='https://launchpad.net/stocktracker',
+    cmdclass={'install': InstallAndUpdateDataDirectory}
+    )
 

@@ -12,7 +12,7 @@ def subscribe(message, subscriber):
         
 def publish(message, *args, **kwargs):
     if not message in subscriptions:
-        #logger.info("Message with no Subscribers: " + str(message))
+        logger.info("Message with no Subscribers: " + str(message))
         return
     for subscriber in subscriptions[message]:
         try:

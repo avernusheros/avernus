@@ -27,36 +27,13 @@ except:
     raise Exception("PyGTK Version >=2.0 required")
 
 import logging, gtk,os #, gobject
-import treeviews, toolbars, persistent_store, objects, config, pubsub, chart_tab, dialogs
+from stocktracker import treeviews, persistent_store, objects, config, pubsub, chart_tab, dialogs
+from stocktracker.positions_tab import PositionsTab
+from stocktracker.overview_tab import OverviewTab
 from webbrowser import open as web
-if __name__ == "__main__":
-    import __init__
+import stocktracker
 
 logger = logging.getLogger(__name__)
-
-
-
-__appname__ = 'stocktracker'
-__version__ = '0.3'
-__description__ = _('A lightweight program to easily track your investments.')
-__url__='https://launchpad.net/stocktracker'
-__authors__ = ['Wolfgang Steitz (wsteitz(at)gmail.com)']
-__mail__ = 'wsteitz(at)gmail.com'
-__copyright__ = '''\
-Copyright (c) 2008-2009 Wolfgang Steitz
-
-'''
-__license__='''\
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-'''
-
 
 
 
@@ -64,13 +41,13 @@ class AboutDialog(gtk.AboutDialog):
     def __init__(self):
         gtk.AboutDialog.__init__(self)
         
-        self.set_name(__appname__)
-        self.set_version(__version__)
-        self.set_copyright(__copyright__)
-        self.set_comments(__description__)
-        self.set_license(__license__)
-        self.set_authors(__authors__)
-        self.set_website(__url__)
+        self.set_name(stocktracker.__appname__)
+        self.set_version(stocktracker.__version__)
+        self.set_copyright(stocktracker.__copyright__)
+        self.set_comments(stocktracker.__description__)
+        self.set_license(stocktracker.__license__)
+        self.set_authors(stocktracker.__authors__)
+        self.set_website(stocktracker.__url__)
         #self.set_logo(gtk.gdk.pixbuf_new_from_file("xyz.png"))
         
         self.run()
@@ -83,10 +60,9 @@ class MenuBar(gtk.MenuBar):
         
         gtk.MenuBar.__init__(self)
         file_menu_items  = (('----'  , None, None),
-                           (_("Quit"), gtk.STOCK_QUIT, lambda x: parent.destroy()),
+                           (_("Quit"), gtk.STOCK_QUIT, parent.on_destroy),
                            )
         tools_menu_items = ( (_("Merge two positions"), None, self.on_merge),
-                             (_('Split'), None, self.on_split)
                            )                   
         help_menu_items  = (#("Help"  , gtk.STOCK_HELP, None),
                             (_("Website"), None, lambda x:web("https://launchpad.net/stocktracker")),
@@ -135,9 +111,6 @@ class MenuBar(gtk.MenuBar):
     def on_merge(self, widget):
         d = dialogs.MergeDialog(self.model)
     
-    def on_split(self, widget):
-        print "SPLIT!"
-    
 class TransactionsTab(gtk.ScrolledWindow):
     def __init__(self, item, model):
         gtk.ScrolledWindow.__init__(self)
@@ -147,53 +120,35 @@ class TransactionsTab(gtk.ScrolledWindow):
         self.add(transactions_tree)
         self.show_all()
 
-class PositionsTab(gtk.VBox):
-    def __init__(self, pf, model, type):
-        gtk.VBox.__init__(self)
-        self.pf = pf
-        positions_tree = treeviews.PositionsTree(pf, model, type)
-        hbox = gtk.HBox()
-        tb = toolbars.PositionsToolbar(pf)
-        hbox.pack_start(tb, expand = True, fill = True)
+class MainTreeToolbar(gtk.Toolbar):
+    def __init__(self, model):
+        self.model = model
+        gtk.Toolbar.__init__(self)
         
-        self.total_label = label = gtk.Label()
-        hbox.pack_start(label)
-        hbox.pack_start(gtk.VSeparator(), expand = False, fill = False)
-        self.today_label = label = gtk.Label()
-        hbox.pack_start(label)
-        hbox.pack_start(gtk.VSeparator(), expand = False, fill = False)
-        self.overall_label = label = gtk.Label()
-        hbox.pack_start(label)
-        sw = gtk.ScrolledWindow()
-        sw.set_property('hscrollbar-policy', gtk.POLICY_AUTOMATIC)
-        sw.set_property('vscrollbar-policy', gtk.POLICY_AUTOMATIC)
-        sw.add(positions_tree)
-        self.pack_start(hbox, expand=False, fill=False)
-        self.pack_start(sw)
+        button = gtk.ToolButton('gtk-add')
+        button.connect('clicked', self.on_add_clicked)
+        self.insert(button,-1)
         
-        self.on_stock_update()
-        pubsub.subscribe('stock.updated', self.on_stock_update)
-       
-        self.show_all()
+        button = gtk.ToolButton('gtk-delete')
+        #button.set_label('Remove tag'
+        button.connect('clicked', self.on_remove_clicked)
+        self.insert(button,-1)
         
-    def on_stock_update(self, item = None):
-        text = '<b>' + _('Day\'s gain')+'</b>\n'+self.get_change_string(self.pf.current_change)
-        self.today_label.set_markup(text)
-        text = '<b>'+_('Gain')+'</b>\n'+self.get_change_string(self.pf.overall_change)
-        self.overall_label.set_markup(text)
-        text = '<b>'+_('Total')+'</b>\n'+str(round(self.pf.total,2))+ config.currency
-        self.total_label.set_markup(text)
-        
-    def get_change_string(self, item):
-        change, percent = item
-        if change is None:
-            return 'n/a'
-        text = str(percent) + '%' + ' | ' + str(round(change,2))
-        if change < 0.0:
-            text = '<span foreground="red">'+ text + '</span>'
-        else:
-            text = '<span foreground="dark green">'+ text + '</span>'
-        return text
+        button = gtk.ToolButton('gtk-edit')
+        #button.set_label('Remove tag'
+        button.connect('clicked', self.on_edit_clicked)
+        self.insert(button,-1)
+         
+             
+    def on_add_clicked(self, widget):
+        dialogs.NewContainerDialog(self.model)
+    
+    def on_remove_clicked(self, widget):
+        pubsub.publish('maintoolbar.remove')  
+           
+    def on_edit_clicked(self, widget):
+        pubsub.publish('maintoolbar.edit')
+
 
 class MainWindow(gtk.Window):
     
@@ -203,7 +158,7 @@ class MainWindow(gtk.Window):
         # Create the toplevel window
         gtk.Window.__init__(self)
         
-        self.set_title(__appname__)
+        #self.set_title(__appname__)
 
         # Use two thirds of the screen by default
         screen = self.get_screen()
@@ -225,7 +180,7 @@ class MainWindow(gtk.Window):
         main_tree_vbox = gtk.VBox()
         main_tree = treeviews.MainTree(self.model)
         main_tree_vbox.pack_start(main_tree)
-        main_tree_toolbar = toolbars.MainTreeToolbar(self.model)
+        main_tree_toolbar = MainTreeToolbar(self.model)
         main_tree_vbox.pack_start(main_tree_toolbar, expand=False, fill=False)
         
         hpaned.pack1(main_tree_vbox)
@@ -240,7 +195,18 @@ class MainWindow(gtk.Window):
         
         #display everything    
         self.show_all()
+        
+        
+    def quit(self, widget, data=None):
+        """quit - signal handler for closing the StocktrackerWindow"""
+        self.destroy()
 
+    def on_destroy(self, widget, data=None):
+        """on_destroy - called when the StocktrackerWindow is close. """
+        #clean up code for saving application state should be added here
+
+        gtk.main_quit()
+    
     def clear_notebook(self):
         for child in self.notebook.get_children():
             self.notebook.remove_page(-1)
@@ -261,32 +227,14 @@ class MainWindow(gtk.Window):
             type = -1
 
         if type == 0 or type == 1 or type == 2:
+            self.notebook.append_page(OverviewTab(item, self.model, type), gtk.Label(_('Overview')))
             self.notebook.append_page(PositionsTab(item, self.model, type), gtk.Label(_('Positions')))
         
         if type == 1 or type == 2:
             self.notebook.append_page(TransactionsTab(item, self.model), gtk.Label(_('Transactions')))
             self.notebook.append_page(chart_tab.ChartTab(item, self.model), gtk.Label(_('Charts')))
 
-
 def check_path(path):
     if not os.path.isdir(path):
         os.mkdir(path)    
     
-    
-def start():
-    check_path(config.config_path)
-    store = persistent_store.Store(config.db_file)
-    model = objects.Model(store)
-    store.model = model
-    
-    main_window = MainWindow(model)
-    model.initialize()
-    
-    #gobject.threads_init()
-    gtk.main()    
-
-if __name__ == "__main__":
-    logging.basicConfig(level=logging.DEBUG, 
-         format="%(levelname)s %(asctime)s %(funcName)s %(lineno)d %(message)s")
-    start()
-

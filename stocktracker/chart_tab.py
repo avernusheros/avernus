@@ -1,6 +1,5 @@
-from cairoplot.gtkcairoplot import gtk_pie_plot,gtk_vertical_bar_plot
+from stocktracker.cairoplot.gtkcairoplot import gtk_pie_plot,gtk_vertical_bar_plot
 import gtk
-from objects import TYPES
 
 
 class ChartTab(gtk.ScrolledWindow):

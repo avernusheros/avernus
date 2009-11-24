@@ -32,7 +32,7 @@
 __version__ = 1.1
 
 import cairo, math, random
-from Series import Serie, Group, Data
+from stocktracker.cairoplot.Series import Serie, Group, Data
 from gtk.gdk import CairoContext
 
 HORZ = 0

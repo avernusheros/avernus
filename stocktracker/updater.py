@@ -22,7 +22,7 @@
 
 from urllib import urlopen
 import csv, pytz
-import pubsub
+from stocktracker import pubsub
 from datetime import datetime
 
 
@@ -42,7 +42,6 @@ def update_stocks(stocks):
     s = 0
     res = __request(symbols, 'l1d1d3c1')
     for row in csv.reader(res):
-        print stocks[s].name, row
         stocks[s].price = float(row[0])
         try:
             date = datetime.strptime(row[1] + ' ' + row[2], '%m/%d/%Y %H:%M%p')
@@ -70,7 +69,7 @@ def check_symbol(symbol):
 if __name__ == "__main__":
     import objects
     
-    s = [objects.Stock(0, "ge", 'ge.de', 0.0, None, None, None, None, None), objects.Stock(0, "test1", 'goog', 0.0, None, None, None, None, None)]
+    s = [objects.Stock(0, "ge", 'ge.de', 0.0, None, None, None, None, None, None), objects.Stock(0, "test1", 'goog', 0.0, None, None, None, None, None, None)]
     update_stocks(s)
     print get_info('cbk.de')
     print check_symbol('ge.de')

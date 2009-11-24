@@ -1,2 +1,0 @@
-xgettext --language=Python --keyword=_ --output=locales/stocktracker.pot src/*py
-

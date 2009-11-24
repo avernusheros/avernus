@@ -21,7 +21,7 @@
 
 
 import gtk
-import dialogs, objects, pubsub
+from stocktracker import dialogs, objects, pubsub
 
 
 class PositionsToolbar(gtk.Toolbar):

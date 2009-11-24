@@ -24,7 +24,8 @@
 
 import pygtk
 pygtk.require('2.0')
-import gtk, gobject, cairo, cairoplot
+import gtk, gobject, cairo
+from stocktracker.cairoplot import cairoplot
 
 
 class gtk_plot(gtk.DrawingArea):

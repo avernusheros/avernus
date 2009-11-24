@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=Stocktracker
+Comment=Stocktracker application
+Categories=GNOME;Utility;
+Exec=stocktracker
+Icon=/usr/share/stocktracker/media/icon.png
+Terminal=false
+Type=Application

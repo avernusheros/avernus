@@ -18,10 +18,11 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import updater, pubsub
-from utils import unique
+from stocktracker import updater, pubsub
+from stocktracker.utils import unique
+import logging
 
-
+logger = logging.getLogger(__name__)
 TYPES = {None: 'n/a', 0:'stock', 1:'fund'}
 
 
@@ -35,6 +36,7 @@ class Model(object):
         self.portfolios = self.store.get_portfolios()
         self.stocks = self.store.get_stocks()
         self.tags = self.store.get_tags()
+        logger.debug('database loaded')
         pubsub.publish('model.database.loaded')
     
     def create_watchlist(self, name):
@@ -205,6 +207,7 @@ class Portfolio(Container):
 class Watchlist(Container):
     def __init__(self, *args, **kwargs):
         Container.__init__(self, *args, **kwargs)
+        logger.debug('watchlist created')
         pubsub.publish("watchlist.created",  self)
 
     def add_position(self, symbol, buy_price, buy_date, quantity):
@@ -359,10 +362,17 @@ class Position(object):
             tag = self.model.get_tag(tagstring)
         self.tags = tags
         pubsub.publish("position.tags.changed", [self.model.tags[t] for t in tags], self)
-        
+            
+    def split(self, n1, m2):
+        self.quantity = self.quantity / n1 * n2
+        self.price = self.price / n1 * n2
+        #TODO die transactions müssen auch geändert werden
             
     def __iter__(self):
         return self.transactions.itervalues()  
+
+    def __str__(self):
+        return str(self.quantity) +' '+ self.get_name()
 
 class WatchlistPosition(Position):
     def __init__(self, *args, **kwargs):

@@ -22,7 +22,7 @@
 
 import sqlite3, logging, os
 from sqlite3 import dbapi2 as sqlite
-import objects, pubsub
+from stocktracker import objects, pubsub
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +34,6 @@ PORTFOLIO = 1
 class Store:
     def __init__(self, path):
         self.path = path
-        print path
         self.version = 3
         self.dirty = False
         init = False

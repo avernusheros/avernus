@@ -1,0 +1,104 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+### BEGIN LICENSE
+# Copyright (C) 2008-2009 Wolfgang Steitz <wsteitz(at)gmail.com>
+#This program is free software: you can redistribute it and/or modify it 
+#under the terms of the GNU General Public License version 3, as published 
+#by the Free Software Foundation.
+#
+#This program is distributed in the hope that it will be useful, but 
+#WITHOUT ANY WARRANTY; without even the implied warranties of 
+#MERCHANTABILITY, SATISFACTORY QUALITY, or FITNESS FOR A PARTICULAR 
+#PURPOSE.  See the GNU General Public License for more details.
+#
+#You should have received a copy of the GNU General Public License along 
+#with this program.  If not, see <http://www.gnu.org/licenses/>.
+### END LICENSE
+
+import sys
+import os
+import gtk
+
+# Check if we are working in the source tree or from the installed 
+# package and mangle the python path accordingly
+if os.path.dirname(sys.argv[0]) != ".":
+    if sys.argv[0][0] == "/":
+        fullPath = os.path.dirname(sys.argv[0])
+    else:
+        fullPath = os.getcwd() + "/" + os.path.dirname(sys.argv[0])
+else:
+    fullPath = os.getcwd()
+sys.path.insert(0, os.path.dirname(fullPath))
+
+from stocktracker.stocktrackerconfig import getdatapath
+
+
+
+def init_translations():
+    import locale
+    locale.setlocale(locale.LC_ALL, '')
+
+    import gettext
+    from os.path import pardir, abspath, dirname, join
+
+    GETTEXT_DOMAIN = 'stocktracker'
+    LOCALE_PATH = abspath(join(dirname(__file__), pardir, 'locales'))
+    if not os.path.isdir(LOCALE_PATH):
+        LOCALE_PATH = '/usr/share/locale'
+    
+    # setup translation
+    languages_used = []
+    
+    lc, encoding = locale.getdefaultlocale()
+    if lc:
+        languages_used = [lc]
+    lang_in_env = os.environ.get('LANGUAGE', None)
+    if lang_in_env:
+        languages_used.extend(lang_in_env.split())
+    
+    gettext.bindtextdomain(GETTEXT_DOMAIN, LOCALE_PATH)
+    gettext.textdomain(GETTEXT_DOMAIN)
+    
+    translation = gettext.translation(GETTEXT_DOMAIN, LOCALE_PATH,
+                                      languages=languages_used,
+                                      fallback=True)
+    import __builtin__
+    __builtin__._ = translation.gettext
+    
+    
+def start():
+    init_translations()
+    from stocktracker import persistent_store, objects, config
+   
+    store = persistent_store.Store(config.db_file)
+    model = objects.Model(store)
+    store.model = model
+        
+    
+    from stocktracker.mainwindow import MainWindow    
+    window = MainWindow(model)
+    model.initialize()
+    gtk.main()
+
+
+
+if __name__ == "__main__":
+    #support for command line options
+    import logging, optparse
+    import stocktracker
+    parser = optparse.OptionParser(version="%prog "+stocktracker.__version__)
+    parser.add_option("-v", "--verbose", action="store_true", dest="verbose", help="Show debug messages")
+    (options, args) = parser.parse_args()
+
+    #set the logging level to show debug messages
+    if options.verbose:
+        logging.basicConfig(level=logging.DEBUG)
+        logging.debug('logging enabled')
+    else:
+        logging.basicConfig(level=logging.ERROR)
+    
+    #gobject.threads_init()
+
+    #run the application
+    start()
+
