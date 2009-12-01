@@ -87,13 +87,15 @@ class Store:
     def get_historical_prices(self, stock, start_date, end_date):
         cursor = self.dbconn.cursor()
         res = []
-        start_date -= datetime.timedelta(days = 1)
+        start_date += datetime.timedelta(days = 1)
         for result in cursor.execute("""
         SELECT * FROM quotations 
         WHERE stock_id=?
         AND datetime >= ?
-        ORDER BY datetime""",(stock.id,start_date)).fetchall():
+        AND datetime <= ?
+        ORDER BY datetime""",(stock.id,end_date, start_date)).fetchall():
             res.append((result[2],result[3],result[4],result[5],result[6],result[7]))
+        #print "foo", res
         return res
         
     def get_latest_date(self, stock):
@@ -140,10 +142,12 @@ class DataProvider():
         Get historical prices for the given ticker symbol.
         Returns a nested list.
         """
+        #print start_date, end_date
         newest = self.store.get_latest_date(stock)
         if newest == None:
             newest = datetime.datetime(end_date.year -20, end_date.month, end_date.day)
-        if self.online() and newest.date() != start_date:
+        # newest.date(), start_date, newest.date() >= start_date
+        if self.online() and newest.date() < start_date:
             new_data = updater.get_historical_prices(stock.symbol, start_date, newest)
             self.store.insert_quotes(stock, new_data)
         return self.store.get_historical_prices(stock, start_date, end_date)
