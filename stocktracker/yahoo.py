@@ -19,12 +19,10 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-
 from urllib import urlopen
 import csv, pytz
-from stocktracker import pubsub
 from datetime import datetime
-
+import time
 
 
 def __request(symbol, stat):
@@ -32,8 +30,6 @@ def __request(symbol, stat):
     return urlopen(url)
 
 def update_stocks(stocks):
-    if len(stocks) == 0:
-        return
     symbols = ''
     for stock in stocks:
         symbols+= stock.symbol+'+'
@@ -51,11 +47,8 @@ def update_stocks(stocks):
         stocks[s].date = date.astimezone(pytz.utc)
         stocks[s].date = stocks[s].date.replace(tzinfo = None)
         stocks[s].change = float(row[3])
-        pubsub.publish('stock.updated', stocks[s])
         s+=1
      
-def update_stock(stock):
-    update_stocks([stock])
     
 def get_info(symbol):
     #name, isin, exchange, currency
@@ -65,11 +58,40 @@ def get_info(symbol):
 def check_symbol(symbol):
     return __request(symbol, 'e1').read().strip().strip('"') == "N/A"
     
+
+def get_historical_prices(symbol, start_date, end_date):
+    """
+    Get historical prices for the given ticker symbol.
+    Returns a nested list.
+    """
+    url = 'http://ichart.yahoo.com/table.csv?s=%s&' % symbol + \
+          'd=%s&' % str(start_date.month-1) + \
+          'e=%s&' % str(start_date.day) + \
+          'f=%s&' % str(start_date.year) + \
+          'g=d&' + \
+          'a=%s&' % str(end_date.month-1) + \
+          'b=%s&' % str(end_date.day) + \
+          'c=%s&' % str(end_date.year) + \
+          'ignore=.csv'
+    days = urlopen(url).readlines()
+    data = []
     
+    for row in [day[:-2].split(',') for day in days[1:]]:
+        dt = datetime.strptime(row[0], '%Y-%m-%d')
+        data.append((dt, float(row[1]), float(row[2]), float(row[3]), float(row[4]), int(row[5])))
+
+    data.reverse()
+    return data #(date, open, high, low, close, vol)        , Adj. Schluß
+
+
 if __name__ == "__main__":
     import objects
     
-    s = [objects.Stock(0, "ge", 'ge.de', 0.0, None, None, None, None, None, None), objects.Stock(0, "test1", 'goog', 0.0, None, None, None, None, None, None)]
-    update_stocks(s)
-    print get_info('cbk.de')
-    print check_symbol('ge.de')
+    #s = [objects.Stock(0, "ge", 'ge.de', 0.0, None, None, None, None, None, None), objects.Stock(0, "test1", 'goog', 0.0, None, None, None, None, None, None)]
+    #update_stocks(s)
+    #print get_info('cbk.de')
+    #print check_symbol('ge.de')
+
+    date1 = datetime.date(2009, 11, 25)
+    date2 = datetime.date(2009, 11, 24)
+    print get_historical_prices('GE', date1, date2)

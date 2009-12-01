@@ -1,6 +1,7 @@
 import gtk
 from stocktracker.treeviews import Tree, get_name_string, get_datetime_string, get_green_red_string
 from stocktracker import pubsub, dialogs
+from stocktracker.plot import ChartWindow
 
 class PositionsToolbar(gtk.Toolbar):
     def __init__(self, model):
@@ -28,6 +29,10 @@ class PositionsToolbar(gtk.Toolbar):
         
         button = gtk.ToolButton('gtk-cut')
         button.connect('clicked', self.on_split_clicked)
+        self.insert(button,-1) 
+        
+        button = gtk.ToolButton()
+        button.connect('clicked', self.on_chart_clicked)
         self.insert(button,-1)        
         
         self.insert(gtk.SeparatorToolItem(),-1)
@@ -55,6 +60,9 @@ class PositionsToolbar(gtk.Toolbar):
         
     def on_split_clicked(self, widget):
         pubsub.publish('positionstoolbar.split')
+        
+    def on_chart_clicked(self, widget):
+        pubsub.publish('positionstoolbar.chart')
 
 class PositionsTree(Tree):
     def __init__(self, container, model, type):
@@ -168,6 +176,7 @@ class PositionsTree(Tree):
             ('positionstoolbar.add', self.on_add_position),
             ('positionstoolbar.tag', self.on_tag),
             ('positionstoolbar.tag', self.on_split),
+            ('positionstoolbar.chart', self.on_chart),
             ('position.created', self.on_position_created),
             ('position.tags.changed', self.on_positon_tags_changed),
             ('container.position.removed', self.on_position_deleted)
@@ -251,6 +260,12 @@ class PositionsTree(Tree):
             return
         obj, iter = self.selected_item
         d = dialogs.SplitDialog(obj)
+        
+    def on_chart(self):
+        if self.selected_item is None:
+            return
+        obj, iter = self.selected_item
+        d = ChartWindow(obj.stock, self.model)
         
     def on_tag(self):
         if self.selected_item is None:

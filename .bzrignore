@@ -6,3 +6,4 @@ build
 stocktracker.geany
 .pydevproject
 .project
+test.py

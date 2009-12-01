@@ -22,6 +22,7 @@ import os
 
 config_path = os.path.join( os.getenv('HOME'), '.stocktracker')
 db_file = os.path.join(config_path, 'stocktracker.db')
+quotes_file = os.path.join(config_path, 'historical_data.db')
 timezone = 'CET'
 currency = '€'
 

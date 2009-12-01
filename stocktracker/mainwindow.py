@@ -27,7 +27,7 @@ except:
     raise Exception("PyGTK Version >=2.0 required")
 
 import logging, gtk,os #, gobject
-from stocktracker import treeviews, persistent_store, objects, config, pubsub, chart_tab, dialogs
+from stocktracker import treeviews, objects, config, pubsub, chart_tab, dialogs
 from stocktracker.positions_tab import PositionsTab
 from stocktracker.overview_tab import OverviewTab
 from webbrowser import open as web
@@ -62,7 +62,8 @@ class MenuBar(gtk.MenuBar):
         file_menu_items  = (('----'  , None, None),
                            (_("Quit"), gtk.STOCK_QUIT, parent.on_destroy),
                            )
-        tools_menu_items = ( (_("Merge two positions"), None, self.on_merge),
+        tools_menu_items = ((_('Update stocks') , gtk.STOCK_REFRESH, self.on_update),
+                            (_("Merge two positions"), gtk.STOCK_CONVERT, self.on_merge),
                            )                   
         help_menu_items  = (#("Help"  , gtk.STOCK_HELP, None),
                             (_("Website"), None, lambda x:web("https://launchpad.net/stocktracker")),
@@ -88,7 +89,7 @@ class MenuBar(gtk.MenuBar):
     def build_menu(self, menu_items):
         menu = gtk.Menu()
         
-        for label,icon, func in menu_items:
+        for label, icon, func in menu_items:
             if label == '----':
                 s = gtk.SeparatorMenuItem()
                 s.show()
@@ -110,6 +111,9 @@ class MenuBar(gtk.MenuBar):
     
     def on_merge(self, widget):
         d = dialogs.MergeDialog(self.model)
+    
+    def on_update(self, widget):
+        pubsub.publish('menubar.update')    
     
 class TransactionsTab(gtk.ScrolledWindow):
     def __init__(self, item, model):
@@ -189,6 +193,7 @@ class MainWindow(gtk.Window):
         hpaned.pack2(self.notebook)
         
         self.notebook.connect('switch-page', self.on_notebook_selection)
+        self.connect('key-press-event', self.on_key_press_event)
         #subscribe
         self.connect("destroy", lambda x: gtk.main_quit())
         pubsub.subscribe('maintree.selection', self.on_maintree_selection)
@@ -196,7 +201,12 @@ class MainWindow(gtk.Window):
         #display everything    
         self.show_all()
         
-        
+    def on_key_press_event(self, widget, event):
+        if event.keyval == gtk.gdk.keyval_from_name('F5'):
+             pubsub.publish('shortcut.update')
+             return True
+        return False
+    
     def quit(self, widget, data=None):
         """quit - signal handler for closing the StocktrackerWindow"""
         self.destroy()
@@ -227,7 +237,7 @@ class MainWindow(gtk.Window):
             type = -1
 
         if type == 0 or type == 1 or type == 2:
-            self.notebook.append_page(OverviewTab(item, self.model, type), gtk.Label(_('Overview')))
+            #self.notebook.append_page(OverviewTab(item, self.model, type), gtk.Label(_('Overview')))
             self.notebook.append_page(PositionsTab(item, self.model, type), gtk.Label(_('Positions')))
         
         if type == 1 or type == 2:

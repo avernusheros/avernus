@@ -20,7 +20,7 @@
 
 
 import gtk
-from stocktracker import objects, updater
+from stocktracker import objects
 from datetime import datetime
 
 
@@ -237,7 +237,7 @@ class BuyDialog(gtk.Dialog):
         
     def on_symbol_entry(self, widget, event = None):
         symbol = self.symbol_entry.get_text()
-        if updater.check_symbol(symbol):
+        if self.model.check_symbol(symbol):
             self.symbol_entry.set_icon_from_stock(1, gtk.STOCK_YES)
             self.set_response_sensitive(gtk.RESPONSE_ACCEPT, True)
         else:
@@ -310,7 +310,7 @@ class NewWatchlistPositionDialog(gtk.Dialog):
    
     def on_entry(self, widget, event = None):
         symbol = self.symbol_entry.get_text()
-        if updater.check_symbol(symbol):
+        if self.model.check_symbol(symbol):
             self.symbol_entry.set_icon_from_stock(1, gtk.STOCK_YES)
             self.set_response_sensitive(gtk.RESPONSE_ACCEPT, True)
         else:

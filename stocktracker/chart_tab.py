@@ -24,9 +24,9 @@ class ChartTab(gtk.ScrolledWindow):
         table.attach(gtk.Label(_('Buy value')),1,2,0,1)
         table.attach(self.buy_pie(),1,2,1,2)
         
-        table.attach(gtk.Label(_('Investment types')),0,2,2,3)
+        table.attach(gtk.Label(_('Investment types')),0,1,2,3)
         table.attach(self.types_chart('pie'),0,1,3,4)
-        table.attach(self.types_chart('vertical_bars'),1,2,3,4)
+        #table.attach(self.types_chart('vertical_bars'),1,2,3,4)
         
         self.add_with_viewport(table)
         self.show_all()
@@ -42,7 +42,7 @@ class ChartTab(gtk.ScrolledWindow):
             if val != 0:
                 data[pos.name] = val
         pie = gtk_pie_plot()        
-        pie.set_args({'data':data, 'width':300, 'height':300})
+        pie.set_args({'data':data, 'width':300, 'height':300, 'gradient':True})
         return pie
 
     def buy_pie(self):
@@ -52,7 +52,7 @@ class ChartTab(gtk.ScrolledWindow):
             if val != 0:
                 data[pos.name] = val
         pie = gtk_pie_plot()        
-        pie.set_args({'data':data, 'width':300, 'height':300})
+        pie.set_args({'data':data, 'width':300, 'height':300, 'gradient':True})
         return pie
    
     def types_chart(self, chart_type):
@@ -64,7 +64,7 @@ class ChartTab(gtk.ScrolledWindow):
             chart = gtk_pie_plot()  
         elif chart_type == 'vertical_bars':
             chart = gtk_vertical_bar_plot()
-        chart.set_args({'data':data, 'width':300, 'height':300})
+        chart.set_args({'data':data, 'width':300, 'height':300, 'gradient':True})
         return chart
 
     

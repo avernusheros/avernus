@@ -18,8 +18,9 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from stocktracker import updater, pubsub
+from stocktracker import pubsub
 from stocktracker.utils import unique
+from stocktracker.data_provider import DataProvider
 import logging
 
 logger = logging.getLogger(__name__)
@@ -29,13 +30,16 @@ TYPES = {None: 'n/a', 0:'stock', 1:'fund'}
 class Model(object):
     def __init__(self, store):
         self.store = store
-        pubsub.subscribe( 'positionstoolbar.update', self.on_update_clicked)
+        pubsub.subscribe('positionstoolbar.update', self.on_update)
+        pubsub.subscribe('menubar.update', self.on_update)
+        pubsub.subscribe('shortcut.update', self.on_update)
         
     def initialize(self):
         self.watchlists = self.store.get_watchlists()
         self.portfolios = self.store.get_portfolios()
         self.stocks = self.store.get_stocks()
         self.tags = self.store.get_tags()
+        self.data_provider = DataProvider()
         logger.debug('database loaded')
         pubsub.publish('model.database.loaded')
     
@@ -70,16 +74,23 @@ class Model(object):
             if val.symbol == symbol:
                 stock = val
         if stock is None:
-            name, isin, exchange, currency = updater.get_info(symbol)
+            name, isin, exchange, currency = self.data_provider.get_info(symbol)
             id = self.store.create_stock(name,symbol,isin, exchange, type, currency, None, None, None)
             stock = Stock(id, name, symbol,isin, exchange, type, currency, None, None, None)
             self.stocks[id] = stock
         if update:
-            updater.update_stock(stock)
+            self.data_provider.update_stock(stock)
         return stock
     
-    def on_update_clicked(self):
-        updater.update_stocks([stock for key, stock in self.stocks.iteritems()])
+    def check_symbol(self, symbol):
+        for key, val in self.stocks.iteritems():
+            if symbol == val.symbol:
+                return True
+        else:
+            return self.data_provider.check_symbol(symbol)
+    
+    def on_update(self):
+        self.data_provider.update_stocks([stock for key, stock in self.stocks.iteritems()])
     
     def create_position(self, symbol, buy_price, buy_date, quantity, container_id, type):
         stock = self.get_stock(symbol, type)
@@ -249,7 +260,7 @@ class Stock(object):
         self._currency = currency
         self.price = price
         self.date = date
-        self.change = change
+        self._change = change
         self.type = type
         
         pubsub.publish("stock.created",  self)
@@ -262,12 +273,19 @@ class Stock(object):
         else:
             return ''
           
+    def get_change(self):
+        return self._change
+        
+    def set_change(self, change):
+        self._change = change
+        pubsub.publish('stock.updated', self)
+          
     def get_percent(self):
         return round(self.change * 100 / (self.price - self.change),2)
           
     percent_change = property(get_percent)
     currency = property(get_currency)
-             
+    change = property(get_change, set_change)             
 
 class Position(object):
     def __init__(self, id, container_id, stock_id, model, price, date, transactions, quantity = 1, tags = None):
@@ -332,6 +350,9 @@ class Position(object):
     def get_type_string(self):
         return TYPES[self.model.stocks[self.stock_id].type]
         
+    def get_stock(self):
+        return self.model.stocks[self.stock_id]
+        
     
     current_price = property(get_current_price)
     current_change =  property(get_current_change)
@@ -345,6 +366,7 @@ class Position(object):
     tags_string = property(get_tags_string)
     type = property(get_type)
     type_string = property(get_type_string)
+    stock = property(get_stock)
      
     def add_transaction(self, type, date, quantity, price, ta_costs):
         id = self.model.store.create_transaction(self.id, type, date, quantity, price, ta_costs)
