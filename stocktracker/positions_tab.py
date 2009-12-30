@@ -1,46 +1,115 @@
-import gtk
+import gtk, os
 from stocktracker.treeviews import Tree, get_name_string, get_datetime_string, get_green_red_string
-from stocktracker import pubsub, dialogs
+from stocktracker import pubsub, config, objects
 from stocktracker.plot import ChartWindow
+from stocktracker.dialogs import SellDialog, NewWatchlistPositionDialog, SplitDialog, BuyDialog
+from stocktracker.session import session
+from stocktracker.gui_utils import ContextMenu
+
+
+class PositionContextMenu(ContextMenu):
+    def __init__(self, position):
+        ContextMenu.__init__(self)
+        if isinstance(position, objects.PortfolioPosition):
+            type = 0
+            remove_string = 'Sell'
+        else:
+            type = 1
+            remove_string = 'Remove'
+        self.position = position
+            
+        mi = gtk.MenuItem(remove_string+' position')
+        mi.connect('activate',  self.__remove_position)
+        self.append(mi)
+        
+        mi = gtk.MenuItem(_('Edit position'))
+        mi.connect('activate',  self.__edit_position)
+        self.append(mi)    
+        
+        mi = gtk.MenuItem(_('Chart position'))
+        mi.connect('activate',  self.__chart_position)
+        self.append(mi)    
+        
+        if type == 0:
+            mi = gtk.MenuItem(_('Split position'))
+            mi.connect('activate',  self.__split_position)
+            self.append(mi)
+    
+    def __remove_position(self, *arg):
+        pubsub.publish('position_menu.remove', self.position)
+    
+    def __edit_position(self, *arg):
+        pubsub.publish('position_menu.edit', self.position)
+
+    def __split_position(self, *arg):
+        pubsub.publish('position_menu.split', self.position)
+    
+    def __chart_position(self, *arg):
+        pubsub.publish('position_menu.chart', self.position)
+    
 
 class PositionsToolbar(gtk.Toolbar):
-    def __init__(self, model):
-        self.model = model
+    def __init__(self):
         gtk.Toolbar.__init__(self)
+        
+        self.conditioned = []
         
         button = gtk.ToolButton('gtk-add')
         button.connect('clicked', self.on_add_clicked)
+        button.set_tooltip_text('Buy a new position') 
         self.insert(button,-1)
         
         button = gtk.ToolButton('gtk-delete')
         #button.set_label('Remove tag'
         button.connect('clicked', self.on_remove_clicked)
+        button.set_tooltip_text('Sell selected position') 
+        self.conditioned.append(button)
         self.insert(button,-1)
         
         button = gtk.ToolButton('gtk-edit')
         #button.set_label('Remove tag'
         button.connect('clicked', self.on_edit_clicked)
+        button.set_tooltip_text('Edit selected position') 
         self.insert(button,-1)
+        self.conditioned.append(button)
         button.set_sensitive(False)
         
         button = gtk.ToolButton('gtk-paste')
         button.connect('clicked', self.on_tag_clicked)
+        button.set_tooltip_text('Tag selected position') 
+        self.conditioned.append(button)
         self.insert(button,-1)
         
         button = gtk.ToolButton('gtk-cut')
         button.connect('clicked', self.on_split_clicked)
+        button.set_tooltip_text('Split selected position') 
+        self.conditioned.append(button)
         self.insert(button,-1) 
         
-        button = gtk.ToolButton()
+        button = gtk.ToolButton('gtk-info')
         button.connect('clicked', self.on_chart_clicked)
+        button.set_tooltip_text('Chart selected position')
+        self.conditioned.append(button) 
         self.insert(button,-1)        
         
         self.insert(gtk.SeparatorToolItem(),-1)
         
         button = gtk.ToolButton('gtk-refresh')
         button.connect('clicked', self.on_update_clicked)
+        button.set_tooltip_text('Update stock quotes') 
         self.insert(button,-1)
         
+        self.on_unselect()
+        pubsub.subscribe('positionstree.unselect', self.on_unselect)
+        pubsub.subscribe('positionstree.select', self.on_select)
+        
+    def on_unselect(self):
+        for button in self.conditioned:
+            button.set_sensitive(False)       
+        
+    def on_select(self, obj):
+        for button in self.conditioned:
+            button.set_sensitive(True)
            
     def on_add_clicked(self, widget):
         pubsub.publish('positionstoolbar.add')  
@@ -64,10 +133,10 @@ class PositionsToolbar(gtk.Toolbar):
     def on_chart_clicked(self, widget):
         pubsub.publish('positionstoolbar.chart')
 
+
 class PositionsTree(Tree):
-    def __init__(self, container, model, type):
+    def __init__(self, container, type):
         #type 0=wl 1=pf
-        self.model = model
         self.container = container
         self.type = type
         Tree.__init__(self)
@@ -166,6 +235,7 @@ class PositionsTree(Tree):
 
         self.load_positions()
         
+        self.connect('button-press-event', self.on_button_press_event)
         self.connect('cursor_changed', self.on_cursor_changed)
         self.connect("destroy", self.on_destroy)
         
@@ -173,10 +243,14 @@ class PositionsTree(Tree):
             ('position.updated', self.on_position_updated),
             ('stock.updated', self.on_stock_updated),
             ('positionstoolbar.remove', self.on_remove_position),
+            ('position_menu.remove', self.on_remove_position),
             ('positionstoolbar.add', self.on_add_position),
+            ('position_menu.add', self.on_add_position),
             ('positionstoolbar.tag', self.on_tag),
-            ('positionstoolbar.tag', self.on_split),
+            ('positionstoolbar.split', self.on_split),
+            ('position_menu.split', self.on_split),
             ('positionstoolbar.chart', self.on_chart),
+            ('position_menu.chart', self.on_chart),
             ('position.created', self.on_position_created),
             ('position.tags.changed', self.on_positon_tags_changed),
             ('container.position.removed', self.on_position_deleted)
@@ -185,6 +259,12 @@ class PositionsTree(Tree):
             pubsub.subscribe(topic, callback)
             
         self.selected_item = None
+
+    def on_button_press_event(self, widget, event):
+        if event.button == 3:
+            if self.selected_item is not None:
+                obj, iter = self.selected_item
+                PositionContextMenu(obj).show(event)
 
     def on_destroy(self, x):
         for topic, callback in self.subscriptions:
@@ -206,7 +286,7 @@ class PositionsTree(Tree):
             if item.quantity == 0:
                 self.get_model().remove(row.iter)
             else:
-                row[self.cols['quantity']] = item.quantity
+                row[self.cols['shares']] = item.quantity
     
     def on_positon_tags_changed(self, tags, item):
         row = self.find_position(item.id)
@@ -228,10 +308,11 @@ class PositionsTree(Tree):
         if item.container_id == self.container.id:
             self.insert_position(item)
      
-    def on_remove_position(self):
-        if self.selected_item is None:
-            return
-        obj, iter = self.selected_item
+    def on_remove_position(self, position = None):
+        if position is None:
+            if self.selected_item is None:
+                return
+            position, iter = self.selected_item
         if self.type == 0:
             dlg = gtk.MessageDialog(None, 
                  gtk.DIALOG_DESTROY_WITH_PARENT, gtk.MESSAGE_QUESTION, 
@@ -239,9 +320,9 @@ class PositionsTree(Tree):
             response = dlg.run()
             dlg.destroy()
             if response == gtk.RESPONSE_OK:
-                self.container.remove_position(obj)
+                self.container.remove_position(position)
         elif self.type == 1:
-            dialogs.SellDialog(self.container, obj)    
+            SellDialog(self.container, position)    
     
     def on_position_deleted(self, pos, pf):
         if pf.id == self.container.id:
@@ -251,21 +332,23 @@ class PositionsTree(Tree):
        
     def on_add_position(self):
         if self.type == 0:
-            dialogs.NewWatchlistPositionDialog(self.container, self.model)  
+            NewWatchlistPositionDialog(self.container)  
         elif self.type == 1:
-            dialogs.BuyDialog(self.container, self.model)
+            BuyDialog(self.container)
     
-    def on_split(self):
-        if self.selected_item is None:
-            return
-        obj, iter = self.selected_item
-        d = dialogs.SplitDialog(obj)
+    def on_split(self, position = None):
+        if position is None:
+            if self.selected_item is None:
+                return
+            position, iter = self.selected_item
+        d = SplitDialog(position)
         
-    def on_chart(self):
-        if self.selected_item is None:
-            return
-        obj, iter = self.selected_item
-        d = ChartWindow(obj.stock, self.model)
+    def on_chart(self, position = None):
+        if position is None:
+            if self.selected_item is None:
+                return
+            position, iter = self.selected_item
+        d = ChartWindow(position.stock)
         
     def on_tag(self):
         if self.selected_item is None:
@@ -285,7 +368,10 @@ class PositionsTree(Tree):
             #Something is selected so get the object
             obj = model.get_value(selection_iter, 1)
             self.selected_item = obj, selection_iter
-            pubsub.publish('watchlistpositionstree.selection', obj)   
+            if isinstance(obj, objects.Position):
+                pubsub.publish('positionstree.select', obj)
+                return
+        pubsub.publish('positionstree.unselect')
             
     def get_price_string(self, item):
         if item.price is None:
@@ -294,7 +380,7 @@ class PositionsTree(Tree):
         
     def insert_position(self, position):
         if position.quantity != 0:
-            stock = self.model.stocks[position.stock_id]
+            stock = session['model'].stocks[position.stock_id]
             gain = position.gain
             c_change = position.current_change
             self.get_model().append(None, [position.id, 
@@ -339,14 +425,13 @@ class PositionsTree(Tree):
         pass
 
 
-
 class PositionsTab(gtk.VBox):
-    def __init__(self, pf, model, type):
+    def __init__(self, pf, type):
         gtk.VBox.__init__(self)
         self.pf = pf
-        positions_tree = PositionsTree(pf, model, type)
+        positions_tree = PositionsTree(pf, type)
         hbox = gtk.HBox()
-        tb = PositionsToolbar(pf)
+        tb = PositionsToolbar()
         hbox.pack_start(tb, expand = True, fill = True)
         
         self.total_label = label = gtk.Label()
@@ -356,7 +441,7 @@ class PositionsTab(gtk.VBox):
         hbox.pack_start(label)
         hbox.pack_start(gtk.VSeparator(), expand = False, fill = False)
         self.overall_label = label = gtk.Label()
-        hbox.pack_start(label)
+        hbox.pack_start(label, expand = False, fill = False)
         sw = gtk.ScrolledWindow()
         sw.set_property('hscrollbar-policy', gtk.POLICY_AUTOMATIC)
         sw.set_property('vscrollbar-policy', gtk.POLICY_AUTOMATIC)

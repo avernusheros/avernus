@@ -1,19 +1,20 @@
 from stocktracker.cairoplot.gtkcairoplot import gtk_dot_line_plot, gtk_vertical_bar_plot
 import gtk
-from datetime import date
+from stocktracker.treeviews import get_green_red_string
+from datetime import date, timedelta
+from stocktracker.session import session
 
 
 class ChartWindow(gtk.Window):
-    def __init__ (self, stock, model):
+    def __init__ (self, stock):
         gtk.Window.__init__(self)
-        self.add(Chart(stock, model))
+        self.add(Chart(stock))
         self.show_all()
 
 class Chart(gtk.VBox):
-    def __init__(self, stock, model):
+    def __init__(self, stock):
         gtk.VBox.__init__(self)
         self.stock = stock
-        self.model = model
         
         hbox = gtk.HBox()
         self.add(hbox)
@@ -57,24 +58,36 @@ class Chart(gtk.VBox):
             print "TODO"
             return date(date1.year-1, date1.month,date1.day)
         
+                
     def get_chart(self, zoom):
         vbox = gtk.VBox()
         date1 = date.today()
         date2 = self.get_date2(zoom, date1)
-        data = self.model.data_provider.get_historical_prices(self.stock, date1, date2) 
-        
+        data = session['model'].data_provider.get_historical_prices(self.stock, date1, date2) 
+       
         quotes = [d[4] for d in data]
-        #legend = ['Jan', 'Feb', 'Mar']        
+        y_min = 0.95*min(quotes)
+        y_max = 1.05*max(quotes)
+        
+        legend = [str(data[int(len(data)/20 *i)][0].date()) for i in range(20)]
        
         p1 = gtk_dot_line_plot()
         p1.set_args({'data':quotes, 
-                     #'x_labels':legend, 
+                     'x_labels':legend, 
                      'y_title': 'Share Price',
                      'series_colors': ['blue'],
                      'grid': True,
                      'width':600, 
-                     'height':250})
+                     'height':250,
+                     'y_bounds':(y_min, y_max)})
+                   
+        change = quotes[-1] - quotes[0]
+        change_str = get_green_red_string(change, str(change)+' ('+str(round(change/quotes[0]*100,2))+'%)')
+        label = gtk.Label()
+        label.set_markup(str(date2)+' - '+str(date1)+'     '+change_str)
+        vbox.add(label)
         vbox.add(p1)
+        vbox.add(gtk.Label(_('Volume (mil/1d)')))
         
         p2 = gtk_vertical_bar_plot()
         vols = [d[5] for d in data]
@@ -100,10 +113,3 @@ class Chart(gtk.VBox):
             self.show_all()
         
 
-if __name__ == '__main__':
-    import objects
-    w = gtk.Window()
-    s = objects.Stock(0, 'Google', 'BMW.DE', None, 'Xetra',0, None, '234', None, '23')
-    w.add(Chart(s))
-    w.show_all()
-    gtk.main()

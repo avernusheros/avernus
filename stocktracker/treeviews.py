@@ -19,7 +19,8 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import gtk, string,  logging, pytz
-from stocktracker import objects, dialogs, config, pubsub
+from stocktracker import objects, config, pubsub
+from stocktracker.session import session
 
 logger = logging.getLogger(__name__)
 
@@ -42,23 +43,21 @@ def get_name_string(stock):
     return '<b>'+stock.name+'</b>' + '\n' + '<small>'+stock.symbol+'</small>' + '\n' + '<small>'+stock.exchange+'</small>'
  
 
-def get_green_red_string(num):
+def get_green_red_string(num, string = None):
+    if string is None:
+        string = str(num)
     if num < 0.0:
-        text = '<span foreground="red">'+ str(num) + '</span>'
+        text = '<span foreground="red">'+ string + '</span>'
     else:
-        text = '<span foreground="dark green">'+ str(num) + '</span>'
+        text = '<span foreground="dark green">'+ string + '</span>'
     return text
 
-
-class Category(object):
-    def __init__(self, name):
-        self.name = name
 
 class Tree(gtk.TreeView):
     def __init__(self):
         self.selected_item = None
         gtk.TreeView.__init__(self)
-
+        pubsub.subscribe('clear!', self.clear)
     
     def create_column(self, name, attribute):
         column = gtk.TreeViewColumn(name)
@@ -70,115 +69,25 @@ class Tree(gtk.TreeView):
         return column, cell
 
     
-    def find_item(self, id):
+    def find_item(self, id, type = None):
+        print "find item", id
         def search(rows):
             if not rows: return None
             for row in rows:
-                if row[0] == id:
+                if row[0] == id and (type is None or type == row[1].type):
                     return row 
                 result = search(row.iterchildren())
                 if result: return result
             return None
         return search(self.get_model())
 
-
-
-class MainTree(Tree):
-    def __init__(self, model):
-        self.model = model
-        
-        Tree.__init__(self)
-        #id, object, icon, name
-        self.set_model(gtk.TreeStore(int, object,gtk.gdk.Pixbuf, str))
-        
-        self.set_headers_visible(False)
-             
-        column = gtk.TreeViewColumn()
-        # Icon Renderer
-        renderer = gtk.CellRendererPixbuf()
-        column.pack_start(renderer, expand = False)
-        column.add_attribute(renderer, "pixbuf", 2)
-        # Text Renderer
-        renderer = gtk.CellRendererText()
-        column.pack_start(renderer, expand = True)
-        column.add_attribute(renderer, "markup", 3)
-        self.append_column(column)
-        
-        self.insert_categories()
-       
-        self.connect('cursor_changed', self.on_cursor_changed)
-        pubsub.subscribe("watchlist.created", self.insert_watchlist)
-        pubsub.subscribe("portfolio.created", self.insert_portfolio)
-        pubsub.subscribe("tag.created", self.insert_tag)
-        pubsub.subscribe( "maintoolbar.remove", self.on_remove)
-        pubsub.subscribe("maintoolbar.edit", self.on_edit)
-        pubsub.subscribe( "container.updated", self.on_updated)
-        pubsub.subscribe("model.database.loaded", self.on_database_loaded)
-        
-        self.selected_item = None
-
-    def insert_categories(self):
-        self.pf_iter = self.get_model().append(None, [-1, Category('Portfolios'),None,_("<b>Portfolios</b>")])
-        self.wl_iter = self.get_model().append(None, [-1, Category('Watchlists'),None,_("<b>Watchlists</b>")])
-        self.tag_iter = self.get_model().append(None, [-1, Category('Tags'),None,_("<b>Tags</b>")])
-
-    def insert_watchlist(self, item):
-        self.get_model().append(self.wl_iter, [item.id, item, None, item.name])
+    def clear(self):
+        print self
+        self.get_model().clear()
     
-    def insert_portfolio(self, item):
-        self.get_model().append(self.pf_iter, [item.id, item, None, item.name])
-         
-    def insert_tag(self, item):
-        self.get_model().append(self.tag_iter, [item.id, item, None, item.name])
-         
-    def on_remove(self):
-        if self.selected_item is None:
-            return
-        obj, iter = self.selected_item
-        if isinstance(obj, objects.Watchlist) or isinstance(obj, objects.Portfolio) or isinstance(obj, objects.Tag):
-            dlg = gtk.MessageDialog(None, 
-                 gtk.DIALOG_DESTROY_WITH_PARENT, gtk.MESSAGE_QUESTION, 
-                    gtk.BUTTONS_OK_CANCEL, _("Are you sure?"))
-            response = dlg.run()
-            dlg.destroy()
-            if response == gtk.RESPONSE_OK:
-                self.model.remove(obj)
-                self.get_model().remove(iter)  
-    
-    def on_updated(self, item):
-        row = self.find_item(item.id)
-        if row: 
-            row[1] = item
-            row[3] = item.name
-    
-    def on_cursor_changed(self, widget):
-        #Get the current selection in the gtk.TreeView
-        selection = widget.get_selection()
-        # Get the selection iter
-        model, selection_iter = selection.get_selected()
-        if (selection_iter and model):
-            #Something is selected so get the object
-            obj = model.get_value(selection_iter, 1)
-            self.selected_item = obj, selection_iter
-            pubsub.publish('maintree.selection', obj)        
-        
-    def on_edit(self):
-        if self.selected_item is None:
-            return
-        obj, iter = self.selected_item
-        if isinstance(obj, objects.Watchlist):
-            dialogs.EditWatchlist(obj)
-        elif isinstance(obj, objects.Portfolio):
-            dialogs.EditPortfolio(obj)
-
-    def on_database_loaded(self):
-        self.expand_all()
-    
-
 
 class TransactionsTree(Tree):
-    def __init__(self, portfolio, model):
-        self.model = model
+    def __init__(self, portfolio):
         self.portfolio = portfolio
         Tree.__init__(self)
         #id, object, name, price, change
@@ -209,9 +118,11 @@ class TransactionsTree(Tree):
             return 'BUY'
         elif type == 0:
             return 'SELL'
+        elif type == 2:
+            return 'SPLIT'
         else:
             return ''
         
     def insert_transaction(self, ta, pos):
-        stock = self.model.stocks[pos.stock_id]
+        stock = session['model'].stocks[pos.stock_id]
         self.get_model().append(None, [ta.id, ta, self.get_action_string(ta.type), get_name_string(stock), get_datetime_string(ta.date), ta.quantity, ta.price, ta.ta_costs])

@@ -18,91 +18,130 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-
 import gtk
 from stocktracker import objects
 from datetime import datetime
+from session import session
 
 
-class EditWatchlist(gtk.Dialog):
-    def __init__(self, wl, parent = None):
-        gtk.Dialog.__init__(self, _("Edit..."), parent
-                            , gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
-                     (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
+
+class StockSelector(gtk.Entry):
+    def __init__(self, stocks):
+        self.stocks = stocks
+        gtk.Entry.__init__(self)
+        self.completion = completion = gtk.EntryCompletion()
+        self.set_completion(completion)
+        self.model = liststore = gtk.ListStore(int, str)
+        completion.set_model(liststore)
+        completion.set_text_column(1)
+        for id, stock in stocks.items():
+            liststore.append([id, str(stock)])       
+        #completion.insert_action_text(4,'test')
+        #completion.insert_action_markup(4,'test')
+    
+        completion.set_match_func(self.match_func)
+        completion.connect("match-selected", self.on_completion_match)
+
+    def match_func(self, completion, key, iter):
+        stock = self.stocks[self.model[iter][0]]
+        key = key.lower()
+        if stock.name.lower().startswith(key) or stock.symbol.lower().startswith(key):
+            return True
+        return False
+
+    def on_completion_match(self, completion, model, iter):
+        self.selected_stock = model[iter][0]
+        
+
+class AddStockDialog(gtk.Dialog):
+    def __init__(self):
+        gtk.Dialog.__init__(self, _("Add a new stock"), session['main']
+                    , gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
+                       (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
                       gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
-        
-        self.wl = wl
         vbox = self.get_content_area()
+        table = gtk.Table()
+        vbox.add(table)
         
-        #name entry
-        hbox = gtk.HBox()
-        vbox.pack_start(hbox)
-        label = gtk.Label(_('Name:'))
-        hbox.pack_start(label)
+        table.attach(gtk.Label('Symbol'), 0,1,0,1)
+        
+        self.symbol_entry = gtk.Entry()
+        self.symbol_entry.set_icon_from_stock(1, gtk.STOCK_NO)
+        table.attach(self.symbol_entry, 1,2,0,1)
+        self.symbol_entry.connect("activate", self.on_symbol_entry)
+        self.symbol_entry.connect("focus-out-event", self.on_symbol_entry)
+        self.symbol_entry.connect("changed", self.on_symbol_change)
+
+        #type
+        table.attach(gtk.Label('Type'), 0,1,1,2)
+        self.type_cb = type_cb = gtk.combo_box_new_text()
+        type_cb.append_text('stock')
+        type_cb.append_text('fund')
+        type_cb.set_active(0)
+        table.attach(type_cb, 1,2,1,2)
+        
+        #name
+        table.attach(gtk.Label('Name'), 0,1,2,3)
         self.name_entry = gtk.Entry()
-        hbox.pack_start(self.name_entry)
+        table.attach(self.name_entry, 1,2,2,3)
+        
+        table.attach(gtk.Label('Exchange'), 0,1,3,4)
+        self.exchange_label = gtk.Entry()
+        self.exchange_label.set_editable(False)
+        table.attach(self.exchange_label, 1,2,3,4)
+        
+        table.attach(gtk.Label('Currency'), 0,1,4,5)
+        self.currency_label = gtk.Entry()
+        self.currency_label.set_editable(False)
+        table.attach(self.currency_label, 1,2,4,5)
+
+        #table.attach(gtk.Label('Country'), 0,1,5,6)
+        #self.country_entry = gtk.Entry()
+        #self.country_entry.set_editable(False)
+        #table.attach(self.country_entry, 1,2,5,6)
 
         self.show_all()
-        response = self.run()  
-        self.process_result(response)
+        self.process_result(self.run())
         
         self.destroy()
 
+    def on_symbol_change(self, widget):
+        self.symbol_entry.set_icon_from_stock(1, gtk.STOCK_DIALOG_QUESTION)
+        self.set_response_sensitive(gtk.RESPONSE_ACCEPT, False)  
+        
+    def on_symbol_entry(self, widget, event = None):
+        symbol = self.symbol_entry.get_text()
+        stock_info = session['model'].data_provider.get_info(symbol)
+        if stock_info is not None:
+            name, isin, exchange, currency = stock_info
+            self.symbol_entry.set_icon_from_stock(1, gtk.STOCK_YES)
+            self.set_response_sensitive(gtk.RESPONSE_ACCEPT, True)
+            self.name_entry.set_text(name)
+            self.exchange_label.set_text(exchange)
+            self.currency_label.set_text(currency)
+        else:
+            self.symbol_entry.set_icon_from_stock(1, gtk.STOCK_NO)
+            self.set_response_sensitive(gtk.RESPONSE_ACCEPT, False)
+            self.name_entry.set_text('')
+            self.exchange_label.set_text('')
+            self.currency_label.set_text('')
+        
     def process_result(self, response):
         if response == gtk.RESPONSE_ACCEPT:
-            self.wl.name = self.name_entry.get_text()    
-
-class EditPortfolio(EditWatchlist):
-    def __init__(self, pf, parent = None):
-        EditWatchlist.__init__(self, pf, parent)
-
-class NewContainerDialog(gtk.Dialog):
-    def __init__(self, model, parent = None):
-        gtk.Dialog.__init__(self, _("Create..."), parent
-                            , gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
-                     (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
-                      gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
-        
-        self.model = model
-        vbox = self.get_content_area()
-        
-        
-        hbox = gtk.HBox()
-        vbox.pack_start(hbox)
-        self.radiobutton = button = gtk.RadioButton(None, _("Portfolio"))
-        hbox.pack_start(button, True, True, 0)
-        
-        button = gtk.RadioButton(button, _("Watchlist"))
-        hbox.pack_start(button, True, True, 0)
-               
-        #name entry
-        hbox = gtk.HBox()
-        vbox.pack_start(hbox)
-        label = gtk.Label(_('Name:'))
-        hbox.pack_start(label)
-        self.name_entry = gtk.Entry()
-        hbox.pack_start(self.name_entry)
-
-        self.show_all()
-        response = self.run()  
-        self.process_result(response)
-        
-        self.destroy()
-
-    def process_result(self, response):
-        if response == gtk.RESPONSE_ACCEPT:
-            #grab the name
             name = self.name_entry.get_text()
-            if self.radiobutton.get_active():
-                self.model.create_portfolio(name)
-            else:
-                #create wathclist
-                self.model.create_watchlist(name)
+            symbol = self.symbol_entry.get_text()
+            type = self.type_cb.get_active()
+            exchange = self.exchange_label.get_text()
+            currency = self.currency_label.get_text()
+            isin = 'n/a'
+            
+            session['model'].create_stock(symbol, name, type, exchange, currency, isin)
 
 
+        
 class SellDialog(gtk.Dialog):
-    def __init__(self, pf, pos, parent = None):
-        gtk.Dialog.__init__(self, _("Sell a position"), parent
+    def __init__(self, pf, pos):
+        gtk.Dialog.__init__(self, _("Sell a position"), session['main']
                             , gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
                      (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
                       gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
@@ -151,38 +190,24 @@ class SellDialog(gtk.Dialog):
 
 
 class BuyDialog(gtk.Dialog):
-    def __init__(self, pf, model, parent = None):
-        gtk.Dialog.__init__(self, _("Buy a position"), parent
+    def __init__(self, pf):
+        gtk.Dialog.__init__(self, _("Buy a position"), session['main']
                             , gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
                      (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
                       gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
         self.pf = pf
-        self.model = model
         
         vbox = self.get_content_area()
-        #symbol entry
+        #stock entry
         hbox = gtk.HBox()
         vbox.pack_start(hbox)
-        label = gtk.Label(_('Symbol:'))
-        label.set_tooltip_text('Symbol as used on yahoo finance') 
+        label = gtk.Label(_('Stock:'))
         hbox.pack_start(label)
 
+        self.stock_selector = StockSelector(session['model'].stocks)
+        hbox.pack_start(self.stock_selector)
+        self.stock_selector.completion.connect('match-selected', self.on_stock_selection)
 
-        self.symbol_entry = gtk.Entry()
-        self.symbol_entry.set_icon_from_stock(1, gtk.STOCK_NO)
-        hbox.pack_start(self.symbol_entry)
-        self.symbol_entry.connect("activate", self.on_symbol_entry)
-        self.symbol_entry.connect("focus-out-event", self.on_symbol_entry)
-        self.symbol_entry.connect("changed", self.on_symbol_change)
-
-        #type
-        hbox = gtk.HBox()
-        vbox.pack_start(hbox)
-        self.radiobutton = button = gtk.RadioButton(None, _("Stock"))
-        hbox.pack_start(button, True, True, 0)
-        
-        button = gtk.RadioButton(button, _("Fond"))
-        hbox.pack_start(button, True, True, 0)
 
         #shares entry
         hbox = gtk.HBox()
@@ -199,7 +224,6 @@ class BuyDialog(gtk.Dialog):
         self.price_entry = gtk.SpinButton(gtk.Adjustment(lower=0, upper=100000,step_incr=0.1, value = 1.0), digits=2)
         self.price_entry.connect("changed", self.on_change)
         hbox.pack_start(self.price_entry)
-        
         
         #ta_costs entry
         hbox = gtk.HBox()
@@ -224,109 +248,63 @@ class BuyDialog(gtk.Dialog):
         self.show_all()
         response = self.run()  
         self.process_result(response)
-        
         self.destroy()
 
     def on_change(self, widget):
         total = self.shares_entry.get_value() * self.price_entry.get_value() + self.tacosts_entry.get_value()
         self.total.set_text(str(total))
 
-    def on_symbol_change(self, widget):
-        self.symbol_entry.set_icon_from_stock(1, gtk.STOCK_DIALOG_QUESTION)
-        self.set_response_sensitive(gtk.RESPONSE_ACCEPT, False)  
-        
-    def on_symbol_entry(self, widget, event = None):
-        symbol = self.symbol_entry.get_text()
-        if self.model.check_symbol(symbol):
-            self.symbol_entry.set_icon_from_stock(1, gtk.STOCK_YES)
-            self.set_response_sensitive(gtk.RESPONSE_ACCEPT, True)
-        else:
-            self.symbol_entry.set_icon_from_stock(1, gtk.STOCK_NO)
-            self.set_response_sensitive(gtk.RESPONSE_ACCEPT, False)
+    def on_stock_selection(self, *args):
+        self.set_response_sensitive(gtk.RESPONSE_ACCEPT, True)  
         
     def process_result(self, response):
         if response == gtk.RESPONSE_ACCEPT:
-            symbol = self.symbol_entry.get_text()
+            stock_id = self.stock_selector.selected_stock
             shares = self.shares_entry.get_value()
             if shares == 0.0:
                 return
-            if self.radiobutton.get_active():
-                type = 0
-            else:
-                type = 1
             price = self.price_entry.get_value()
-            stock = self.model.get_stock(symbol, type, update = True)
             year, month, day = self.calendar.get_date()
             date = datetime(year, month, day)
             ta_costs = self.tacosts_entry.get_value()
-            position = self.pf.add_position(symbol, price, date, shares)
+            position = self.pf.add_position(stock_id, price, date, shares)
             position.add_transaction(1, date, shares, price, ta_costs)
-        else:
-            print "ELSE"
 
 
 class NewWatchlistPositionDialog(gtk.Dialog):
-    def __init__(self, wl, model, parent = None):
-        gtk.Dialog.__init__(self, _("Create..."), parent
+    def __init__(self, wl):
+        gtk.Dialog.__init__(self, _("Add watchlist position"), session['main']
                             , gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
                      (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
                       gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
-        
         self.wl = wl
-        self.model = model
+        
         vbox = self.get_content_area()
-        
-        #symbol entry
+        #stock entry
         hbox = gtk.HBox()
         vbox.pack_start(hbox)
-        hbox.pack_start(gtk.Label(_('Symbol:')))
-        self.symbol_entry = gtk.Entry()
-        self.symbol_entry.set_icon_from_stock(1, gtk.STOCK_NO)
-        hbox.pack_start(self.symbol_entry)
-        self.symbol_entry.connect("activate", self.on_entry)
-        self.symbol_entry.connect("focus-out-event", self.on_entry)
-        self.symbol_entry.connect("changed", self.on_change)
-        self.set_response_sensitive(gtk.RESPONSE_ACCEPT, False)
-        
-        #type
-        hbox = gtk.HBox()
-        vbox.pack_start(hbox)
-        self.radiobutton = button = gtk.RadioButton(None, _("Stock"))
-        hbox.pack_start(button, True, True, 0)
-        
-        button = gtk.RadioButton(button, _("Fond"))
-        hbox.pack_start(button, True, True, 0)
+        label = gtk.Label(_('Stock:'))
+        hbox.pack_start(label)
 
-        
+        self.stock_selector = StockSelector(session['model'].stocks)
+        hbox.pack_start(self.stock_selector)
+        self.stock_selector.completion.connect('match-selected', self.on_stock_selection)
+
+        self.set_response_sensitive(gtk.RESPONSE_ACCEPT, False)
         self.show_all()
         response = self.run()  
         self.process_result(response)
-        
         self.destroy()
-    
-    def on_change(self, widget):
-        self.symbol_entry.set_icon_from_stock(1, gtk.STOCK_DIALOG_QUESTION)
-        self.set_response_sensitive(gtk.RESPONSE_ACCEPT, False)
-   
-    def on_entry(self, widget, event = None):
-        symbol = self.symbol_entry.get_text()
-        if self.model.check_symbol(symbol):
-            self.symbol_entry.set_icon_from_stock(1, gtk.STOCK_YES)
-            self.set_response_sensitive(gtk.RESPONSE_ACCEPT, True)
-        else:
-            self.symbol_entry.set_icon_from_stock(1, gtk.STOCK_NO)
-            self.set_response_sensitive(gtk.RESPONSE_ACCEPT, False)
 
+    def on_stock_selection(self, *args):
+        self.set_response_sensitive(gtk.RESPONSE_ACCEPT, True)  
+        
     def process_result(self, response):
         if response == gtk.RESPONSE_ACCEPT:
-            symbol = self.symbol_entry.get_text()
-            if self.radiobutton.get_active():
-                type = 0
-            else:
-                type = 1
-            stock = self.model.get_stock(symbol, type, update = True)
-            position = self.wl.add_position(symbol,stock.price, stock.date, 1)            
-
+            stock_id = self.stock_selector.selected_stock
+            stock = session['model'].stocks[stock_id]
+            stock.update()
+            position = self.wl.add_position(stock_id, stock.price, stock.date)
 
 
 class PfSelector(gtk.ComboBox):
@@ -362,8 +340,8 @@ class PosSelector(gtk.ComboBox):
             
 
 class SplitDialog(gtk.Dialog):
-    def __init__(self, pos, parent = None):
-        gtk.Dialog.__init__(self, _("Split a position"), parent
+    def __init__(self, pos):
+        gtk.Dialog.__init__(self, _("Split a position"), session['main']
                             , gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
                      (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
                       _('Split'), gtk.RESPONSE_ACCEPT))
@@ -371,7 +349,7 @@ class SplitDialog(gtk.Dialog):
         
         vbox = self.get_content_area()
         
-        vbox.pack_start(str(pos))
+        vbox.pack_start(gtk.Label(str(pos)))
 
         hbox = gtk.HBox()
         vbox.pack_start(hbox)
@@ -379,7 +357,11 @@ class SplitDialog(gtk.Dialog):
         hbox.pack_start(self.val1)
         hbox.pack_start(gtk.Label(' - '))
         self.val2 = gtk.SpinButton(gtk.Adjustment(lower=1, upper=1000,step_incr=1, value = 0), digits=0)
-        hbox.pack_start(self.val1)        
+        hbox.pack_start(self.val2)     
+        
+        #date 
+        self.calendar = gtk.Calendar()
+        vbox.pack_start(self.calendar)   
 
         self.show_all()
         response = self.run()  
@@ -391,16 +373,13 @@ class SplitDialog(gtk.Dialog):
         if response == gtk.RESPONSE_ACCEPT:
             val1 = self.val1.get_value()
             val2 = self.val2.get_value()
-            print val1, val2
-            self.pos.split(val1, val2)
-        
+            year, month, day = self.calendar.get_date()
+            self.pos.split(val1, val2, datetime(year, month, day))
  
             
 class MergeDialog(gtk.Dialog):
-    def __init__(self,  model, parent = None):
-        self.model = model
-        
-        gtk.Dialog.__init__(self, _("Merge two positions"), parent
+    def __init__(self):
+        gtk.Dialog.__init__(self, _("Merge two positions"), session['main']
                             , gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
                      (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
                       'Merge', gtk.RESPONSE_ACCEPT))
@@ -439,7 +418,7 @@ class MergeDialog(gtk.Dialog):
         model = combobox.get_model()
         index = combobox.get_active()
         if index:
-            self.selected_pf = self.model.portfolios[model[index][0]]
+            self.selected_pf = session['model'].portfolios[model[index][0]]
         else:
             self.selected_pf = None
         self.pos1.on_pf_selection(self.selected_pf)
@@ -464,6 +443,8 @@ class MergeDialog(gtk.Dialog):
         if response == gtk.RESPONSE_ACCEPT:
             self.selected_pf.merge_positions(self.selected_pos[0], self.selected_pos[1])
         
+
+
 if __name__ == "__main__":
     import objects, persistent_store
     store = persistent_store.Store('test.db')

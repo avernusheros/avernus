@@ -53,6 +53,8 @@ def update_stocks(stocks):
 def get_info(symbol):
     #name, isin, exchange, currency
     for row in csv.reader(__request(symbol, 'nxc4')):
+        if row[1] == 'N/A':
+            return None
         return row[0], 'n/a', row[1], row[2]
      
 def check_symbol(symbol):
@@ -81,7 +83,7 @@ def get_historical_prices(symbol, start_date, end_date):
     for row in [day[:-2].split(',') for day in days[1:]]:
         #print row[0]
         dt = datetime.strptime(row[0], '%Y-%m-%d')
-        data.append((dt, float(row[1]), float(row[2]), float(row[3]), float(row[4]), int(row[5])))
+        data.append((dt, float(row[1]), float(row[2]), float(row[3]), float(row[6]), int(row[5])))
 
     data.reverse()
     return data #(date, open, high, low, close, vol)        , Adj. Schluß

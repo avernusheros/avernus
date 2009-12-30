@@ -1,19 +1,16 @@
 from stocktracker.cairoplot.gtkcairoplot import gtk_pie_plot,gtk_vertical_bar_plot
 import gtk
-
+from session import session
 
 class ChartTab(gtk.ScrolledWindow):
-    def __init__(self, pf, model):
+    def __init__(self, pf):
         gtk.ScrolledWindow.__init__(self)
         self.pf = pf
-        self.model = model
-        
         
         self.set_property('hscrollbar-policy', gtk.POLICY_AUTOMATIC)
         self.set_property('vscrollbar-policy', gtk.POLICY_AUTOMATIC)
         self.show_all()
 
-    
     def show(self):
         self.clear()
         table = gtk.Table(rows = 4, columns =2)
@@ -27,6 +24,9 @@ class ChartTab(gtk.ScrolledWindow):
         table.attach(gtk.Label(_('Investment types')),0,1,2,3)
         table.attach(self.types_chart('pie'),0,1,3,4)
         #table.attach(self.types_chart('vertical_bars'),1,2,3,4)
+        
+        table.attach(gtk.Label(_('Tags')),1,2,2,3)
+        table.attach(self.tags_pie(),1,2,3,4)
         
         self.add_with_viewport(table)
         self.show_all()
@@ -66,5 +66,15 @@ class ChartTab(gtk.ScrolledWindow):
             chart = gtk_vertical_bar_plot()
         chart.set_args({'data':data, 'width':300, 'height':300, 'gradient':True})
         return chart
-
-    
+        
+    def tags_pie(self):
+        data = {}
+        for pos in self.pf:
+            for tag in pos.tags:
+                try:
+                    data[tag] += pos.cvalue
+                except:
+                    data[tag] = pos.cvalue
+        pie = gtk_pie_plot()        
+        pie.set_args({'data':data, 'width':300, 'height':300, 'gradient':True})
+        return pie

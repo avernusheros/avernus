@@ -30,8 +30,7 @@ else:
     fullPath = os.getcwd()
 sys.path.insert(0, os.path.dirname(fullPath))
 
-from stocktracker.stocktrackerconfig import getdatapath
-
+from stocktracker import config
 
 
 def init_translations():
@@ -65,21 +64,34 @@ def init_translations():
     import __builtin__
     __builtin__._ = translation.gettext
     
+
+def init_icons():
+    from stocktracker.icons import IconManager
+    icons = IconManager()
+    path = config.getdatapath('images')
+    #icons.add_icon_name_from_directory('stocktracker-logo', path)
+    #icons.add_stock_from_directory('stocktracker-chart', path)
+    #gtk.window_set_default_icon_name('stocktracker-logo')    
+
     
 def start():
     init_translations()
-    from stocktracker import persistent_store, objects, config
-   
-    store = persistent_store.Store(config.db_file)
+    init_icons()
+    
+    from stocktracker import config
+    configs = config.StocktrackerConfig()
+    db_file = configs.get_option('database file')
+    print db_file
+    
+    from stocktracker import persistent_store, objects
+    store = persistent_store.Store(db_file)
     model = objects.Model(store)
     store.model = model
-        
     
     from stocktracker.mainwindow import MainWindow    
-    window = MainWindow(model)
+    window = MainWindow()
     model.initialize()
     gtk.main()
-
 
 
 if __name__ == "__main__":

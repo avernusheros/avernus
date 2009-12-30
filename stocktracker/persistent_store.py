@@ -18,11 +18,9 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-
-
 import sqlite3, logging, os
 from sqlite3 import dbapi2 as sqlite
-from stocktracker import objects, pubsub
+from stocktracker import objects, pubsub, config
 
 logger = logging.getLogger(__name__)
 
@@ -30,11 +28,33 @@ WATCHLIST = 0
 PORTFOLIO = 1
 
 
-
 class Store:
-    def __init__(self, path):
-        self.path = path
+    def __init__(self, path = None):
         self.version = 3
+        if path is None:
+            self.new()
+        else:
+            self.open(path)
+        self.subscriptions = (
+            (self.on_exit, "exit"),
+            (self.on_remove_container, "watchlist.removed"),
+            (self.on_remove_container, "portfolio.removed"),
+            (self.on_remove_tag, "tag.removed"),
+            (self.on_update_container, 'container.updated.name'),
+            (self.on_update_portfolio, 'portfolio.updated'),
+            (self.on_update_position, 'position.updated'),
+            (self.on_remove_position, 'container.position.removed'),
+            (self.on_update_stock, 'stock.updated'),
+            (self.on_positon_tags_change, 'position.tags.changed'),
+            (self.on_positon_merge, 'container.position.merged')
+        )
+        for callback, topic in self.subscriptions:
+            pubsub.subscribe(topic, callback)
+        
+        
+    def open(self, path):
+        logger.debug('Opening database file %s', path)
+        self.path = path
         self.dirty = False
         init = False
         if not os.path.exists(self.path):
@@ -53,20 +73,13 @@ class Store:
 
         self.commit_if_appropriate()
 
-        self.subscriptions = (
-            (self.on_exit, "exit"),
-            (self.on_remove_container, "watchlist.removed"),
-            (self.on_remove_container, "portfolio.removed"),
-            (self.on_remove_tag, "tag.removed"),
-            (self.on_update_container, 'container.updated'),
-            (self.on_update_position, 'position.updated'),
-            (self.on_remove_position, 'container.position.removed'),
-            (self.on_update_stock, 'stock.updated'),
-            (self.on_positon_tags_change, 'position.tags.changed'),
-            (self.on_positon_merge, 'container.position.merged')
-        )
-        for callback, topic in self.subscriptions:
-            pubsub.subscribe(topic, callback)
+    def new(self):
+        path = config.config_path + '/stocktracker.db'
+        i = 0
+        while os.path.exists(path):
+            i += 1 
+            path = config.config_path + '/stocktracker_'+str(i)+'.db'  
+        self.open(path)
     
     def commit_if_appropriate(self):
         if self.dirty:
@@ -77,6 +90,17 @@ class Store:
         self.dbconn.commit()
         logger.debug("Committed in %s seconds" % (time.time()-t))
         self.dirty = False
+   
+    def save_as(self, file):
+        import time; t = time.time()
+        self.dbconn.commit()
+        logger.debug("Committed in %s seconds" % (time.time()-t))
+        self.dirty = False   
+        #copy db to new location
+        import shutil
+        shutil.copyfile(self.path, file)
+        self.path = file
+        self.dbconn = sqlite3.connect(self.path, detect_types=sqlite3.PARSE_DECLTYPES|sqlite3.PARSE_COLNAMES)
    
     def close(self):
         self.dbconn.close()
@@ -314,6 +338,11 @@ class Store:
         self.dbconn.cursor().execute('UPDATE container SET name=? WHERE id=?', (item.name, item.id))
         self.dirty = True
         self.commit_if_appropriate()
+    
+    def on_update_portfolio(self, item):
+        self.dbconn.cursor().execute('UPDATE container SET cash=? WHERE id=?', (item.cash, item.id))
+        self.dirty = True
+        self.commit_if_appropriate()
         
     def on_update_position(self, item):
         self.dbconn.cursor().execute('UPDATE position SET quantity=? WHERE id=?', (item.quantity, item.id))
@@ -325,7 +354,6 @@ class Store:
         self.dbconn.cursor().execute('UPDATE stock SET date=? WHERE id=?', (item.date, item.id))
         self.dbconn.cursor().execute('UPDATE stock SET change=? WHERE id=?', (item.change, item.id))
         self.dirty = True
-        self.commit_if_appropriate()
 
     def on_remove_container(self, item):
         self.clear_container(item.id)

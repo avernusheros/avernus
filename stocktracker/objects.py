@@ -22,6 +22,7 @@ from stocktracker import pubsub
 from stocktracker.utils import unique
 from stocktracker.data_provider import DataProvider
 import logging
+from stocktracker.session import session
 
 logger = logging.getLogger(__name__)
 TYPES = {None: 'n/a', 0:'stock', 1:'fund'}
@@ -33,6 +34,7 @@ class Model(object):
         pubsub.subscribe('positionstoolbar.update', self.on_update)
         pubsub.subscribe('menubar.update', self.on_update)
         pubsub.subscribe('shortcut.update', self.on_update)
+        session['model'] = self
         
     def initialize(self):
         self.watchlists = self.store.get_watchlists()
@@ -67,6 +69,12 @@ class Model(object):
                 if tag in p.tags:
                     pos.append(p)
         return pos
+    
+    def create_stock(self, symbol, name, type, exchange, currency, isin):
+        id = self.store.create_stock(name,symbol, isin, exchange, type, currency, None, None, None)
+        stock = Stock(id, name, symbol, isin, exchange, type, currency, None, None, None)
+        self.stocks[id] = stock
+        return stock
         
     def get_stock(self, symbol, type, update = False):
         stock = None
@@ -92,13 +100,12 @@ class Model(object):
     def on_update(self):
         self.data_provider.update_stocks([stock for key, stock in self.stocks.iteritems()])
     
-    def create_position(self, symbol, buy_price, buy_date, quantity, container_id, type):
-        stock = self.get_stock(symbol, type)
-        id = self.store.create_position(container_id, stock.id, buy_price, buy_date, quantity)
+    def create_position(self, stock_id, buy_price, buy_date, quantity, container_id, type):
+        id = self.store.create_position(container_id, stock_id, buy_price, buy_date, quantity)
         if type == 0:
-            return WatchlistPosition(id, container_id, stock.id, self, buy_price, buy_date, {}, quantity)
+            return WatchlistPosition(id, container_id, stock_id, self, buy_price, buy_date, {}, quantity)
         elif type ==1:
-            return PortfolioPosition(id, container_id, stock.id, self, buy_price, buy_date, {}, quantity)
+            return PortfolioPosition(id, container_id, stock_id, self, buy_price, buy_date, {}, quantity)
            
     def remove(self, item):
         if isinstance(item, Watchlist):
@@ -113,6 +120,10 @@ class Model(object):
      
     def save(self):
         self.store.save()
+    
+    def clear(self):
+        pubsub.publish('clear!')
+        self.__init__(self.store)           
 
 
 class Container(object):
@@ -122,6 +133,7 @@ class Container(object):
         self.comment = comment
         self.model = model
         self.positions = positions
+        self.type = 'container'
             
     def get_name(self):
         return self._name
@@ -129,10 +141,9 @@ class Container(object):
     def set_name(self, name):
         self._name = name
         pubsub.publish('container.updated.name',  self)
-        
+
     name = property(get_name, set_name)
-    
-        
+
     def remove_position(self, position):
         del self.positions[position.id]
         pubsub.publish("container.position.removed", position,  self)
@@ -191,11 +202,22 @@ class Container(object):
 class Portfolio(Container):
     def __init__(self,cash, *args, **kwargs):
         Container.__init__(self, *args, **kwargs)
-        self.cash = cash
+        self._cash = cash
+        print "pf", self.name
         pubsub.publish("portfolio.created",  self)
+        self.type = 'portfolio'
+          
+    def get_cash(self):
+        return self._cash
         
-    def add_position(self, symbol, buy_price, buy_date, quantity):
-        pos = self.model.create_position(symbol, buy_price, buy_date, quantity, self.id,1)
+    def set_cash(self, cash):
+        self._cash = cash
+        pubsub.publish('portfolio.updated',  self)
+
+    cash = property(get_cash, set_cash)            
+        
+    def add_position(self, stock_id, buy_price, buy_date, quantity):
+        pos = self.model.create_position(stock_id, buy_price, buy_date, quantity, self.id,1)
         self.positions[pos.id] = pos
         pubsub.publish("container.position.added",  pos,  self)
         return pos
@@ -220,8 +242,9 @@ class Watchlist(Container):
         Container.__init__(self, *args, **kwargs)
         logger.debug('watchlist created')
         pubsub.publish("watchlist.created",  self)
+        self.type = 'watchlist'
 
-    def add_position(self, symbol, buy_price, buy_date, quantity):
+    def add_position(self, symbol, buy_price, buy_date, quantity = 1):
         pos = self.model.create_position(symbol, buy_price, buy_date, quantity, self.id, 0)
         self.positions[pos.id] = pos
         pubsub.publish("container.position.added",  pos,  self)
@@ -230,8 +253,9 @@ class Watchlist(Container):
 class Tag(Container):
     def __init__(self, id, name, model):
         self.id = id
-        self.name = name
+        self._name = name
         self.model = model
+        self.type = 'tag'
         
         pubsub.publish("tag.created", self)
 
@@ -255,7 +279,7 @@ class Stock(object):
         self.id = id
         self.name = name
         self.symbol = symbol
-        self.isin = isinstance
+        self.isin = isin
         self.exchange = exchange
         self._currency = currency
         self.price = price
@@ -279,13 +303,20 @@ class Stock(object):
     def set_change(self, change):
         self._change = change
         pubsub.publish('stock.updated', self)
+    
+    def update(self):
+        session['model'].data_provider.update_stock(self)
           
     def get_percent(self):
         return round(self.change * 100 / (self.price - self.change),2)
           
     percent_change = property(get_percent)
     currency = property(get_currency)
-    change = property(get_change, set_change)             
+    change = property(get_change, set_change)
+    
+    def __str__(self):
+        return self.name +'  '+self.exchange+'   '+self.symbol#+'  '+self.isin             
+
 
 class Position(object):
     def __init__(self, id, container_id, stock_id, model, price, date, transactions, quantity = 1, tags = None):
@@ -385,10 +416,12 @@ class Position(object):
         self.tags = tags
         pubsub.publish("position.tags.changed", [self.model.tags[t] for t in tags], self)
             
-    def split(self, n1, m2):
+    def split(self, n1, n2, date):
         self.quantity = self.quantity / n1 * n2
         self.price = self.price / n1 * n2
         #TODO die transactions müssen auch geändert werden
+        self.add_transaction(2, date, 0, 0.0, 0.0)
+        
             
     def __iter__(self):
         return self.transactions.itervalues()  
@@ -403,7 +436,7 @@ class WatchlistPosition(Position):
 class PortfolioPosition(Position):
     def __init__(self, *args, **kwargs):
         Position.__init__(self, *args, **kwargs)
- 
+   
         
 if __name__ == "__main__":
     pass    
