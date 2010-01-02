@@ -56,6 +56,10 @@ def get_info(symbol):
         if row[1] == 'N/A':
             return None
         return row[0], 'n/a', row[1], row[2]
+        
+def test_api(symbol):
+    for row in csv.reader(__request(symbol, 'nxc4n0n1n2n3n4')):
+        print row
      
 def check_symbol(symbol):
     return __request(symbol, 'e1').read().strip().strip('"') == "N/A"
@@ -90,13 +94,7 @@ def get_historical_prices(symbol, start_date, end_date):
 
 
 if __name__ == "__main__":
-    import objects
     
-    #s = [objects.Stock(0, "ge", 'ge.de', 0.0, None, None, None, None, None, None), objects.Stock(0, "test1", 'goog', 0.0, None, None, None, None, None, None)]
-    #update_stocks(s)
-    #print get_info('cbk.de')
+    test_api('cbk.de')
     #print check_symbol('ge.de')
 
-    date1 = datetime.date(2009, 11, 25)
-    date2 = datetime.date(2009, 11, 24)
-    print get_historical_prices('GE', date1, date2)

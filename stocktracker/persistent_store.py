@@ -30,7 +30,7 @@ PORTFOLIO = 1
 
 class Store:
     def __init__(self, path = None):
-        self.version = 3
+        self.version = 4
         if path is None:
             self.new()
         else:
@@ -40,7 +40,7 @@ class Store:
             (self.on_remove_container, "watchlist.removed"),
             (self.on_remove_container, "portfolio.removed"),
             (self.on_remove_tag, "tag.removed"),
-            (self.on_update_container, 'container.updated.name'),
+            (self.on_update_container, 'container.updated'),
             (self.on_update_portfolio, 'portfolio.updated'),
             (self.on_update_position, 'position.updated'),
             (self.on_remove_position, 'container.position.removed'),
@@ -126,11 +126,18 @@ class Store:
                     ''')
             upgrade = True 
             
-        if version == 2:
+        elif version == 2:
             cursor = self.dbconn.cursor()
             cursor.execute('''
                 ALTER TABLE stock
                 ADD type integer;  
+                    ''')
+            upgrade = True 
+        elif version == 3:
+            cursor = self.dbconn.cursor()
+            cursor.execute('''
+                ALTER TABLE container
+                ADD last_update timestamp
                     ''')
             upgrade = True 
         else:
@@ -156,17 +163,17 @@ class Store:
     def get_watchlists(self):
         wl = {}
         for result in self.dbconn.cursor().execute("SELECT * FROM container WHERE type =?", (0,)).fetchall():
-            id, type, name, comment, cash = result
+            id, type, name, comment, cash, last_update = result
             positions = self.get_positions(id, 0)
-            wl[id] = objects.Watchlist(id, name, self.model,positions, comment)
+            wl[id] = objects.Watchlist(id, name, self.model,positions, last_update, comment)
         return wl
            
     def get_portfolios(self):
         pf = {}
         for result in self.dbconn.cursor().execute("SELECT * FROM container WHERE type =?", (1,)).fetchall():
-            id, type, name, comment, cash = result
+            id, type, name, comment, cash, last_update = result
             positions = self.get_positions(id, 1)
-            pf[id] = objects.Portfolio(cash, id, name, self.model,positions, comment)
+            pf[id] = objects.Portfolio(cash, id, name, self.model,positions, last_update, comment)
         return pf
     
     def get_stocks(self):
@@ -275,6 +282,7 @@ class Store:
                 , name text
                 , comment text
                 , cash real
+                , last_update timestamp
                 );
                 ''')
         cursor.execute('''
@@ -335,7 +343,7 @@ class Store:
         self.commit_if_appropriate()
 
     def on_update_container(self, item):
-        self.dbconn.cursor().execute('UPDATE container SET name=? WHERE id=?', (item.name, item.id))
+        self.dbconn.cursor().execute('UPDATE container SET name=?, last_update=? WHERE id=?', (item.name, item.last_update, item.id))
         self.dirty = True
         self.commit_if_appropriate()
     

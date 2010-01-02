@@ -22,7 +22,7 @@ class MainTree(Tree):
     def __init__(self):
         Tree.__init__(self)
         #id, object, icon, name
-        self.set_model(gtk.TreeStore(int, object,gtk.gdk.Pixbuf, str))
+        self.set_model(gtk.TreeStore(int, object,str, str))
         
         self.set_headers_visible(False)
              
@@ -31,6 +31,8 @@ class MainTree(Tree):
         renderer = gtk.CellRendererPixbuf()
         column.pack_start(renderer, expand = False)
         column.add_attribute(renderer, "pixbuf", 2)
+        column.set_attributes(renderer, stock_id=2)
+
         # Text Renderer
         renderer = gtk.CellRendererText()
         column.pack_start(renderer, expand = True)
@@ -68,13 +70,13 @@ class MainTree(Tree):
         self.tag_iter = self.get_model().append(None, [-1, Category('Tags'),None,_("<b>Tags</b>")])
 
     def insert_watchlist(self, item):
-        self.get_model().append(self.wl_iter, [item.id, item, None, item.name])
+        self.get_model().append(self.wl_iter, [item.id, item, 'gtk-dnd', item.name])
     
     def insert_portfolio(self, item):
-        self.get_model().append(self.pf_iter, [item.id, item, None, item.name])
+        self.get_model().append(self.pf_iter, [item.id, item, 'gtk-dnd', item.name])
          
     def insert_tag(self, item):
-        self.get_model().append(self.tag_iter, [item.id, item, None, item.name])
+        self.get_model().append(self.tag_iter, [item.id, item, 'gtk-dnd', item.name])
          
     def on_remove(self):
         if self.selected_item is None:

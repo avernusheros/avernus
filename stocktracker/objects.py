@@ -22,6 +22,7 @@ from stocktracker import pubsub
 from stocktracker.utils import unique
 from stocktracker.data_provider import DataProvider
 import logging
+from datetime import datetime
 from stocktracker.session import session
 
 logger = logging.getLogger(__name__)
@@ -97,8 +98,9 @@ class Model(object):
         else:
             return self.data_provider.check_symbol(symbol)
     
-    def on_update(self):
-        self.data_provider.update_stocks([stock for key, stock in self.stocks.iteritems()])
+    def on_update(self, pf):
+        self.data_provider.update_stocks([pos.stock for pos in pf])
+        pf.last_update = datetime.today()
     
     def create_position(self, stock_id, buy_price, buy_date, quantity, container_id, type):
         id = self.store.create_position(container_id, stock_id, buy_price, buy_date, quantity)
@@ -127,12 +129,13 @@ class Model(object):
 
 
 class Container(object):
-    def __init__(self, id, name, model, positions, comment = '', **kwargs):
+    def __init__(self, id, name, model, positions, last_update = None, comment = '', **kwargs):
         self.id = id
         self._name = name
         self.comment = comment
         self.model = model
         self.positions = positions
+        self._last_update = last_update
         self.type = 'container'
             
     def get_name(self):
@@ -140,10 +143,18 @@ class Container(object):
         
     def set_name(self, name):
         self._name = name
-        pubsub.publish('container.updated.name',  self)
-
+        pubsub.publish('container.updated', self)
+    
+    def get_last_update(self):
+        return self._last_update
+        
+    def set_last_update(self, last_update):
+        self._last_update = last_update
+        pubsub.publish('container.updated', self)
+        
     name = property(get_name, set_name)
-
+    last_update = property(get_last_update, set_last_update)
+    
     def remove_position(self, position):
         del self.positions[position.id]
         pubsub.publish("container.position.removed", position,  self)
@@ -187,8 +198,6 @@ class Container(object):
     bvalue = property(get_bvalue)
     total = cvalue = property(get_cvalue)
     
-    
-  
     def __cmp__(self, other):
         return cmp(self.id, other.id)
 
@@ -203,7 +212,6 @@ class Portfolio(Container):
     def __init__(self,cash, *args, **kwargs):
         Container.__init__(self, *args, **kwargs)
         self._cash = cash
-        print "pf", self.name
         pubsub.publish("portfolio.created",  self)
         self.type = 'portfolio'
           

@@ -34,10 +34,15 @@ def to_local_time(date):
 def get_datetime_string(date):
     if date is not None:
         if date.hour == 0 and date.minute == 0 and date.second == 0:
-            return str(to_local_time(date).date())
+            return datetime_format(to_local_time(date).date())
         else:
-            return str(to_local_time(date))
+            return datetime_format(to_local_time(date))
     return ''
+    
+def datetime_format(date):
+    if date is not None:
+        return date.strftime("%d.%m.%Y %I:%M%p")
+    return 'never'
     
 def get_name_string(stock):
     return '<b>'+stock.name+'</b>' + '\n' + '<small>'+stock.symbol+'</small>' + '\n' + '<small>'+stock.exchange+'</small>'

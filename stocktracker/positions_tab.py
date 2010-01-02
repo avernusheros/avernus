@@ -1,5 +1,5 @@
 import gtk, os
-from stocktracker.treeviews import Tree, get_name_string, get_datetime_string, get_green_red_string
+from stocktracker.treeviews import Tree, get_name_string, datetime_format, get_datetime_string, get_green_red_string
 from stocktracker import pubsub, config, objects
 from stocktracker.plot import ChartWindow
 from stocktracker.dialogs import SellDialog, NewWatchlistPositionDialog, SplitDialog, BuyDialog
@@ -49,9 +49,9 @@ class PositionContextMenu(ContextMenu):
     
 
 class PositionsToolbar(gtk.Toolbar):
-    def __init__(self):
+    def __init__(self, container):
         gtk.Toolbar.__init__(self)
-        
+        self.container = container
         self.conditioned = []
         
         button = gtk.ToolButton('gtk-add')
@@ -115,7 +115,7 @@ class PositionsToolbar(gtk.Toolbar):
         pubsub.publish('positionstoolbar.add')  
       
     def on_update_clicked(self, widget):
-        pubsub.publish('positionstoolbar.update')
+        pubsub.publish('positionstoolbar.update', self.container)
         
     def on_remove_clicked(self, widget):
         pubsub.publish('positionstoolbar.remove') 
@@ -431,7 +431,7 @@ class PositionsTab(gtk.VBox):
         self.pf = pf
         positions_tree = PositionsTree(pf, type)
         hbox = gtk.HBox()
-        tb = PositionsToolbar()
+        tb = PositionsToolbar(pf)
         hbox.pack_start(tb, expand = True, fill = True)
         
         self.total_label = label = gtk.Label()
@@ -442,6 +442,11 @@ class PositionsTab(gtk.VBox):
         hbox.pack_start(gtk.VSeparator(), expand = False, fill = False)
         self.overall_label = label = gtk.Label()
         hbox.pack_start(label, expand = False, fill = False)
+        
+        if pf.type == 'watchlist' or pf.type == 'portfolio':
+            hbox.pack_start(gtk.VSeparator(), expand = False, fill = False)
+            self.last_update_label = label = gtk.Label()
+            hbox.pack_start(label, expand = False, fill = False)
         sw = gtk.ScrolledWindow()
         sw.set_property('hscrollbar-policy', gtk.POLICY_AUTOMATIC)
         sw.set_property('vscrollbar-policy', gtk.POLICY_AUTOMATIC)
@@ -449,18 +454,22 @@ class PositionsTab(gtk.VBox):
         self.pack_start(hbox, expand=False, fill=False)
         self.pack_start(sw)
         
-        self.on_stock_update()
-        pubsub.subscribe('stock.updated', self.on_stock_update)
+        self.on_container_update(self.pf)
+        pubsub.subscribe('container.updated', self.on_container_update)
        
         self.show_all()
         
-    def on_stock_update(self, item = None):
-        text = '<b>' + _('Day\'s gain')+'</b>\n'+self.get_change_string(self.pf.current_change)
-        self.today_label.set_markup(text)
-        text = '<b>'+_('Gain')+'</b>\n'+self.get_change_string(self.pf.overall_change)
-        self.overall_label.set_markup(text)
-        text = '<b>'+_('Total')+'</b>\n'+str(round(self.pf.total,2))
-        self.total_label.set_markup(text)
+    def on_container_update(self, container):
+        if self.pf == container:
+            text = '<b>' + _('Day\'s gain')+'</b>\n'+self.get_change_string(self.pf.current_change)
+            self.today_label.set_markup(text)
+            text = '<b>'+_('Gain')+'</b>\n'+self.get_change_string(self.pf.overall_change)
+            self.overall_label.set_markup(text)
+            text = '<b>'+_('Total')+'</b>\n'+str(round(self.pf.total,2))
+            self.total_label.set_markup(text)
+            if self.pf.type == 'watchlist' or self.pf.type == 'portfolio':
+                text = '<b>'+_('Last update')+'</b>\n'+datetime_format(self.pf.last_update)
+                self.last_update_label.set_markup(text)
         
     def get_change_string(self, item):
         change, percent = item
