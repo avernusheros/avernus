@@ -24,7 +24,7 @@ class Chart(gtk.VBox):
         hbox.add(gtk.VSeparator())
         hbox.add(gtk.Label('Zoom:'))
         
-        self.zooms = ['1m', '3m', '6m', 'YTD', '1y','2y','5y','10y', 'Max']
+        self.zooms = ['1m', '3m', '6m', 'YTD', '1y','2y','5y','10y', '20y']
         combobox = gtk.combo_box_new_text()
         for ch in self.zooms:
             combobox.append_text(ch)
@@ -38,34 +38,40 @@ class Chart(gtk.VBox):
         
         
     def get_date2(self, zoom, date1):
+        ret = None
         if zoom == '1m':
-            return date(date1.year, date1.month-1,date1.day)
+            ret = date(date1.year, ((date1.month+10) % 12)+1,date1.day)
         elif zoom == '3m':
-            return date(date1.year, date1.month-3,date1.day)
+            ret =  date(date1.year, ((date1.month+8) % 12)+1,date1.day)
         elif zoom == '6m':
-            return date(date1.year, date1.month-6,date1.day)
+            ret =  date(date1.year, ((date1.month+5) % 12)+1,date1.day)
         elif zoom == 'YTD':
-            return date(date1.year, 1,1)
+            date2 = date(date1.year, 1,1)
+            if (date1 - date2).days > 4:
+                ret =  date(date1.year, 1,1)
+            else: ret =  date(date1.year-1, 1,1)
         elif zoom == '1y':
-            return date(date1.year-1, date1.month,date1.day)
+            ret =  date(date1.year-1, date1.month,date1.day)
         elif zoom == '2y':
-            return date(date1.year-2, date1.month,date1.day)
+            ret =  date(date1.year-2, date1.month,date1.day)
         elif zoom == '5y':
-            return date(date1.year-5, date1.month,date1.day)
+            ret =  date(date1.year-5, date1.month,date1.day)
         elif zoom == '10y':
-            return date(date1.year-10, date1.month,date1.day)
-        elif zoom == 'Max':
-            print "TODO"
-            return date(date1.year-1, date1.month,date1.day)
-        
+            ret =  date(date1.year-10, date1.month,date1.day)
+        elif zoom == '20y':
+            ret =  date(date1.year-20, date1.month,date1.day)
+        if ret > date1:
+            ret = date(ret.year-1, ret.month, ret.day)
+        return ret
                 
     def get_chart(self, zoom):
         vbox = gtk.VBox()
         date1 = date.today()
         date2 = self.get_date2(zoom, date1)
         data = session['model'].data_provider.get_historical_prices(self.stock, date1, date2) 
-       
+        
         quotes = [d[4] for d in data]
+
         y_min = 0.95*min(quotes)
         y_max = 1.05*max(quotes)
         
