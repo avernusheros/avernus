@@ -17,23 +17,13 @@ class PositionContextMenu(ContextMenu):
             type = 1
             remove_string = 'Remove'
         self.position = position
-            
-        mi = gtk.MenuItem(remove_string+' position')
-        mi.connect('activate',  self.__remove_position)
-        self.append(mi)
         
-        mi = gtk.MenuItem(_('Edit position'))
-        mi.connect('activate',  self.__edit_position)
-        self.append(mi)    
-        
-        mi = gtk.MenuItem(_('Chart position'))
-        mi.connect('activate',  self.__chart_position)
-        self.append(mi)    
+        self.add_item(remove_string+' position',  self.__remove_position, 'gtk-remove')
+        self.add_item(_('Edit position'),  self.__edit_position, 'gtk-edit')
+        self.add_item(_('Chart position'),  self.__chart_position, 'gtk-info')
         
         if type == 0:
-            mi = gtk.MenuItem(_('Split position'))
-            mi.connect('activate',  self.__split_position)
-            self.append(mi)
+            self.add_item(_('Split position'),  self.__split_position, 'gtk-cut')
     
     def __remove_position(self, *arg):
         pubsub.publish('position_menu.remove', self.position)
@@ -437,6 +427,8 @@ class PositionsTab(gtk.VBox):
         self.total_label = label = gtk.Label()
         hbox.pack_start(label)
         hbox.pack_start(gtk.VSeparator(), expand = False, fill = False)
+            
+            
         self.today_label = label = gtk.Label()
         hbox.pack_start(label)
         hbox.pack_start(gtk.VSeparator(), expand = False, fill = False)
@@ -465,8 +457,15 @@ class PositionsTab(gtk.VBox):
             self.today_label.set_markup(text)
             text = '<b>'+_('Gain')+'</b>\n'+self.get_change_string(self.pf.overall_change)
             self.overall_label.set_markup(text)
-            text = '<b>'+_('Total')+'</b>\n'+str(round(self.pf.total,2))
-            self.total_label.set_markup(text)
+            
+            if self.pf.type == 'portfolio':
+                text = '<b>'+_('Investments')+'</b> :'+str(round(self.pf.total,2))
+                text += '\n<b>'+_('Cash')+'</b> :'+str(round(self.pf.cash,2))
+                self.total_label.set_markup(text)
+            else:
+                text = '<b>'+_('Total')+'</b>\n'+str(round(self.pf.total,2))
+                self.total_label.set_markup(text)
+            
             if self.pf.type == 'watchlist' or self.pf.type == 'portfolio':
                 text = '<b>'+_('Last update')+'</b>\n'+datetime_format(self.pf.last_update)
                 self.last_update_label.set_markup(text)

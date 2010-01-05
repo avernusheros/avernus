@@ -174,6 +174,8 @@ class Store:
             id, type, name, comment, cash, last_update = result
             positions = self.get_positions(id, 1)
             pf[id] = objects.Portfolio(cash, id, name, self.model,positions, last_update, comment)
+            transactions = self.get_transactions(-id)
+            pf[id].transactions = transactions
         return pf
     
     def get_stocks(self):
@@ -217,9 +219,9 @@ class Store:
         return tas
 
                
-    def create_container(self, name, comment, type = 0, cash = 0.0):
+    def create_container(self, name, comment, type = 0, cash = 0.0, last_update = None):
         cursor = self.dbconn.cursor()
-        cursor.execute('INSERT INTO CONTAINER VALUES (null, ?,?, ?, ?)', (type, name,comment,cash))
+        cursor.execute('INSERT INTO CONTAINER VALUES (null, ?,?, ?, ?, ?)', (type, name,comment,cash,last_update))
         id = cursor.lastrowid
         self.dirty = True
         self.commit_if_appropriate()

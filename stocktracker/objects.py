@@ -50,9 +50,9 @@ class Model(object):
         id = self.store.create_container(name,'',0,0.0)
         self.watchlists[id] = Watchlist(id, name, self, {})
         
-    def create_portfolio(self, name, cash = 0.0):
-        id = self.store.create_container(name,'',1,cash)
-        self.portfolios[id] = Portfolio(cash, id, name, self, {})
+    def create_portfolio(self, name):
+        id = self.store.create_container(name,'',1,0.0)
+        pf = self.portfolios[id] = Portfolio(0.0, id, name, self, {})
      
     def get_tag(self,tag):
         if tag in self.tags:
@@ -214,6 +214,12 @@ class Portfolio(Container):
         self._cash = cash
         pubsub.publish("portfolio.created",  self)
         self.type = 'portfolio'
+    
+    def add_transaction(self, type, date, quantity, price, ta_costs):
+        id = self.model.store.create_transaction(-self.id, type, date, quantity, price, ta_costs)
+        ta = Transaction(id, -self.id, type, date, quantity, price, ta_costs) 
+        self.transactions[ta.id] = ta
+        pubsub.publish("portfolio.transaction.added", ta, self)
           
     def get_cash(self):
         return self._cash
@@ -230,6 +236,14 @@ class Portfolio(Container):
         pubsub.publish("container.position.added",  pos,  self)
         return pos
     
+    def deposit_cash(self, cash, date):
+        self.cash += cash
+        self.add_transaction(3, date, 0, cash, 0.0)
+    
+    def withdraw_cash(self, cash, date):
+        self.cash -= cash
+        self.add_transaction(4, date, 0, cash, 0.0)
+             
     def merge_positions(self, pos1, pos2):
         quantity = pos1.quantity + pos2.quantity
         buy_price = (pos1.quantity*pos1.price + pos2.quantity*pos2.price) / quantity

@@ -107,12 +107,18 @@ class TransactionsTree(Tree):
         
         self.load_transactions()
         pubsub.subscribe('position.transaction.added', self.on_transaction_created)
-        
+        pubsub.subscribe('portfolio.transaction.added', self.on_pf_transaction_created)
         
     def load_transactions(self):
         for pos in self.portfolio:
             for ta in pos:
                 self.insert_transaction(ta, pos)
+        for id, ta in self.portfolio.transactions.iteritems():
+            self.insert_pf_transaction(ta)
+    
+    def on_pf_transaction_created(self, ta, portfolio):
+        if portfolio.id == self.portfolio.id:
+            self.insert_pf_transaction(ta)
     
     def on_transaction_created(self, item, position):
         if position.container_id == self.portfolio.id:
@@ -125,9 +131,16 @@ class TransactionsTree(Tree):
             return 'SELL'
         elif type == 2:
             return 'SPLIT'
+        elif type == 3:
+            return 'DEPOSIT'
+        elif type == 4:
+            return 'WITHDRAW'
         else:
             return ''
         
     def insert_transaction(self, ta, pos):
         stock = session['model'].stocks[pos.stock_id]
         self.get_model().append(None, [ta.id, ta, self.get_action_string(ta.type), get_name_string(stock), get_datetime_string(ta.date), ta.quantity, ta.price, ta.ta_costs])
+
+    def insert_pf_transaction(self, ta):
+        self.get_model().append(None, [ta.id, ta, self.get_action_string(ta.type), '', get_datetime_string(ta.date), ta.quantity, ta.price, ta.ta_costs]) 

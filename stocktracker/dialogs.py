@@ -181,7 +181,7 @@ class SellDialog(gtk.Dialog):
                 return
             price = self.price_entry.get_text()
             year, month, day = self.calendar.get_date()
-            date = datetime(year, month, day)
+            date = datetime(year, month+1, day)
             ta_costs = 0.0
 
             self.pos.quantity -= shares    
@@ -265,7 +265,7 @@ class BuyDialog(gtk.Dialog):
                 return
             price = self.price_entry.get_value()
             year, month, day = self.calendar.get_date()
-            date = datetime(year, month, day)
+            date = datetime(year, month+1, day)
             ta_costs = self.tacosts_entry.get_value()
             position = self.pf.add_position(stock_id, price, date, shares)
             position.add_transaction(1, date, shares, price, ta_costs)
@@ -374,7 +374,7 @@ class SplitDialog(gtk.Dialog):
             val1 = self.val1.get_value()
             val2 = self.val2.get_value()
             year, month, day = self.calendar.get_date()
-            self.pos.split(val1, val2, datetime(year, month, day))
+            self.pos.split(val1, val2, datetime(year, month+1, day))
  
             
 class MergeDialog(gtk.Dialog):

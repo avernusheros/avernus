@@ -3,6 +3,7 @@ from stocktracker.treeviews import Tree
 from stocktracker import pubsub, objects
 from stocktracker.gui_utils import ContextMenu
 from session import session
+from datetime import datetime
 
 class Category(object):
     def __init__(self, name):
@@ -108,8 +109,9 @@ class MainTree(Tree):
             #Something is selected so get the object
             obj = model.get_value(selection_iter, 1)
             if not isinstance(obj, Category):
-                self.selected_item = obj, selection_iter
-                pubsub.publish('maintree.selection', obj)        
+                if self.selected_item is None or self.selected_item[0] != obj:
+                    self.selected_item = obj, selection_iter
+                    pubsub.publish('maintree.selection', obj)        
         
     def on_edit(self):
         if self.selected_item is None:
@@ -209,7 +211,9 @@ class EditPortfolio(gtk.Dialog):
         #cash entry
         label = gtk.Label(_('Cash:'))
         table.attach(label, 0,1,1,2)
-        self.cash_entry = gtk.SpinButton(gtk.Adjustment(lower=-9999999999, upper=9999999999, step_incr=1, value = pf.cash), digits=2)
+        self.cash_entry = gtk.Entry()
+        self.cash_entry.set_text(str(pf.cash))
+        self.cash_entry.set_sensitive(False)
         table.attach(self.cash_entry,1,2,1,2)
         
         self.show_all()
@@ -220,7 +224,6 @@ class EditPortfolio(gtk.Dialog):
     def process_result(self, widget=None, response = gtk.RESPONSE_ACCEPT):
         if response == gtk.RESPONSE_ACCEPT:
             self.pf.name = self.name_entry.get_text()
-            self.pf.cash = self.cash_entry.get_value()    
         self.destroy()
 
 class NewContainerDialog(gtk.Dialog):
@@ -266,17 +269,66 @@ class NewContainerDialog(gtk.Dialog):
 class ContainerContextMenu(ContextMenu):
     def __init__(self, container):
         ContextMenu.__init__(self)
+        self.container = container
         
-        mi = gtk.MenuItem(_('Remove ')+container.type)
-        mi.connect('activate',  self.__remove_container)
-        self.append(mi)
+        self.add_item(_('Remove ')+container.type,  self.__remove_container, 'gtk-remove')
+        self.add_item(_('Edit ')+container.type,  self.__edit_container, 'gtk-edit')
+        self.add_item('----')
         
-        mi = gtk.MenuItem(_('Edit ')+container.type)
-        mi.connect('activate',  self.__edit_container)
-        self.append(mi)
+        if container.type == 'portfolio':
+            self.add_item(_('Deposit cash'),  self.__deposit_cash, 'gtk-add')
+            self.add_item(_('Withdraw cash'),  self.__withdraw_cash, 'gtk-remove')
 
     def __remove_container(self, *arg):
         pubsub.publish('maincontextmenu.remove')
         
     def __edit_container(self, *arg):
         pubsub.publish('maincontextmenu.edit')
+        
+    def __deposit_cash(self, *arg):
+        CashDialog(self.container, 0)
+        
+    def __withdraw_cash(self, *arg):
+        CashDialog(self.container, 1)        
+
+
+class CashDialog(gtk.Dialog):
+    def __init__(self, pf, type = 0):  #0 deposit, 1 withdraw
+        self.action_type = type
+        if type == 0:
+            text = _("Deposit cash")
+        else: text = _("Withdraw cash")
+        gtk.Dialog.__init__(self, text, session['main']
+                            , gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
+                     (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
+                      gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
+        
+        self.pf = pf
+        vbox = self.get_content_area()
+        
+        hbox = gtk.HBox()
+        vbox.pack_start(hbox)
+        hbox.pack_start(gtk.Label(_('Amount:')))
+        self.amount_entry = gtk.SpinButton(gtk.Adjustment(lower=0, upper=100000,step_incr=0.1, value = 1.0), digits=2)
+        hbox.pack_start(self.amount_entry)
+        
+        self.calendar = gtk.Calendar()
+        vbox.pack_start(self.calendar)
+
+        self.show_all()
+        response = self.run()  
+        self.process_result(response = response)
+        self.destroy()
+
+    def process_result(self, widget=None, response = gtk.RESPONSE_ACCEPT):
+        if response == gtk.RESPONSE_ACCEPT:
+            amount = self.amount_entry.get_value()  
+            year, month, day = self.calendar.get_date()
+            date = datetime(year, month+1, day)
+            if self.action_type == 0:
+                self.pf.deposit_cash(amount, date)
+            else:
+                self.pf.withdraw_cash(amount, date)
+                  
+        
+        
