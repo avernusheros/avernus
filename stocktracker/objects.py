@@ -145,6 +145,8 @@ class Container(object):
         self._name = name
         pubsub.publish('container.updated', self)
     
+    name = property(get_name, set_name)
+    
     def get_last_update(self):
         return self._last_update
         
@@ -152,7 +154,6 @@ class Container(object):
         self._last_update = last_update
         pubsub.publish('container.updated', self)
         
-    name = property(get_name, set_name)
     last_update = property(get_last_update, set_last_update)
     
     def remove_position(self, position):
@@ -283,6 +284,17 @@ class Tag(Container):
 
     def __iter__(self):
         return iter(self.model.get_positions_from_tag(self.name))
+        
+    def get_name(self):
+        return self._name
+        
+    def set_name(self, name):
+        self._name = name
+        pubsub.publish('tag.updated', self)
+    
+    name = property(get_name, set_name)
+        
+        
    
 class Transaction(object):
     def __init__(self, id, pos_id, type, date, quantity, price, ta_costs):

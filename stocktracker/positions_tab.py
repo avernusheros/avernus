@@ -223,6 +223,8 @@ class PositionsTree(Tree):
         self.get_model().set_sort_func(self.cols['start'], sort_start_price)
         self.get_model().set_sort_func(self.cols['last_price'], sort_current_price)
 
+        self.set_rules_hint(True)
+    
         self.load_positions()
         
         self.connect('button-press-event', self.on_button_press_event)

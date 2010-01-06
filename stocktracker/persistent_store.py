@@ -40,6 +40,7 @@ class Store:
             (self.on_remove_container, "watchlist.removed"),
             (self.on_remove_container, "portfolio.removed"),
             (self.on_remove_tag, "tag.removed"),
+            (self.on_update_tag, "tag.updated"),
             (self.on_update_container, 'container.updated'),
             (self.on_update_portfolio, 'portfolio.updated'),
             (self.on_update_position, 'position.updated'),
@@ -341,6 +342,11 @@ class Store:
             pid, cid, sid, buy_price, buy_date, quantity = result
             self.dbconn.cursor().execute('DELETE FROM transactions WHERE position_id=?',(pid,))
         self.dbconn.cursor().execute("DELETE FROM position WHERE container_id=?",(cid,))
+        self.dirty = True
+        self.commit_if_appropriate()
+
+    def on_update_tag(self, item):
+        self.dbconn.cursor().execute('UPDATE tag SET name=? WHERE id=?', (item.name, item.id))
         self.dirty = True
         self.commit_if_appropriate()
 

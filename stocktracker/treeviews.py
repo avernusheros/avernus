@@ -113,8 +113,9 @@ class TransactionsTree(Tree):
         for pos in self.portfolio:
             for ta in pos:
                 self.insert_transaction(ta, pos)
-        for id, ta in self.portfolio.transactions.iteritems():
-            self.insert_pf_transaction(ta)
+        if self.portfolio.type == 'portfolio':
+            for id, ta in self.portfolio.transactions.iteritems():
+                self.insert_pf_transaction(ta)
     
     def on_pf_transaction_created(self, ta, portfolio):
         if portfolio.id == self.portfolio.id:

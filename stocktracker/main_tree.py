@@ -45,8 +45,9 @@ class MainTree(Tree):
         self.connect('cursor_changed', self.on_cursor_changed)
         pubsub.subscribe("watchlist.created", self.insert_watchlist)
         pubsub.subscribe("portfolio.created", self.insert_portfolio)
-        pubsub.subscribe("container.updated.name", self.on_updated)
+        pubsub.subscribe("container.updated", self.on_updated)
         pubsub.subscribe("tag.created", self.insert_tag)
+        pubsub.subscribe("tag.updated", self.on_updated)
         pubsub.subscribe("maintoolbar.remove", self.on_remove)
         pubsub.subscribe("maincontextmenu.remove", self.on_remove)
         pubsub.subscribe('maintoolbar.edit', self.on_edit)
@@ -97,7 +98,7 @@ class MainTree(Tree):
     def on_updated(self, item):
         row = self.find_item(item.id, item.type)
         if row: 
-            row[1] = item
+            #row[1] = item
             row[3] = item.name
     
     def on_cursor_changed(self, widget):
@@ -111,16 +112,18 @@ class MainTree(Tree):
             if not isinstance(obj, Category):
                 if self.selected_item is None or self.selected_item[0] != obj:
                     self.selected_item = obj, selection_iter
-                    pubsub.publish('maintree.selection', obj)        
+                    pubsub.publish('maintree.select', obj)   
+                return
+        return pubsub.publish('maintree.unselect')
         
     def on_edit(self):
         if self.selected_item is None:
             return
         obj, iter = self.selected_item
-        if isinstance(obj, objects.Watchlist):
-            EditWatchlist(obj)
-        elif isinstance(obj, objects.Portfolio):
+        if obj.type == 'portfolio':
             EditPortfolio(obj)
+        elif obj.type == 'watchlist':# or obj.type == 'tag':
+            EditWatchlist(obj)
 
     def on_database_loaded(self):
         self.expand_all()
@@ -130,6 +133,7 @@ class MainTree(Tree):
 class MainTreeToolbar(gtk.Toolbar):
     def __init__(self):
         gtk.Toolbar.__init__(self)
+        self.conditioned = []
         
         button = gtk.ToolButton('gtk-add')
         button.connect('clicked', self.on_add_clicked)
@@ -139,15 +143,28 @@ class MainTreeToolbar(gtk.Toolbar):
         button = gtk.ToolButton('gtk-delete')
         #button.set_label('Remove tag'
         button.connect('clicked', self.on_remove_clicked)
-        button.set_tooltip_text('Delete selected portfolio or watchlist') 
+        button.set_tooltip_text('Delete selected portfolio or watchlist')
+        self.conditioned.append(button) 
         self.insert(button,-1)
         
         button = gtk.ToolButton('gtk-edit')
         #button.set_label('Remove tag'
         button.connect('clicked', self.on_edit_clicked)
-        button.set_tooltip_text('Edit Selected portfolio or watchlist') 
+        button.set_tooltip_text('Edit Selected portfolio or watchlist')
+        self.conditioned.append(button) 
         self.insert(button,-1)
+        
+        self.on_unselect()
+        pubsub.subscribe('maintree.unselect', self.on_unselect)
+        pubsub.subscribe('maintree.select', self.on_select)
          
+    def on_unselect(self):
+        for button in self.conditioned:
+            button.set_sensitive(False)       
+        
+    def on_select(self, obj):
+        for button in self.conditioned:
+            button.set_sensitive(True)
              
     def on_add_clicked(self, widget):
         NewContainerDialog()

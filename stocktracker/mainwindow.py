@@ -205,7 +205,8 @@ class MainWindow(gtk.Window):
         self.connect('key-press-event', self.on_key_press_event)
         #subscribe
         self.connect("destroy", self.on_destroy)
-        pubsub.subscribe('maintree.selection', self.on_maintree_selection)
+        pubsub.subscribe('maintree.select', self.on_maintree_select)
+        pubsub.subscribe('maintree.unselect', self.on_maintree_unselect)
         
         #display everything    
         self.show_all()
@@ -231,7 +232,7 @@ class MainWindow(gtk.Window):
     def on_notebook_selection(self, notebook, page, page_num):
         notebook.get_nth_page(page_num).show()
             
-    def on_maintree_selection(self, item):
+    def on_maintree_select(self, item):
         self.clear_notebook()
         if isinstance(item, objects.Watchlist):
             type = 0
@@ -249,6 +250,9 @@ class MainWindow(gtk.Window):
         if type == 1 or type == 2:
             self.notebook.append_page(TransactionsTab(item), gtk.Label(_('Transactions')))
             self.notebook.append_page(chart_tab.ChartTab(item), gtk.Label(_('Charts')))
+
+    def on_maintree_unselect(self):
+        self.clear_notebook()
 
 def check_path(path):
     if not os.path.isdir(path):
