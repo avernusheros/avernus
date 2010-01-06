@@ -245,12 +245,16 @@ class PositionsTree(Tree):
             ('position_menu.chart', self.on_chart),
             ('position.created', self.on_position_created),
             ('position.tags.changed', self.on_positon_tags_changed),
-            ('container.position.removed', self.on_position_deleted)
+            ('container.position.removed', self.on_position_deleted),
+            ('shortcut.update', self.on_update)
         )
         for topic, callback in self.subscriptions:
             pubsub.subscribe(topic, callback)
             
         self.selected_item = None
+    
+    def on_update(self):
+        pubsub.publish('positionstoolbar.update', self.container)
 
     def on_button_press_event(self, widget, event):
         if event.button == 3:

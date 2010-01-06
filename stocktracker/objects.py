@@ -34,7 +34,6 @@ class Model(object):
         self.store = store
         pubsub.subscribe('positionstoolbar.update', self.on_update)
         pubsub.subscribe('menubar.update', self.on_update)
-        pubsub.subscribe('shortcut.update', self.on_update)
         session['model'] = self
         
     def initialize(self):

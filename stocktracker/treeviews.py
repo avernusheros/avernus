@@ -75,7 +75,6 @@ class Tree(gtk.TreeView):
 
     
     def find_item(self, id, type = None):
-        print "find item", id
         def search(rows):
             if not rows: return None
             for row in rows:
@@ -87,7 +86,6 @@ class Tree(gtk.TreeView):
         return search(self.get_model())
 
     def clear(self):
-        print self
         self.get_model().clear()
     
 
