@@ -1,5 +1,5 @@
 import gtk, os
-from stocktracker.treeviews import Tree, get_name_string, datetime_format, get_datetime_string, get_green_red_string
+from stocktracker.treeviews import Tree, get_name_string, datetime_format, get_datetime_string
 from stocktracker import pubsub, config, objects
 from stocktracker.plot import ChartWindow
 from stocktracker.dialogs import SellDialog, NewWatchlistPositionDialog, SplitDialog, BuyDialog
@@ -125,10 +125,8 @@ class PositionsToolbar(gtk.Toolbar):
 
 
 class PositionsTree(Tree):
-    def __init__(self, container, type):
-        #type 0=wl 1=pf
+    def __init__(self, container):
         self.container = container
-        self.type = type
         Tree.__init__(self)
         self.cols = {'id':0,
                      'obj':1,
@@ -144,39 +142,55 @@ class PositionsTree(Tree):
                      'days_gain':11,
                      'gain_percent':12,
                      'change_percent':13,
-                     'type': 14
+                     'type': 14,
+                     'pf_percent': 15
                       }
         
-        #id, object, name, price, change
-        self.set_model(gtk.TreeStore(int, object,str, str, str,str, str, int, str, str, str, str, str, str, str))
+        def float_to_string(column, cell, model, iter, user_data):
+            text =  str(round(model.get_value(iter, user_data), 2))
+            cell.set_property('text', text)
         
-        if type == 1 or type == 2:
+        def float_to_red_green_string(column, cell, model, iter, user_data):
+            num = round(model.get_value(iter, user_data), 2)
+            if num < 0:
+                markup =  '<span foreground="red">'+ str(num) + '</span>'
+            elif num > 0:
+                markup =  '<span foreground="dark green">'+ str(num) + '</span>'
+            else:
+                markup =  str(num)
+            cell.set_property('markup', markup)
+        
+        self.set_model(gtk.TreeStore(int, object,str, str, str,float, float, int, float, float, str, float, float, float, str, float))
+        
+        if self.container.type != 'watchlist':
             self.create_column(_('Shares'), 7)
         self.create_column(_('Name'), 2)
+        if self.container.type != 'watchlist':
+            col, cell = self.create_column(_('Portfolio %'), self.cols['pf_percent'])
+            col.set_cell_data_func(cell, float_to_string, self.cols['pf_percent'])
         self.create_column(_('Type'), self.cols['type'])
         self.create_column(_('Start'), 3)
-        if type == 1 or type == 2:
-            self.create_column(_('Buy value'), 8)
+        if self.container.type != 'watchlist':
+            col, cell = self.create_column(_('Buy value'), 8)
+            col.set_cell_data_func(cell, float_to_string, 8)
         self.create_column(_('Last price'), 4)
-        self.create_column(_('Change'), 5)
-        self.create_column(_('Change %'), 13)
-        if type == 1 or type == 2:
-            self.create_column(_('Mkt value'), 9)
-        
-        self.create_column(_('Gain'), 6)
-        self.create_column(_('Gain %'), 12)
-        if type == 1 or type == 2:
-            self.create_column(_('Day\'s gain'), 11)
+        col, cell = self.create_column(_('Change'), 5)
+        col.set_cell_data_func(cell, float_to_red_green_string, 5)
+        col, cell = self.create_column(_('Change %'), 13)
+        col.set_cell_data_func(cell, float_to_red_green_string, 13)
+        if self.container.type != 'watchlist':
+            col, cell = self.create_column(_('Mkt value'), 9)
+            col.set_cell_data_func(cell, float_to_string, 9)
+        col, cell = self.create_column(_('Gain'), 6)
+        col.set_cell_data_func(cell, float_to_red_green_string, 6)
+        col, cell = self.create_column(_('Gain %'), 12)
+        col.set_cell_data_func(cell, float_to_red_green_string, 12)
+        if self.container.type != 'watchlist':
+            col, cell = self.create_column(_('Day\'s gain'), 11)
+            col.set_cell_data_func(cell, float_to_red_green_string, 11)
         col, cell = self.create_column(_('Tags'), 10)
         cell.set_property('editable', True)
         cell.connect('edited', self.on_tag_edited)
-        
-        def sort_string_float(model, iter1, iter2, col):
-            item1 = float(model.get_value(iter1, col))
-            item2 = float(model.get_value(iter2, col))
-            if item1 == item2: return 0
-            elif item1 < item2: return -1
-            else: return 1
         
         def sort_start_price(model, iter1, iter2):
             item1 = model.get_value(iter1, self.cols['obj'])
@@ -192,34 +206,6 @@ class PositionsTree(Tree):
             elif item1.current_price < item2.current_price: return -1
             else: return 1
         
-        def sort_days_gain(model, iter1, iter2):
-            item1 = model.get_value(iter1, self.cols['obj'])
-            item2 = model.get_value(iter2, self.cols['obj'])
-            if item1.days_gain == item2.days_gain: return 0
-            elif item1.days_gain < item2.days_gain: return -1
-            else: return 1
-
-        def sort_gain(model, iter1, iter2, i):
-            item1 = model.get_value(iter1, self.cols['obj'])
-            item2 = model.get_value(iter2, self.cols['obj'])
-            if item1.gain[i] == item2.gain[i]: return 0
-            elif item1.gain[i] < item2.gain[i]: return -1
-            else: return 1
-        
-        def sort_change(model, iter1, iter2, i):
-            item1 = model.get_value(iter1, self.cols['obj'])
-            item2 = model.get_value(iter2, self.cols['obj'])
-            if item1.current_change[i] == item2.current_change[i]: return 0
-            elif item1.current_change[i] < item2.current_change[i]: return -1
-            else: return 1
-                
-        self.get_model().set_sort_func(self.cols['buy_value'], sort_string_float, self.cols['buy_value'])
-        self.get_model().set_sort_func(self.cols['mkt_value'], sort_string_float, self.cols['mkt_value'])
-        self.get_model().set_sort_func(self.cols['days_gain'], sort_days_gain)
-        self.get_model().set_sort_func(self.cols['gain'], sort_gain, 0)
-        self.get_model().set_sort_func(self.cols['gain_percent'], sort_gain, 1)
-        self.get_model().set_sort_func(self.cols['change'], sort_change, 0)
-        self.get_model().set_sort_func(self.cols['change_percent'], sort_change, 1)
         self.get_model().set_sort_func(self.cols['start'], sort_start_price)
         self.get_model().set_sort_func(self.cols['last_price'], sort_current_price)
 
@@ -293,12 +279,12 @@ class PositionsTree(Tree):
         row = self.find_position_from_stock(item.id)
         if row:
             row[self.cols['last_price']] = self.get_price_string(item)
-            row[self.cols['change']] = get_green_red_string(row[1].current_change[0])
-            row[self.cols['change_percent']] = get_green_red_string(row[1].current_change[1])
-            row[self.cols['gain']] = get_green_red_string(row[1].gain[0])
-            row[self.cols['gain_percent']] = get_green_red_string(row[1].gain[1])
-            row[self.cols['days_gain']] = get_green_red_string(row[1].days_gain)
-            row[self.cols['mkt_value']] = str(round(row[1].cvalue,2))
+            row[self.cols['change']] = row[1].current_change[0]
+            row[self.cols['change_percent']] = row[1].current_change[1]
+            row[self.cols['gain']] = row[1].gain[0]
+            row[self.cols['gain_percent']] = row[1].gain[1]
+            row[self.cols['days_gain']] = row[1].days_gain
+            row[self.cols['mkt_value']] = round(row[1].cvalue,2)
                 
     def on_position_created(self, item):
         if item.container_id == self.container.id:
@@ -384,16 +370,17 @@ class PositionsTree(Tree):
                                            get_name_string(stock), 
                                            self.get_price_string(position), 
                                            self.get_price_string(stock), 
-                                           get_green_red_string(c_change[0]),
-                                           get_green_red_string(gain[0]),
+                                           c_change[0],
+                                           gain[0],
                                            position.quantity,
-                                           str(round(position.bvalue,2)),
-                                           str(round(position.cvalue,2)),
+                                           position.bvalue,
+                                           position.cvalue,
                                            position.tags_string,
-                                           get_green_red_string(position.days_gain),
-                                           get_green_red_string(gain[1]),
-                                           get_green_red_string(c_change[1]),
-                                           position.type_string])
+                                           position.days_gain,
+                                           gain[1],
+                                           c_change[1],
+                                           position.type_string,
+                                           100 * position.cvalue / self.container.total])
 
     def find_position_from_stock(self, sid):
         def search(rows):
@@ -422,10 +409,10 @@ class PositionsTree(Tree):
 
 
 class PositionsTab(gtk.VBox):
-    def __init__(self, pf, type):
+    def __init__(self, pf):
         gtk.VBox.__init__(self)
         self.pf = pf
-        positions_tree = PositionsTree(pf, type)
+        positions_tree = PositionsTree(pf)
         hbox = gtk.HBox()
         tb = PositionsToolbar(pf)
         hbox.pack_start(tb, expand = True, fill = True)

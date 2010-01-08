@@ -114,6 +114,7 @@ class MainTree(Tree):
                     self.selected_item = obj, selection_iter
                     pubsub.publish('maintree.select', obj)   
                 return
+        self.selected_item = None
         return pubsub.publish('maintree.unselect')
         
     def on_edit(self):

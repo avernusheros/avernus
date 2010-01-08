@@ -365,6 +365,7 @@ class Position(object):
             self.tags = []
         else: self.tags = tags
         pubsub.publish("position.created", self)
+        pubsub.subscribe('tag.removed', self.on_tag_removed)
       
     def get_name(self):
         return self.model.stocks[self.stock_id].name
@@ -416,7 +417,6 @@ class Position(object):
         
     def get_stock(self):
         return self.model.stocks[self.stock_id]
-        
     
     current_price = property(get_current_price)
     current_change =  property(get_current_change)
@@ -454,8 +454,14 @@ class Position(object):
         self.price = self.price / n1 * n2
         #TODO die transactions müssen auch geändert werden
         self.add_transaction(2, date, 0, 0.0, 0.0)
+
+    def on_tag_removed(self, tag):
+        tags = []
+        for t in self.tags:
+            if tag.name != t:
+                tags.append(t)
+        self.tags = tags
         
-            
     def __iter__(self):
         return self.transactions.itervalues()  
 

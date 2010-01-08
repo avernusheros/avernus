@@ -234,20 +234,11 @@ class MainWindow(gtk.Window):
             
     def on_maintree_select(self, item):
         self.clear_notebook()
-        if isinstance(item, objects.Watchlist):
-            type = 0
-        elif isinstance(item, objects.Portfolio):
-            type = 1
-        elif isinstance(item, objects.Tag):
-            type = 2
-        else:
-            type = -1
-
-        if type == 0 or type == 1 or type == 2:
+        if item.type == 'watchlist' or item.type == 'portfolio' or item.type == 'tag':
             #self.notebook.append_page(OverviewTab(item, self.model, type), gtk.Label(_('Overview')))
-            self.notebook.append_page(PositionsTab(item, type), gtk.Label(_('Positions')))
+            self.notebook.append_page(PositionsTab(item), gtk.Label(_('Positions')))
         
-        if type == 1 or type == 2:
+        if item.type == 'portfolio' or item.type == 'tag':
             self.notebook.append_page(TransactionsTab(item), gtk.Label(_('Transactions')))
             self.notebook.append_page(chart_tab.ChartTab(item), gtk.Label(_('Charts')))
 
