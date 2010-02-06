@@ -34,7 +34,8 @@ from stocktracker import objects, config, pubsub, chart_tab
 from stocktracker.positions_tab import PositionsTab
 from stocktracker.overview_tab import OverviewTab
 from stocktracker.main_tree import MainTreeBox
-from stocktracker.treeviews import TransactionsTree
+from stocktracker.dividends_tab import DividendsTab
+from stocktracker.transactions_tab import TransactionsTab
 import dialogs
 from webbrowser import open as web
 from stocktracker.session import session
@@ -164,15 +165,6 @@ class SaveAsDialog(gtk.FileChooserDialog):
             session['model'].store.save_as(self.get_filename())                
     
     
-class TransactionsTab(gtk.ScrolledWindow):
-    def __init__(self, item):
-        gtk.ScrolledWindow.__init__(self)
-        transactions_tree = TransactionsTree(item)
-        self.set_property('hscrollbar-policy', gtk.POLICY_AUTOMATIC)
-        self.set_property('vscrollbar-policy', gtk.POLICY_AUTOMATIC)
-        self.add(transactions_tree)
-        self.show_all()
-
 
 class MainWindow(gtk.Window):
     def __init__(self):
@@ -240,6 +232,7 @@ class MainWindow(gtk.Window):
         
         if item.type == 'portfolio' or item.type == 'tag':
             self.notebook.append_page(TransactionsTab(item), gtk.Label(_('Transactions')))
+            self.notebook.append_page(DividendsTab(item), gtk.Label(_('Dividends')))
             self.notebook.append_page(chart_tab.ChartTab(item), gtk.Label(_('Charts')))
 
     def on_maintree_unselect(self):

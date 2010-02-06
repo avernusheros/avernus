@@ -5,6 +5,7 @@ from stocktracker.gui_utils import ContextMenu
 from session import session
 from datetime import datetime
 
+
 class Category(object):
     def __init__(self, name):
         self.name = name

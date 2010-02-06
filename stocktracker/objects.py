@@ -293,6 +293,17 @@ class Tag(Container):
     
     name = property(get_name, set_name)
         
+
+class Dividend(object):
+    def __init__(self, id, pos_id, type, date, value, ta_costs):
+        self.id = id
+        self.pos_id = pos_id
+        self.type = type
+        self.date = date
+        self.value = value
+        self.ta_costs = ta_costs
+        
+        pubsub.publish("dividend.created", self)
         
    
 class Transaction(object):
@@ -305,7 +316,7 @@ class Transaction(object):
         self.price = price
         self.ta_costs = ta_costs
         
-        pubsub.publish("transaction.created",  self)
+        pubsub.publish("transaction.created", self)
         
 class Stock(object):
     def __init__(self, id, name, symbol, isin, exchange,type, currency, price, date, change):
@@ -320,7 +331,7 @@ class Stock(object):
         self._change = change
         self.type = type
         
-        pubsub.publish("stock.created",  self)
+        pubsub.publish("stock.created", self)
           
     def get_currency(self):
         if self._currency == 'EUR':
@@ -472,10 +483,16 @@ class WatchlistPosition(Position):
     def __init__(self, *args, **kwargs):
         Position.__init__(self, *args, **kwargs)
 
+
 class PortfolioPosition(Position):
     def __init__(self, *args, **kwargs):
         Position.__init__(self, *args, **kwargs)
+        self.dividends = self.model.store.get_dividends(self.id)
    
+    def add_dividend(self, value, date, type =0, ta_costs =0.0):
+        id = self.model.store.create_dividend(self.id, value, date,type, ta_costs)
+        div = self.dividends[id] = Dividend(id, self.id, type, date, value, ta_costs)
+        pubsub.publish("position.dividend.added", div, self)
         
 if __name__ == "__main__":
     pass    

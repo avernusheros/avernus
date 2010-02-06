@@ -229,7 +229,7 @@ class PositionsTree(Tree):
             ('position_menu.split', self.on_split),
             ('positionstoolbar.chart', self.on_chart),
             ('position_menu.chart', self.on_chart),
-            ('position.created', self.on_position_created),
+            ('container.position.added', self.on_position_added),
             ('position.tags.changed', self.on_positon_tags_changed),
             ('container.position.removed', self.on_position_deleted),
             ('shortcut.update', self.on_update)
@@ -286,8 +286,8 @@ class PositionsTree(Tree):
             row[self.cols['days_gain']] = row[1].days_gain
             row[self.cols['mkt_value']] = round(row[1].cvalue,2)
                 
-    def on_position_created(self, item):
-        if item.container_id == self.container.id:
+    def on_position_added(self, item, container):
+        if container.id == self.container.id:
             self.insert_position(item)
      
     def on_remove_position(self, position = None):
@@ -295,7 +295,7 @@ class PositionsTree(Tree):
             if self.selected_item is None:
                 return
             position, iter = self.selected_item
-        if self.type == 0:
+        if self.container.type == 'watchlist':
             dlg = gtk.MessageDialog(None, 
                  gtk.DIALOG_DESTROY_WITH_PARENT, gtk.MESSAGE_QUESTION, 
                     gtk.BUTTONS_OK_CANCEL, _("Are you sure?"))
@@ -303,7 +303,7 @@ class PositionsTree(Tree):
             dlg.destroy()
             if response == gtk.RESPONSE_OK:
                 self.container.remove_position(position)
-        elif self.type == 1:
+        elif self.container.type == 'portfolio':
             SellDialog(self.container, position)    
     
     def on_position_deleted(self, pos, pf):
@@ -313,9 +313,9 @@ class PositionsTree(Tree):
                 self.get_model().remove(row.iter)   
        
     def on_add_position(self):
-        if self.type == 0:
+        if self.container.type == 'watchlist':
             NewWatchlistPositionDialog(self.container)  
-        elif self.type == 1:
+        elif self.container.type == 'portfolio':
             BuyDialog(self.container)
     
     def on_split(self, position = None):

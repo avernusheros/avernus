@@ -30,7 +30,7 @@ PORTFOLIO = 1
 
 class Store:
     def __init__(self, path = None):
-        self.version = 4
+        self.version = 5
         if path is None:
             self.new()
         else:
@@ -140,7 +140,20 @@ class Store:
                 ALTER TABLE container
                 ADD last_update timestamp
                     ''')
-            upgrade = True 
+            upgrade = True
+        elif version ==4:
+            cursor = self.dbconn.cursor()
+            cursor.execute('''
+                CREATE TABLE DIVIDEND (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT
+                    , position_id integer
+                    , type integer
+                    , datetime timestamp
+                    , value real
+                    , transaction_costs real
+                    );
+                    ''')
+            upgrade = True
         else:
             print "upgrade to version not implemented", version
         if upgrade:
@@ -218,8 +231,14 @@ class Store:
             id, pos_id, type, date, quantity, price, ta_costs = result
             tas[id] = objects.Transaction(id, pos_id, type, date, quantity, price, ta_costs)
         return tas
+    
+    def get_dividends(self, pid):
+        divs = {}
+        for result in self.dbconn.cursor().execute("SELECT * FROM dividend WHERE position_id=?",(pid,)).fetchall():
+            id, pos_id, type, date, value, ta_costs = result
+            divs[id] = objects.Dividend(id, pos_id, type, date, value, ta_costs)
+        return divs
 
-               
     def create_container(self, name, comment, type = 0, cash = 0.0, last_update = None):
         cursor = self.dbconn.cursor()
         cursor.execute('INSERT INTO CONTAINER VALUES (null, ?,?, ?, ?, ?)', (type, name,comment,cash,last_update))
@@ -244,7 +263,15 @@ class Store:
         id = cursor.lastrowid
         self.dirty = True
         self.commit_if_appropriate()
-        return id 
+        return id
+        
+    def create_dividend(self, pid, value, date, type = 0, ta_costs = 0.0):
+        cursor = self.dbconn.cursor()
+        cursor.execute('INSERT INTO dividend VALUES (null,?,?,?,?,?)', (pid, type, date, value, ta_costs))
+        id = cursor.lastrowid
+        self.dirty = True
+        self.commit_if_appropriate()
+        return id     
     
     def create_tag(self, name):
         cursor = self.dbconn.cursor()
@@ -267,6 +294,16 @@ class Store:
         sqlite create statements
         """
         cursor = self.dbconn.cursor()
+        cursor.execute('''
+            CREATE TABLE DIVIDEND (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT
+                    , position_id integer
+                    , type integer
+                    , datetime timestamp
+                    , value real
+                    , transaction_costs real
+                    );
+                    ''')
         cursor.execute('''
             CREATE TABLE TRANSACTIONS (
                     id INTEGER PRIMARY KEY AUTOINCREMENT
