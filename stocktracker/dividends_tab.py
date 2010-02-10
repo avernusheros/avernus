@@ -1,3 +1,23 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+#    https://launchpad.net/stocktracker
+#    objects.py: Copyright 2009 Wolfgang Steitz <wsteitz(at)gmail.com>
+#
+#    This file is part of stocktracker.
+#
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 from stocktracker.treeviews import Tree, get_name_string, datetime_format, get_datetime_string
 import gtk
 from stocktracker.session import session
@@ -36,7 +56,9 @@ class DividendsToolbar(gtk.Toolbar):
         self.insert(button,-1)
         
         self.on_unselect()
-
+        pubsub.subscribe('dividendstree.unselect', self.on_unselect)
+        pubsub.subscribe('dividendstree.select', self.on_select)
+        
     def on_unselect(self):
         for button in self.conditioned:
             button.set_sensitive(False)       
@@ -49,12 +71,13 @@ class DividendsToolbar(gtk.Toolbar):
         AddDividendDialog(self.container)
     
     def on_remove_clicked(self, *args):
-        pass
-
+        pubsub.publish("dividendstoolbar.remove")
+       
 
 class DividendsTree(Tree):
     def __init__(self, portfolio):
         self.portfolio = portfolio
+        self.selected_item = None
         Tree.__init__(self)
         self.set_model(gtk.TreeStore(int, object,str, str, str,float))
         
@@ -65,6 +88,22 @@ class DividendsTree(Tree):
         
         self.load_dividends()
         pubsub.subscribe('position.dividend.added', self.on_dividend_added)
+        pubsub.subscribe('dividendstoolbar.remove', self.on_remove)
+        self.connect('cursor_changed', self.on_cursor_changed)
+        
+    def on_cursor_changed(self, widget):
+        #Get the current selection in the gtk.TreeView
+        selection = widget.get_selection()
+        # Get the selection iter
+        model, selection_iter = selection.get_selected()
+        if (selection_iter and model):
+            #Something is selected so get the object
+            obj = model.get_value(selection_iter, 1)
+            self.selected_item = obj, selection_iter
+            if isinstance(obj, objects.Dividend):
+                pubsub.publish('dividendstree.select', obj)
+                return
+        pubsub.publish('dividendstree.unselect')
         
     def load_dividends(self):
         for pos in self.portfolio:
@@ -78,6 +117,22 @@ class DividendsTree(Tree):
     def insert_dividend(self, div, pos):
         stock = session['model'].stocks[pos.stock_id]
         self.get_model().append(None, [div.id, div, get_name_string(stock), get_datetime_string(div.date), div.value, 0.0])
+
+    def on_remove(self):
+        if self.selected_item is None:
+            return
+        obj, iter = self.selected_item
+        if isinstance(obj, objects.Dividend):
+            dlg = gtk.MessageDialog(None, 
+                 gtk.DIALOG_DESTROY_WITH_PARENT, gtk.MESSAGE_QUESTION, 
+                 gtk.BUTTONS_OK_CANCEL, 
+                 _("Permanently delete dividend?"))
+            response = dlg.run()
+            dlg.destroy()
+            if response == gtk.RESPONSE_OK:
+                self.portfolio.positions[obj.pos_id].remove_dividend(obj)
+                self.get_model().remove(iter) 
+
 
 
 class AddDividendDialog(gtk.Dialog):

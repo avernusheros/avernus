@@ -1,3 +1,4 @@
+
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #    https://launchpad.net/stocktracker
@@ -24,13 +25,10 @@ from stocktracker import objects, pubsub, config
 
 logger = logging.getLogger(__name__)
 
-WATCHLIST = 0
-PORTFOLIO = 1
-
 
 class Store:
     def __init__(self, path = None):
-        self.version = 5
+        self.version = 4
         if path is None:
             self.new()
         else:
@@ -45,6 +43,7 @@ class Store:
             (self.on_update_portfolio, 'portfolio.updated'),
             (self.on_update_position, 'position.updated'),
             (self.on_remove_position, 'container.position.removed'),
+            (self.on_remove_dividend, 'dividend.removed'),
             (self.on_update_stock, 'stock.updated'),
             (self.on_positon_tags_change, 'position.tags.changed'),
             (self.on_positon_merge, 'container.position.merged')
@@ -141,19 +140,6 @@ class Store:
                 ADD last_update timestamp
                     ''')
             upgrade = True
-        elif version ==4:
-            cursor = self.dbconn.cursor()
-            cursor.execute('''
-                CREATE TABLE DIVIDEND (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT
-                    , position_id integer
-                    , type integer
-                    , datetime timestamp
-                    , value real
-                    , transaction_costs real
-                    );
-                    ''')
-            upgrade = True
         else:
             print "upgrade to version not implemented", version
         if upgrade:
@@ -227,16 +213,29 @@ class Store:
     
     def get_transactions(self, pid):
         tas = {}
-        for result in self.dbconn.cursor().execute("SELECT * FROM transactions WHERE position_id=?",(pid,)).fetchall():
+        for result in self.dbconn.cursor().execute("SELECT * FROM transactions WHERE position_id=? AND type<10",(pid,)).fetchall():
             id, pos_id, type, date, quantity, price, ta_costs = result
             tas[id] = objects.Transaction(id, pos_id, type, date, quantity, price, ta_costs)
         return tas
     
+    def get_transactions_cash(self, pfid):
+        res = []
+        for type, date, price, ta_costs, quantity in self.dbconn.cursor().execute("""
+                SELECT t.type, t.datetime, t.price, t.transaction_costs, t.quantity 
+                FROM transactions as t, position as p 
+                WHERE t.position_id=p.id
+                AND p.container_id=?
+                ORDER BY t.datetime DESC
+                """, (pfid,)).fetchall():
+            res.append((type, date, price, ta_costs, quantity))
+        return res
+    
     def get_dividends(self, pid):
         divs = {}
-        for result in self.dbconn.cursor().execute("SELECT * FROM dividend WHERE position_id=?",(pid,)).fetchall():
-            id, pos_id, type, date, value, ta_costs = result
-            divs[id] = objects.Dividend(id, pos_id, type, date, value, ta_costs)
+        type = 10
+        for result in self.dbconn.cursor().execute("SELECT * FROM transactions WHERE position_id=? AND type=?",(pid, type)).fetchall():
+            id, pos_id, type, date, quantity, price, ta_costs = result
+            divs[id] = objects.Dividend(id, pos_id, type, date, price, ta_costs)
         return divs
 
     def create_container(self, name, comment, type = 0, cash = 0.0, last_update = None):
@@ -247,9 +246,7 @@ class Store:
         self.commit_if_appropriate()
         return id   
        
-
     def create_stock(self, name, symbol,isin,exchange, type,currency, price, date,change):
-        print "TYPE", type
         cursor = self.dbconn.cursor()
         cursor.execute('INSERT INTO stock VALUES (null,?,?,?,?,?,?,?,?,?)', (name,symbol,isin, exchange,  currency, price, date, change, type))
         id = cursor.lastrowid
@@ -265,13 +262,8 @@ class Store:
         self.commit_if_appropriate()
         return id
         
-    def create_dividend(self, pid, value, date, type = 0, ta_costs = 0.0):
-        cursor = self.dbconn.cursor()
-        cursor.execute('INSERT INTO dividend VALUES (null,?,?,?,?,?)', (pid, type, date, value, ta_costs))
-        id = cursor.lastrowid
-        self.dirty = True
-        self.commit_if_appropriate()
-        return id     
+    def create_dividend(self, pid, value, date, type, ta_costs = 0.0):
+        return self.create_transaction(pid, type, date, 1, value, ta_costs)
     
     def create_tag(self, name):
         cursor = self.dbconn.cursor()
@@ -294,16 +286,6 @@ class Store:
         sqlite create statements
         """
         cursor = self.dbconn.cursor()
-        cursor.execute('''
-            CREATE TABLE DIVIDEND (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT
-                    , position_id integer
-                    , type integer
-                    , datetime timestamp
-                    , value real
-                    , transaction_costs real
-                    );
-                    ''')
         cursor.execute('''
             CREATE TABLE TRANSACTIONS (
                     id INTEGER PRIMARY KEY AUTOINCREMENT
@@ -411,6 +393,11 @@ class Store:
     def on_remove_container(self, item):
         self.clear_container(item.id)
         self.dbconn.cursor().execute('DELETE FROM container WHERE id=?',(item.id,))
+        self.dirty = True
+        self.commit_if_appropriate()
+    
+    def on_remove_dividend(self, item):
+        self.dbconn.cursor().execute('DELETE FROM transactions WHERE id=?',(item.id,))
         self.dirty = True
         self.commit_if_appropriate()
         

@@ -81,7 +81,6 @@ def start():
     from stocktracker import config
     configs = config.StocktrackerConfig()
     db_file = configs.get_option('database file')
-    print db_file
     
     from stocktracker import persistent_store, objects
     store = persistent_store.Store(db_file)

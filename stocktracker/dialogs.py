@@ -184,9 +184,9 @@ class SellDialog(gtk.Dialog):
             date = datetime(year, month+1, day)
             ta_costs = 0.0
 
-            self.pos.quantity -= shares    
-            
+            self.pos.quantity -= shares                
             self.pos.add_transaction(0, date, shares, price, ta_costs)
+            self.pf.cash += shares*price - ta_costs
 
 
 class BuyDialog(gtk.Dialog):
@@ -267,7 +267,7 @@ class BuyDialog(gtk.Dialog):
             year, month, day = self.calendar.get_date()
             date = datetime(year, month+1, day)
             ta_costs = self.tacosts_entry.get_value()
-            position = self.pf.add_position(stock_id, price, date, shares)
+            position = self.pf.add_position(stock_id, price, date, shares, ta_costs)
             position.add_transaction(1, date, shares, price, ta_costs)
 
 

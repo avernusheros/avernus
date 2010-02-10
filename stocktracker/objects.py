@@ -22,7 +22,7 @@ from stocktracker import pubsub
 from stocktracker.utils import unique
 from stocktracker.data_provider import DataProvider
 import logging
-from datetime import datetime
+from datetime import date
 from stocktracker.session import session
 
 logger = logging.getLogger(__name__)
@@ -215,6 +215,21 @@ class Portfolio(Container):
         pubsub.publish("portfolio.created",  self)
         self.type = 'portfolio'
     
+    def cash_over_time(self, date1 = None):
+        cash = self.cash
+        res = []
+        tas = session['model'].store.get_transactions_cash(self.id)
+        for type, tdate, price, ta_costs, quantity in tas:
+            if type == 1 or type == 4:
+                res.append((tdate.date(), cash))
+                cash += quantity*price+ta_costs
+            if type == 2 or type == 3 or type == 10:
+                res.append((tdate.date(), cash))
+                cash -= quantity*price-ta_costs
+        last_date = res[-1][0]  
+        res.append((date(last_date.year, last_date.month, 1) , cash))
+        return res
+    
     def add_transaction(self, type, date, quantity, price, ta_costs):
         id = self.model.store.create_transaction(-self.id, type, date, quantity, price, ta_costs)
         ta = Transaction(id, -self.id, type, date, quantity, price, ta_costs) 
@@ -226,23 +241,24 @@ class Portfolio(Container):
         
     def set_cash(self, cash):
         self._cash = cash
-        pubsub.publish('portfolio.updated',  self)
+        pubsub.publish('portfolio.updated', self)
 
     cash = property(get_cash, set_cash)            
         
-    def add_position(self, stock_id, buy_price, buy_date, quantity):
+    def add_position(self, stock_id, buy_price, buy_date, quantity, ta_costs):
         pos = self.model.create_position(stock_id, buy_price, buy_date, quantity, self.id,1)
         self.positions[pos.id] = pos
-        pubsub.publish("container.position.added",  pos,  self)
+        self.cash -= pos.bvalue+ta_costs
+        pubsub.publish("container.position.added", pos, self)
         return pos
     
     def deposit_cash(self, cash, date):
         self.cash += cash
-        self.add_transaction(3, date, 0, cash, 0.0)
+        self.add_transaction(3, date, 1, cash, 0.0)
     
     def withdraw_cash(self, cash, date):
         self.cash -= cash
-        self.add_transaction(4, date, 0, cash, 0.0)
+        self.add_transaction(4, date, 1, cash, 0.0)
              
     def merge_positions(self, pos1, pos2):
         quantity = pos1.quantity + pos2.quantity
@@ -292,19 +308,7 @@ class Tag(Container):
         pubsub.publish('tag.updated', self)
     
     name = property(get_name, set_name)
-        
 
-class Dividend(object):
-    def __init__(self, id, pos_id, type, date, value, ta_costs):
-        self.id = id
-        self.pos_id = pos_id
-        self.type = type
-        self.date = date
-        self.value = value
-        self.ta_costs = ta_costs
-        
-        pubsub.publish("dividend.created", self)
-        
    
 class Transaction(object):
     def __init__(self, id, pos_id, type, date, quantity, price, ta_costs):
@@ -316,7 +320,20 @@ class Transaction(object):
         self.price = price
         self.ta_costs = ta_costs
         
-        pubsub.publish("transaction.created", self)
+        pubsub.publish("transaction.created", self)        
+
+
+class Dividend(Transaction):
+    def __init__(self, id, pos_id, type, date, value, ta_costs):
+        self.id = id
+        self.pos_id = pos_id
+        self.type = type
+        self.date = date
+        self.value = value
+        self.ta_costs = ta_costs
+        
+        pubsub.publish("dividend.created", self)
+        
         
 class Stock(object):
     def __init__(self, id, name, symbol, isin, exchange,type, currency, price, date, change):
@@ -489,10 +506,14 @@ class PortfolioPosition(Position):
         Position.__init__(self, *args, **kwargs)
         self.dividends = self.model.store.get_dividends(self.id)
    
-    def add_dividend(self, value, date, type =0, ta_costs =0.0):
+    def add_dividend(self, value, date, type=10, ta_costs=0.0):
         id = self.model.store.create_dividend(self.id, value, date,type, ta_costs)
         div = self.dividends[id] = Dividend(id, self.id, type, date, value, ta_costs)
         pubsub.publish("position.dividend.added", div, self)
+        
+    def remove_dividend(self, div):
+        del self.dividends[div.id]
+        pubsub.publish("dividend.removed", div)  
         
 if __name__ == "__main__":
     pass    

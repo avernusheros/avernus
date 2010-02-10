@@ -1,3 +1,23 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+#    https://launchpad.net/stocktracker
+#    objects.py: Copyright 2009 Wolfgang Steitz <wsteitz(at)gmail.com>
+#
+#    This file is part of stocktracker.
+#
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 import gtk
 from stocktracker.treeviews import Tree
 from stocktracker import pubsub, objects
@@ -101,7 +121,7 @@ class MainTree(Tree):
         if row: 
             #row[1] = item
             row[3] = item.name
-    
+
     def on_cursor_changed(self, widget):
         #Get the current selection in the gtk.TreeView
         selection = widget.get_selection()
@@ -129,7 +149,6 @@ class MainTree(Tree):
 
     def on_database_loaded(self):
         self.expand_all()
-    
 
 
 class MainTreeToolbar(gtk.Toolbar):
@@ -230,9 +249,7 @@ class EditPortfolio(gtk.Dialog):
         #cash entry
         label = gtk.Label(_('Cash:'))
         table.attach(label, 0,1,1,2)
-        self.cash_entry = gtk.Entry()
-        self.cash_entry.set_text(str(pf.cash))
-        self.cash_entry.set_sensitive(False)
+        self.cash_entry = gtk.SpinButton(gtk.Adjustment(lower=-999999999, upper=999999999,step_incr=10, value = pf.cash), digits=2)
         table.attach(self.cash_entry,1,2,1,2)
         
         self.show_all()
@@ -243,7 +260,9 @@ class EditPortfolio(gtk.Dialog):
     def process_result(self, widget=None, response = gtk.RESPONSE_ACCEPT):
         if response == gtk.RESPONSE_ACCEPT:
             self.pf.name = self.name_entry.get_text()
+            self.pf.cash = self.cash_entry.get_value()      
         self.destroy()
+
 
 class NewContainerDialog(gtk.Dialog):
     def __init__(self):
