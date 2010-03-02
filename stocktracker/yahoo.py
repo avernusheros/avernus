@@ -70,8 +70,8 @@ def get_historical_prices(symbol, start_date, end_date):
     Get historical prices for the given ticker symbol.
     Returns a nested list.
     """
-    #print "fetch data", start_date, end_date
-    url = 'http://ichart.yahoo.com/table.csv?s=%s&' % symbol + \
+    print "fetch data", start_date, end_date, symbol
+    url = 'http://download.finance.yahoo.com/d/quotes.csv?s=%s&' % symbol + \
           'd=%s&' % str(start_date.month-1) + \
           'e=%s&' % str(start_date.day) + \
           'f=%s&' % str(start_date.year) + \
@@ -79,13 +79,15 @@ def get_historical_prices(symbol, start_date, end_date):
           'a=%s&' % str(end_date.month-1) + \
           'b=%s&' % str(end_date.day) + \
           'c=%s&' % str(end_date.year) + \
-          'ignore=.csv'
-    #print url
-    days = urlopen(url).readlines()
+          '.csv'
+    print url
+    try:
+        days = urlopen(url).readlines()
+    except:
+        return None
     data = []
     
     for row in [day[:-2].split(',') for day in days[1:]]:
-        #print row[0]
         dt = datetime.strptime(row[0], '%Y-%m-%d')
         data.append((dt, float(row[1]), float(row[2]), float(row[3]), float(row[6]), int(row[5])))
 

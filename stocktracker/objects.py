@@ -22,7 +22,7 @@ from stocktracker import pubsub
 from stocktracker.utils import unique
 from stocktracker.data_provider import DataProvider
 import logging
-from datetime import date
+from datetime import date, datetime, timedelta
 from stocktracker.session import session
 
 logger = logging.getLogger(__name__)
@@ -41,7 +41,7 @@ class Model(object):
         self.portfolios = self.store.get_portfolios()
         self.stocks = self.store.get_stocks()
         self.tags = self.store.get_tags()
-        self.data_provider = DataProvider()
+        session['data_provider'] = self.data_provider = DataProvider()
         logger.debug('database loaded')
         pubsub.publish('model.database.loaded')
     
@@ -212,6 +212,7 @@ class Portfolio(Container):
     def __init__(self,cash, *args, **kwargs):
         Container.__init__(self, *args, **kwargs)
         self._cash = cash
+        self.transactions = {}
         pubsub.publish("portfolio.created",  self)
         self.type = 'portfolio'
     
@@ -223,12 +224,70 @@ class Portfolio(Container):
             if type == 1 or type == 4:
                 res.append((tdate.date(), cash))
                 cash += quantity*price+ta_costs
-            if type == 2 or type == 3 or type == 10:
+            elif type == 2 or type == 3 or type == 10:
                 res.append((tdate.date(), cash))
                 cash -= quantity*price-ta_costs
         last_date = res[-1][0]  
         res.append((date(last_date.year, last_date.month, 1) , cash))
+        res.reverse()
         return res
+    
+    def value_over_time(self, date1, freq = 'weekly'):
+        pf_value = []
+        pf_cash = []
+        pf_overall = []
+        dates = []
+        cash = 0
+        positions = {}
+        tas = session['model'].store.get_transactions_list(self.id)
+        for t in tas:
+            print t
+        today = datetime.today()
+        if freq == 'weekly':
+            delta = timedelta(days=7)
+        elif freq == 'daily':
+            delta = timedelta(days=1)
+        while date1 <= today-delta:
+            #print date1
+            #process all transactions on that day
+            while not len(tas)==0 and date1 >= tas[0][1]:  
+                type, tdate, price, ta_costs, quantity, pid = tas.pop()
+                if type == 1: #buy
+                    cash -= quantity*price+ta_costs
+                    try: 
+                        positions[pid] += quantity
+                    except:
+                        positions[pid] = quantity
+                elif type == 0: #sell
+                    cash += quantity*price-ta_costs
+                    positions[pid] -= quantity
+                elif type == 4: #withdraw cash
+                    cash -= price
+                elif type == 3: #deposit cash
+                    print "DEPOSIT", price
+                    cash += price
+                elif type == 10: #dividend
+                    cash += price*quantity-ta_costs
+            #calculate value on that day
+            if date1.weekday() < 5: #5saturday 6sunday
+                print date1, cash
+                val = 0
+                no_data = False
+                for pid, quantity in positions.items():
+                    price = self.positions[pid].stock.get_price_at(date1)
+                    if price is not None:
+                        val += quantity*price
+                    else:
+                        no_data = True
+                if not no_data:
+                    pf_value.append(val)
+                    pf_cash.append(cash)
+                    pf_overall.append(val+cash)
+                    dates.append(str(date1.date()))
+                  
+            date1 += delta
+        #print date1, pf_value
+        return pf_value, pf_cash, pf_overall, dates
     
     def add_transaction(self, type, date, quantity, price, ta_costs):
         id = self.model.store.create_transaction(-self.id, type, date, quantity, price, ta_costs)
@@ -357,6 +416,12 @@ class Stock(object):
             return '$'
         else:
             return ''
+          
+    def get_price_at(self, date1):
+        res = session['data_provider'].get_quote_at_date(self.symbol, date1)
+        if res is None:
+            return None
+        return res[4]
           
     def get_change(self):
         return self._change
