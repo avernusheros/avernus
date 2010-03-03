@@ -22,7 +22,7 @@ from stocktracker.treeviews import Tree, get_name_string, datetime_format, get_d
 import gtk
 from stocktracker.session import session
 from stocktracker import pubsub, config, objects
-from dialogs import PosSelector
+from stocktracker.dialogs import PosSelector
 from datetime import datetime
 
 

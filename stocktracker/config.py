@@ -19,7 +19,7 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import os, sys
-__stocktracker_data_directory__ = '../data/'
+__stocktracker_data_directory__ = '/usr/share/stocktracker/'
 import ConfigParser
 from stocktracker.session import session
 

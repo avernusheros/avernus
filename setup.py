@@ -31,7 +31,7 @@ import os
 def update_data_path(prefix, oldvalue=None):
 
     try:
-        fin = file('stocktracker/stocktrackerconfig.py', 'r')
+        fin = file('stocktracker/config.py', 'r')
         fout = file(fin.name + '.new', 'w')
 
         for line in fin:            
@@ -50,6 +50,7 @@ def update_data_path(prefix, oldvalue=None):
         fin.close()
         os.rename(fout.name, fin.name)
     except (OSError, IOError), e:
+        import sys
         print ("ERROR: Can't find stocktracker/stocktrackerconfig.py")
         sys.exit(1)
     return oldvalue
@@ -96,8 +97,8 @@ DistUtilsExtra.auto.setup(
     name='stocktracker',
     version='0.3',
     license='GPL v3',
-    author='Wolfgang Steitz',
-    author_email='wsteitz(at)gmail.com',
+    author='wolfer',
+    author_email='wsteitz@gmail.com',
     description='A lightweight program to easily track your investments.',
     #long_description='Here a longer description',
     url='https://launchpad.net/stocktracker',

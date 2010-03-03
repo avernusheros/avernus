@@ -68,7 +68,7 @@ class Chart(gtk.VBox):
         vbox = gtk.VBox()
         date1 = date.today()
         date2 = self.get_date2(zoom, date1)
-        data = session['model'].data_provider.get_historical_prices(self.stock.symbol, date1, date2) 
+        data = session['model'].data_provider.get_historical_prices(self.stock, date1, date2) 
         
         quotes = [d[4] for d in data]
 

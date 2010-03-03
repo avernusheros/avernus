@@ -21,7 +21,7 @@
 import gtk
 from stocktracker import objects
 from datetime import datetime
-from session import session
+from stocktracker.session import session
 
 
 

@@ -23,8 +23,7 @@ from sqlite3 import dbapi2 as sqlite
 import sqlite3
 from stocktracker import config, pubsub
 from stocktracker import yahoo as updater
-import os, logging
-from datetime import datetime, timedelta
+import os, logging, datetime
 
 logger = logging.getLogger(__name__)
 
@@ -68,7 +67,7 @@ class Store:
         cursor.execute('''
             CREATE TABLE QUOTATIONS (
                     id INTEGER PRIMARY KEY AUTOINCREMENT
-                    , symbol integer
+                    , stock_id integer
                     , datetime timestamp
                     , open real
                     , high real
@@ -78,43 +77,32 @@ class Store:
                     );
                     ''')
 
-    def insert_quotes(self, symbol, quotes):
+    def insert_quotes(self, stock, quotes):
         #quotes: list of tuples : (date, open, high, low, close, volume)
         cursor = self.dbconn.cursor()
         for q in quotes:
-            cursor.execute('INSERT INTO quotations VALUES (null,?, ?,?,?,?,?,?)', (symbol, q[0], q[1], q[2], q[3], q[4], q[5]))
+            cursor.execute('INSERT INTO quotations VALUES (null,?, ?,?,?,?,?,?)', (stock.id, q[0], q[1], q[2], q[3], q[4], q[5]))
         self.save()
     
-    def get_quote_at_date(self, symbol, date1):
-        cursor = self.dbconn.cursor()
-        result = cursor.execute("""
-        SELECT * FROM quotations 
-        WHERE symbol = ?
-        AND datetime = ?""",(symbol, date1)).fetchone()
-        if result is not None:    
-            return ((result[2],result[3],result[4],result[5],result[6],result[7]))
-        return None
-    
-    def get_historical_prices(self, symbol, start_date, end_date):
+    def get_historical_prices(self, stock, start_date, end_date):
         cursor = self.dbconn.cursor()
         res = []
-        start_date += timedelta(days = 1)
+        start_date += datetime.timedelta(days = 1)
         for result in cursor.execute("""
         SELECT * FROM quotations 
-        WHERE symbol=?
+        WHERE stock_id=?
         AND datetime >= ?
         AND datetime <= ?
-        ORDER BY datetime""",(symbol,end_date, start_date)).fetchall():
+        ORDER BY datetime""",(stock.id,end_date, start_date)).fetchall():
             res.append((result[2],result[3],result[4],result[5],result[6],result[7]))
         #print "foo", res
         return res
         
-    def get_latest_date(self, symbol):
-        res = self.dbconn.cursor().execute("SELECT MAX(datetime) FROM quotations WHERE symbol= ? ",(symbol,)).fetchone()
-        print "RESULT", res
+    def get_latest_date(self, stock):
+        res = self.dbconn.cursor().execute("SELECT MAX(datetime) FROM quotations WHERE stock_id= ? ",(stock.id,)).fetchone()
         if res[0] is None:
             return None
-        return datetime.strptime(res[0], '%Y-%m-%d %H:%M:%S')
+        return datetime.datetime.strptime(res[0], '%Y-%m-%d %H:%M:%S')
     
     def on_exit(self, message):
         pass
@@ -149,33 +137,20 @@ class DataProvider():
         if self.online():
             return updater.check_symbol(symbol)
     
-    def get_quote_at_date(self, symbol, date1):
-        newest = self.store.get_latest_date(symbol)
-        if newest is None or newest < date1:
-            print "HERE", newest, date1
-            self.update_history(symbol)
-        return self.store.get_quote_at_date(symbol, date1)
-
-    def update_history(self, symbol):
-        if self.online():
-            today = datetime.today()
-            newest = self.store.get_latest_date(symbol)
-            if newest == None:
-                newest = datetime(today.year -20, today.month, today.day)
-            new_data = updater.get_historical_prices(symbol, today, newest)
-            self.store.insert_quotes(symbol, new_data)
-    
-    def get_historical_prices(self, symbol, start_date, end_date):
+    def get_historical_prices(self, stock, start_date, end_date):
         """
         Get historical prices for the given ticker symbol.
         Returns a nested list.
         """
         #print start_date, end_date
-        newest = self.store.get_latest_date(symbol)
-        if newest == None or newest.date() < start_date:
-            newest = datetime(end_date.year -20, end_date.month, end_date.day)
-            self.update_history(symbol)
-        return self.store.get_historical_prices(symbol, start_date, end_date)
+        newest = self.store.get_latest_date(stock)
+        if newest == None:
+            newest = datetime.datetime(end_date.year -20, end_date.month, end_date.day)
+        # newest.date(), start_date, newest.date() >= start_date
+        if self.online() and newest.date() < start_date:
+            new_data = updater.get_historical_prices(stock.symbol, start_date, newest)
+            self.store.insert_quotes(stock, new_data)
+        return self.store.get_historical_prices(stock, start_date, end_date)
         
 
 if __name__ == "__main__":

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2009-11-24 11:20+0100\n"
+"POT-Creation-Date: 2010-03-03 09:28+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -16,231 +16,332 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ../stocktracker/chart_tab.py:21
+#: ../stocktracker/chart_tab.py:39
+msgid "Cash over time"
+msgstr ""
+
+#: ../stocktracker/chart_tab.py:42
 msgid "Market value"
 msgstr ""
 
-#: ../stocktracker/chart_tab.py:24 ../stocktracker/positions_tab.py:92
+#: ../stocktracker/chart_tab.py:45 ../stocktracker/positions_tab.py:194
 msgid "Buy value"
 msgstr ""
 
-#: ../stocktracker/chart_tab.py:27
+#: ../stocktracker/chart_tab.py:48
 msgid "Investment types"
 msgstr ""
 
-#: ../stocktracker/overview_tab.py:8 ../stocktracker/positions_tab.py:88
-#: ../stocktracker/treeviews.py:188
+#. table.attach(self.types_chart('vertical_bars'),1,2,3,4)
+#: ../stocktracker/chart_tab.py:52 ../stocktracker/positions_tab.py:211
+msgid "Tags"
+msgstr ""
+
+#: ../stocktracker/plot.py:96
+msgid "Volume (mil/1d)"
+msgstr ""
+
+#: ../stocktracker/main_tree.py:91
+msgid "<b>Portfolios</b>"
+msgstr ""
+
+#: ../stocktracker/main_tree.py:92
+msgid "<b>Watchlists</b>"
+msgstr ""
+
+#: ../stocktracker/main_tree.py:93
+msgid "<b>Tags</b>"
+msgstr ""
+
+#: ../stocktracker/main_tree.py:112
+msgid "Permanently delete "
+msgstr ""
+
+#: ../stocktracker/main_tree.py:202 ../stocktracker/main_tree.py:232
+msgid "Edit..."
+msgstr ""
+
+#. name entry
+#: ../stocktracker/main_tree.py:213 ../stocktracker/main_tree.py:243
+#: ../stocktracker/main_tree.py:286
+msgid "Name:"
+msgstr ""
+
+#. cash entry
+#: ../stocktracker/main_tree.py:250
+msgid "Cash:"
+msgstr ""
+
+#: ../stocktracker/main_tree.py:269
+msgid "Create..."
+msgstr ""
+
+#: ../stocktracker/main_tree.py:277 ../stocktracker/dialogs.py:390
+msgid "Portfolio"
+msgstr ""
+
+#: ../stocktracker/main_tree.py:280
+msgid "Watchlist"
+msgstr ""
+
+#: ../stocktracker/main_tree.py:312
+msgid "Remove "
+msgstr ""
+
+#: ../stocktracker/main_tree.py:313
+msgid "Edit "
+msgstr ""
+
+#: ../stocktracker/main_tree.py:317 ../stocktracker/main_tree.py:337
+msgid "Deposit cash"
+msgstr ""
+
+#: ../stocktracker/main_tree.py:318 ../stocktracker/main_tree.py:338
+msgid "Withdraw cash"
+msgstr ""
+
+#: ../stocktracker/main_tree.py:349
+msgid "Amount:"
+msgstr ""
+
+#: ../stocktracker/overview_tab.py:8 ../stocktracker/positions_tab.py:187
+#: ../stocktracker/dividends_tab.py:84 ../stocktracker/transactions_tab.py:47
 msgid "Name"
 msgstr ""
 
-#: ../stocktracker/overview_tab.py:9 ../stocktracker/positions_tab.py:99
-#: ../stocktracker/positions_tab.py:360
+#: ../stocktracker/overview_tab.py:9 ../stocktracker/positions_tab.py:204
+#: ../stocktracker/positions_tab.py:471
 msgid "Gain"
 msgstr ""
 
-#: ../stocktracker/mainwindow.py:63
+#: ../stocktracker/mainwindow.py:71
 msgid "Quit"
 msgstr ""
 
-#: ../stocktracker/mainwindow.py:65 ../stocktracker/dialogs.py:403
+#: ../stocktracker/mainwindow.py:73
+msgid "Update stocks"
+msgstr ""
+
+#: ../stocktracker/mainwindow.py:74
+msgid "Add a stock"
+msgstr ""
+
+#: ../stocktracker/mainwindow.py:75 ../stocktracker/dialogs.py:382
 msgid "Merge two positions"
 msgstr ""
 
 #. ("Help"  , gtk.STOCK_HELP, None),
-#: ../stocktracker/mainwindow.py:68
+#: ../stocktracker/mainwindow.py:78
 msgid "Website"
 msgstr ""
 
-#: ../stocktracker/mainwindow.py:69
+#: ../stocktracker/mainwindow.py:79
 msgid "Request a Feature"
 msgstr ""
 
-#: ../stocktracker/mainwindow.py:70
+#: ../stocktracker/mainwindow.py:80
 msgid "Report a Bug"
 msgstr ""
 
-#: ../stocktracker/mainwindow.py:72
+#: ../stocktracker/mainwindow.py:82
 msgid "About"
 msgstr ""
 
-#: ../stocktracker/mainwindow.py:75
+#: ../stocktracker/mainwindow.py:85
 msgid "File"
 msgstr ""
 
-#: ../stocktracker/mainwindow.py:78
+#: ../stocktracker/mainwindow.py:88
 msgid "Tools"
 msgstr ""
 
-#: ../stocktracker/mainwindow.py:81
+#: ../stocktracker/mainwindow.py:91
 msgid "Help"
 msgstr ""
 
+#. self.notebook.append_page(OverviewTab(item, self.model, type), gtk.Label(_('Overview')))
 #: ../stocktracker/mainwindow.py:230
-msgid "Overview"
-msgstr ""
-
-#: ../stocktracker/mainwindow.py:231
 msgid "Positions"
 msgstr ""
 
-#: ../stocktracker/mainwindow.py:234
+#: ../stocktracker/mainwindow.py:233
 msgid "Transactions"
+msgstr ""
+
+#: ../stocktracker/mainwindow.py:234
+msgid "Dividends"
 msgstr ""
 
 #: ../stocktracker/mainwindow.py:235
 msgid "Charts"
 msgstr ""
 
-#: ../stocktracker/positions_tab.py:87 ../stocktracker/treeviews.py:190
+#: ../stocktracker/positions_tab.py:42
+msgid "Edit position"
+msgstr ""
+
+#: ../stocktracker/positions_tab.py:43
+msgid "Chart position"
+msgstr ""
+
+#: ../stocktracker/positions_tab.py:46
+msgid "Split position"
+msgstr ""
+
+#: ../stocktracker/positions_tab.py:186 ../stocktracker/transactions_tab.py:49
 msgid "Shares"
 msgstr ""
 
-#: ../stocktracker/positions_tab.py:89
+#: ../stocktracker/positions_tab.py:189
+msgid "Portfolio %"
+msgstr ""
+
+#: ../stocktracker/positions_tab.py:191
 msgid "Type"
 msgstr ""
 
-#: ../stocktracker/positions_tab.py:90
+#: ../stocktracker/positions_tab.py:192
 msgid "Start"
 msgstr ""
 
-#: ../stocktracker/positions_tab.py:93
+#: ../stocktracker/positions_tab.py:196
 msgid "Last price"
 msgstr ""
 
-#: ../stocktracker/positions_tab.py:94
+#: ../stocktracker/positions_tab.py:197
 msgid "Change"
 msgstr ""
 
-#: ../stocktracker/positions_tab.py:95
+#: ../stocktracker/positions_tab.py:199
 msgid "Change %"
 msgstr ""
 
-#: ../stocktracker/positions_tab.py:97
+#: ../stocktracker/positions_tab.py:202
 msgid "Mkt value"
 msgstr ""
 
-#: ../stocktracker/positions_tab.py:100
+#: ../stocktracker/positions_tab.py:206
 msgid "Gain %"
 msgstr ""
 
-#: ../stocktracker/positions_tab.py:102 ../stocktracker/positions_tab.py:358
+#: ../stocktracker/positions_tab.py:209 ../stocktracker/positions_tab.py:469
 msgid "Day's gain"
 msgstr ""
 
-#: ../stocktracker/positions_tab.py:103
-msgid "Tags"
-msgstr ""
-
-#: ../stocktracker/positions_tab.py:229 ../stocktracker/treeviews.py:141
+#: ../stocktracker/positions_tab.py:321
 msgid "Are you sure?"
 msgstr ""
 
-#: ../stocktracker/positions_tab.py:362
+#: ../stocktracker/positions_tab.py:475
+msgid "Investments"
+msgstr ""
+
+#: ../stocktracker/positions_tab.py:476
+msgid "Cash"
+msgstr ""
+
+#: ../stocktracker/positions_tab.py:479
 msgid "Total"
 msgstr ""
 
-#: ../stocktracker/treeviews.py:121
-msgid "<b>Portfolios</b>"
+#: ../stocktracker/positions_tab.py:483
+msgid "Last update"
 msgstr ""
 
-#: ../stocktracker/treeviews.py:122
-msgid "<b>Watchlists</b>"
+#: ../stocktracker/dialogs.py:58
+msgid "Add a new stock"
 msgstr ""
 
-#: ../stocktracker/treeviews.py:123
-msgid "<b>Tags</b>"
-msgstr ""
-
-#: ../stocktracker/treeviews.py:187
-msgid "Action"
-msgstr ""
-
-#: ../stocktracker/treeviews.py:189
-msgid "Date"
-msgstr ""
-
-#: ../stocktracker/treeviews.py:191
-msgid "Price"
-msgstr ""
-
-#: ../stocktracker/treeviews.py:192
-msgid "Transaction Costs"
-msgstr ""
-
-#: ../stocktracker/dialogs.py:29
-msgid "Edit..."
-msgstr ""
-
-#: ../stocktracker/dialogs.py:40 ../stocktracker/dialogs.py:81
-msgid "Name:"
-msgstr ""
-
-#: ../stocktracker/dialogs.py:61 ../stocktracker/dialogs.py:270
-msgid "Create..."
-msgstr ""
-
-#: ../stocktracker/dialogs.py:72 ../stocktracker/dialogs.py:411
-msgid "Portfolio"
-msgstr ""
-
-#: ../stocktracker/dialogs.py:75
-msgid "Watchlist"
-msgstr ""
-
-#: ../stocktracker/dialogs.py:105
+#: ../stocktracker/dialogs.py:144
 msgid "Sell a position"
 msgstr ""
 
-#: ../stocktracker/dialogs.py:117 ../stocktracker/dialogs.py:190
+#: ../stocktracker/dialogs.py:156 ../stocktracker/dialogs.py:215
 msgid "Shares:"
 msgstr ""
 
-#: ../stocktracker/dialogs.py:124 ../stocktracker/dialogs.py:198
+#: ../stocktracker/dialogs.py:163 ../stocktracker/dialogs.py:223
 msgid "Price:"
 msgstr ""
 
-#: ../stocktracker/dialogs.py:155
+#: ../stocktracker/dialogs.py:194
 msgid "Buy a position"
 msgstr ""
 
-#: ../stocktracker/dialogs.py:166 ../stocktracker/dialogs.py:282
-msgid "Symbol:"
+#: ../stocktracker/dialogs.py:204 ../stocktracker/dialogs.py:286
+msgid "Stock:"
 msgstr ""
 
-#: ../stocktracker/dialogs.py:181 ../stocktracker/dialogs.py:294
-msgid "Stock"
-msgstr ""
-
-#: ../stocktracker/dialogs.py:184 ../stocktracker/dialogs.py:297
-msgid "Fond"
-msgstr ""
-
-#: ../stocktracker/dialogs.py:207
+#: ../stocktracker/dialogs.py:231
 msgid "Transaction Costs:"
 msgstr ""
 
-#: ../stocktracker/dialogs.py:215
+#: ../stocktracker/dialogs.py:239
 msgid "Total:"
 msgstr ""
 
-#: ../stocktracker/dialogs.py:366
+#: ../stocktracker/dialogs.py:276
+msgid "Add watchlist position"
+msgstr ""
+
+#: ../stocktracker/dialogs.py:344
 msgid "Split a position"
 msgstr ""
 
-#: ../stocktracker/dialogs.py:369
+#: ../stocktracker/dialogs.py:347
 msgid "Split"
 msgstr ""
 
-#: ../stocktracker/dialogs.py:416
+#: ../stocktracker/dialogs.py:395
 msgid "First Position"
 msgstr ""
 
-#: ../stocktracker/dialogs.py:421
+#: ../stocktracker/dialogs.py:400
 msgid "Second Position"
 msgstr ""
 
-#: ../stocktracker/dialogs.py:426
+#: ../stocktracker/dialogs.py:405
 msgid ""
 "Only positions with identical stocks can be merged. This action can not be "
 "undone!"
+msgstr ""
+
+#: ../stocktracker/dividends_tab.py:85 ../stocktracker/transactions_tab.py:48
+msgid "Date"
+msgstr ""
+
+#: ../stocktracker/dividends_tab.py:86
+msgid "Value"
+msgstr ""
+
+#: ../stocktracker/dividends_tab.py:87
+msgid "Percentage"
+msgstr ""
+
+#: ../stocktracker/dividends_tab.py:129
+msgid "Permanently delete dividend?"
+msgstr ""
+
+#: ../stocktracker/dividends_tab.py:140
+msgid "Add dividend"
+msgstr ""
+
+#: ../stocktracker/dividends_tab.py:149
+msgid "Position: "
+msgstr ""
+
+#: ../stocktracker/dividends_tab.py:157
+msgid "Value: "
+msgstr ""
+
+#: ../stocktracker/transactions_tab.py:46
+msgid "Action"
+msgstr ""
+
+#: ../stocktracker/transactions_tab.py:50
+msgid "Price"
+msgstr ""
+
+#: ../stocktracker/transactions_tab.py:51
+msgid "Transaction Costs"
 msgstr ""

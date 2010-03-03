@@ -30,13 +30,12 @@ if __name__ == '__main__':
 
 
 import logging, gtk,os #, gobject
-from stocktracker import objects, config, pubsub, chart_tab
+from stocktracker import objects, config, pubsub, chart_tab, dialogs
 from stocktracker.positions_tab import PositionsTab
 from stocktracker.overview_tab import OverviewTab
 from stocktracker.main_tree import MainTreeBox
 from stocktracker.dividends_tab import DividendsTab
 from stocktracker.transactions_tab import TransactionsTab
-import dialogs
 from webbrowser import open as web
 from stocktracker.session import session
 

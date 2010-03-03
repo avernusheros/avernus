@@ -218,16 +218,16 @@ class Store:
             tas[id] = objects.Transaction(id, pos_id, type, date, quantity, price, ta_costs)
         return tas
     
-    def get_transactions_list(self, pfid):
+    def get_transactions_cash(self, pfid):
         res = []
-        for type, date, price, ta_costs, quantity, pid in self.dbconn.cursor().execute("""
-                SELECT t.type, t.datetime, t.price, t.transaction_costs, t.quantity, t.position_id 
+        for type, date, price, ta_costs, quantity in self.dbconn.cursor().execute("""
+                SELECT t.type, t.datetime, t.price, t.transaction_costs, t.quantity 
                 FROM transactions as t, position as p 
-                WHERE t.position_id=p.id AND p.container_id=?
-                OR t.position_id=?
-                ORDER BY t.datetime ASC
-                """, (pfid,-pfid)).fetchall():
-            res.append((type, date, price, ta_costs, quantity, pid))
+                WHERE t.position_id=p.id
+                AND p.container_id=?
+                ORDER BY t.datetime DESC
+                """, (pfid,)).fetchall():
+            res.append((type, date, price, ta_costs, quantity))
         return res
     
     def get_dividends(self, pid):

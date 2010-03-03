@@ -22,7 +22,7 @@ import gtk
 from stocktracker.treeviews import Tree
 from stocktracker import pubsub, objects
 from stocktracker.gui_utils import ContextMenu
-from session import session
+from stocktracker.session import session
 from datetime import datetime
 
 
