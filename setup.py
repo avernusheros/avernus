@@ -51,7 +51,7 @@ def update_data_path(prefix, oldvalue=None):
         os.rename(fout.name, fin.name)
     except (OSError, IOError), e:
         import sys
-        print ("ERROR: Can't find stocktracker/stocktrackerconfig.py")
+        print ("ERROR: Can't find stocktracker/config.py")
         sys.exit(1)
     return oldvalue
 

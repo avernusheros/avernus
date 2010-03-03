@@ -1,6 +1,6 @@
 Format-Specification: http://wiki.debian.org/Proposals/CopyrightFormat
 Upstream-Name: stocktracker
-Upstream-Maintainer: Wolfgang Steitz <wsteitz(at)gmail.com>
+Upstream-Maintainer: wolfer <wsteitz@gmail.com>
 Upstream-Source: https://launchpad.net/stocktracker
 
 Files: *

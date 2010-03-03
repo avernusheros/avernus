@@ -19,7 +19,7 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import os, sys
-__stocktracker_data_directory__ = '/usr/share/stocktracker/'
+__stocktracker_data_directory__ = '../data/'
 import ConfigParser
 from stocktracker.session import session
 
@@ -27,8 +27,8 @@ from stocktracker.session import session
 class project_path_not_found(Exception):
     pass
 
-def getdatapath(folder = ''):
-    """Retrieve stocktracker data path
+def getdatapath():
+    """Retrieve foo data path
 
     This path is by default <stocktracker_lib_path>/../data/ in trunk
     and /usr/share/stocktracker in an installed version but this path
@@ -41,7 +41,7 @@ def getdatapath(folder = ''):
     else:
         pathname = os.path.dirname(__file__) + '/' + __stocktracker_data_directory__
 
-    abs_data_path = os.path.join(os.path.abspath(pathname),folder)
+    abs_data_path = os.path.abspath(pathname)
     if os.path.exists(abs_data_path):
         return abs_data_path
     else:
@@ -50,7 +50,7 @@ def getdatapath(folder = ''):
 
 
 config_path = os.path.join( os.getenv('HOME'), '.stocktracker')
-media_path = os.path.join(getdatapath(), 'media')
+#media_path = os.path.join(getdatapath(), 'media')
 
 quotes_file = os.path.join(config_path, 'historical_data.db')
 timezone = 'CET'
