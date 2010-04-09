@@ -2,8 +2,7 @@ from stocktracker.cairoplot.gtkcairoplot import gtk_dot_line_plot, gtk_vertical_
 import gtk
 from stocktracker.treeviews import get_green_red_string
 from datetime import date, timedelta
-from stocktracker.session import session
-
+from stocktracker import updater
 
 class ChartWindow(gtk.Window):
     def __init__ (self, stock):
@@ -68,7 +67,7 @@ class Chart(gtk.VBox):
         vbox = gtk.VBox()
         date1 = date.today()
         date2 = self.get_date2(zoom, date1)
-        data = session['model'].data_provider.get_historical_prices(self.stock, date1, date2) 
+        data = updater.get_historical_prices(self.stock, date1, date2) 
         
         quotes = [d[4] for d in data]
 

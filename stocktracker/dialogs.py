@@ -3,7 +3,7 @@
 import gtk
 from stocktracker import model, pubsub
 from datetime import datetime
-from stocktracker import yahoo as updater
+from stocktracker import updater
 
 
 class StockSelector(gtk.Entry):

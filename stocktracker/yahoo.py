@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-
 from urllib import urlopen
 import csv, pytz
 from datetime import datetime
@@ -49,11 +48,12 @@ def check_symbol(symbol):
     return __request(symbol, 'e1').read().strip().strip('"') == "N/A"
     
 
-def get_historical_prices(symbol, start_date, end_date):
+def get_historical_prices(stock, start_date, end_date):
     """
     Get historical prices for the given ticker symbol.
     Returns a nested list.
     """
+    symbol = stock.yahoo_symbol
     #print "fetch data", start_date, end_date
     url = 'http://ichart.yahoo.com/table.csv?s=%s&' % symbol + \
           'd=%s&' % str(start_date.month-1) + \

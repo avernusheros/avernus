@@ -4,7 +4,7 @@ import elixir
 from elixir import Entity, Field, Unicode, String, Float, Integer, \
                     UnicodeText, DateTime, OneToMany, ManyToMany, ManyToOne
 from stocktracker  import pubsub
-from stocktracker  import yahoo as updater
+from stocktracker  import updater
 from elixir.events import *   
 from datetime      import datetime
  
