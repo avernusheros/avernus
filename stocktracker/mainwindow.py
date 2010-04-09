@@ -20,6 +20,7 @@ from stocktracker.dividends_tab import DividendsTab
 from stocktracker.transactions_tab import TransactionsTab
 from webbrowser import open as web
 import stocktracker
+from stocktracker import updater
 
 logger = logging.getLogger(__name__)
 
@@ -101,7 +102,7 @@ class MenuBar(gtk.MenuBar):
         dialogs.MergeDialog()
     
     def on_update(self, widget):
-        pubsub.publish('menubar.update')    
+        updater.update_stocks(model.Stock.query.all())
         
     def on_add(self,widget):
         dialogs.AddStockDialog()
@@ -213,7 +214,8 @@ class MainWindow(gtk.Window):
         
         if isinstance(item, model.Portfolio) or isinstance(item, model.Tag): 
             self.notebook.append_page(TransactionsTab(item), gtk.Label(_('Transactions')))
-            self.notebook.append_page(DividendsTab(item), gtk.Label(_('Dividends')))
+            #FIXME
+            #self.notebook.append_page(DividendsTab(item), gtk.Label(_('Dividends')))
             self.notebook.append_page(chart_tab.ChartTab(item), gtk.Label(_('Charts')))
 
     def on_maintree_unselect(self):

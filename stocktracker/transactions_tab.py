@@ -65,7 +65,9 @@ class TransactionsTree(Tree):
             return ''
         
     def insert_transaction(self, ta, pos):
-        self.get_model().append(None, [ta, self.get_action_string(ta.type), get_name_string(pos.stock), get_datetime_string(ta.date), ta.quantity, ta.price, ta.ta_costs])
+        model = self.get_model()
+        if model:
+            model.append(None, [ta, self.get_action_string(ta.type), get_name_string(pos.stock), get_datetime_string(ta.date), ta.quantity, ta.price, ta.ta_costs])
 
     def insert_pf_transaction(self, ta):
         self.get_model().append(None, [ta, self.get_action_string(ta.type), '', get_datetime_string(ta.date), ta.quantity, ta.price, ta.ta_costs]) 

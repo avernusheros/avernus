@@ -52,7 +52,6 @@ def getdatapath():
 config_path = os.path.join( os.getenv('HOME'), '.stocktracker')
 #media_path = os.path.join(getdatapath(), 'media')
 
-quotes_file = os.path.join(config_path, 'historical_data.db')
 timezone = 'CET'
 currency = '€'
 

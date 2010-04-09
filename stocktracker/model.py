@@ -18,7 +18,7 @@ TYPES = {None: 'n/a', 0:'stock', 1:'fund'}
 ###############################################################
 
 class Position(object):
-    tags = None
+    tagstring = ''
     
     @property
     def type_string(self):
@@ -54,6 +54,8 @@ class Position(object):
 
 class Container(object):
 
+    tagstring = ''
+    
     @property
     def current_change(self):
         change = 0.0
@@ -107,7 +109,7 @@ class Container(object):
      
     def update_positions(self):
         updater.update_stocks([pos.stock for pos in self.positions])
-        self.last_update = datetime.today()
+        self.last_update = datetime.now()
         pubsub.publish("stocks.updated", self)
 
 

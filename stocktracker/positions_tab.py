@@ -11,7 +11,7 @@ from stocktracker.gui_utils import ContextMenu
 class PositionContextMenu(ContextMenu):
     def __init__(self, position):
         ContextMenu.__init__(self)
-        if isinstance(position, objects.PortfolioPosition):
+        if isinstance(position, model.PortfolioPosition):
             type = 0
             remove_string = 'Sell'
         else:
@@ -296,11 +296,12 @@ class PositionsTree(Tree):
             if response == gtk.RESPONSE_OK:
                 position.delete()
         elif isinstance(self.container, model.Portfolio):
-            SellDialog(self.container, position)
-            if position.quantity == 0:
-                self.get_model().remove(iter)
-            else:
-                self.get_model()[iter][self.cols['shares']] = position.quantity    
+            d = SellDialog(self.container, position)
+            if d.response == gtk.RESPONSE_ACCEPT:
+                if position.quantity == 0:
+                    self.get_model().remove(iter)
+                else:
+                    self.get_model()[iter][self.cols['shares']] = position.quantity    
     
     def on_add_position(self):
         if isinstance(self.container, model.Watchlist):

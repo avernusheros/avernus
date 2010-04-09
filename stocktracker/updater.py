@@ -33,7 +33,7 @@ def get_historical_prices(stock, start_date, end_date):
     if newest == None:
         newest = datetime.datetime(end_date.year -20, end_date.month, end_date.day)
     # newest.date(), start_date, newest.date() >= start_date
-    if self.online() and newest.date() < start_date:
+    if newest.date() < start_date:
         new_data = updater.get_historical_prices(stock.symbol, start_date, newest)
         self.store.insert_quotes(stock, new_data)
     return self.store.get_historical_prices(stock, start_date, end_date)
