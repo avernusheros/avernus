@@ -31,8 +31,7 @@ def update_stocks(stocks):
         stocks[s].change = float(row[3])
         s+=1
              
-        
-    
+               
 def get_info(symbol):
     #name, isin, exchange, currency
     for row in csv.reader(__request(symbol, 'nxc4')):

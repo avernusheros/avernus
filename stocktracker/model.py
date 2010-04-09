@@ -272,7 +272,16 @@ class Transaction(Entity):
     quantity = Field(Integer)
     ta_costs = Field(Float)
     price = Field(Float)
-    
+      
+
+class PortfolioTransaction(Entity):
+    elixir.using_options(tablename='portolio_transaction')
+    date = Field(DateTime)
+    portfolio = ManyToOne('Portfolio')
+    type = Field(Integer)
+    quantity = Field(Integer)
+    price = Field(Float)
+    ta_costs = Field(Float)
 
 class Dividend(Entity):
     elixir.using_options(tablename='dividend')
@@ -285,10 +294,7 @@ class Dividend(Entity):
     price = Field(Float)
     
 
-class PortfolioTransaction(Entity):
-    elixir.using_options(tablename='portolio_transaction')
-    date = Field(DateTime)
-    positions = ManyToOne('Portfolio')
+
 
     
     

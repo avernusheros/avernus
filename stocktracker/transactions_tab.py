@@ -42,7 +42,7 @@ class TransactionsTree(Tree):
             for ta in self.portfolio.transactions:
                 self.insert_pf_transaction(ta)
     
-    def on_pf_transaction_created(self, portfolio, name):
+    def on_pf_transaction_created(self, portfolio, ta):
         if portfolio.name == self.portfolio.name:
             self.insert_pf_transaction(ta)
     

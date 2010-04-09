@@ -327,7 +327,7 @@ class CashDialog(gtk.Dialog):
         if type == 0:
             text = _("Deposit cash")
         else: text = _("Withdraw cash")
-        gtk.Dialog.__init__(self, text, session['main']
+        gtk.Dialog.__init__(self, text, None
                             , gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
                      (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
                       gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
@@ -355,9 +355,12 @@ class CashDialog(gtk.Dialog):
             year, month, day = self.calendar.get_date()
             date = datetime(year, month+1, day)
             if self.action_type == 0:
-                self.pf.deposit_cash(amount, date)
+                self.pf.cash += amount
+                ta = model.PortfolioTransaction(date=date, portfolio=self.pf, type=3, price=amount)
             else:
-                self.pf.withdraw_cash(amount, date)
+                self.pf.cash -= amount
+                ta = model.PortfolioTransaction(date=date, portfolio=self.pf, type=4, price=amount)
+            pubsub.publish('portfolio.transaction.added', self.pf, ta)
                   
         
         
