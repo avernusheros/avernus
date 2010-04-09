@@ -1,29 +1,10 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
-#    https://launchpad.net/stocktracker
-#    objects.py: Copyright 2009 Wolfgang Steitz <wsteitz(at)gmail.com>
-#
-#    This file is part of stocktracker.
-#
-#    This program is free software: you can redistribute it and/or modify
-#    it under the terms of the GNU General Public License as published by
-#    the Free Software Foundation, either version 3 of the License, or
-#    (at your option) any later version.
-#
-#    This program is distributed in the hope that it will be useful,
-#    but WITHOUT ANY WARRANTY; without even the implied warranty of
-#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#    GNU General Public License for more details.
-#
-#    You should have received a copy of the GNU General Public License
-#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import gtk, os
 from stocktracker.treeviews import Tree, get_name_string, datetime_format, get_datetime_string
-from stocktracker import pubsub, config, objects
+from stocktracker import pubsub, config, model
 from stocktracker.plot import ChartWindow
 from stocktracker.dialogs import SellDialog, NewWatchlistPositionDialog, SplitDialog, BuyDialog
-from stocktracker.session import session
 from stocktracker.gui_utils import ContextMenu
 
 
@@ -125,7 +106,7 @@ class PositionsToolbar(gtk.Toolbar):
         pubsub.publish('positionstoolbar.add')  
       
     def on_update_clicked(self, widget):
-        pubsub.publish('positionstoolbar.update', self.container)
+        self.container.update_positions()
         
     def on_remove_clicked(self, widget):
         pubsub.publish('positionstoolbar.remove') 
@@ -148,22 +129,21 @@ class PositionsTree(Tree):
     def __init__(self, container):
         self.container = container
         Tree.__init__(self)
-        self.cols = {'id':0,
-                     'obj':1,
-                     'name':2, 
-                     'start':3, 
-                     'last_price':4, 
-                     'change':5, 
-                     'gain':6,
-                     'shares':7, 
-                     'buy_value':8,
-                     'mkt_value':9,
-                     'tags':10,
-                     'days_gain':11,
-                     'gain_percent':12,
-                     'change_percent':13,
-                     'type': 14,
-                     'pf_percent': 15
+        self.cols = {'obj':0,
+                     'name':1, 
+                     'start':2, 
+                     'last_price':3, 
+                     'change':4, 
+                     'gain':5,
+                     'shares':6, 
+                     'buy_value':7,
+                     'mkt_value':8,
+                     'tags':9,
+                     'days_gain':10,
+                     'gain_percent':11,
+                     'change_percent':12,
+                     'type': 13,
+                     'pf_percent': 14
                       }
         
         def float_to_string(column, cell, model, iter, user_data):
@@ -180,35 +160,35 @@ class PositionsTree(Tree):
                 markup =  str(num)
             cell.set_property('markup', markup)
         
-        self.set_model(gtk.TreeStore(int, object,str, str, str,float, float, int, float, float, str, float, float, float, str, float))
+        self.set_model(gtk.TreeStore(object,str, str, str,float, float, int, float, float, str, float, float, float, str, float))
         
-        if self.container.type != 'watchlist':
-            self.create_column(_('Shares'), 7)
-        self.create_column(_('Name'), 2)
-        if self.container.type != 'watchlist':
+        if not isinstance(self.container, model.Watchlist):
+            self.create_column(_('Shares'), self.cols['shares'])
+        self.create_column(_('Name'), self.cols['name'])
+        if not isinstance(self.container, model.Watchlist):
             col, cell = self.create_column(_('Portfolio %'), self.cols['pf_percent'])
             col.set_cell_data_func(cell, float_to_string, self.cols['pf_percent'])
         self.create_column(_('Type'), self.cols['type'])
-        self.create_column(_('Start'), 3)
-        if self.container.type != 'watchlist':
-            col, cell = self.create_column(_('Buy value'), 8)
-            col.set_cell_data_func(cell, float_to_string, 8)
-        self.create_column(_('Last price'), 4)
-        col, cell = self.create_column(_('Change'), 5)
-        col.set_cell_data_func(cell, float_to_red_green_string, 5)
-        col, cell = self.create_column(_('Change %'), 13)
-        col.set_cell_data_func(cell, float_to_red_green_string, 13)
-        if self.container.type != 'watchlist':
-            col, cell = self.create_column(_('Mkt value'), 9)
-            col.set_cell_data_func(cell, float_to_string, 9)
-        col, cell = self.create_column(_('Gain'), 6)
-        col.set_cell_data_func(cell, float_to_red_green_string, 6)
-        col, cell = self.create_column(_('Gain %'), 12)
-        col.set_cell_data_func(cell, float_to_red_green_string, 12)
-        if self.container.type != 'watchlist':
-            col, cell = self.create_column(_('Day\'s gain'), 11)
-            col.set_cell_data_func(cell, float_to_red_green_string, 11)
-        col, cell = self.create_column(_('Tags'), 10)
+        self.create_column(_('Start'), self.cols['start'])
+        if not isinstance(self.container, model.Watchlist):
+            col, cell = self.create_column(_('Buy value'), self.cols['buy_value'])
+            col.set_cell_data_func(cell, float_to_string, self.cols['buy_value'])
+        self.create_column(_('Last price'), self.cols['last_price'])
+        col, cell = self.create_column(_('Change'), self.cols['change'])
+        col.set_cell_data_func(cell, float_to_red_green_string, self.cols['change'])
+        col, cell = self.create_column(_('Change %'), self.cols['change_percent'])
+        col.set_cell_data_func(cell, float_to_red_green_string, self.cols['change_percent'])
+        if not isinstance(self.container, model.Watchlist):
+            col, cell = self.create_column(_('Mkt value'), self.cols['mkt_value'])
+            col.set_cell_data_func(cell, float_to_string, self.cols['mkt_value'])
+        col, cell = self.create_column(_('Gain'), self.cols['gain'])
+        col.set_cell_data_func(cell, float_to_red_green_string, self.cols['gain'])
+        col, cell = self.create_column(_('Gain %'), self.cols['gain_percent'])
+        col.set_cell_data_func(cell, float_to_red_green_string, self.cols['gain_percent'])
+        if not isinstance(self.container, model.Watchlist):
+            col, cell = self.create_column(_('Day\'s gain'), self.cols['days_gain'])
+            col.set_cell_data_func(cell, float_to_red_green_string, self.cols['days_gain'])
+        col, cell = self.create_column(_('Tags'), self.cols['tags'])
         cell.set_property('editable', True)
         cell.connect('edited', self.on_tag_edited)
         
@@ -238,8 +218,7 @@ class PositionsTree(Tree):
         self.connect("destroy", self.on_destroy)
         
         self.subscriptions = (
-            ('position.updated', self.on_position_updated),
-            ('stock.updated', self.on_stock_updated),
+            ('stocks.updated', self.on_stocks_updated),
             ('positionstoolbar.remove', self.on_remove_position),
             ('position_menu.remove', self.on_remove_position),
             ('positionstoolbar.add', self.on_add_position),
@@ -251,7 +230,6 @@ class PositionsTree(Tree):
             ('position_menu.chart', self.on_chart),
             ('container.position.added', self.on_position_added),
             ('position.tags.changed', self.on_positon_tags_changed),
-            ('container.position.removed', self.on_position_deleted),
             ('shortcut.update', self.on_update)
         )
         for topic, callback in self.subscriptions:
@@ -260,7 +238,7 @@ class PositionsTree(Tree):
         self.selected_item = None
     
     def on_update(self):
-        pubsub.publish('positionstoolbar.update', self.container)
+        self.container.update_positions()
 
     def on_button_press_event(self, widget, event):
         if event.button == 3:
@@ -273,41 +251,35 @@ class PositionsTree(Tree):
             pubsub.unsubscribe(topic, callback)
 
     def load_positions(self):
-        for pos in self.container:
+        for pos in self.container.positions:
             self.insert_position(pos)
     
     def on_tag_edited(self, cellrenderertext, path, new_text):
         if self.selected_item is None:
             return
         obj, iter = self.selected_item
-        obj.tag(new_text.split())
+        obj.tags = new_text.split()
     
-    def on_position_updated(self, item):
-        row = self.find_position(item.id)
-        if row:
-            if item.quantity == 0:
-                self.get_model().remove(row.iter)
-            else:
-                row[self.cols['shares']] = item.quantity
-    
+   
     def on_positon_tags_changed(self, tags, item):
         row = self.find_position(item.id)
         if row:
             row[self.cols['tags']] = item.tags_string
     
-    def on_stock_updated(self, item):
-        row = self.find_position_from_stock(item.id)
-        if row:
-            row[self.cols['last_price']] = self.get_price_string(item)
-            row[self.cols['change']] = row[1].current_change[0]
-            row[self.cols['change_percent']] = row[1].current_change[1]
-            row[self.cols['gain']] = row[1].gain[0]
-            row[self.cols['gain_percent']] = row[1].gain[1]
-            row[self.cols['days_gain']] = row[1].days_gain
-            row[self.cols['mkt_value']] = round(row[1].cvalue,2)
+    def on_stocks_updated(self, container):
+        if container.name == self.container.name:
+            for row in self.get_model():
+                item = row[0]
+                row[self.cols['last_price']] = self.get_price_string(item)
+                row[self.cols['change']] = item.current_change[0]
+                row[self.cols['change_percent']] = item.current_change[1]
+                row[self.cols['gain']] = item.gain[0]
+                row[self.cols['gain_percent']] = item.gain[1]
+                row[self.cols['days_gain']] = item.days_gain
+                row[self.cols['mkt_value']] = round(item.cvalue,2)
                 
-    def on_position_added(self, item, container):
-        if container.id == self.container.id:
+    def on_position_added(self, container, item):
+        if container.name == self.container.name:
             self.insert_position(item)
      
     def on_remove_position(self, position = None):
@@ -315,27 +287,25 @@ class PositionsTree(Tree):
             if self.selected_item is None:
                 return
             position, iter = self.selected_item
-        if self.container.type == 'watchlist':
+        if isinstance(self.container, model.Watchlist):
             dlg = gtk.MessageDialog(None, 
                  gtk.DIALOG_DESTROY_WITH_PARENT, gtk.MESSAGE_QUESTION, 
                     gtk.BUTTONS_OK_CANCEL, _("Are you sure?"))
             response = dlg.run()
             dlg.destroy()
             if response == gtk.RESPONSE_OK:
-                self.container.remove_position(position)
-        elif self.container.type == 'portfolio':
-            SellDialog(self.container, position)    
+                position.delete()
+        elif isinstance(self.container, model.Portfolio):
+            SellDialog(self.container, position)
+            if position.quantity == 0:
+                self.get_model().remove(iter)
+            else:
+                self.get_model()[iter][self.cols['shares']] = position.quantity    
     
-    def on_position_deleted(self, pos, pf):
-        if pf.id == self.container.id:
-            row = self.find_position(pos.id)
-            if row is not None:
-                self.get_model().remove(row.iter)   
-       
     def on_add_position(self):
-        if self.container.type == 'watchlist':
+        if isinstance(self.container, model.Watchlist):
             NewWatchlistPositionDialog(self.container)  
-        elif self.container.type == 'portfolio':
+        elif isinstance(self.container, model.Portfolio):
             BuyDialog(self.container)
     
     def on_split(self, position = None):
@@ -365,12 +335,12 @@ class PositionsTree(Tree):
         #Get the current selection in the gtk.TreeView
         selection = widget.get_selection()
         # Get the selection iter
-        model, selection_iter = selection.get_selected()
+        treestore, selection_iter = selection.get_selected()
         if (selection_iter and model):
             #Something is selected so get the object
-            obj = model.get_value(selection_iter, 1)
+            obj = treestore.get_value(selection_iter, 0)
             self.selected_item = obj, selection_iter
-            if isinstance(obj, objects.Position):
+            if isinstance(obj, model.Position):
                 pubsub.publish('positionstree.select', obj)
                 return
         pubsub.publish('positionstree.unselect')
@@ -382,11 +352,14 @@ class PositionsTree(Tree):
         
     def insert_position(self, position):
         if position.quantity != 0:
-            stock = session['model'].stocks[position.stock_id]
+            stock = position.stock
             gain = position.gain
             c_change = position.current_change
-            self.get_model().append(None, [position.id, 
-                                           position, 
+            if self.container.cvalue == 0:
+                change = 0
+            else:
+                change = 100 * position.cvalue / self.container.cvalue
+            self.get_model().append(None, [position, 
                                            get_name_string(stock), 
                                            self.get_price_string(position), 
                                            self.get_price_string(stock), 
@@ -395,12 +368,12 @@ class PositionsTree(Tree):
                                            position.quantity,
                                            position.bvalue,
                                            position.cvalue,
-                                           position.tags_string,
+                                           position.tagstring,
                                            position.days_gain,
                                            gain[1],
                                            c_change[1],
                                            position.type_string,
-                                           100 * position.cvalue / self.container.total])
+                                           change])
 
     def find_position_from_stock(self, sid):
         def search(rows):
@@ -448,7 +421,7 @@ class PositionsTab(gtk.VBox):
         self.overall_label = label = gtk.Label()
         hbox.pack_start(label, expand = False, fill = False)
         
-        if pf.type == 'watchlist' or pf.type == 'portfolio':
+        if isinstance(pf, model.Watchlist) or isinstance(pf, model.Portfolio):
             hbox.pack_start(gtk.VSeparator(), expand = False, fill = False)
             self.last_update_label = label = gtk.Label()
             hbox.pack_start(label, expand = False, fill = False)
@@ -471,15 +444,15 @@ class PositionsTab(gtk.VBox):
             text = '<b>'+_('Gain')+'</b>\n'+self.get_change_string(self.pf.overall_change)
             self.overall_label.set_markup(text)
             
-            if self.pf.type == 'portfolio':
-                text = '<b>'+_('Investments')+'</b> :'+str(round(self.pf.total,2))
+            if isinstance(container, model.Portfolio):
+                text = '<b>'+_('Investments')+'</b> :'+str(round(self.pf.cvalue,2))
                 text += '\n<b>'+_('Cash')+'</b> :'+str(round(self.pf.cash,2))
                 self.total_label.set_markup(text)
             else:
-                text = '<b>'+_('Total')+'</b>\n'+str(round(self.pf.total,2))
+                text = '<b>'+_('Total')+'</b>\n'+str(round(self.pf.cvalue,2))
                 self.total_label.set_markup(text)
             
-            if self.pf.type == 'watchlist' or self.pf.type == 'portfolio':
+            if isinstance(container, model.Portfolio) or isinstance(container, model.Watchlist):
                 text = '<b>'+_('Last update')+'</b>\n'+datetime_format(self.pf.last_update)
                 self.last_update_label.set_markup(text)
         

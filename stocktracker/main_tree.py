@@ -1,28 +1,9 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
-#    https://launchpad.net/stocktracker
-#    objects.py: Copyright 2009 Wolfgang Steitz <wsteitz(at)gmail.com>
-#
-#    This file is part of stocktracker.
-#
-#    This program is free software: you can redistribute it and/or modify
-#    it under the terms of the GNU General Public License as published by
-#    the Free Software Foundation, either version 3 of the License, or
-#    (at your option) any later version.
-#
-#    This program is distributed in the hope that it will be useful,
-#    but WITHOUT ANY WARRANTY; without even the implied warranty of
-#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#    GNU General Public License for more details.
-#
-#    You should have received a copy of the GNU General Public License
-#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import gtk
 from stocktracker.treeviews import Tree
-from stocktracker import pubsub, objects
+from stocktracker import pubsub, model
 from stocktracker.gui_utils import ContextMenu
-from stocktracker.session import session
 from datetime import datetime
 
 
@@ -43,8 +24,8 @@ class MainTreeBox(gtk.VBox):
 class MainTree(Tree):
     def __init__(self):
         Tree.__init__(self)
-        #id, object, icon, name
-        self.set_model(gtk.TreeStore(int, object,str, str))
+        #object, icon, name
+        self.set_model(gtk.TreeStore(object,str, str))
         
         self.set_headers_visible(False)
              
@@ -52,13 +33,13 @@ class MainTree(Tree):
         # Icon Renderer
         renderer = gtk.CellRendererPixbuf()
         column.pack_start(renderer, expand = False)
-        column.add_attribute(renderer, "pixbuf", 2)
-        column.set_attributes(renderer, stock_id=2)
+        column.add_attribute(renderer, "pixbuf", 1)
+        column.set_attributes(renderer, stock_id=1)
 
         # Text Renderer
         renderer = gtk.CellRendererText()
         column.pack_start(renderer, expand = True)
-        column.add_attribute(renderer, "markup", 3)
+        column.add_attribute(renderer, "markup", 2)
         self.append_column(column)
         self.on_clear()
         
@@ -66,16 +47,24 @@ class MainTree(Tree):
         self.connect('cursor_changed', self.on_cursor_changed)
         pubsub.subscribe("watchlist.created", self.insert_watchlist)
         pubsub.subscribe("portfolio.created", self.insert_portfolio)
-        pubsub.subscribe("container.updated", self.on_updated)
+        pubsub.subscribe("container.edited", self.on_updated)
         pubsub.subscribe("tag.created", self.insert_tag)
         pubsub.subscribe("tag.updated", self.on_updated)
         pubsub.subscribe("maintoolbar.remove", self.on_remove)
         pubsub.subscribe("maincontextmenu.remove", self.on_remove)
         pubsub.subscribe('maintoolbar.edit', self.on_edit)
         pubsub.subscribe('maincontextmenu.edit', self.on_edit)
-        pubsub.subscribe("model.database.loaded", self.on_database_loaded)
-                
         pubsub.subscribe('clear!', self.on_clear)
+        
+        #loading portfolios...
+        for pf in model.Portfolio.query.all():
+            self.insert_portfolio(pf)
+        for wl in model.Watchlist.query.all():
+            self.insert_watchlist(wl)
+        for tag in model.Tag.query.all():
+            self.insert_tag(tag)
+        self.expand_all()
+        
     
     def on_clear(self):
         self.insert_categories()
@@ -88,48 +77,49 @@ class MainTree(Tree):
                 ContainerContextMenu(obj).show(event)
 
     def insert_categories(self):
-        self.pf_iter = self.get_model().append(None, [-1, Category('Portfolios'),None,_("<b>Portfolios</b>")])
-        self.wl_iter = self.get_model().append(None, [-1, Category('Watchlists'),None,_("<b>Watchlists</b>")])
-        self.tag_iter = self.get_model().append(None, [-1, Category('Tags'),None,_("<b>Tags</b>")])
+        self.pf_iter = self.get_model().append(None, [Category('Portfolios'),'gtk-dnd-multiple', _("<b>Portfolios</b>")])
+        self.wl_iter = self.get_model().append(None, [Category('Watchlists'),'gtk-dnd-multiple', _("<b>Watchlists</b>")])
+        self.tag_iter = self.get_model().append(None, [Category('Tags'),'gtk-dnd-multiple', _("<b>Tags</b>")])
 
     def insert_watchlist(self, item):
-        self.get_model().append(self.wl_iter, [item.id, item, 'gtk-dnd', item.name])
+        self.get_model().append(self.wl_iter, [item, 'gtk-dnd', item.name])
     
     def insert_portfolio(self, item):
-        self.get_model().append(self.pf_iter, [item.id, item, 'gtk-dnd', item.name])
+        self.get_model().append(self.pf_iter, [item, 'gtk-dnd', item.name])
          
     def insert_tag(self, item):
-        self.get_model().append(self.tag_iter, [item.id, item, 'gtk-dnd', item.name])
+        self.get_model().append(self.tag_iter, [item, 'gtk-dnd', item.name])
          
     def on_remove(self):
         if self.selected_item is None:
             return
         obj, iter = self.selected_item
-        if isinstance(obj, objects.Watchlist) or isinstance(obj, objects.Portfolio) or isinstance(obj, objects.Tag):
+        if isinstance(obj, model.Container):
             dlg = gtk.MessageDialog(None, 
                  gtk.DIALOG_DESTROY_WITH_PARENT, gtk.MESSAGE_QUESTION, 
                  gtk.BUTTONS_OK_CANCEL, 
-                 _("Permanently delete ")+obj.type+' '+obj.name+'?')
+                 _("Permanently delete ")+obj.name+'?')
             response = dlg.run()
             dlg.destroy()
             if response == gtk.RESPONSE_OK:
-                session['model'].remove(obj)
+                obj.delete()
                 self.get_model().remove(iter)  
     
     def on_updated(self, item):
-        row = self.find_item(item.id, item.type)
+        obj, iter = self.selected_item
+        row = self.get_model()[iter]
         if row: 
             #row[1] = item
-            row[3] = item.name
+            row[2] = item.name
 
     def on_cursor_changed(self, widget):
         #Get the current selection in the gtk.TreeView
         selection = widget.get_selection()
         # Get the selection iter
-        model, selection_iter = selection.get_selected()
-        if (selection_iter and model):
+        treestore, selection_iter = selection.get_selected()
+        if (selection_iter and treestore):
             #Something is selected so get the object
-            obj = model.get_value(selection_iter, 1)
+            obj = treestore.get_value(selection_iter, 0)
             if not isinstance(obj, Category):
                 if self.selected_item is None or self.selected_item[0] != obj:
                     self.selected_item = obj, selection_iter
@@ -141,14 +131,13 @@ class MainTree(Tree):
     def on_edit(self):
         if self.selected_item is None:
             return
-        obj, iter = self.selected_item
-        if obj.type == 'portfolio':
+        obj, row = self.selected_item
+        if isinstance(obj, model.Portfolio):
             EditPortfolio(obj)
-        elif obj.type == 'watchlist':# or obj.type == 'tag':
+        elif isinstance(obj, model.Watchlist):# or obj.type == 'tag':
             EditWatchlist(obj)
 
-    def on_database_loaded(self):
-        self.expand_all()
+       
 
 
 class MainTreeToolbar(gtk.Toolbar):
@@ -199,7 +188,7 @@ class MainTreeToolbar(gtk.Toolbar):
 
 class EditWatchlist(gtk.Dialog):
     def __init__(self, wl):
-        gtk.Dialog.__init__(self, _("Edit..."), session['main']
+        gtk.Dialog.__init__(self, _("Edit..."), None
                             , gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
                      (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
                       gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
@@ -223,13 +212,14 @@ class EditWatchlist(gtk.Dialog):
 
     def process_result(self, widget=None, response = gtk.RESPONSE_ACCEPT):
         if response == gtk.RESPONSE_ACCEPT:
-            self.wl.name = self.name_entry.get_text()    
+            self.wl.name = self.name_entry.get_text()   
+            pubsub.publish("container.edited", self.wl) 
         self.destroy()
 
 
 class EditPortfolio(gtk.Dialog):
     def __init__(self, pf):
-        gtk.Dialog.__init__(self, _("Edit..."), session['main']
+        gtk.Dialog.__init__(self, _("Edit..."), None
                             , gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
                      (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
                       gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
@@ -260,13 +250,14 @@ class EditPortfolio(gtk.Dialog):
     def process_result(self, widget=None, response = gtk.RESPONSE_ACCEPT):
         if response == gtk.RESPONSE_ACCEPT:
             self.pf.name = self.name_entry.get_text()
-            self.pf.cash = self.cash_entry.get_value()      
+            self.pf.cash = self.cash_entry.get_value()
+            pubsub.publish("container.edited", self.pf)       
         self.destroy()
 
 
 class NewContainerDialog(gtk.Dialog):
     def __init__(self):
-        gtk.Dialog.__init__(self, _("Create..."), session['main']
+        gtk.Dialog.__init__(self, _("Create..."), None
                             , gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
                      (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
                       gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
@@ -299,21 +290,21 @@ class NewContainerDialog(gtk.Dialog):
             #grab the name
             name = self.name_entry.get_text()
             if self.radiobutton.get_active():
-                session['model'].create_portfolio(name)
+                model.Portfolio(name = name, cash=0.0)
             else:
                 #create wathclist
-                session['model'].create_watchlist(name)
+                model.Watchlist(name = name)
 
 class ContainerContextMenu(ContextMenu):
     def __init__(self, container):
         ContextMenu.__init__(self)
         self.container = container
         
-        self.add_item(_('Remove ')+container.type,  self.__remove_container, 'gtk-remove')
-        self.add_item(_('Edit ')+container.type,  self.__edit_container, 'gtk-edit')
+        self.add_item(_('Remove '),  self.__remove_container, 'gtk-remove')
+        self.add_item(_('Edit '),  self.__edit_container, 'gtk-edit')
         self.add_item('----')
         
-        if container.type == 'portfolio':
+        if isinstance(container, model.Portfolio):
             self.add_item(_('Deposit cash'),  self.__deposit_cash, 'gtk-add')
             self.add_item(_('Withdraw cash'),  self.__withdraw_cash, 'gtk-remove')
 

@@ -1,27 +1,8 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
-#    https://launchpad.net/stocktracker
-#    objects.py: Copyright 2009 Wolfgang Steitz <wsteitz(at)gmail.com>
-#
-#    This file is part of stocktracker.
-#
-#    This program is free software: you can redistribute it and/or modify
-#    it under the terms of the GNU General Public License as published by
-#    the Free Software Foundation, either version 3 of the License, or
-#    (at your option) any later version.
-#
-#    This program is distributed in the hope that it will be useful,
-#    but WITHOUT ANY WARRANTY; without even the implied warranty of
-#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#    GNU General Public License for more details.
-#
-#    You should have received a copy of the GNU General Public License
-#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from stocktracker.treeviews import Tree, get_name_string, datetime_format, get_datetime_string
 import gtk
-from stocktracker.session import session
-from stocktracker import pubsub, config, objects
+from stocktracker import pubsub, config, model
 from stocktracker.dialogs import PosSelector
 from datetime import datetime
 
@@ -106,8 +87,8 @@ class DividendsTree(Tree):
         pubsub.publish('dividendstree.unselect')
         
     def load_dividends(self):
-        for pos in self.portfolio:
-            for id, div in pos.dividends.items():
+        for pos in self.portfolio.positions:
+            for div in pos.dividends:
                 self.insert_dividend(div, pos)
     
     def on_dividend_added(self, item, position):

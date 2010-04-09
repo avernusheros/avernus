@@ -1,4 +1,4 @@
 project = stocktracker
-template = ubuntu-project
-format = 0.2.5
+template = ubuntu-application
 lp_id = stocktracker
+version = 0.3.90

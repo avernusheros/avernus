@@ -1,22 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
-#    https://launchpad.net/stocktracker
-#    updater.py: Copyright 2009 Wolfgang Steitz <wsteitz(at)gmail.com>
-#
-#    This file is part of stocktracker.
-#
-#    This program is free software: you can redistribute it and/or modify
-#    it under the terms of the GNU General Public License as published by
-#    the Free Software Foundation, either version 3 of the License, or
-#    (at your option) any later version.
-#
-#    This program is distributed in the hope that it will be useful,
-#    but WITHOUT ANY WARRANTY; without even the implied warranty of
-#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#    GNU General Public License for more details.
-#
-#    You should have received a copy of the GNU General Public License
-#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
 from urllib import urlopen
@@ -29,10 +11,11 @@ def __request(symbol, stat):
     url = 'http://finance.yahoo.com/d/quotes.csv?s=%s&f=%s' % (symbol, stat)
     return urlopen(url)
 
+
 def update_stocks(stocks):
     symbols = ''
     for stock in stocks:
-        symbols+= stock.symbol+'+'
+        symbols+= stock.yahoo_symbol+'+'
     symbols = symbols.strip('+')
     
     s = 0
@@ -48,7 +31,8 @@ def update_stocks(stocks):
         stocks[s].date = stocks[s].date.replace(tzinfo = None)
         stocks[s].change = float(row[3])
         s+=1
-     
+             
+        
     
 def get_info(symbol):
     #name, isin, exchange, currency
@@ -90,7 +74,7 @@ def get_historical_prices(symbol, start_date, end_date):
         data.append((dt, float(row[1]), float(row[2]), float(row[3]), float(row[6]), int(row[5])))
 
     data.reverse()
-    return data #(date, open, high, low, close, vol)        , Adj. Schluß
+    return data #(date, open, high, low, close, vol)        , Adj. Schluss
 
 
 if __name__ == "__main__":

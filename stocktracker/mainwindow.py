@@ -1,22 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
-#    https://launchpad.net/stocktracker
-#    stocktracker.py: Copyright 2009 Wolfgang Steitz <wsteitz(at)gmail.com>
-#
-#    This file is part of stocktracker.
-#
-#    This program is free software: you can redistribute it and/or modify
-#    it under the terms of the GNU General Public License as published by
-#    the Free Software Foundation, either version 3 of the License, or
-#    (at your option) any later version.
-#
-#    This program is distributed in the hope that it will be useful,
-#    but WITHOUT ANY WARRANTY; without even the implied warranty of
-#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#    GNU General Public License for more details.
-#
-#    You should have received a copy of the GNU General Public License
-#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 try:
     import pygtk
@@ -30,14 +12,14 @@ if __name__ == '__main__':
 
 
 import logging, gtk,os #, gobject
-from stocktracker import objects, config, pubsub, chart_tab, dialogs
+from stocktracker import config, pubsub, chart_tab, dialogs, model
 from stocktracker.positions_tab import PositionsTab
 from stocktracker.overview_tab import OverviewTab
 from stocktracker.main_tree import MainTreeBox
 from stocktracker.dividends_tab import DividendsTab
 from stocktracker.transactions_tab import TransactionsTab
 from webbrowser import open as web
-from stocktracker.session import session
+import stocktracker
 
 logger = logging.getLogger(__name__)
 
@@ -125,18 +107,18 @@ class MenuBar(gtk.MenuBar):
         dialogs.AddStockDialog()
     
     def on_save(self, widget):
-        session['model'].store.save()
+        model.commit()
     
     def on_new(self, widget):
-        session['model'].clear()
-        session['model'].store.new() 
-        session['model'].initialize()   
+        print "not implemented"
+        #session['model'].clear()
+        #session['model'].store.new() 
+        #session['model'].initialize()   
         
 
 class OpenDialog(gtk.FileChooserDialog):            
     def __init__(self, *arg, **args):
         gtk.FileChooserDialog.__init__(self, title='Open...', 
-                    parent=session['main'],
                     action=gtk.FILE_CHOOSER_ACTION_OPEN, 
                     buttons=(gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
                         gtk.STOCK_OK, gtk.RESPONSE_ACCEPT), backend=None)    
@@ -146,14 +128,15 @@ class OpenDialog(gtk.FileChooserDialog):
     
     def process_result(self, response):
         if response == gtk.RESPONSE_ACCEPT:
-            session['model'].clear()
-            session['model'].store.open(self.get_filename())
-            session['model'].initialize()
+            print "not implemented"
+            #session['model'].clear()
+            #session['model'].store.open(self.get_filename())
+            #session['model'].initialize()
             
 
 class SaveAsDialog(gtk.FileChooserDialog):            
     def __init__(self, *arg, **args):
-        gtk.FileChooserDialog.__init__(self, title='Save as...', parent=session['main'], action=gtk.FILE_CHOOSER_ACTION_SAVE, buttons=(gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
+        gtk.FileChooserDialog.__init__(self, title='Save as...',  action=gtk.FILE_CHOOSER_ACTION_SAVE, buttons=(gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
                       gtk.STOCK_OK, gtk.RESPONSE_ACCEPT), backend=None)    
         response = self.run()  
         self.process_result(response)
@@ -161,7 +144,7 @@ class SaveAsDialog(gtk.FileChooserDialog):
     
     def process_result(self, response):
         if response == gtk.RESPONSE_ACCEPT:
-            session['model'].store.save_as(self.get_filename())                
+            model.save_as(self.get_filename)
     
     
 
@@ -201,7 +184,6 @@ class MainWindow(gtk.Window):
         
         #display everything    
         self.show_all()
-        session['main'] = self
         
     def on_key_press_event(self, widget, event):
         if event.keyval == gtk.gdk.keyval_from_name('F5'):
@@ -212,7 +194,7 @@ class MainWindow(gtk.Window):
     def on_destroy(self, widget, data=None):
         """on_destroy - called when the StocktrackerWindow is close. """
         #clean up code for saving application state should be added here
-        session['model'].save()
+        model.commit()
         gtk.main_quit()
     
     def clear_notebook(self):
@@ -225,11 +207,11 @@ class MainWindow(gtk.Window):
             
     def on_maintree_select(self, item):
         self.clear_notebook()
-        if item.type == 'watchlist' or item.type == 'portfolio' or item.type == 'tag':
+        if isinstance(item, model.Container): 
             #self.notebook.append_page(OverviewTab(item, self.model, type), gtk.Label(_('Overview')))
             self.notebook.append_page(PositionsTab(item), gtk.Label(_('Positions')))
         
-        if item.type == 'portfolio' or item.type == 'tag':
+        if isinstance(item, model.Portfolio) or isinstance(item, model.Tag): 
             self.notebook.append_page(TransactionsTab(item), gtk.Label(_('Transactions')))
             self.notebook.append_page(DividendsTab(item), gtk.Label(_('Dividends')))
             self.notebook.append_page(chart_tab.ChartTab(item), gtk.Label(_('Charts')))

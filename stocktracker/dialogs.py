@@ -1,28 +1,9 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
-#    https://launchpad.net/stocktracker
-#    dialogs.py: Copyright 2009 Wolfgang Steitz <wsteitz(at)gmail.com>
-#
-#    This file is part of stocktracker.
-#
-#    This program is free software: you can redistribute it and/or modify
-#    it under the terms of the GNU General Public License as published by
-#    the Free Software Foundation, either version 3 of the License, or
-#    (at your option) any later version.
-#
-#    This program is distributed in the hope that it will be useful,
-#    but WITHOUT ANY WARRANTY; without even the implied warranty of
-#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#    GNU General Public License for more details.
-#
-#    You should have received a copy of the GNU General Public License
-#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import gtk
-from stocktracker import objects
+from stocktracker import model, pubsub
 from datetime import datetime
-from stocktracker.session import session
-
+from stocktracker import yahoo as updater
 
 
 class StockSelector(gtk.Entry):
@@ -34,8 +15,10 @@ class StockSelector(gtk.Entry):
         self.model = liststore = gtk.ListStore(int, str)
         completion.set_model(liststore)
         completion.set_text_column(1)
-        for id, stock in stocks.items():
-            liststore.append([id, str(stock)])       
+        i = 0
+        for stock in stocks:
+            liststore.append([i, str(stock)])       
+            i += 1
         #completion.insert_action_text(4,'test')
         #completion.insert_action_markup(4,'test')
     
@@ -45,17 +28,17 @@ class StockSelector(gtk.Entry):
     def match_func(self, completion, key, iter):
         stock = self.stocks[self.model[iter][0]]
         key = key.lower()
-        if stock.name.lower().startswith(key) or stock.symbol.lower().startswith(key):
+        if stock.name.lower().startswith(key) or stock.yahoo_symbol.lower().startswith(key):
             return True
         return False
 
     def on_completion_match(self, completion, model, iter):
-        self.selected_stock = model[iter][0]
+        self.selected_stock = self.stocks[model[iter][0]]
         
 
 class AddStockDialog(gtk.Dialog):
     def __init__(self):
-        gtk.Dialog.__init__(self, _("Add a new stock"), session['main']
+        gtk.Dialog.__init__(self, _("Add a new stock"), None
                     , gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
                        (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
                       gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
@@ -111,7 +94,7 @@ class AddStockDialog(gtk.Dialog):
         
     def on_symbol_entry(self, widget, event = None):
         symbol = self.symbol_entry.get_text()
-        stock_info = session['model'].data_provider.get_info(symbol)
+        stock_info = updater.get_info(symbol)
         if stock_info is not None:
             name, isin, exchange, currency = stock_info
             self.symbol_entry.set_icon_from_stock(1, gtk.STOCK_YES)
@@ -134,14 +117,15 @@ class AddStockDialog(gtk.Dialog):
             exchange = self.exchange_label.get_text()
             currency = self.currency_label.get_text()
             isin = 'n/a'
+            #FIXME
             
-            session['model'].create_stock(symbol, name, type, exchange, currency, isin)
+            model.Stock(yahoo_symbol = symbol, name = name, type = type, exchange = exchange, currency = currency, isin = isin)
 
 
         
 class SellDialog(gtk.Dialog):
     def __init__(self, pf, pos):
-        gtk.Dialog.__init__(self, _("Sell a position"), session['main']
+        gtk.Dialog.__init__(self, _("Sell a position"), None
                             , gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
                      (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
                       gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
@@ -169,29 +153,30 @@ class SellDialog(gtk.Dialog):
         vbox.pack_start(self.calendar)
         
         self.show_all()
-        response = self.run()  
-        self.process_result(response)
+        self.response = self.run()  
+        self.process_result()
         
         self.destroy()
         
-    def process_result(self, response):
-        if response == gtk.RESPONSE_ACCEPT:
+    def process_result(self):
+        if self.response == gtk.RESPONSE_ACCEPT:
             shares = self.shares_entry.get_value()
             if shares == 0.0:
                 return
-            price = self.price_entry.get_text()
+            price = float(self.price_entry.get_text())
             year, month, day = self.calendar.get_date()
             date = datetime(year, month+1, day)
             ta_costs = 0.0
 
-            self.pos.quantity -= shares                
-            self.pos.add_transaction(0, date, shares, price, ta_costs)
+            self.pos.quantity -= shares
+            ta = model.Transaction(position=self.pos, type=0, date=date, quantity=shares, price=price, ta_costs=ta_costs)              
+            pubsub.publish('position.transaction.added', self.pos, ta)
             self.pf.cash += shares*price - ta_costs
 
 
 class BuyDialog(gtk.Dialog):
     def __init__(self, pf):
-        gtk.Dialog.__init__(self, _("Buy a position"), session['main']
+        gtk.Dialog.__init__(self, _("Buy a position"), None
                             , gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
                      (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
                       gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
@@ -204,7 +189,7 @@ class BuyDialog(gtk.Dialog):
         label = gtk.Label(_('Stock:'))
         hbox.pack_start(label)
 
-        self.stock_selector = StockSelector(session['model'].stocks)
+        self.stock_selector = StockSelector(model.Stock.query.all())
         hbox.pack_start(self.stock_selector)
         self.stock_selector.completion.connect('match-selected', self.on_stock_selection)
 
@@ -259,7 +244,7 @@ class BuyDialog(gtk.Dialog):
         
     def process_result(self, response):
         if response == gtk.RESPONSE_ACCEPT:
-            stock_id = self.stock_selector.selected_stock
+            stock = self.stock_selector.selected_stock
             shares = self.shares_entry.get_value()
             if shares == 0.0:
                 return
@@ -267,13 +252,15 @@ class BuyDialog(gtk.Dialog):
             year, month, day = self.calendar.get_date()
             date = datetime(year, month+1, day)
             ta_costs = self.tacosts_entry.get_value()
-            position = self.pf.add_position(stock_id, price, date, shares, ta_costs)
-            position.add_transaction(1, date, shares, price, ta_costs)
+            pos = model.PortfolioPosition(price=price, date=date, quantity=shares, portfolio=self.pf, stock = stock)
+            ta = model.Transaction(type=1, date=date,quantity=shares,price=price,ta_costs=ta_costs, position=pos)
+            pubsub.publish('container.position.added', self.pf, pos)
+            pubsub.publish('position.transaction.added', pos, ta)
 
 
 class NewWatchlistPositionDialog(gtk.Dialog):
     def __init__(self, wl):
-        gtk.Dialog.__init__(self, _("Add watchlist position"), session['main']
+        gtk.Dialog.__init__(self, _("Add watchlist position"), None
                             , gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
                      (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
                       gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
@@ -286,7 +273,7 @@ class NewWatchlistPositionDialog(gtk.Dialog):
         label = gtk.Label(_('Stock:'))
         hbox.pack_start(label)
 
-        self.stock_selector = StockSelector(session['model'].stocks)
+        self.stock_selector = StockSelector(model.Stock.query.all())
         hbox.pack_start(self.stock_selector)
         self.stock_selector.completion.connect('match-selected', self.on_stock_selection)
 
@@ -301,10 +288,10 @@ class NewWatchlistPositionDialog(gtk.Dialog):
         
     def process_result(self, response):
         if response == gtk.RESPONSE_ACCEPT:
-            stock_id = self.stock_selector.selected_stock
-            stock = session['model'].stocks[stock_id]
+            stock = self.stock_selector.selected_stock
             stock.update()
-            position = self.wl.add_position(stock_id, stock.price, stock.date)
+            pos = model.WatchlistPosition(stock=stock, price = stock.price, date=stock.date, watchlist=self.wl)
+            pubsub.publish('container.position.added', self.wl, pos)
 
 
 class PfSelector(gtk.ComboBox):
@@ -341,7 +328,7 @@ class PosSelector(gtk.ComboBox):
 
 class SplitDialog(gtk.Dialog):
     def __init__(self, pos):
-        gtk.Dialog.__init__(self, _("Split a position"), session['main']
+        gtk.Dialog.__init__(self, _("Split a position"), None
                             , gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
                      (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
                       _('Split'), gtk.RESPONSE_ACCEPT))
@@ -379,7 +366,7 @@ class SplitDialog(gtk.Dialog):
             
 class MergeDialog(gtk.Dialog):
     def __init__(self):
-        gtk.Dialog.__init__(self, _("Merge two positions"), session['main']
+        gtk.Dialog.__init__(self, _("Merge two positions"), None
                             , gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
                      (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
                       'Merge', gtk.RESPONSE_ACCEPT))
