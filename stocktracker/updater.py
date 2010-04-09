@@ -8,8 +8,7 @@ updater = yahoo
 def update_stocks(stocks):
     if len(stocks) == 0:
         return
-    if self.online():
-        updater.update_stocks(stocks)
+    updater.update_stocks(stocks)
      
 def update_stock(stock):
     self.update_stocks([stock])
