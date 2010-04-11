@@ -1,11 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: latin-1 -*-
 
-
 import os, sys
 __stocktracker_data_directory__ = '../data/'
 import ConfigParser
-from stocktracker.session import session
 
 
 class project_path_not_found(Exception):
@@ -53,9 +51,7 @@ class StocktrackerConfig():
         if not os.path.exists(self.filename):
             self.create()
         self.parser.read(self.filename)
-        
-        session['config'] = self        
-    
+            
     def create(self):
         if not os.path.exists(config_path):
             os.mkdir(config_path)
