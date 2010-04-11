@@ -14,7 +14,10 @@
    id="svg2"
    version="1.1"
    inkscape:version="0.47 r22583"
-   sodipodi:docname="New document 1">
+   sodipodi:docname="drawing.svg"
+   inkscape:export-filename="/home/bastian/Dropbox/stocktracker/data/images/48x48/stocktracker_48x48.png"
+   inkscape:export-xdpi="89.766197"
+   inkscape:export-ydpi="89.766197">
   <defs
      id="defs4">
     <marker
@@ -46,8 +49,8 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="1"
-     inkscape:cx="30.368953"
-     inkscape:cy="10.273261"
+     inkscape:cx="29.47736"
+     inkscape:cy="26.188748"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -97,14 +100,18 @@
        d="m 47.499795,1019.8622 -46.9995897,0"
        style="fill:none;stroke:#aaaaaa;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" />
     <path
+       style="fill:#7cd854;fill-opacity:1;stroke:none"
+       d="m 0,1009.2372 0,41.125 37,0 0,-24.5625 -0.375,-0.1875 -8.625,8.25 -6.5,-2.5 -7.75,8.625 -10.0625,-30.75 -3.6875,0 z"
+       id="rect4259" />
+    <path
+       sodipodi:nodetypes="ccccc"
+       id="path4269"
+       d="m 2,1007.8622 10.625,32.5 7.75,-8.625 6.5,2.5 9.375,-9"
+       style="fill:none;stroke:#3c9814;stroke-width:3;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;marker-end:none" />
+    <path
        style="fill:none;stroke:#000000;stroke-width:1.99999976;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
        d="m 0.99999988,1005.3622 0,46 45.99999912,0"
        id="path3590" />
-    <path
-       style="fill:none;stroke:#3c9814;stroke-width:3;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;stroke-miterlimit:4;stroke-dasharray:none;marker-end:none"
-       d="M 2.875,1.4999999 12.375,36 l 7.75,-8.625 6.5,2.5 9.375,-9"
-       id="path3602"
-       transform="translate(0,1004.3622)" />
     <path
        sodipodi:type="star"
        style="fill:#eeeeee;fill-opacity:1;stroke:#3c9814;stroke-width:3;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0"
