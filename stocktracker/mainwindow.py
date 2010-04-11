@@ -191,6 +191,8 @@ class MainWindow(gtk.Window):
         if event.keyval == gtk.gdk.keyval_from_name('F5'):
              pubsub.publish('shortcut.update')
              return True
+        if event.keyval == gtk.gdk.keyval_from_name('q'):
+            self.on_destroy(widget) 
         return False
 
     def on_destroy(self, widget, data=None):
