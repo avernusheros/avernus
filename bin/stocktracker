@@ -6,7 +6,10 @@ import gtk
 
 # Check if we are working in the source tree or from the installed 
 # package and mangle the python path accordingly
+source_start = False
 if os.path.dirname(sys.argv[0]) != ".":
+    # we run from the source
+    source_start = True
     if sys.argv[0][0] == "/":
         fullPath = os.path.dirname(sys.argv[0])
     else:
@@ -77,18 +80,18 @@ def start():
 
 if __name__ == "__main__":
     #support for command line options
-    import logging, optparse
+    import optparse
     import stocktracker
     parser = optparse.OptionParser(version="%prog "+stocktracker.__version__)
     parser.add_option("-v", "--verbose", action="store_true", dest="verbose", help="Show debug messages")
+    parser.add_option("-d", "--debug", action="store_true", dest="debug", help="Enable debugging")
     (options, args) = parser.parse_args()
 
     #set the logging level to show debug messages
     if options.verbose:
-        logging.basicConfig(level=logging.DEBUG)
-        logging.debug('logging enabled')
-    else:
-        logging.basicConfig(level=logging.ERROR)
+        print "please tell the guys to implement this"
+    if options.debug or source_start:
+        import stocktracker.stockLogging
     
     #gobject.threads_init()
 

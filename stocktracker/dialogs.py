@@ -7,6 +7,7 @@ from datetime import datetime
 from stocktracker import updater
 
 import config
+import stockLogging as logging
 
 
 class StockSelector(gtk.Entry):
@@ -186,6 +187,7 @@ class PrefDialog(gtk.Dialog):
                             (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
                              gtk.STOCK_OK, gtk.RESPONSE_ACCEPT),
                             )
+        logging.logger.debug("PrefDialog started")
         self.conf = config.StocktrackerConfig()
         self.newName = None
         vbox = self.get_content_area()
@@ -202,6 +204,7 @@ class PrefDialog(gtk.Dialog):
         response = self.run()  
         self.process_result(response)
         self.destroy()
+        logging.logger.debug("PrefDialog destroyed")
         
     def launchDiag(self, widget):
         dialog = gtk.FileChooserDialog("Select a Database Location",
@@ -222,7 +225,7 @@ class PrefDialog(gtk.Dialog):
             if self.newName:
                 self.conf.set_option('database file', self.newName)
                 self.conf.write()
-                #print "Configuration updated: ", self.newName
+                logging.logger.info("Wrote new database file: " + self.newName)
 
 
 class BuyDialog(gtk.Dialog):
