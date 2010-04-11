@@ -1,9 +1,12 @@
 #!/usr/bin/env python
 
+
 import gtk
 from stocktracker import model, pubsub
 from datetime import datetime
 from stocktracker import updater
+
+import config
 
 
 class StockSelector(gtk.Entry):
@@ -174,6 +177,52 @@ class SellDialog(gtk.Dialog):
             ta = model.Transaction(position=self.pos, type=0, date=date, quantity=shares, price=price, ta_costs=ta_costs)              
             pubsub.publish('position.transaction.added', self.pos, ta)
             self.pf.cash += shares*price - ta_costs
+            
+class PrefDialog(gtk.Dialog):
+    
+    def __init__(self):
+        gtk.Dialog.__init__(self, "Preferences", None,
+                            gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
+                            (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
+                             gtk.STOCK_OK, gtk.RESPONSE_ACCEPT),
+                            )
+        self.conf = config.StocktrackerConfig()
+        self.newName = None
+        vbox = self.get_content_area()
+        hbox = gtk.HBox()
+        vbox.pack_start(hbox)
+        label = gtk.Label("Database Location: ")
+        hbox.pack_start(label)
+        dialogButton = gtk.ToolButton(gtk.STOCK_OPEN)
+        hbox.pack_start(dialogButton)
+        dialogButton.connect('clicked',self.launchDiag)
+        self.currLabel = gtk.Label(self.conf.get_option('database file'))
+        vbox.pack_start(self.currLabel)
+        self.show_all()
+        response = self.run()  
+        self.process_result(response)
+        self.destroy()
+        
+    def launchDiag(self, widget):
+        dialog = gtk.FileChooserDialog("Select a Database Location",
+                               None,
+                               gtk.FILE_CHOOSER_ACTION_SAVE,
+                               (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL,
+                                gtk.STOCK_OPEN, gtk.RESPONSE_OK))
+        dialog.set_default_response(gtk.RESPONSE_OK)
+        response = dialog.run()
+        if response == gtk.RESPONSE_OK:
+            self.newName = dialog.get_filename()
+            self.currLabel.set_text(self.newName)
+        dialog.destroy()
+
+    def process_result(self, response):
+        #print "Processing the response"
+        if response == gtk.RESPONSE_ACCEPT:
+            if self.newName:
+                self.conf.set_option('database file', self.newName)
+                self.conf.write()
+                #print "Configuration updated: ", self.newName
 
 
 class BuyDialog(gtk.Dialog):
@@ -435,3 +484,11 @@ class MergeDialog(gtk.Dialog):
         
 
 
+
+if __name__ == "__main__":
+    #import objects, persistent_store
+    #store = persistent_store.Store('test.db')
+    #model = objects.Model(store)
+    #d = MergeDialog(model)
+    #gtk.main()
+    PrefDialog() 

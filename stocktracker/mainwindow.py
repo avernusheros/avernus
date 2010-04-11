@@ -65,9 +65,15 @@ class MenuBar(gtk.MenuBar):
                             ('----', None, None),
                             (_("About"), gtk.STOCK_ABOUT , AboutDialog),
                            )
+        edit_menu_items = (
+                           (_("Preferences"),gtk.STOCK_PREFERENCES,self.on_pref),
+                           )
 
         filemenu = gtk.MenuItem(_("File"))
         filemenu.set_submenu(self.build_menu(file_menu_items))
+        
+        editmenu = gtk.MenuItem(_('Edit'))
+        editmenu.set_submenu(self.build_menu(edit_menu_items))
         
         toolsmenu = gtk.MenuItem(_('Tools'))
         toolsmenu.set_submenu(self.build_menu(tools_menu_items))
@@ -76,6 +82,7 @@ class MenuBar(gtk.MenuBar):
         helpmenu.set_submenu(self.build_menu(help_menu_items))
 
         self.append(filemenu)
+        self.append(editmenu)
         self.append(toolsmenu)
         self.append(helpmenu)
         
@@ -110,6 +117,9 @@ class MenuBar(gtk.MenuBar):
     
     def on_save(self, widget):
         model.commit()
+        
+    def on_pref(self, widget):
+        dialogs.PrefDialog()
     
     def on_new(self, widget):
         print "not implemented"
