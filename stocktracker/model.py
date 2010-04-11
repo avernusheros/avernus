@@ -120,10 +120,8 @@ class Container(object):
 ###############################################################
 
 
-#FIXME
 class Exchange(Entity):
     elixir.using_options(tablename='exchange')
-
     name = Field(String(128))
     #stocks = OneToMany('Stock')
     
@@ -133,6 +131,8 @@ class Index(Entity, Container):
     
     name = Field(String(128))
     positions = ManyToMany('Stock')
+    isin = Field(String(16))
+    exchange = ManyToOne('Exchange')
           
           
 class Quotation(Entity):
@@ -146,7 +146,7 @@ class Quotation(Entity):
 class Stock(Entity):
     elixir.using_options(tablename='stock')
     
-    isin = Field(String(128))
+    isin = Field(String(16))
     exchange = ManyToOne('Exchange')
     name = Field(String(128))
     type = Field(Integer, default=0)
@@ -336,17 +336,26 @@ def load_stocks():
     folder = config.getdatapath()
     files = [p for p in os.listdir(folder) if os.path.isfile(os.path.join(folder, p))] 
     
-    for f in files:
+    for f in files:    
         stocks = []
+        first = True
         for row in csv.reader(open(os.path.join(folder, f), "rb")):
-            exchange = Exchange.query.filter_by(name =row[3]).first()
-            if exchange is None:
-                exchange = Exchange(name=row[3])
-            stock = Stock.query.filter_by(isin=row[2], exchange=exchange).first()
-            if stock is None:
-                stock = Stock(yahoo_symbol=row[0], name=row[1], isin=row[2], exchange=exchange)
-            stocks.append(stock)
-        index = Index(name=f)
+            if first:
+                exchange = Exchange.query.filter_by(name =row[3]).first()
+                if exchange is None:
+                    exchange = Exchange(name=row[3])
+                index = Index.query.filter_by(isin=row[2], exchange=exchange).first()
+                if index is None:
+                    index = Index(yahoo_symbol=row[0], name=row[1], isin=row[2], exchange=exchange)
+                first = False
+            else:   
+                exchange = Exchange.query.filter_by(name =row[3]).first()
+                if exchange is None:
+                    exchange = Exchange(name=row[3])
+                stock = Stock.query.filter_by(isin=row[2], exchange=exchange).first()
+                if stock is None:
+                    stock = Stock(yahoo_symbol=row[0], name=row[1], isin=row[2], exchange=exchange)
+                stocks.append(stock)
         index.positions=stocks    
             
             
