@@ -18,6 +18,7 @@ from stocktracker.overview_tab import OverviewTab
 from stocktracker.main_tree import MainTreeBox
 from stocktracker.dividends_tab import DividendsTab
 from stocktracker.transactions_tab import TransactionsTab
+from stocktracker.index_treeview import IndexPositionsTab
 from webbrowser import open as web
 import stocktracker
 from stocktracker import updater
@@ -208,7 +209,7 @@ class MainWindow(gtk.Window):
             
     def on_maintree_select(self, item):
         self.clear_notebook()
-        if isinstance(item, model.Container): 
+        if isinstance(item, model.Portfolio) or isinstance(item, model.Tag) or isinstance(item, model.Watchlist): 
             #self.notebook.append_page(OverviewTab(item, self.model, type), gtk.Label(_('Overview')))
             self.notebook.append_page(PositionsTab(item), gtk.Label(_('Positions')))
         
@@ -217,6 +218,9 @@ class MainWindow(gtk.Window):
             #FIXME
             #self.notebook.append_page(DividendsTab(item), gtk.Label(_('Dividends')))
             self.notebook.append_page(chart_tab.ChartTab(item), gtk.Label(_('Charts')))
+        if isinstance(item, model.Index): 
+            self.notebook.append_page(IndexPositionsTab(item), gtk.Label(_('Positions')))
+
 
     def on_maintree_unselect(self):
         self.clear_notebook()

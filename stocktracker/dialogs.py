@@ -28,7 +28,9 @@ class StockSelector(gtk.Entry):
     def match_func(self, completion, key, iter):
         stock = self.stocks[self.model[iter][0]]
         key = key.lower()
-        if stock.name.lower().startswith(key) or stock.yahoo_symbol.lower().startswith(key):
+        if stock.name.lower().startswith(key)  \
+                or stock.yahoo_symbol.lower().startswith(key) \
+                or stock.isin.lower().startswith(key):
             return True
         return False
 
@@ -405,6 +407,7 @@ class MergeDialog(gtk.Dialog):
         model = combobox.get_model()
         index = combobox.get_active()
         if index:
+            #FIXME
             self.selected_pf = session['model'].portfolios[model[index][0]]
         else:
             self.selected_pf = None
@@ -432,9 +435,3 @@ class MergeDialog(gtk.Dialog):
         
 
 
-if __name__ == "__main__":
-    import objects, persistent_store
-    store = persistent_store.Store('test.db')
-    model = objects.Model(store)
-    d = MergeDialog(model)
-    gtk.main() 

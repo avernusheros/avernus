@@ -26,7 +26,7 @@ def datetime_format(date):
     return 'never'
     
 def get_name_string(stock):
-    return '<b>'+stock.name+'</b>' + '\n' + '<small>'+stock.yahoo_symbol+'</small>' + '\n' + '<small>'+stock.exchange+'</small>'
+    return '<b>'+stock.name+'</b>' + '\n' + '<small>'+stock.yahoo_symbol+'</small>' + '\n' + '<small>'+stock.exchange.name+'</small>'
  
 
 def get_green_red_string(num, string = None):

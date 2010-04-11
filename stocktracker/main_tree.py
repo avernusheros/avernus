@@ -63,6 +63,8 @@ class MainTree(Tree):
             self.insert_watchlist(wl)
         for tag in model.Tag.query.all():
             self.insert_tag(tag)
+        for index in model.Index.query.all():
+            self.insert_index(index)
         self.expand_all()
         
     
@@ -80,6 +82,7 @@ class MainTree(Tree):
         self.pf_iter = self.get_model().append(None, [Category('Portfolios'),'gtk-dnd-multiple', _("<b>Portfolios</b>")])
         self.wl_iter = self.get_model().append(None, [Category('Watchlists'),'gtk-dnd-multiple', _("<b>Watchlists</b>")])
         self.tag_iter = self.get_model().append(None, [Category('Tags'),'gtk-dnd-multiple', _("<b>Tags</b>")])
+        self.index_iter = self.get_model().append(None, [Category('Indices'),'gtk-dnd-multiple', _("<b>Indices</b>")])
 
     def insert_watchlist(self, item):
         self.get_model().append(self.wl_iter, [item, 'gtk-dnd', item.name])
@@ -89,6 +92,9 @@ class MainTree(Tree):
          
     def insert_tag(self, item):
         self.get_model().append(self.tag_iter, [item, 'gtk-dnd', item.name])
+    
+    def insert_index(self, item):
+        self.get_model().append(self.index_iter, [item, 'gtk-dnd', item.name])
          
     def on_remove(self):
         if self.selected_item is None:

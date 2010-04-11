@@ -1,13 +1,14 @@
 #!/usr/bin/env python
+# -*- coding: latin-1 -*-
+
 
 import elixir
-from elixir import Entity, Field, Unicode, String, Float, Integer, \
+from elixir import Entity, Field, Unicode, String, Text, Float, Integer, \
                     UnicodeText, DateTime, OneToMany, ManyToMany, ManyToOne
-from stocktracker  import pubsub
-from stocktracker  import updater
+from stocktracker  import pubsub, updater, config
 from elixir.events import *   
 from datetime      import datetime
- 
+import os 
  
     
 TYPES = {None: 'n/a', 0:'stock', 1:'fund'}
@@ -123,14 +124,15 @@ class Container(object):
 class Exchange(Entity):
     elixir.using_options(tablename='exchange')
 
-    name = Field(Unicode(128))
+    name = Field(String(128))
     #stocks = OneToMany('Stock')
     
 
-class Index(Entity):
+class Index(Entity, Container):
     elixir.using_options(tablename='indices')
     
-    name = Field(Unicode(128))
+    name = Field(String(128))
+    positions = ManyToMany('Stock')
           
           
 class Quotation(Entity):
@@ -144,12 +146,12 @@ class Quotation(Entity):
 class Stock(Entity):
     elixir.using_options(tablename='stock')
     
-    isin = Field(Unicode(128))
-    name = Field(Unicode(128))
+    isin = Field(String(128))
+    exchange = ManyToOne('Exchange')
+    name = Field(String(128))
     type = Field(Integer, default=0)
     currency = Field(Unicode(5))
-    yahoo_symbol = Field(Unicode(20))        
-    exchange = Field(Unicode(128))
+    yahoo_symbol = Field(String(32))        
     quotations = OneToMany('Quotation')
     price = Field(Float, default=0.0)
     date = Field(DateTime)
@@ -166,7 +168,7 @@ class Stock(Entity):
         updater.update_stocks([self])
     
     def __str__(self):
-        return self.name +' | '+self.exchange
+        return self.name +' | '+self.isin+' | '+self.exchange.name
     
 
 class Watchlist(Entity, Container):
@@ -313,20 +315,39 @@ def flush():
 
 
 def connect(database):
+    if os.path.isfile(database):
+        new = False
+    else: new = True
     elixir.metadata.bind = "sqlite:///"+database
-    #elixir.metadata.bind.echo = True
+    elixir.metadata.bind.echo = False #debug ausgabe
     elixir.setup_all()
     elixir.create_all()
-    #load_default_values()
-
-
-def load_default_values():
-    stock1 = Stock(name=u'Google', yahoo_symbol=u"GOOG", exchange=u"NASDAQ")
-    pf = Portfolio(name=u'Example')
-    PortfolioPosition(stock=stock1, portfolio=pf, quantity=10, price=500, tags=['tag1', 'tag2'])
-    wl = Watchlist(name=u'Example')
+    if new:
+        load_stocks()
 
 
 def save_as(filename):
     #FIXME
     print "not implemented"
+
+
+def load_stocks():
+    import csv
+    folder = config.getdatapath()
+    files = [p for p in os.listdir(folder) if os.path.isfile(os.path.join(folder, p))] 
+    
+    for f in files:
+        stocks = []
+        for row in csv.reader(open(os.path.join(folder, f), "rb")):
+            exchange = Exchange.query.filter_by(name =row[3]).first()
+            if exchange is None:
+                exchange = Exchange(name=row[3])
+            stock = Stock.query.filter_by(isin=row[2], exchange=exchange).first()
+            if stock is None:
+                stock = Stock(yahoo_symbol=row[0], name=row[1], isin=row[2], exchange=exchange)
+            stocks.append(stock)
+        index = Index(name=f)
+        index.positions=stocks    
+            
+            
+    
