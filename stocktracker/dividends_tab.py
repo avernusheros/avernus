@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 
-from stocktracker.treeviews import Tree, get_name_string, datetime_format, get_datetime_string
+from stocktracker.treeviews import Tree
+from stocktracker.gui_utils import get_datetime_string, get_name_string
 import gtk
-from stocktracker import pubsub, config, model
+from stocktracker import pubsub, model
 from stocktracker.dialogs import PosSelector
 from datetime import datetime
 
@@ -76,12 +77,12 @@ class DividendsTree(Tree):
         #Get the current selection in the gtk.TreeView
         selection = widget.get_selection()
         # Get the selection iter
-        model, selection_iter = selection.get_selected()
-        if (selection_iter and model):
+        treestore, selection_iter = selection.get_selected()
+        if (selection_iter and treestore):
             #Something is selected so get the object
-            obj = model.get_value(selection_iter, 1)
+            obj = treestore.get_value(selection_iter, 1)
             self.selected_item = obj, selection_iter
-            if isinstance(obj, objects.Dividend):
+            if isinstance(obj, model.Dividend):
                 pubsub.publish('dividendstree.select', obj)
                 return
         pubsub.publish('dividendstree.unselect')
@@ -96,14 +97,13 @@ class DividendsTree(Tree):
             self.insert_dividend(item, position)    
     
     def insert_dividend(self, div, pos):
-        stock = session['model'].stocks[pos.stock_id]
-        self.get_model().append(None, [div.id, div, get_name_string(stock), get_datetime_string(div.date), div.value, 0.0])
+        self.get_model().append(None, [div.id, div, get_name_string(pos.stock), get_datetime_string(div.date), div.value, 0.0])
 
     def on_remove(self):
         if self.selected_item is None:
             return
         obj, iter = self.selected_item
-        if isinstance(obj, objects.Dividend):
+        if isinstance(obj, model.Dividend):
             dlg = gtk.MessageDialog(None, 
                  gtk.DIALOG_DESTROY_WITH_PARENT, gtk.MESSAGE_QUESTION, 
                  gtk.BUTTONS_OK_CANCEL, 
@@ -118,7 +118,7 @@ class DividendsTree(Tree):
 
 class AddDividendDialog(gtk.Dialog):
     def __init__(self, pf):
-        gtk.Dialog.__init__(self, _("Add dividend"), session['main']
+        gtk.Dialog.__init__(self, _("Add dividend"), None
                             , gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
                      (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
                       'Add', gtk.RESPONSE_ACCEPT))

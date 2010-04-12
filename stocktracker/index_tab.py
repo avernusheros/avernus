@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 
-from stocktracker.treeviews import Tree, get_name_string, datetime_format, get_datetime_string
-import gtk, os
-from stocktracker import pubsub
+import gtk
+from stocktracker           import pubsub, model
+from stocktracker.treeviews import Tree
+from stocktracker.gui_utils import float_to_red_green_string, get_price_string, get_name_string, ContextMenu   
+from stocktracker.plot      import ChartWindow
 
 
 class IndexPositionsTab(gtk.VBox):
@@ -11,8 +13,8 @@ class IndexPositionsTab(gtk.VBox):
         self.index = index
         positions_tree = IndexPositionsTree(index)
         hbox = gtk.HBox()
-        #tb = PositionsToolbar(pf)
-        #hbox.pack_start(tb, expand = True, fill = True)
+        tb = PositionsToolbar(index, positions_tree)
+        hbox.pack_start(tb, expand = True, fill = True)
         
         self.today_label = label = gtk.Label()
         hbox.pack_start(label)
@@ -30,45 +32,82 @@ class IndexPositionsTab(gtk.VBox):
         self.pack_start(hbox, expand=False, fill=False)
         self.pack_start(sw)
         
-        self.on_container_update(self.index)
-        pubsub.subscribe('container.updated', self.on_container_update)
-       
         self.show_all()
         
-    def on_container_update(self, container):
-        #FIXME
-        return
-        if self.pf == container:
-            text = '<b>' + _('Day\'s gain')+'</b>\n'+self.get_change_string(self.pf.current_change)
-            self.today_label.set_markup(text)
-            text = '<b>'+_('Gain')+'</b>\n'+self.get_change_string(self.pf.overall_change)
-            self.overall_label.set_markup(text)
-            
-            if isinstance(container, model.Portfolio):
-                text = '<b>'+_('Investments')+'</b> :'+str(round(self.pf.cvalue,2))
-                text += '\n<b>'+_('Cash')+'</b> :'+str(round(self.pf.cash,2))
-                self.total_label.set_markup(text)
-            else:
-                text = '<b>'+_('Total')+'</b>\n'+str(round(self.pf.cvalue,2))
-                self.total_label.set_markup(text)
-            
-            if isinstance(container, model.Portfolio) or isinstance(container, model.Watchlist):
-                text = '<b>'+_('Last update')+'</b>\n'+datetime_format(self.pf.last_update)
-                self.last_update_label.set_markup(text)
-        
-    def get_change_string(self, item):
-        change, percent = item
-        if change is None:
-            return 'n/a'
-        text = str(percent) + '%' + ' | ' + str(round(change,2))
-        if change < 0.0:
-            text = '<span foreground="red">'+ text + '</span>'
-        else:
-            text = '<span foreground="dark green">'+ text + '</span>'
-        return text
-
     
-
+class PositionsToolbar(gtk.Toolbar):
+    def __init__(self, container, tree):
+        gtk.Toolbar.__init__(self)
+        self.container = container
+        self.tree = tree
+        self.conditioned = []
+        
+        button = gtk.ToolButton('gtk-edit')
+        #button.set_label('Remove tag'
+        button.connect('clicked', self.on_edit_clicked)
+        button.set_tooltip_text('Edit selected stock') 
+        #FIXME
+        self.insert(button,-1)
+        #self.conditioned.append(button)
+        button.set_sensitive(False)
+                
+        button = gtk.ToolButton('gtk-info')
+        button.connect('clicked', self.on_chart_clicked)
+        button.set_tooltip_text('Chart selected stock')
+        self.conditioned.append(button) 
+        self.insert(button,-1)        
+        
+        self.insert(gtk.SeparatorToolItem(),-1)
+        
+        button = gtk.ToolButton('gtk-refresh')
+        button.connect('clicked', self.on_update_clicked)
+        button.set_tooltip_text('Update stock quotes') 
+        self.insert(button,-1)
+        
+        self.on_unselect()
+        pubsub.subscribe('indextree.unselect', self.on_unselect)
+        pubsub.subscribe('indextree.select', self.on_select)
+        
+    def on_unselect(self):
+        for button in self.conditioned:
+            button.set_sensitive(False)       
+        
+    def on_select(self, obj):
+        for button in self.conditioned:
+            button.set_sensitive(True)
+           
+    def on_add_clicked(self, widget):
+        pubsub.publish('positionstoolbar.add')  
+      
+    def on_update_clicked(self, widget):
+        self.container.update_positions()
+           
+    def on_edit_clicked(self, widget):
+        #FIXME
+        pass
+        
+    def on_chart_clicked(self, widget):
+        if self.tree.selected_item is None:
+            return
+        stock, iter = self.tree.selected_item
+        d = ChartWindow(stock)
+        
+        
+class StockContextMenu(ContextMenu):
+    def __init__(self, position):
+        ContextMenu.__init__(self)
+        self.position = position
+        
+        self.add_item(_('Edit position'),  self.__edit_position, 'gtk-edit')
+        self.add_item(_('Chart position'),  self.on_chart_position, 'gtk-info')
+       
+    def __edit_position(self, *arg):
+        #FIXME
+        pass
+    
+    def on_chart_position(self, *arg):
+        ChartWindow(self.stock)
+        
 
 class IndexPositionsTree(Tree):
     def __init__(self, container):
@@ -85,16 +124,6 @@ class IndexPositionsTree(Tree):
             text =  str(round(model.get_value(iter, user_data), 2))
             cell.set_property('text', text)
         
-        def float_to_red_green_string(column, cell, model, iter, user_data):
-            num = round(model.get_value(iter, user_data), 2)
-            if num < 0:
-                markup =  '<span foreground="red">'+ str(num) + '</span>'
-            elif num > 0:
-                markup =  '<span foreground="dark green">'+ str(num) + '</span>'
-            else:
-                markup =  str(num)
-            cell.set_property('markup', markup)
-        
         self.set_model(gtk.TreeStore(object,str, str,float, float))
         
         self.create_column(_('Name'), self.cols['name'])
@@ -105,14 +134,14 @@ class IndexPositionsTree(Tree):
         col.set_cell_data_func(cell, float_to_red_green_string, self.cols['change_percent'])
         
         
-        def sort_current_price(model, iter1, iter2):
+        def sort_price(model, iter1, iter2):
             item1 = model.get_value(iter1, self.cols['obj'])
             item2 = model.get_value(iter2, self.cols['obj'])
-            if item1.current_price == item2.current_price: return 0
-            elif item1.current_price < item2.current_price: return -1
+            if item1.price == item2.price: return 0
+            elif item1.price < item2.price: return -1
             else: return 1
 
-        self.get_model().set_sort_func(self.cols['last_price'], sort_current_price)
+        self.get_model().set_sort_func(self.cols['last_price'], sort_price)
 
         self.set_rules_hint(True)
     
@@ -138,23 +167,21 @@ class IndexPositionsTree(Tree):
         if event.button == 3:
             if self.selected_item is not None:
                 obj, iter = self.selected_item
-                PositionContextMenu(obj).show(event)
+                StockContextMenu(obj).show(event)
     
     def on_cursor_changed(self, widget):
-        #FIXME
-        return
         #Get the current selection in the gtk.TreeView
         selection = widget.get_selection()
         # Get the selection iter
         treestore, selection_iter = selection.get_selected()
-        if (selection_iter and model):
+        if (selection_iter and treestore):
             #Something is selected so get the object
             obj = treestore.get_value(selection_iter, 0)
             self.selected_item = obj, selection_iter
-            if isinstance(obj, model.Position):
-                pubsub.publish('positionstree.select', obj)
+            if isinstance(obj, model.Stock):
+                pubsub.publish('indextree.select', obj)
                 return
-        pubsub.publish('positionstree.unselect')
+        pubsub.publish('indextree.unselect')
 
     def on_destroy(self, x):
         for topic, callback in self.subscriptions:
@@ -165,25 +192,16 @@ class IndexPositionsTree(Tree):
             self.insert_position(pos)
 
     def on_stocks_updated(self, container):
-        if container.name == self.container.name:
+        if container.id == self.container.id:
             for row in self.get_model():
                 item = row[0]
-                row[self.cols['last_price']] = self.get_price_string(item)
-                row[self.cols['change']] = item.current_change[0]
-                row[self.cols['change_percent']] = item.current_change[1]
-                row[self.cols['gain']] = item.gain[0]
-                row[self.cols['gain_percent']] = item.gain[1]
-                row[self.cols['days_gain']] = item.days_gain
-                row[self.cols['mkt_value']] = round(item.cvalue,2)
-
-    def get_price_string(self, item):
-        if item.price is None:
-            return 'n/a'
-        return str(round(item.price,2)) +'\n' +'<small>'+get_datetime_string(item.date)+'</small>'
+                row[self.cols['last_price']] = get_price_string(item)
+                row[self.cols['change']] = item.change
+                row[self.cols['change_percent']] = item.percent
         
     def insert_position(self, stock):
         self.get_model().append(None, [stock, 
                                        get_name_string(stock),  
-                                       self.get_price_string(stock), 
+                                       get_price_string(stock), 
                                        stock.change,
                                        stock.percent])

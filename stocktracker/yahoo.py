@@ -1,9 +1,9 @@
+
 #!/usr/bin/env python
 
 from urllib import urlopen
 import csv, pytz
 from datetime import datetime
-import time
 
 
 def __request(symbol, stat):
@@ -77,7 +77,7 @@ def get_historical_prices(stock, start_date, end_date):
 
 
 if __name__ == "__main__":
+    print check_symbol('OG7B.F')
+    test_api('OG7B.F')
     
-    test_api('cbk.de')
-    #print check_symbol('ge.de')
 

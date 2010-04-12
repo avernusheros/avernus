@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 
-from stocktracker.treeviews import Tree, get_name_string, datetime_format, get_datetime_string
+from stocktracker.treeviews import Tree
+from stocktracker.gui_utils import get_datetime_string, get_name_string
 import gtk
-from stocktracker import pubsub, config, model
+from stocktracker import pubsub, model
 
 
 

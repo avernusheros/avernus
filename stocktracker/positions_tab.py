@@ -1,12 +1,11 @@
 #!/usr/bin/env python
 
-import gtk, os
-from stocktracker.treeviews import Tree, get_name_string, datetime_format, get_datetime_string
-from stocktracker import pubsub, config, model
+import gtk
+from stocktracker.treeviews import Tree
+from stocktracker import pubsub, model
 from stocktracker.plot import ChartWindow
 from stocktracker.dialogs import SellDialog, NewWatchlistPositionDialog, SplitDialog, BuyDialog
-from stocktracker.gui_utils import ContextMenu
-
+from stocktracker.gui_utils import ContextMenu, float_to_red_green_string, float_to_string, get_price_string, get_name_string, datetime_format
 
 class PositionContextMenu(ContextMenu):
     def __init__(self, position):
@@ -21,7 +20,7 @@ class PositionContextMenu(ContextMenu):
         
         self.add_item(remove_string+' position',  self.__remove_position, 'gtk-remove')
         self.add_item(_('Edit position'),  self.__edit_position, 'gtk-edit')
-        self.add_item(_('Chart position'),  self.__chart_position, 'gtk-info')
+        self.add_item(_('Chart position'),  self.on_chart_position, 'gtk-info')
         
         if type == 0:
             self.add_item(_('Split position'),  self.__split_position, 'gtk-cut')
@@ -35,14 +34,15 @@ class PositionContextMenu(ContextMenu):
     def __split_position(self, *arg):
         pubsub.publish('position_menu.split', self.position)
     
-    def __chart_position(self, *arg):
-        pubsub.publish('position_menu.chart', self.position)
+    def on_chart_position(self, *arg):
+        ChartWindow(self.position.stock)
     
 
 class PositionsToolbar(gtk.Toolbar):
-    def __init__(self, container):
+    def __init__(self, container, tree):
         gtk.Toolbar.__init__(self)
         self.container = container
+        self.tree = tree
         self.conditioned = []
         
         button = gtk.ToolButton('gtk-add')
@@ -122,7 +122,10 @@ class PositionsToolbar(gtk.Toolbar):
         pubsub.publish('positionstoolbar.split')
         
     def on_chart_clicked(self, widget):
-        pubsub.publish('positionstoolbar.chart')
+        if self.tree.selected_item is None:
+            return
+        position, iter = self.tree.selected_item
+        d = ChartWindow(position.stock)
 
 
 class PositionsTree(Tree):
@@ -146,19 +149,6 @@ class PositionsTree(Tree):
                      'pf_percent': 14
                       }
         
-        def float_to_string(column, cell, model, iter, user_data):
-            text =  str(round(model.get_value(iter, user_data), 2))
-            cell.set_property('text', text)
-        
-        def float_to_red_green_string(column, cell, model, iter, user_data):
-            num = round(model.get_value(iter, user_data), 2)
-            if num < 0:
-                markup =  '<span foreground="red">'+ str(num) + '</span>'
-            elif num > 0:
-                markup =  '<span foreground="dark green">'+ str(num) + '</span>'
-            else:
-                markup =  str(num)
-            cell.set_property('markup', markup)
         
         self.set_model(gtk.TreeStore(object,str, str, str,float, float, int, float, float, str, float, float, float, str, float))
         
@@ -226,8 +216,6 @@ class PositionsTree(Tree):
             ('positionstoolbar.tag', self.on_tag),
             ('positionstoolbar.split', self.on_split),
             ('position_menu.split', self.on_split),
-            ('positionstoolbar.chart', self.on_chart),
-            ('position_menu.chart', self.on_chart),
             ('container.position.added', self.on_position_added),
             ('position.tags.changed', self.on_positon_tags_changed),
             ('shortcut.update', self.on_update)
@@ -270,7 +258,7 @@ class PositionsTree(Tree):
         if container.name == self.container.name:
             for row in self.get_model():
                 item = row[0]
-                row[self.cols['last_price']] = self.get_price_string(item)
+                row[self.cols['last_price']] = get_price_string(item)
                 row[self.cols['change']] = item.current_change[0]
                 row[self.cols['change_percent']] = item.current_change[1]
                 row[self.cols['gain']] = item.gain[0]
@@ -316,13 +304,6 @@ class PositionsTree(Tree):
             position, iter = self.selected_item
         d = SplitDialog(position)
         
-    def on_chart(self, position = None):
-        if position is None:
-            if self.selected_item is None:
-                return
-            position, iter = self.selected_item
-        d = ChartWindow(position.stock)
-        
     def on_tag(self):
         if self.selected_item is None:
             return
@@ -337,7 +318,7 @@ class PositionsTree(Tree):
         selection = widget.get_selection()
         # Get the selection iter
         treestore, selection_iter = selection.get_selected()
-        if (selection_iter and model):
+        if (selection_iter and treestore):
             #Something is selected so get the object
             obj = treestore.get_value(selection_iter, 0)
             self.selected_item = obj, selection_iter
@@ -346,11 +327,6 @@ class PositionsTree(Tree):
                 return
         pubsub.publish('positionstree.unselect')
             
-    def get_price_string(self, item):
-        if item.price is None:
-            return 'n/a'
-        return str(round(item.price,2)) +'\n' +'<small>'+get_datetime_string(item.date)+'</small>'
-        
     def insert_position(self, position):
         if position.quantity != 0:
             stock = position.stock
@@ -362,8 +338,8 @@ class PositionsTree(Tree):
                 change = 100 * position.cvalue / self.container.cvalue
             self.get_model().append(None, [position, 
                                            get_name_string(stock), 
-                                           self.get_price_string(position), 
-                                           self.get_price_string(stock), 
+                                           get_price_string(position), 
+                                           get_price_string(stock), 
                                            c_change[0],
                                            gain[0],
                                            position.quantity,
@@ -408,7 +384,7 @@ class PositionsTab(gtk.VBox):
         self.pf = pf
         positions_tree = PositionsTree(pf)
         hbox = gtk.HBox()
-        tb = PositionsToolbar(pf)
+        tb = PositionsToolbar(pf, positions_tree)
         hbox.pack_start(tb, expand = True, fill = True)
         
         self.total_label = label = gtk.Label()

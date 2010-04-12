@@ -367,6 +367,3 @@ class CashDialog(gtk.Dialog):
                 self.pf.cash -= amount
                 ta = model.PortfolioTransaction(date=date, portfolio=self.pf, type=4, price=amount)
             pubsub.publish('portfolio.transaction.added', self.pf, ta)
-                  
-        
-        

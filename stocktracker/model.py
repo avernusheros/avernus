@@ -3,10 +3,9 @@
 
 
 import elixir
-from elixir import Entity, Field, Unicode, String, Text, Float, Integer, \
+from elixir import Entity, Field, String, Float, Integer, \
                     UnicodeText, DateTime, OneToMany, ManyToMany, ManyToOne
 from stocktracker  import pubsub, updater, config
-from elixir.events import *   
 from datetime      import datetime
 import os 
  
@@ -257,6 +256,13 @@ COUNTRIES = {
  
 
 
+def update_all_stocks():
+    updater.update_stocks(Stock.query.all())
+    for container in Portfolio.query.all() + Watchlist.query.all() \
+                                        + Index.query.all():
+        container.last_update = datetime.now()
+    
+
 ###############################################################
 #################     BASE CLASSES      #######################
 ###############################################################
@@ -299,19 +305,6 @@ class Position(object):
 class Container(object):
 
     tagstring = ''
-    
-    @property
-    def current_change(self):
-        change = 0.0
-        for pos in self.positions:
-            stock, percent = pos.current_change
-            change +=stock * pos.quantity
-        start = self.cvalue - change
-        if start == 0.0:
-            percent = 0
-        else:
-            percent = round(100.0 / start * change,2)
-        return change, percent
     
     @property
     def bvalue(self):
@@ -376,6 +369,14 @@ class Index(Entity, Container):
     positions = ManyToMany('Stock')
     isin = Field(String(16))
     exchange = ManyToOne('Exchange')
+    last_update = Field(DateTime)
+    yahoo_symbol = Field(String(16)) 
+    
+    def update_positions(self):
+        #update stocks and index
+        updater.update_stocks(self.positions+[self]) 
+        self.last_update = datetime.now()
+        pubsub.publish("stocks.updated", self)
           
           
 class Quotation(Entity):
@@ -603,7 +604,4 @@ def load_stocks():
                 if stock is None:
                     stock = Stock(yahoo_symbol=row[0], name=row[1], isin=row[2], exchange=exchange)
                 stocks.append(stock)
-        index.positions=stocks    
-            
-            
-    
+        index.positions=stocks  

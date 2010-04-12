@@ -1,42 +1,8 @@
 #!/usr/bin/env python
 
-import gtk, string,  logging, pytz
-from stocktracker import model, config, pubsub
+import gtk
+from stocktracker import pubsub
 
-logger = logging.getLogger(__name__)
-
-
-def to_local_time(date):
-    if date is not None:
-        date = date.replace(tzinfo = pytz.utc)
-        date = date.astimezone(pytz.timezone(config.timezone))
-        return date.replace(tzinfo = None)
-
-def get_datetime_string(date):
-    if date is not None:
-        if date.hour == 0 and date.minute == 0 and date.second == 0:
-            return datetime_format(to_local_time(date).date())
-        else:
-            return datetime_format(to_local_time(date))
-    return ''
-    
-def datetime_format(date):
-    if date is not None:
-        return date.strftime("%d.%m.%Y %I:%M%p")
-    return 'never'
-    
-def get_name_string(stock):
-    return '<b>'+stock.name+'</b>' + '\n' + '<small>'+stock.yahoo_symbol+'</small>' + '\n' + '<small>'+stock.exchange.name+'</small>'
- 
-
-def get_green_red_string(num, string = None):
-    if string is None:
-        string = str(num)
-    if num < 0.0:
-        text = '<span foreground="red">'+ string + '</span>'
-    else:
-        text = '<span foreground="dark green">'+ string + '</span>'
-    return text
 
 
 class Tree(gtk.TreeView):

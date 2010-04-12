@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 from stocktracker import yahoo
+import datetime
 
 updater = yahoo
 
@@ -11,7 +12,7 @@ def update_stocks(stocks):
     updater.update_stocks(stocks)
      
 def update_stock(stock):
-    self.update_stocks([stock])
+    update_stocks([stock])
     
 def get_info(symbol):
     return updater.get_info(symbol)
@@ -35,7 +36,7 @@ def get_historical_prices(stock, start_date, end_date):
     # newest.date(), start_date, newest.date() >= start_date
     if newest.date() < start_date:
         new_data = updater.get_historical_prices(stock.symbol, start_date, newest)
-        self.store.insert_quotes(stock, new_data)
-    return self.store.get_historical_prices(stock, start_date, end_date)
+        #store.insert_quotes(stock, new_data)
+    #return store.get_historical_prices(stock, start_date, end_date)
     
 

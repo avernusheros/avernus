@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: latin-1 -*-
 
-import os, sys
+import os
 __stocktracker_data_directory__ = '../data/'
 import ConfigParser
 

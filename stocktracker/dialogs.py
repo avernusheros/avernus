@@ -247,13 +247,12 @@ class BuyDialog(gtk.Dialog):
         hbox.pack_start(self.stock_selector)
         self.stock_selector.completion.connect('match-selected', self.on_stock_selection)
 
-
         #shares entry
         hbox = gtk.HBox()
         vbox.pack_start(hbox)
         hbox.pack_start(gtk.Label(_('Shares:')))
         self.shares_entry = gtk.SpinButton(gtk.Adjustment(lower=0, upper=100000,step_incr=1.0, value = 0), digits=2)
-        self.shares_entry.connect("changed", self.on_change)
+        self.shares_entry.connect("value-changed", self.on_change)
         hbox.pack_start(self.shares_entry)
         
         #price entry
@@ -261,7 +260,7 @@ class BuyDialog(gtk.Dialog):
         vbox.pack_start(hbox)
         hbox.pack_start(gtk.Label(_('Price:')))
         self.price_entry = gtk.SpinButton(gtk.Adjustment(lower=0, upper=100000,step_incr=0.1, value = 1.0), digits=2)
-        self.price_entry.connect("changed", self.on_change)
+        self.price_entry.connect("value-changed", self.on_change)
         hbox.pack_start(self.price_entry)
         
         #ta_costs entry
@@ -269,7 +268,7 @@ class BuyDialog(gtk.Dialog):
         vbox.pack_start(hbox)
         hbox.pack_start(gtk.Label(_('Transaction Costs:')))
         self.tacosts_entry = gtk.SpinButton(gtk.Adjustment(lower=0, upper=100000,step_incr=0.1, value = 0.0), digits=2)
-        self.tacosts_entry.connect("changed", self.on_change)
+        self.tacosts_entry.connect("value-changed", self.on_change)
         hbox.pack_start(self.tacosts_entry)
         
         #total
@@ -460,7 +459,8 @@ class MergeDialog(gtk.Dialog):
         index = combobox.get_active()
         if index:
             #FIXME
-            self.selected_pf = session['model'].portfolios[model[index][0]]
+            pass
+            #self.selected_pf = session['model'].portfolios[model[index][0]]
         else:
             self.selected_pf = None
         self.pos1.on_pf_selection(self.selected_pf)

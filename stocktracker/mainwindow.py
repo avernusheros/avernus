@@ -12,16 +12,16 @@ if __name__ == '__main__':
 
 
 import logging, gtk,os #, gobject
-from stocktracker import config, pubsub, chart_tab, dialogs, model
+from stocktracker import pubsub, chart_tab, dialogs, model
 from stocktracker.positions_tab import PositionsTab
 from stocktracker.overview_tab import OverviewTab
 from stocktracker.main_tree import MainTreeBox
 from stocktracker.dividends_tab import DividendsTab
 from stocktracker.transactions_tab import TransactionsTab
-from stocktracker.index_treeview import IndexPositionsTab
+from stocktracker.index_tab import IndexPositionsTab
 from webbrowser import open as web
 import stocktracker
-from stocktracker import updater
+
 
 logger = logging.getLogger(__name__)
 
@@ -110,7 +110,7 @@ class MenuBar(gtk.MenuBar):
         dialogs.MergeDialog()
     
     def on_update(self, widget):
-        updater.update_stocks(model.Stock.query.all())
+        model.update_all_stocks()
         
     def on_add(self,widget):
         dialogs.AddStockDialog()
@@ -199,7 +199,7 @@ class MainWindow(gtk.Window):
         
     def on_key_press_event(self, widget, event):
         if event.keyval == gtk.gdk.keyval_from_name('F5'):
-             pubsub.publish('shortcut.update')
+             model.update_all_stocks()
              return True
         if event.keyval == gtk.gdk.keyval_from_name('q'):
             self.on_destroy(widget) 
@@ -240,4 +240,4 @@ class MainWindow(gtk.Window):
 def check_path(path):
     if not os.path.isdir(path):
         os.mkdir(path)    
-    
+

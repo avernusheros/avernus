@@ -1,14 +1,15 @@
 #!/usr/bin/env python
 
-
-from stocktracker.cairoplot.gtkcairoplot import gtk_pie_plot,gtk_vertical_bar_plot, gtk_dot_line_plot
+from stocktracker.cairoplot.gtkcairoplot \
+    import gtk_pie_plot, gtk_vertical_bar_plot, gtk_dot_line_plot
 import gtk
 
+
 class ChartTab(gtk.ScrolledWindow):
+
     def __init__(self, pf):
         gtk.ScrolledWindow.__init__(self)
         self.pf = pf
-        
         self.set_property('hscrollbar-policy', gtk.POLICY_AUTOMATIC)
         self.set_property('vscrollbar-policy', gtk.POLICY_AUTOMATIC)
         self.show_all()
@@ -16,13 +17,13 @@ class ChartTab(gtk.ScrolledWindow):
     def show(self):
         self.clear()
         table = gtk.Table()
-        
+
         #table.attach(gtk.Label(_('Cash over time')), 0,2,0,1)
         #table.attach(self.cash_chart(),0,2,1,2)
-        
+
         table.attach(gtk.Label(_('Market value')), 0, 1, 2, 3)
         table.attach(self.current_pie(),0,1,3,4)
-        
+
         table.attach(gtk.Label(_('Buy value')),1,2,2,3)
         table.attach(self.buy_pie(),1,2,3,4)
         
