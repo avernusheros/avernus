@@ -116,11 +116,15 @@ class AddStockDialog(gtk.Dialog):
             name = self.name_entry.get_text()
             symbol = self.symbol_entry.get_text()
             type = self.type_cb.get_active()
-            exchange = self.exchange_label.get_text()
+            exchange_name = self.exchange_label.get_text()
             currency = self.currency_label.get_text()
-            isin = 'n/a'
-            #FIXME
+            #FIXME get isin from yahoo????
+            isin = ''
+            exchange = model.Exchange.query.filter_by(name=exchange_name).first()
+            if exchange is None:
+                exchange = model.Exchange(name=exchange_name)
             
+                        
             model.Stock(yahoo_symbol = symbol, name = name, type = type, exchange = exchange, currency = currency, isin = isin)
 
 

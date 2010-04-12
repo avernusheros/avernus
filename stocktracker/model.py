@@ -393,7 +393,7 @@ class Stock(Entity):
     exchange = ManyToOne('Exchange')
     name = Field(String(128))
     type = Field(Integer, default=0)
-    currency = Field(Unicode(5))
+    currency = Field(String(8))
     yahoo_symbol = Field(String(32))        
     quotations = OneToMany('Quotation')
     price = Field(Float, default=0.0)
