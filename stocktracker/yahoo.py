@@ -35,7 +35,7 @@ def update_stocks(stocks):
 def get_info(symbol):
     #name, isin, exchange, currency
     for row in csv.reader(__request(symbol, 'nxc4')):
-        if row[1] == 'N/A':
+        if len(row) == 0 or row[1] == 'N/A':
             return None
         return row[0], 'n/a', row[1], row[2]
         
