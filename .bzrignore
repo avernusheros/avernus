@@ -12,3 +12,6 @@ old
 .settings/org.eclipse.core.resources.prefs
 .settings/org.eclipse.core.resources.prefs
 log
+log
+test.sqlite
+test.sqlite

@@ -1,13 +1,9 @@
 #!/usr/bin/env python
 
-
 import gtk
-from stocktracker import model, pubsub
+from stocktracker import model, pubsub, config, updater
 from datetime import datetime
-from stocktracker import updater
-
-import config
-import stockLogging as logging
+from stocktracker import stockLogging as logging
 
 
 class StockSelector(gtk.Entry):

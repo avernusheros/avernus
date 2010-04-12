@@ -56,10 +56,10 @@ def init_translations():
 def init_icons():
     from stocktracker.icons import IconManager
     icons = IconManager()
-    #path = config.getdatapath('images')
-    #icons.add_icon_name_from_directory('stocktracker-logo', path)
+    path = os.path.join(config.getdatapath(),'images')
+    icons.add_icon_name_from_directory('stocktracker', path)
     #icons.add_stock_from_directory('stocktracker-chart', path)
-    #gtk.window_set_default_icon_name('stocktracker-logo')    
+    gtk.window_set_default_icon_name('stocktracker')    
 
     
 def start():

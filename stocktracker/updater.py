@@ -29,7 +29,7 @@ def get_historical_prices(stock, start_date, end_date):
     #print start_date, end_date
     from stocktracker import model
     print "newest", model.Quotation.query.last().date
-    newest = model.Quotation.query().last.date
+    newest = model.Quotation.query.last().date
     if newest == None:
         newest = datetime.datetime(end_date.year -20, end_date.month, end_date.day)
     # newest.date(), start_date, newest.date() >= start_date
