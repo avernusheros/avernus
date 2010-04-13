@@ -385,28 +385,27 @@ class PositionsTab(gtk.VBox):
         positions_tree = PositionsTree(pf)
         hbox = gtk.HBox()
         tb = PositionsToolbar(pf, positions_tree)
-        hbox.pack_start(tb, expand = True, fill = True)
+        self.pack_start(tb, expand = False, fill = True)
         
         self.total_label = label = gtk.Label()
         hbox.pack_start(label)
         hbox.pack_start(gtk.VSeparator(), expand = False, fill = False)
             
-            
         self.today_label = label = gtk.Label()
         hbox.pack_start(label)
-        hbox.pack_start(gtk.VSeparator(), expand = False, fill = False)
+        hbox.pack_start(gtk.VSeparator(), expand = True, fill = True)
         self.overall_label = label = gtk.Label()
         hbox.pack_start(label, expand = False, fill = False)
         
         if isinstance(pf, model.Watchlist) or isinstance(pf, model.Portfolio):
-            hbox.pack_start(gtk.VSeparator(), expand = False, fill = False)
+            hbox.pack_start(gtk.VSeparator(), expand = True, fill = True)
             self.last_update_label = label = gtk.Label()
-            hbox.pack_start(label, expand = False, fill = False)
+            hbox.pack_start(label, expand = True, fill = False)
         sw = gtk.ScrolledWindow()
         sw.set_property('hscrollbar-policy', gtk.POLICY_AUTOMATIC)
         sw.set_property('vscrollbar-policy', gtk.POLICY_AUTOMATIC)
         sw.add(positions_tree)
-        self.pack_start(hbox, expand=False, fill=False)
+        self.pack_start(hbox, expand=False, fill=True)
         self.pack_start(sw)
         
         self.on_container_update(self.pf)

@@ -11,34 +11,38 @@ class IndexPositionsTab(gtk.VBox):
     def __init__(self, index):
         gtk.VBox.__init__(self)
         self.index = index
-        positions_tree = IndexPositionsTree(index)
+        index_tree = IndexPositionsTree(index)
         hbox = gtk.HBox()
-        tb = PositionsToolbar(index, positions_tree)
+        tb = IndexToolbar(index, index_tree)
         hbox.pack_start(tb, expand = True, fill = True)
         
-        self.today_label = label = gtk.Label()
+        self.price_label = label = gtk.Label()
         hbox.pack_start(label)
         hbox.pack_start(gtk.VSeparator(), expand = False, fill = False)
-        self.overall_label = label = gtk.Label()
+        self.change_label = label = gtk.Label()
         hbox.pack_start(label, expand = False, fill = False)
-        
-        hbox.pack_start(gtk.VSeparator(), expand = False, fill = False)
         self.last_update_label = label = gtk.Label()
         hbox.pack_start(label, expand = False, fill = False)
+        
+        #hbox.pack_start(gtk.VSeparator(), expand = False, fill = False)
+        
         sw = gtk.ScrolledWindow()
         sw.set_property('hscrollbar-policy', gtk.POLICY_AUTOMATIC)
         sw.set_property('vscrollbar-policy', gtk.POLICY_AUTOMATIC)
-        sw.add(positions_tree)
+        sw.add(index_tree)
         self.pack_start(hbox, expand=False, fill=False)
         self.pack_start(sw)
+        
+        #pubsub.subscribe('container.updated', self.on_container_update)
+        
         
         self.show_all()
         
     
-class PositionsToolbar(gtk.Toolbar):
-    def __init__(self, container, tree):
+class IndexToolbar(gtk.Toolbar):
+    def __init__(self, index, tree):
         gtk.Toolbar.__init__(self)
-        self.container = container
+        self.index = index
         self.tree = tree
         self.conditioned = []
         
@@ -46,8 +50,8 @@ class PositionsToolbar(gtk.Toolbar):
         #button.set_label('Remove tag'
         button.connect('clicked', self.on_edit_clicked)
         button.set_tooltip_text('Edit selected stock') 
-        #FIXME
         self.insert(button,-1)
+        #FIXME
         #self.conditioned.append(button)
         button.set_sensitive(False)
                 
@@ -63,6 +67,11 @@ class PositionsToolbar(gtk.Toolbar):
         button.connect('clicked', self.on_update_clicked)
         button.set_tooltip_text('Update stock quotes') 
         self.insert(button,-1)
+        
+        button = gtk.ToolButton('gtk-info')
+        button.connect('clicked', self.on_indexchart_clicked)
+        button.set_tooltip_text('Chart index '+self.index.name)
+        self.insert(button,-1) 
         
         self.on_unselect()
         pubsub.subscribe('indextree.unselect', self.on_unselect)
@@ -80,7 +89,7 @@ class PositionsToolbar(gtk.Toolbar):
         pubsub.publish('positionstoolbar.add')  
       
     def on_update_clicked(self, widget):
-        self.container.update_positions()
+        self.index.update_positions()
            
     def on_edit_clicked(self, widget):
         #FIXME
@@ -91,6 +100,9 @@ class PositionsToolbar(gtk.Toolbar):
             return
         stock, iter = self.tree.selected_item
         d = ChartWindow(stock)
+    
+    def on_indexchart_clicked(self, widget):
+        d = ChartWindow(self.index)
         
         
 class StockContextMenu(ContextMenu):

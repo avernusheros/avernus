@@ -34,6 +34,9 @@ class ChartTab(gtk.ScrolledWindow):
         table.attach(gtk.Label(_('Tags')),1,2,4,5)
         table.attach(self.tags_pie(),1,2,5,6)
         
+        table.attach(gtk.Label(_('Countries')),0,1,6,7)
+        table.attach(self.country_pie(),0,1,7,8)
+        
         self.add_with_viewport(table)
         self.show_all()
         
@@ -81,6 +84,17 @@ class ChartTab(gtk.ScrolledWindow):
                     data[tag] += pos.cvalue
                 except:
                     data[tag] = pos.cvalue
+        pie = gtk_pie_plot()        
+        pie.set_args({'data':data, 'width':300, 'height':300, 'gradient':True})
+        return pie
+        
+    def country_pie(self):
+        data = {}
+        for pos in self.pf.positions:
+            try:
+                data[pos.stock.country] += pos.cvalue
+            except:
+                data[pos.stock.country] = pos.cvalue
         pie = gtk_pie_plot()        
         pie.set_args({'data':data, 'width':300, 'height':300, 'gradient':True})
         return pie
