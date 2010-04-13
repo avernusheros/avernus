@@ -43,6 +43,7 @@ class IconManager(object):
             Registers an icon name from files found in a directory
         """
         for size in self._sizes:
+            #print size
             try: # WxH/icon_name.png and scalable/icon_name.svg
                 sizedir = '%dx%d' % (size, size)
             except TypeError:
@@ -63,18 +64,20 @@ class IconManager(object):
                     icon_size = size if size != 'scalable' else -1
                     self.add_icon_name_from_file(icon_name, files[0], icon_size)
                 except IndexError: # Give up
-                    pass
+                    print "index error in icons.py IconManager.add_icon_name_from_directory", icon_name, directory
+                    
 
     def add_icon_name_from_file(self, icon_name, filename, size=None):
         """
             Registers an icon name from a filename
         """
-        try:
+        try:# TODO: Make svg actually recognized
             pixbuf = gtk.gdk.pixbuf_new_from_file(filename)
             self.add_icon_name_from_pixbuf(icon_name, pixbuf, size)
         except Exception:
+            print "exception in icons.py IconManager.add_icon_name_from_file"
             # Happens if, e.g., librsvg is not installed.
-            pass
+            
 
     def add_icon_name_from_pixbuf(self, icon_name, pixbuf, size=None):
         """
@@ -109,7 +112,8 @@ class IconManager(object):
                 try:
                     files += [glob.glob('%s.*' % filepath)[0]]
                 except IndexError: # Give up
-                    pass
+                    print "index error in icons.py IconManager.add_stock_from_directory"
+                    
 
         self.add_stock_from_files(stock_id, files)
 
