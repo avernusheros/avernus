@@ -15,10 +15,12 @@ import logging, gtk,os #, gobject
 from stocktracker import pubsub, chart_tab, dialogs, model
 from stocktracker.positions_tab import PositionsTab
 from stocktracker.overview_tab import OverviewTab
-from stocktracker.main_tree import MainTreeBox
+from stocktracker.main_tree import MainTreeBox, Category
 from stocktracker.dividends_tab import DividendsTab
 from stocktracker.transactions_tab import TransactionsTab
-from stocktracker.index_tab import IndexPositionsTab
+from stocktracker.indexpositions_tab import IndexPositionsTab
+from stocktracker.news_tab import NewsTab
+from stocktracker.index_tab import IndexTab
 from webbrowser import open as web
 import stocktracker
 
@@ -54,7 +56,10 @@ class MenuBar(gtk.MenuBar):
                             ('----'  , None, None),
                             (_("Quit"), gtk.STOCK_QUIT, parent.on_destroy),
                            )
-        tools_menu_items = ((_('Update stocks') , gtk.STOCK_REFRESH, self.on_update),
+        edit_menu_items = (
+                           (_("Preferences"),gtk.STOCK_PREFERENCES,self.on_pref),
+                           )
+        tools_menu_items = ((_('Update all stocks') , gtk.STOCK_REFRESH, self.on_update),
                             (_('Add a stock'), gtk.STOCK_ADD, self.on_add),
                             (_("Merge two positions"), gtk.STOCK_CONVERT, self.on_merge),
                            )                   
@@ -64,9 +69,6 @@ class MenuBar(gtk.MenuBar):
                             (_("Report a Bug"), None, lambda x:web("https://bugs.launchpad.net/stocktracker")),
                             ('----', None, None),
                             (_("About"), gtk.STOCK_ABOUT , AboutDialog),
-                           )
-        edit_menu_items = (
-                           (_("Preferences"),gtk.STOCK_PREFERENCES,self.on_pref),
                            )
 
         filemenu = gtk.MenuItem(_("File"))
@@ -224,7 +226,6 @@ class MainWindow(gtk.Window):
         if isinstance(item, model.Portfolio) or isinstance(item, model.Tag) or isinstance(item, model.Watchlist): 
             #self.notebook.append_page(OverviewTab(item, self.model, type), gtk.Label(_('Overview')))
             self.notebook.append_page(PositionsTab(item), gtk.Label(_('Positions')))
-        
         if isinstance(item, model.Portfolio) or isinstance(item, model.Tag): 
             self.notebook.append_page(TransactionsTab(item), gtk.Label(_('Transactions')))
             #FIXME
@@ -232,7 +233,10 @@ class MainWindow(gtk.Window):
             self.notebook.append_page(chart_tab.ChartTab(item), gtk.Label(_('Charts')))
         if isinstance(item, model.Index): 
             self.notebook.append_page(IndexPositionsTab(item), gtk.Label(_('Positions')))
-
+        if isinstance(item, Category) and item.name == 'Indices':
+            self.notebook.append_page(IndexTab(item), gtk.Label(_('Indices')))
+        if not isinstance(item, Category):
+            self.notebook.append_page(NewsTab(item), gtk.Label(_('News')))
 
     def on_maintree_unselect(self):
         self.clear_notebook()

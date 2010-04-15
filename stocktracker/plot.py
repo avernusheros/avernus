@@ -2,7 +2,9 @@ from stocktracker.cairoplot.gtkcairoplot import gtk_dot_line_plot, gtk_vertical_
 import gtk
 from stocktracker.gui_utils import get_green_red_string
 from datetime import date
-from stocktracker import updater
+from stocktracker import updater, model
+from sqlalchemy import desc
+
 
 class ChartWindow(gtk.Window):
     def __init__ (self, stock):
@@ -31,6 +33,7 @@ class Chart(gtk.VBox):
         combobox.connect('changed', self.on_zoom_change)
         hbox.add(combobox)
         
+        updater.update_historical_prices(stock)
         self.current_zoom = 'YTD'
         self.current_chart = self.get_chart(self.current_zoom)
         self.add(self.current_chart)
@@ -67,14 +70,16 @@ class Chart(gtk.VBox):
         vbox = gtk.VBox()
         date1 = date.today()
         date2 = self.get_date2(zoom, date1)
-        data = updater.get_historical_prices(self.stock, date1, date2) 
         
-        quotes = [d[4] for d in data]
-
+        data = model.Quotation.query.filter(model.Quotation.stock==self.stock).\
+                                    filter(model.Quotation.date>=date2).\
+                                    order_by(model.Quotation.date).all()
+        
+        quotes = [d.close for d in data]
         y_min = 0.95*min(quotes)
         y_max = 1.05*max(quotes)
         
-        legend = [str(data[int(len(data)/20 *i)][0].date()) for i in range(20)]
+        legend = [str(data[int(len(data)/20 *i)].date) for i in range(20)]
        
         p1 = gtk_dot_line_plot()
         p1.set_args({'data':quotes, 
@@ -95,7 +100,7 @@ class Chart(gtk.VBox):
         vbox.add(gtk.Label(_('Volume (mil/1d)')))
         
         p2 = gtk_vertical_bar_plot()
-        vols = [d[5] for d in data]
+        vols = [d.vol for d in data]
         p2.set_args({'data':vols, 
                      #'x_labels':legend, 
                      'grid': True,

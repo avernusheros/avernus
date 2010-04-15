@@ -1,11 +1,11 @@
 __appname__ = 'stocktracker'
-__version__ = '0.3'
-__description__ = 'A lightweight program to easily track your investments.'
+__version__ = '0.4'
+__description__ = 'A simple program to easily track your investments.'
 __url__='https://launchpad.net/stocktracker'
-__authors__ = 'Wolfgang Steitz (wsteitz(at)gmail.com)'
+__authors__ = ['Wolfgang Steitz', 'Bastian Kennel']
 __mail__ = 'wsteitz(at)gmail.com'
 __copyright__ = '''\
-Copyright (c) 2008-2009 Wolfgang Steitz
+Copyright (c) 2008-2009
 
 '''
 __license__='''\

@@ -1,9 +1,8 @@
 #!/usr/bin/env python
 
 import gtk
-from stocktracker import model, pubsub, config, updater
+from stocktracker import model, pubsub, config, updater, logger
 from datetime import datetime
-from stocktracker import stockLogging as logging
 
 
 class StockSelector(gtk.Entry):
@@ -187,7 +186,7 @@ class PrefDialog(gtk.Dialog):
                             (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
                              gtk.STOCK_OK, gtk.RESPONSE_ACCEPT),
                             )
-        logging.logger.debug("PrefDialog started")
+        logger.logger.debug("PrefDialog started")
         self.conf = config.StocktrackerConfig()
         self.newName = None
         vbox = self.get_content_area()
@@ -204,7 +203,7 @@ class PrefDialog(gtk.Dialog):
         response = self.run()  
         self.process_result(response)
         self.destroy()
-        logging.logger.debug("PrefDialog destroyed")
+        logger.logger.debug("PrefDialog destroyed")
         
     def launchDiag(self, widget):
         dialog = gtk.FileChooserDialog("Select a Database Location",

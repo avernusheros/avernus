@@ -1,9 +1,10 @@
+
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 
 import elixir
-from elixir import Entity, Field, String, Float, Integer, \
+from elixir import Entity, Field, String, Float, Integer, Date, \
                     UnicodeText, DateTime, OneToMany, ManyToMany, ManyToOne
 from stocktracker  import pubsub, updater, config
 from datetime      import datetime
@@ -257,7 +258,7 @@ COUNTRIES = {
 
 
 def update_all_stocks():
-    updater.update_stocks(Stock.query.all())
+    updater.update_stocks(Stock.query.all()+Index.query.all())
     for container in Portfolio.query.all() + Watchlist.query.all() \
                                         + Index.query.all():
         container.last_update = datetime.now()
@@ -368,6 +369,9 @@ class Index(Entity, Container):
     name = Field(String(128))
     positions = ManyToMany('Stock')
     isin = Field(String(16))
+    price = Field(Float, default=0.0)
+    change = Field(Float, default=0.0)
+    date = Field(DateTime)
     exchange = ManyToOne('Exchange')
     last_update = Field(DateTime)
     yahoo_symbol = Field(String(16)) 
@@ -377,14 +381,25 @@ class Index(Entity, Container):
         updater.update_stocks(self.positions+[self]) 
         self.last_update = datetime.now()
         pubsub.publish("stocks.updated", self)
+   
+    @property      
+    def percent(self):
+        try: 
+            return round(self.change * 100 / (self.price - self.change),2)
+        except:
+            return 0
           
           
 class Quotation(Entity):
     elixir.using_options(tablename='quotation')
     
-    price = Field(Float)
-    date = Field(DateTime)
-    stock = ManyToOne('Stock') 
+    stock  = ManyToOne('Stock') 
+    date   = Field(Date)
+    open   = Field(Float)
+    high   = Field(Float)
+    low    = Field(Float)
+    close  = Field(Float)
+    vol    = Field(Integer)
 
          
 class Stock(Entity):
@@ -400,6 +415,11 @@ class Stock(Entity):
     price = Field(Float, default=0.0)
     date = Field(DateTime)
     change = Field(Float, default=0.0)
+    
+    #needed for some treeviews, e.g. news_tab
+    @property
+    def stock(self):
+        return self
     
     @property
     def country(self):
@@ -543,8 +563,6 @@ class Dividend(Entity):
     ta_costs = Field(Float)
     price = Field(Float)
     
-
-
 
     
     

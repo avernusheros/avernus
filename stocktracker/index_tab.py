@@ -7,121 +7,22 @@ from stocktracker.gui_utils import float_to_red_green_string, get_price_string, 
 from stocktracker.plot      import ChartWindow
 
 
-class IndexPositionsTab(gtk.VBox):
+class IndexTab(gtk.VBox):
     def __init__(self, index):
         gtk.VBox.__init__(self)
         self.index = index
-        index_tree = IndexPositionsTree(index)
-        hbox = gtk.HBox()
-        tb = IndexToolbar(index, index_tree)
-        hbox.pack_start(tb, expand = True, fill = True)
-        
-        self.price_label = label = gtk.Label()
-        hbox.pack_start(label)
-        hbox.pack_start(gtk.VSeparator(), expand = False, fill = False)
-        self.change_label = label = gtk.Label()
-        hbox.pack_start(label, expand = False, fill = False)
-        self.last_update_label = label = gtk.Label()
-        hbox.pack_start(label, expand = False, fill = False)
-        
-        #hbox.pack_start(gtk.VSeparator(), expand = False, fill = False)
-        
+        index_tree = IndexTree(index)
+
         sw = gtk.ScrolledWindow()
         sw.set_property('hscrollbar-policy', gtk.POLICY_AUTOMATIC)
         sw.set_property('vscrollbar-policy', gtk.POLICY_AUTOMATIC)
         sw.add(index_tree)
-        self.pack_start(hbox, expand=False, fill=False)
+        
         self.pack_start(sw)
-        
-        #pubsub.subscribe('container.updated', self.on_container_update)
-        
-        
         self.show_all()
         
-    
-class IndexToolbar(gtk.Toolbar):
-    def __init__(self, index, tree):
-        gtk.Toolbar.__init__(self)
-        self.index = index
-        self.tree = tree
-        self.conditioned = []
-        
-        button = gtk.ToolButton('gtk-edit')
-        #button.set_label('Remove tag'
-        button.connect('clicked', self.on_edit_clicked)
-        button.set_tooltip_text('Edit selected stock') 
-        self.insert(button,-1)
-        #FIXME
-        #self.conditioned.append(button)
-        button.set_sensitive(False)
-                
-        button = gtk.ToolButton('gtk-info')
-        button.connect('clicked', self.on_chart_clicked)
-        button.set_tooltip_text('Chart selected stock')
-        self.conditioned.append(button) 
-        self.insert(button,-1)        
-        
-        self.insert(gtk.SeparatorToolItem(),-1)
-        
-        button = gtk.ToolButton('gtk-refresh')
-        button.connect('clicked', self.on_update_clicked)
-        button.set_tooltip_text('Update stock quotes') 
-        self.insert(button,-1)
-        
-        button = gtk.ToolButton('gtk-info')
-        button.connect('clicked', self.on_indexchart_clicked)
-        button.set_tooltip_text('Chart index '+self.index.name)
-        self.insert(button,-1) 
-        
-        self.on_unselect()
-        pubsub.subscribe('indextree.unselect', self.on_unselect)
-        pubsub.subscribe('indextree.select', self.on_select)
-        
-    def on_unselect(self):
-        for button in self.conditioned:
-            button.set_sensitive(False)       
-        
-    def on_select(self, obj):
-        for button in self.conditioned:
-            button.set_sensitive(True)
-           
-    def on_add_clicked(self, widget):
-        pubsub.publish('positionstoolbar.add')  
-      
-    def on_update_clicked(self, widget):
-        self.index.update_positions()
-           
-    def on_edit_clicked(self, widget):
-        #FIXME
-        pass
-        
-    def on_chart_clicked(self, widget):
-        if self.tree.selected_item is None:
-            return
-        stock, iter = self.tree.selected_item
-        d = ChartWindow(stock)
-    
-    def on_indexchart_clicked(self, widget):
-        d = ChartWindow(self.index)
-        
-        
-class StockContextMenu(ContextMenu):
-    def __init__(self, position):
-        ContextMenu.__init__(self)
-        self.position = position
-        
-        self.add_item(_('Edit position'),  self.__edit_position, 'gtk-edit')
-        self.add_item(_('Chart position'),  self.on_chart_position, 'gtk-info')
-       
-    def __edit_position(self, *arg):
-        #FIXME
-        pass
-    
-    def on_chart_position(self, *arg):
-        ChartWindow(self.stock)
-        
 
-class IndexPositionsTree(Tree):
+class IndexTree(Tree):
     def __init__(self, container):
         self.container = container
         Tree.__init__(self)
@@ -157,7 +58,7 @@ class IndexPositionsTree(Tree):
 
         self.set_rules_hint(True)
     
-        self.load_positions()
+        self.load_indices()
         
         self.connect('button-press-event', self.on_button_press_event)
         self.connect('cursor_changed', self.on_cursor_changed)
@@ -199,9 +100,9 @@ class IndexPositionsTree(Tree):
         for topic, callback in self.subscriptions:
             pubsub.unsubscribe(topic, callback)
 
-    def load_positions(self):
-        for pos in self.container.positions:
-            self.insert_position(pos)
+    def load_indices(self):
+        for index in model.Index.query.all():
+            self.insert_index(index)
 
     def on_stocks_updated(self, container):
         if container.id == self.container.id:
@@ -211,9 +112,9 @@ class IndexPositionsTree(Tree):
                 row[self.cols['change']] = item.change
                 row[self.cols['change_percent']] = item.percent
         
-    def insert_position(self, stock):
-        self.get_model().append(None, [stock, 
-                                       get_name_string(stock),  
-                                       get_price_string(stock), 
-                                       stock.change,
-                                       stock.percent])
+    def insert_index(self, index):
+        self.get_model().append(None, [index, 
+                                       get_name_string(index),  
+                                       get_price_string(index), 
+                                       index.change,
+                                       index.percent])

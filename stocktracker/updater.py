@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from stocktracker import yahoo
+from stocktracker import yahoo, logger
 import datetime
 
 updater = yahoo
@@ -20,23 +20,17 @@ def get_info(symbol):
 def check_symbol(symbol):
     return updater.check_symbol(symbol)
 
-def get_historical_prices(stock, start_date, end_date):
+def update_historical_prices(stock):
     """
-    Get historical prices for the given ticker symbol.
-    Returns a nested list.
+    Update historical prices for the given ticker symbol.
     """
-    return updater.get_historical_prices(stock, start_date, end_date)
-    #FIXME
-    #print start_date, end_date
     from stocktracker import model
-    print "newest", model.Quotation.query.last().date
-    newest = model.Quotation.query.last().date
+    today = datetime.date.today()
+    today = datetime.date(today.year, today.month, today.day-1)
+    newest = model.Quotation.query.filter_by(stock=stock).first()
     if newest == None:
-        newest = datetime.datetime(end_date.year -20, end_date.month, end_date.day)
-    # newest.date(), start_date, newest.date() >= start_date
-    if newest.date() < start_date:
-        new_data = updater.get_historical_prices(stock.symbol, start_date, newest)
-        #store.insert_quotes(stock, new_data)
-    #return store.get_historical_prices(stock, start_date, end_date)
-    
-
+        newest = datetime.date(today.year -20, today.month, today.day)
+    else:
+        newest = newest.date
+    if newest <= today:
+        updater.update_historical_prices(stock, today, newest)
