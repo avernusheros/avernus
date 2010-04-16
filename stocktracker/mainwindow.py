@@ -40,7 +40,7 @@ class AboutDialog(gtk.AboutDialog):
         self.set_license(stocktracker.__license__)
         self.set_authors(stocktracker.__authors__)
         self.set_website(stocktracker.__url__)
-        #self.set_logo(gtk.gdk.pixbuf_new_from_file("xyz.png"))
+        self.set_logo_icon_name('stocktracker')
         
         self.run()
         self.hide()
