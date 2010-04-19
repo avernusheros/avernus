@@ -1,16 +1,12 @@
-
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-
-import elixir
+import elixir, os
 from elixir import Entity, Field, String, Float, Integer, Date, \
                     UnicodeText, DateTime, OneToMany, ManyToMany, ManyToOne
 from stocktracker  import pubsub, updater, config
 from datetime      import datetime
-import os 
  
-    
 TYPES = {None: 'n/a', 0:'stock', 1:'fund'}
 #http://svn.python.org/projects/stackless/trunk/Tools/world/world
 COUNTRIES = {
@@ -356,7 +352,6 @@ class Container(object):
 ##################       Entities      ########################
 ###############################################################
 
-
 class Exchange(Entity):
     elixir.using_options(tablename='exchange')
     name = Field(String(128))
@@ -375,6 +370,7 @@ class Index(Entity, Container):
     exchange = ManyToOne('Exchange')
     last_update = Field(DateTime)
     yahoo_symbol = Field(String(16)) 
+    test = Field(Float) 
     
     def update_positions(self):
         #update stocks and index
@@ -494,6 +490,11 @@ class PortfolioPosition(Entity, Position):
     transactions = OneToMany('Transaction')
     _tags = ManyToMany('Tag')
     dividends = OneToMany('Dividend')
+    
+    def __init__(self, *args, **kwargs):
+        Entity.__init__(self, *args, **kwargs)
+        pubsub.publish("position.created", self.portfolio, self) 
+    
      
     @property
     def tagstring(self):
@@ -531,6 +532,11 @@ class WatchlistPosition(Entity, Position):
     quantity = 1
     #FIXME
     tags_string =''
+    
+    
+    def __init__(self, *args, **kwargs):
+        Entity.__init__(self, *args, **kwargs)
+        pubsub.publish("position.created", self.watchlist, self) 
         
 
 class Transaction(Entity):
@@ -590,7 +596,7 @@ def connect(database):
     elixir.create_all()
     if new:
         load_stocks()
-
+        commit()
 
 def save_as(filename):
     #FIXME

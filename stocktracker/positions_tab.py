@@ -216,7 +216,7 @@ class PositionsTree(Tree):
             ('positionstoolbar.tag', self.on_tag),
             ('positionstoolbar.split', self.on_split),
             ('position_menu.split', self.on_split),
-            ('container.position.added', self.on_position_added),
+            ('position.created', self.on_position_added),
             ('position.tags.changed', self.on_positon_tags_changed),
             ('shortcut.update', self.on_update)
         )
@@ -378,58 +378,46 @@ class PositionsTree(Tree):
         pass
 
 
-class PositionsTab(gtk.VBox):
-    def __init__(self, pf):
-        gtk.VBox.__init__(self)
-        self.pf = pf
-        positions_tree = PositionsTree(pf)
-        hbox = gtk.HBox()
-        tb = PositionsToolbar(pf, positions_tree)
-        self.pack_start(tb, expand = False, fill = True)
-        
+class InfoBar(gtk.HBox):
+    def __init__(self, container):
+        gtk.HBox.__init__(self)
+        self.container = container
         self.total_label = label = gtk.Label()
-        hbox.pack_start(label)
-        hbox.pack_start(gtk.VSeparator(), expand = False, fill = False)
+        self.pack_start(label)
+        self.pack_start(gtk.VSeparator(), expand = False, fill = False)
             
         self.today_label = label = gtk.Label()
-        hbox.pack_start(label)
-        hbox.pack_start(gtk.VSeparator(), expand = True, fill = True)
+        self.pack_start(label)
+        self.pack_start(gtk.VSeparator(), expand = True, fill = True)
         self.overall_label = label = gtk.Label()
-        hbox.pack_start(label, expand = False, fill = False)
+        self.pack_start(label, expand = False, fill = False)
         
-        if isinstance(pf, model.Watchlist) or isinstance(pf, model.Portfolio):
-            hbox.pack_start(gtk.VSeparator(), expand = True, fill = True)
+        if isinstance(container, model.Watchlist) or isinstance(container, model.Portfolio):
+            self.pack_start(gtk.VSeparator(), expand = True, fill = True)
             self.last_update_label = label = gtk.Label()
-            hbox.pack_start(label, expand = True, fill = False)
-        sw = gtk.ScrolledWindow()
-        sw.set_property('hscrollbar-policy', gtk.POLICY_AUTOMATIC)
-        sw.set_property('vscrollbar-policy', gtk.POLICY_AUTOMATIC)
-        sw.add(positions_tree)
-        self.pack_start(hbox, expand=False, fill=True)
-        self.pack_start(sw)
-        
-        self.on_container_update(self.pf)
-        pubsub.subscribe('container.updated', self.on_container_update)
-       
-        self.show_all()
-        
-    def on_container_update(self, container):
-        if self.pf == container:
-            text = '<b>' + _('Day\'s gain')+'</b>\n'+self.get_change_string(self.pf.current_change)
+            self.pack_start(label, expand = True, fill = False)
+            
+        self.on_container_update(self.container)
+        pubsub.subscribe('position.created', self.on_container_update)
+
+
+    def on_container_update(self, container, position=None):
+        if self.container == container:
+            text = '<b>' + _('Day\'s gain')+'</b>\n'+self.get_change_string(self.container.current_change)
             self.today_label.set_markup(text)
-            text = '<b>'+_('Gain')+'</b>\n'+self.get_change_string(self.pf.overall_change)
+            text = '<b>'+_('Gain')+'</b>\n'+self.get_change_string(self.container.overall_change)
             self.overall_label.set_markup(text)
             
             if isinstance(container, model.Portfolio):
-                text = '<b>'+_('Investments')+'</b> :'+str(round(self.pf.cvalue,2))
-                text += '\n<b>'+_('Cash')+'</b> :'+str(round(self.pf.cash,2))
+                text = '<b>'+_('Investments')+'</b> :'+str(round(self.container.cvalue,2))
+                text += '\n<b>'+_('Cash')+'</b> :'+str(round(self.container.cash,2))
                 self.total_label.set_markup(text)
             else:
-                text = '<b>'+_('Total')+'</b>\n'+str(round(self.pf.cvalue,2))
+                text = '<b>'+_('Total')+'</b>\n'+str(round(self.container.cvalue,2))
                 self.total_label.set_markup(text)
             
             if isinstance(container, model.Portfolio) or isinstance(container, model.Watchlist):
-                text = '<b>'+_('Last update')+'</b>\n'+datetime_format(self.pf.last_update)
+                text = '<b>'+_('Last update')+'</b>\n'+datetime_format(self.container.last_update)
                 self.last_update_label.set_markup(text)
         
     def get_change_string(self, item):
@@ -442,3 +430,22 @@ class PositionsTab(gtk.VBox):
         else:
             text = '<span foreground="dark green">'+ text + '</span>'
         return text
+
+
+class PositionsTab(gtk.VBox):
+    def __init__(self, pf):
+        gtk.VBox.__init__(self)
+        self.pf = pf
+        positions_tree = PositionsTree(pf)
+        hbox = gtk.HBox()
+        tb = PositionsToolbar(pf, positions_tree)
+        self.pack_start(tb, expand = False, fill = True)
+        
+        sw = gtk.ScrolledWindow()
+        sw.set_property('hscrollbar-policy', gtk.POLICY_AUTOMATIC)
+        sw.set_property('vscrollbar-policy', gtk.POLICY_AUTOMATIC)
+        sw.add(positions_tree)
+        self.pack_start(InfoBar(pf), expand=False, fill=True)
+        self.pack_start(sw)
+ 
+        self.show_all()        
