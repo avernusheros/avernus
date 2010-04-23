@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 
 import gtk
-from stocktracker.treeviews import Tree
 from stocktracker import pubsub, model
-from stocktracker.plot import ChartWindow
-from stocktracker.dialogs import SellDialog, NewWatchlistPositionDialog, SplitDialog, BuyDialog
-from stocktracker.gui_utils import ContextMenu, float_to_red_green_string, float_to_string, get_price_string, get_name_string, datetime_format
+from stocktracker.gui.treeviews import Tree
+from stocktracker.gui.plot import ChartWindow
+from stocktracker.gui.dialogs import SellDialog, NewWatchlistPositionDialog, SplitDialog, BuyDialog
+from stocktracker.gui.gui_utils import ContextMenu, float_to_red_green_string, float_to_string, get_price_string, get_name_string, datetime_format
 
 class PositionContextMenu(ContextMenu):
     def __init__(self, position):

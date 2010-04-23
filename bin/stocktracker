@@ -53,7 +53,7 @@ def init_translations():
     
 
 def init_icons():
-    from stocktracker.icons import IconManager
+    from stocktracker.gui.icons import IconManager
     icons = IconManager()
     path = os.path.join(config.getdatapath(),'images')
     icons.add_icon_name_from_directory('stocktracker', path)
@@ -72,7 +72,7 @@ def start():
     from stocktracker import model
     model.connect(db_file)
     
-    from stocktracker.mainwindow import MainWindow    
+    from stocktracker.gui.mainwindow import MainWindow    
     window = MainWindow()
     gtk.main()
 

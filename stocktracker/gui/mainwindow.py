@@ -12,15 +12,16 @@ if __name__ == '__main__':
 
 
 import logging, gtk,os #, gobject
-from stocktracker import pubsub, chart_tab, dialogs, model
-from stocktracker.positions_tab import PositionsTab
-from stocktracker.overview_tab import OverviewTab
-from stocktracker.main_tree import MainTreeBox, Category
-from stocktracker.dividends_tab import DividendsTab
-from stocktracker.transactions_tab import TransactionsTab
-from stocktracker.indexpositions_tab import IndexPositionsTab
-from stocktracker.news_tab import NewsTab
-from stocktracker.index_tab import IndexTab
+from stocktracker import pubsub, model
+from stocktracker.gui import dialogs, chart_tab
+from stocktracker.gui.positions_tab import PositionsTab
+from stocktracker.gui.overview_tab import OverviewTab
+from stocktracker.gui.main_tree import MainTreeBox, Category
+from stocktracker.gui.dividends_tab import DividendsTab
+from stocktracker.gui.transactions_tab import TransactionsTab
+from stocktracker.gui.indexpositions_tab import IndexPositionsTab
+from stocktracker.gui.news_tab import NewsTab
+from stocktracker.gui.index_tab import IndexTab
 from webbrowser import open as web
 import stocktracker
 

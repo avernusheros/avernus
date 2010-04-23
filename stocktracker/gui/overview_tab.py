@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import gtk
-from stocktracker.treeviews import Tree
+from stocktracker.gui.treeviews import Tree
 
 
 class OverviewTab(gtk.Table):

@@ -1,10 +1,9 @@
 #!/usr/bin/env python
 
-from stocktracker.treeviews import Tree
-from stocktracker.gui_utils import get_datetime_string, get_name_string
 import gtk
 from stocktracker import pubsub, model
-
+from stocktracker.gui.treeviews import Tree
+from stocktracker.gui.gui_utils import get_datetime_string, get_name_string
 
 
 class TransactionsTab(gtk.ScrolledWindow):

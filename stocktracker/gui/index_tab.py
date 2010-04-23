@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 
 import gtk
-from stocktracker           import pubsub, model
-from stocktracker.treeviews import Tree
-from stocktracker.gui_utils import float_to_red_green_string, get_price_string, get_name_string, ContextMenu   
-from stocktracker.plot      import ChartWindow
+from stocktracker import pubsub, model
+from stocktracker.gui.treeviews import Tree
+from stocktracker.gui.gui_utils import float_to_red_green_string, get_price_string, get_name_string, ContextMenu   
+from stocktracker.gui.plot      import ChartWindow
 
 
 class IndexTab(gtk.VBox):

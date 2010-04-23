@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 
 import gtk
-from stocktracker.treeviews import Tree
 from stocktracker import pubsub, model
-from stocktracker.gui_utils import ContextMenu
+from stocktracker.gui.treeviews import Tree
+from stocktracker.gui.gui_utils import ContextMenu
 from datetime import datetime
 
 
