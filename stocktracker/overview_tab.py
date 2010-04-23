@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import gtk
 from stocktracker.treeviews import Tree
 
@@ -18,7 +20,6 @@ class OverviewTab(gtk.Table):
         self.set_col_spacing(0, 50)
         
         self.show_all()
-
 
 
 class PerformanceTree(Tree):

@@ -4,6 +4,8 @@ from stocktracker.cairoplot.gtkcairoplot \
     import gtk_pie_plot, gtk_vertical_bar_plot, gtk_dot_line_plot
 import gtk
 
+no_data_string = '\nNo Data!\nAdd positions to portfolio first.\n\n'
+
 
 class ChartTab(gtk.ScrolledWindow):
 
@@ -18,8 +20,8 @@ class ChartTab(gtk.ScrolledWindow):
         self.clear()
         table = gtk.Table()
 
-        #table.attach(gtk.Label(_('Cash over time')), 0,2,0,1)
-        #table.attach(self.cash_chart(),0,2,1,2)
+        table.attach(gtk.Label(_('Cash over time')), 0,2,0,1)
+        table.attach(self.cash_chart(),0,2,1,2)
 
         table.attach(gtk.Label(_('Market value')), 0, 1, 2, 3)
         table.attach(self.current_pie(),0,1,3,4)
@@ -50,6 +52,8 @@ class ChartTab(gtk.ScrolledWindow):
             val = pos.cvalue
             if val != 0:
                 data[pos.name] = val
+        if len(data) == 0:
+            return gtk.Label(no_data_string)  
         pie = gtk_pie_plot()        
         pie.set_args({'data':data, 'width':300, 'height':300, 'gradient':True})
         return pie
@@ -60,6 +64,8 @@ class ChartTab(gtk.ScrolledWindow):
             val = pos.bvalue
             if val != 0:
                 data[pos.name] = val
+        if len(data) == 0:
+            return gtk.Label(no_data_string)  
         pie = gtk_pie_plot()        
         pie.set_args({'data':data, 'width':300, 'height':300, 'gradient':True})
         return pie
@@ -68,7 +74,9 @@ class ChartTab(gtk.ScrolledWindow):
         sum = {0:0.0, 1:0.0}
         for pos in self.pf.positions:
             sum[pos.stock.type] += pos.cvalue
-        data = {'stock':sum[0], 'fund':sum[1]}    
+        data = {'stock':sum[0], 'fund':sum[1]}
+        if sum[0]+sum[1] == 0.0:
+            return gtk.Label(no_data_string)      
         if chart_type == 'pie':
             chart = gtk_pie_plot()  
         elif chart_type == 'vertical_bars':
@@ -84,6 +92,8 @@ class ChartTab(gtk.ScrolledWindow):
                     data[tag] += pos.cvalue
                 except:
                     data[tag] = pos.cvalue
+        if len(data) == 0:
+            return gtk.Label(no_data_string)            
         pie = gtk_pie_plot()        
         pie.set_args({'data':data, 'width':300, 'height':300, 'gradient':True})
         return pie
@@ -95,12 +105,17 @@ class ChartTab(gtk.ScrolledWindow):
                 data[pos.stock.country] += pos.cvalue
             except:
                 data[pos.stock.country] = pos.cvalue
+        if len(data) == 0:
+            return gtk.Label(no_data_string)        
         pie = gtk_pie_plot()        
         pie.set_args({'data':data, 'width':300, 'height':300, 'gradient':True})
         return pie
 
     def cash_chart(self):
-        cot = self.pf.cash_over_time()
+        #FIXME stufenchart?
+        cot = self.pf.get_cash_over_time()
+        cot.reverse()
+        
         data = [b for a, b, in cot]
         legend = [str(a) for a,b in cot]   
             
@@ -112,6 +127,5 @@ class ChartTab(gtk.ScrolledWindow):
                      'grid': True,
                      'width':600, 
                      'height':300,
-                     #'y_bounds':(y_min, y_max)
                      })
         return chart

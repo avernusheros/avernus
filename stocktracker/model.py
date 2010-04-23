@@ -5,7 +5,7 @@ import elixir, os
 from elixir import Entity, Field, String, Float, Integer, Date, \
                     UnicodeText, DateTime, OneToMany, ManyToMany, ManyToOne
 from stocktracker  import pubsub, updater, config
-from datetime      import datetime
+from datetime      import datetime, date, timedelta
  
 TYPES = {None: 'n/a', 0:'stock', 1:'fund'}
 #http://svn.python.org/projects/stackless/trunk/Tools/world/world
@@ -476,6 +476,20 @@ class Portfolio(Entity, Container):
         Entity.__init__(self, *args, **kwargs)
         pubsub.publish("portfolio.created",  self) 
     
+    def get_cash_over_time(self):
+        cash = self.cash
+        res = []
+        for ta in self.transactions:
+            if ta.type == 1 or ta.type == 4:
+                res.append((ta.date.date(), cash))
+                cash += ta.quantity*ta.price+ta.ta_costs
+            if ta.type == 2 or ta.type == 3 or ta.type == 10:
+                res.append((ta.date.date(), cash))
+                cash -= ta.quantity*ta.price-ta.ta_costs
+        last_date = self.transactions[-1].date
+        #FIXME should be last day - 1 day
+        res.append((date(last_date.year, last_date.month, 1) , cash))
+        return res
     
 
 class PortfolioPosition(Entity, Position):
@@ -494,7 +508,6 @@ class PortfolioPosition(Entity, Position):
     def __init__(self, *args, **kwargs):
         Entity.__init__(self, *args, **kwargs)
         pubsub.publish("position.created", self.portfolio, self) 
-    
      
     @property
     def tagstring(self):
@@ -517,7 +530,32 @@ class PortfolioPosition(Entity, Position):
                 tag = Tag(name = tagstring)
             taglist.append(tag)
         self._tags = taglist
-    
+
+    def get_value_over_time(self, start_day, end_day=datetime.today()):
+        #transactions on same day!
+        #dividends?
+        #transaction_costs?
+        end_day = end_day.date()
+        res = []
+        quantity = 0
+        one_day = timedelta(days = 1)
+        current = start_day
+ 
+        while current <= end_day:
+            print current
+            price = 1 #FIXME, get price at date
+            current += one_day
+            for ta in self.transactions:
+                if ta.date == current:
+                    if ta.type == 0: #sell
+                        quantity -= ta.quantity    
+                    elif ta.type == 1: #buy
+                        quantity += ta.quantity
+                    elif ta.type == 2: #split
+                        #FIXME handle splits correctly
+                        pass
+            res.append((current, ta.quantity*price))    
+        return res
 
 
 class WatchlistPosition(Entity, Position):
@@ -545,9 +583,9 @@ class Transaction(Entity):
     date = Field(DateTime)
     position = ManyToOne('PortfolioPosition')
     type = Field(Integer)
-    quantity = Field(Integer)
-    ta_costs = Field(Float)
-    price = Field(Float)
+    quantity = Field(Integer, default=1)
+    ta_costs = Field(Float, default=0.0)
+    price = Field(Float, default=0.0)
       
 
 class PortfolioTransaction(Entity):
@@ -579,12 +617,10 @@ class Dividend(Entity):
 def commit():
     elixir.session.commit()
 
-
 def flush():
     elixir.drop_all()
     elixir.create_all()
     commit()
-
 
 def connect(database):
     if os.path.isfile(database):
@@ -595,6 +631,22 @@ def connect(database):
     elixir.setup_all()
     elixir.create_all()
     if new:
+        first_start()
+
+def first_start():
+    import gtk
+    text = """Thank you for using stocktracker. Since this is the first
+time you start the program, we have to download some stock information.
+"""
+#You can start this manually using 'Tools->Download stock information.'
+    dialog = gtk.MessageDialog(None,
+                               gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
+                               gtk.MESSAGE_QUESTION, 
+                               gtk.BUTTONS_OK_CANCEL,
+                               text)
+    response = dialog.run()
+    dialog.destroy()
+    if response == gtk.RESPONSE_OK:
         load_stocks()
         commit()
 
@@ -602,8 +654,9 @@ def save_as(filename):
     #FIXME
     print "not implemented"
 
-
 def load_stocks():
+    #FIXME indices should be fetched from yahoo finance, so we don't have to use those csv files
+    #e.g. http://download.finance.yahoo.com/d/quotes.csv?s=@%5EGDAXI&f=sl1d1t1c1ohgv&e=.csv&h=0
     import csv
     folder = config.getdatapath()
     files = [p for p in os.listdir(folder) if os.path.isfile(os.path.join(folder, p))] 

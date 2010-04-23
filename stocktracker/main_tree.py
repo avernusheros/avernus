@@ -26,7 +26,6 @@ class MainTree(Tree):
         Tree.__init__(self)
         #object, icon, name
         self.set_model(gtk.TreeStore(object,str, str))
-        
         self.set_headers_visible(False)
              
         column = gtk.TreeViewColumn()
@@ -67,7 +66,6 @@ class MainTree(Tree):
             self.insert_index(index)
         self.expand_all()
         
-    
     def on_clear(self):
         self.insert_categories()
         self.selected_item = None
@@ -143,7 +141,6 @@ class MainTree(Tree):
         elif isinstance(obj, model.Watchlist):# or obj.type == 'tag':
             EditWatchlist(obj)
 
-       
 
 
 class MainTreeToolbar(gtk.Toolbar):
@@ -268,7 +265,7 @@ class NewContainerDialog(gtk.Dialog):
                      (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
                       gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
         vbox = self.get_content_area()
-        
+               
         hbox = gtk.HBox()
         vbox.pack_start(hbox)
         self.radiobutton = button = gtk.RadioButton(None, _("Portfolio"))
@@ -283,13 +280,17 @@ class NewContainerDialog(gtk.Dialog):
         label = gtk.Label(_('Name:'))
         hbox.pack_start(label)
         self.name_entry = gtk.Entry()
+        self.name_entry.set_text('unknown')
+        self.name_entry.connect("activate", self.callback)
+         
         hbox.pack_start(self.name_entry)
 
         self.show_all()
         response = self.run()  
         self.process_result(response)
         
-        self.destroy()
+    def callback(self, widget):
+        self.process_result(gtk.RESPONSE_ACCEPT)
 
     def process_result(self, response):
         if response == gtk.RESPONSE_ACCEPT:
@@ -300,6 +301,8 @@ class NewContainerDialog(gtk.Dialog):
             else:
                 #create wathclist
                 model.Watchlist(name = name)
+        self.destroy()
+
 
 class ContainerContextMenu(ContextMenu):
     def __init__(self, container):
@@ -362,8 +365,8 @@ class CashDialog(gtk.Dialog):
             date = datetime(year, month+1, day)
             if self.action_type == 0:
                 self.pf.cash += amount
-                ta = model.PortfolioTransaction(date=date, portfolio=self.pf, type=3, price=amount)
+                ta = model.PortfolioTransaction(date=date, portfolio=self.pf, type=3, price=amount, quantity=1, ta_costs=0.0)
             else:
                 self.pf.cash -= amount
-                ta = model.PortfolioTransaction(date=date, portfolio=self.pf, type=4, price=amount)
+                ta = model.PortfolioTransaction(date=date, portfolio=self.pf, type=4, price=amount, quantity=1, ta_costs=0.0)
             pubsub.publish('portfolio.transaction.added', self.pf, ta)

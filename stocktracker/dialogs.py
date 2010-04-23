@@ -228,6 +228,7 @@ class PrefDialog(gtk.Dialog):
 
 
 class BuyDialog(gtk.Dialog):
+    #FIXME user should not be able to select a date in the future
     def __init__(self, pf):
         gtk.Dialog.__init__(self, _("Buy a position"), None
                             , gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,

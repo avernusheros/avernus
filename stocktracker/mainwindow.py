@@ -224,7 +224,7 @@ class MainWindow(gtk.Window):
     def on_maintree_select(self, item):
         self.clear_notebook()
         if isinstance(item, model.Portfolio) or isinstance(item, model.Tag) or isinstance(item, model.Watchlist): 
-            self.notebook.append_page(OverviewTab(item), gtk.Label(_('Overview')))
+            #self.notebook.append_page(OverviewTab(item), gtk.Label(_('Overview')))
             self.notebook.append_page(PositionsTab(item), gtk.Label(_('Positions')))
         if isinstance(item, model.Portfolio) or isinstance(item, model.Tag): 
             self.notebook.append_page(TransactionsTab(item), gtk.Label(_('Transactions')))

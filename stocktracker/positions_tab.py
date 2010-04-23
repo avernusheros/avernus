@@ -22,8 +22,9 @@ class PositionContextMenu(ContextMenu):
         self.add_item(_('Edit position'),  self.__edit_position, 'gtk-edit')
         self.add_item(_('Chart position'),  self.on_chart_position, 'gtk-info')
         
-        if type == 0:
-            self.add_item(_('Split position'),  self.__split_position, 'gtk-cut')
+        #FIXME splitting does not work completely. we need to change all transactions of the position
+        #if type == 0:
+            #self.add_item(_('Split position'),  self.__split_position, 'gtk-cut')
     
     def __remove_position(self, *arg):
         pubsub.publish('position_menu.remove', self.position)
@@ -45,15 +46,24 @@ class PositionsToolbar(gtk.Toolbar):
         self.tree = tree
         self.conditioned = []
         
+        if isinstance(container, model.Portfolio):
+            self.type = 1
+        elif isinstance(container, model. Watchlist):
+            self.type = 2
+        
         button = gtk.ToolButton('gtk-add')
         button.connect('clicked', self.on_add_clicked)
-        button.set_tooltip_text('Buy a new position') 
+        if self.type == 1: 
+            button.set_tooltip_text('Buy a new position')
+        else: button.set_tooltip_text('Add a new position') 
         self.insert(button,-1)
         
         button = gtk.ToolButton('gtk-delete')
         #button.set_label('Remove tag'
         button.connect('clicked', self.on_remove_clicked)
-        button.set_tooltip_text('Sell selected position') 
+        if self.type == 1:
+            button.set_tooltip_text('Sell selected position')
+        else: button.set_tooltip_text('Remove selected position')
         self.conditioned.append(button)
         self.insert(button,-1)
         
@@ -65,17 +75,19 @@ class PositionsToolbar(gtk.Toolbar):
         self.conditioned.append(button)
         button.set_sensitive(False)
         
-        button = gtk.ToolButton('gtk-paste')
-        button.connect('clicked', self.on_tag_clicked)
-        button.set_tooltip_text('Tag selected position') 
-        self.conditioned.append(button)
-        self.insert(button,-1)
+        if self.type == 1:
+            button = gtk.ToolButton('gtk-paste')
+            button.connect('clicked', self.on_tag_clicked)
+            button.set_tooltip_text('Tag selected position') 
+            self.conditioned.append(button)
+            self.insert(button,-1)
         
-        button = gtk.ToolButton('gtk-cut')
-        button.connect('clicked', self.on_split_clicked)
-        button.set_tooltip_text('Split selected position') 
-        self.conditioned.append(button)
-        self.insert(button,-1) 
+            button = gtk.ToolButton('gtk-cut')
+            button.connect('clicked', self.on_split_clicked)
+            button.set_tooltip_text('Split selected position') 
+            self.conditioned.append(button)
+            #FIXME 
+            #self.insert(button,-1) 
         
         button = gtk.ToolButton('gtk-info')
         button.connect('clicked', self.on_chart_clicked)
@@ -374,9 +386,6 @@ class PositionsTree(Tree):
             return None
         return search(self.get_model())
         
-    def __del__(self):
-        pass
-
 
 class InfoBar(gtk.HBox):
     def __init__(self, container):
