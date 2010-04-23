@@ -69,8 +69,14 @@ def start():
     configs = config.StocktrackerConfig()
     db_file = configs.get_option('database file')
     
-    from stocktracker import model
-    model.connect(db_file)
+    #new
+    from stocktracker.objects import model, controller, store
+    model.store = store.Store(db_file)
+    controller.createTables()
+    
+    #elixir
+    #from stocktracker import model
+    #model.connect(db_file)
     
     from stocktracker.gui.mainwindow import MainWindow    
     window = MainWindow()

@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 
 import gtk
-from stocktracker import pubsub, model
+from datetime import datetime
+from stocktracker import pubsub
 from stocktracker.gui.treeviews import Tree
 from stocktracker.gui.gui_utils import ContextMenu
-from datetime import datetime
+from stocktracker.objects import controller
 
 
 class Category(object):
@@ -56,13 +57,13 @@ class MainTree(Tree):
         pubsub.subscribe('clear!', self.on_clear)
         
         #loading portfolios...
-        for pf in model.Portfolio.query.all():
+        for pf in controller.getAllPortfolio():
             self.insert_portfolio(pf)
-        for wl in model.Watchlist.query.all():
+        for wl in controller.getAllWatchlist():
             self.insert_watchlist(wl)
-        for tag in model.Tag.query.all():
+        for tag in controller.getAllTag():
             self.insert_tag(tag)
-        for index in model.Index.query.all():
+        for index in controller.getAllIndex():
             self.insert_index(index)
         self.expand_all()
         
@@ -297,10 +298,9 @@ class NewContainerDialog(gtk.Dialog):
             #grab the name
             name = self.name_entry.get_text()
             if self.radiobutton.get_active():
-                model.Portfolio(name = name, cash=0.0)
+                controller.newPortfolio(name, cash=0.0)
             else:
-                #create wathclist
-                model.Watchlist(name = name)
+                controller.newWatchlist(name)
         self.destroy()
 
 
