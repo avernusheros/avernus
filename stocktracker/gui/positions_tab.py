@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import gtk
-from stocktracker import pubsub, model
+from stocktracker import pubsub
 from stocktracker.gui.treeviews import Tree
 from stocktracker.gui.plot import ChartWindow
 from stocktracker.gui.dialogs import SellDialog, NewWatchlistPositionDialog, SplitDialog, BuyDialog

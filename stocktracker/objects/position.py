@@ -1,10 +1,7 @@
 from stocktracker.objects.model import SQLiteEntity
-from stocktracker.objects.portfolio import Portfolio
-from stocktracker.objects.watchlist import Watchlist
+from stocktracker.objects.container import Portfolio, Watchlist
 from stocktracker.objects.stock import Stock
-from stocktracker.objects.transaction import Transaction
 from stocktracker.objects.tag import Tag
-from stocktracker.objects.dividend import Dividend
 from datetime import datetime
  
 class Position(object):
@@ -57,9 +54,7 @@ class PortfolioPosition(SQLiteEntity, Position):
                    "comment":   "TEXT"
                    }
     __relations__  = {
-                    "transaction": Transaction,
                     "_tags"       : Tag,
-                    "dividends"  : Dividend
                     }
 
     @property

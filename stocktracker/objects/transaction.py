@@ -1,5 +1,6 @@
 from stocktracker.objects.model import SQLiteEntity
-from stocktracker.objects.portfolio import Portfolio
+from stocktracker.objects.container import Portfolio
+from stocktracker.objects.position import PortfolioPosition
         
 class Transaction(SQLiteEntity):
 
@@ -12,6 +13,8 @@ class Transaction(SQLiteEntity):
                    "quantity": "INTEGER",
                    "price": "FLOAT",
                    "costs": "FLOAT",
-                   "portfolio": Portfolio,
+                   "position": PortfolioPosition,
+                   "portfolio": Portfolio
                    }
+
 

@@ -4,7 +4,7 @@ import gtk
 from datetime import date
 from stocktracker.cairoplot.gtkcairoplot import gtk_dot_line_plot, gtk_vertical_bar_plot
 from stocktracker.gui.gui_utils import get_green_red_string
-from stocktracker import updater, model
+from stocktracker import updater
 
 
 class ChartWindow(gtk.Window):

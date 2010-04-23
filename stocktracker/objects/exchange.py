@@ -1,12 +1,11 @@
 from stocktracker.objects.model import SQLiteEntity
 
 
+class Exchange(SQLiteEntity):
 
-class Index(SQLiteEntity):
-
-    __primaryKey__ = 'name'
-    __tableName__ = "indices"
+    __primaryKey__ = 'id'
+    __tableName__ = "exchange"
     __columns__ = {
+                   'id'  : 'INTEGER',
                    'name': 'VARCHAR',
-                   'last_update':'TIMESTAMP',
                   }

@@ -12,7 +12,7 @@ if __name__ == '__main__':
 
 
 import logging, gtk,os #, gobject
-from stocktracker import pubsub, model
+from stocktracker import pubsub
 from stocktracker.gui import dialogs, chart_tab
 from stocktracker.gui.positions_tab import PositionsTab
 from stocktracker.gui.overview_tab import OverviewTab

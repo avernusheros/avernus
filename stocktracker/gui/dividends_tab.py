@@ -2,7 +2,7 @@
 
 import gtk
 from datetime import datetime
-from stocktracker import pubsub, model
+from stocktracker import pubsub
 from stocktracker.gui.treeviews import Tree
 from stocktracker.gui.gui_utils import get_datetime_string, get_name_string
 from stocktracker.gui.dialogs import PosSelector

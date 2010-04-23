@@ -1,15 +1,9 @@
 #!/usr/bin/env python
 
-import logging
+from stocktracker.logger import logger
 from inspect import isclass
 
 store = None
-logger = logging.getLogger('Model')
-logger.setLevel(logging.DEBUG)
-handler = logging.StreamHandler()
-handler.setFormatter(logging.Formatter("%(name)s %(levelname)s %(funcName)s: %(message)s"))
-logger.addHandler(handler)
-
 
 def checkTableExistence(name):
     c = store.con.cursor()

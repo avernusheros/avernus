@@ -1,10 +1,17 @@
 from stocktracker.objects.model import SQLiteEntity
-
+from stocktracker.objects.position import PortfolioPosition
 
 class Dividend(SQLiteEntity):
 
-    __primaryKey__ = 'name'
+    __primaryKey__ = 'id'
     __tableName__ = "dividend"
     __columns__ = {
-                   'name': 'VARCHAR',
+                   'id'      : 'INTEGER',
+                   'date'    : 'TIMESTAMP',
+                   'price'   : 'FLOAT',
+                   'costs'   : 'FLOAT',
+                   'shares'  : 'FLOAT',
+                   'position': PortfolioPosition
+                   
                   }
+    

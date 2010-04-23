@@ -2,35 +2,38 @@
 
 import model
 import datetime
-from stocktracker.objects.portfolio import Portfolio
-from stocktracker.objects.watchlist import Watchlist
+from stocktracker.objects.container import Portfolio, Watchlist, Index
 from stocktracker.objects.tag import Tag
 from stocktracker.objects.transaction import Transaction
-from stocktracker.objects.index import Index
 from stocktracker.objects.position import PortfolioPosition, WatchlistPosition
 from stocktracker.objects.stock import Stock
+from stocktracker.objects.exchange import Exchange
+from stocktracker.objects.dividend import Dividend
+from stocktracker.objects.quotation import Quotation
 
-modelClasses = [Portfolio, Transaction, Tag, Watchlist, Index, PortfolioPosition, WatchlistPosition]
+modelClasses = [Portfolio, Transaction, Tag, Watchlist, Index, Dividend,
+                PortfolioPosition, WatchlistPosition, Exchange,
+                Quotation, Stock]
 
 def createTables():
     for cl in modelClasses:
         cl.createTable()
 
-def newPortfolio(name, last_update = datetime.datetime.now(), comment="",cash=0.0):
+def newPortfolio(name, id=None, last_update = datetime.datetime.now(), comment="",cash=0.0):
     # Check for existence of name
     pre = Portfolio.getByPrimaryKey(name)
     if pre:
         return pre
-    result = Portfolio(name=name,last_update=last_update,comment=comment,cash=cash)
+    result = Portfolio(id=id, name=name,last_update=last_update,comment=comment,cash=cash)
     result.insert()
     return result
     
-def newWatchlist(name, last_update = datetime.datetime.now(), comment=""):
+def newWatchlist(name, id=None, last_update = datetime.datetime.now(), comment=""):
     # Check for existence of name
     pre = Watchlist.getByPrimaryKey(name)
     if pre:
         return pre
-    result = Watchlist(name=name,last_update=last_update,comment=comment)
+    result = Watchlist(id=id, name=name,last_update=last_update,comment=comment)
     result.insert()
     return result
 
