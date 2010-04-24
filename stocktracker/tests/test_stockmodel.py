@@ -13,7 +13,7 @@ from stocktracker.objects.position import PortfolioPosition as Position
 import datetime
 
 dbfile = "stocktracker/tests/stockmodel.db"
-create = True
+create = False
 
 class Test(unittest.TestCase):
 
@@ -63,7 +63,7 @@ class Test(unittest.TestCase):
                                            type=3,
                                            price=11.5,
                                            quantity=142,
-                                           portfolio=self.portfolios[0],
+                                           portfolio=self.portfolios[1],
                                            stock=None,
                                            comment="allesKommentieren4"
                                   ))
@@ -73,14 +73,20 @@ class Test(unittest.TestCase):
             for el in self.positions:
                 el.insert()
             print "Data Created"
-            
+        self.portfolios = controller.getAllPortfolio()
+        self.positions = controller.getAllPosition()
+        
 
     def tearDown(self):
         pass
 
 
-    def testName(self):
-        pass
+    def testControllerFunctions(self):
+        port0pos = controller.getPositionForPortfolio(self.portfolios[0])
+        print port0pos
+        self.assertEquals(len(port0pos),3)
+        for pos in port0pos:
+            self.assertEquals(pos.portfolio,self.portfolios[0])
 
 
 if __name__ == "__main__":

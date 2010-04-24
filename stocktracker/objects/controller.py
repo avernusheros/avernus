@@ -49,6 +49,9 @@ def newTag(name):
 def getAllPortfolio():
     return Portfolio.getAll()
 
+def getAllPosition():
+    return PortfolioPosition.getAll()
+
 def getAllTransaction():
     return Transaction.getAll()
 
@@ -62,7 +65,7 @@ def getAllTag():
     return Tag.getAll()
 
 def getPositionForPortfolio(portfolio):
-    key = portfolio.__primaryKey__
+    key = portfolio.getPrimaryKey()
     erg = PortfolioPosition.getAllFromOneColumn("portfolio",key)
     return erg
 

@@ -122,7 +122,7 @@ class SQLiteEntity(object):
                                      arg, 
                                      self.__columns__[arg].getByPrimaryKey(val)
                                      )
-            else:#a non-compley value
+            else:#a non-complex value
                 self.__setattr__(arg, val)
         #the entity shall retrieve its relations upon creation
         #loop all relations
@@ -245,7 +245,7 @@ class SQLiteEntity(object):
         c = store.con.cursor()
         logger.info(query+str(value))
         c.execute(query,[value])
-        rows = c.fetall()
+        rows = c.fetchall()
         erg = []
         for row in rows:
             pk = row[cls.__primaryKey__]
