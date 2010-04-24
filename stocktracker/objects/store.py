@@ -11,7 +11,7 @@ class Store(object):
                 'commitAfterDelete': True,
                 'retrieveOnGetAll':True,
                 'createCompositeOnCreate':True,
-                'retrieveCompositeOnCreate':True,
+                'retrieveCompositeOnCreate':False,
                 }
 
     def __init__(self, fileName):

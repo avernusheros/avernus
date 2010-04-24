@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-import model
 import datetime
 from stocktracker.objects.container import Portfolio, Watchlist, Index
 from stocktracker.objects.tag import Tag
@@ -62,6 +61,8 @@ def getAllIndex():
 def getAllTag():
     return Tag.getAll()
 
-def getTransactionForPortfolio(portfolio):
+def getPositionForPortfolio(portfolio):
     key = portfolio.__primaryKey__
+    erg = PortfolioPosition.getAllFromOneColumn("portfolio",key)
+    return erg
 

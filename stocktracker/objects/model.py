@@ -124,31 +124,39 @@ class SQLiteEntity(object):
                                      )
             else:#a non-compley value
                 self.__setattr__(arg, val)
-        #policy gate for resolving of composite relations
-        if store.policy['retrieveCompositeOnCreate']:
-            #the entity shall retrieve its relations upon creation
-            #loop all relations
-            for name,relation in self.__relations__.items():
-                #the column name of the partner in the relations table
-                relKey = self.__class__.generateRelationTableOtherKey(relation)
-                #the column name of myself in the relations table
-                myKey = self.__class__.generateRelationTableMyKey()
-                #select all of my relations
-                query = "SELECT " + relKey
-                query += " FROM " + self.__class__.generateRelationTableName(relation, name)
-                query += " WHERE " + myKey +"=:temp"
-                vals = {'temp':self.getPrimaryKey()}
-                logger.info(query+str(vals))
-                c = store.con.cursor()
-                c.execute(query,vals)
-                rows = c.fetchall()
-                erg = SQList(self)
-                #retrieve all related objects by their primary key
-                for row in rows:
-                    erg.append(relation.getByPrimaryKey(row[relKey]), store=False)
-                #attach the list under the name specified by the relations dict
-                self.__setattr__(name,erg)
-           
+        #the entity shall retrieve its relations upon creation
+        #loop all relations
+        for name,relation in self.__relations__.items():
+            erg = SQList(self)
+            #policy gate for resolving of composite relations
+            if store.policy['retrieveCompositeOnCreate']:
+                erg = self.retrieveComposite(name, relation)
+            #attach the list under the name specified by the relations dict
+            self.__setattr__(name,erg)
+            
+    def retrieveAllComposite(self):
+        for name,relation in self.__relations__.items():
+            self.__setattr__(name,self.retrieveComposite(name, relation))
+            
+    def retrieveComposite(self, name, relation):
+        #the column name of the partner in the relations table
+        relKey = self.__class__.generateRelationTableOtherKey(relation)
+        #the column name of myself in the relations table
+        myKey = self.__class__.generateRelationTableMyKey()
+        #select all of my relations
+        query = "SELECT " + relKey
+        query += " FROM " + self.__class__.generateRelationTableName(relation, name)
+        query += " WHERE " + myKey +"=:temp"
+        vals = {'temp':self.getPrimaryKey()}
+        logger.info(query+str(vals))
+        c = store.con.cursor()
+        c.execute(query,vals)
+        rows = c.fetchall()
+        erg = SQList(self)
+        #retrieve all related objects by their primary key
+        for row in rows:
+            erg.append(relation.getByPrimaryKey(row[relKey]), store=False)
+        return erg
            
     def getPrimaryKey(self):
         return self.__getattribute__(self.__primaryKey__)
@@ -244,7 +252,9 @@ class SQLiteEntity(object):
             if cache.isCached(cls, pk):
                 erg.append(cache.get(cls, pk))
             else:
-                erg.append(cls(**row))
+                obj = cls(**row)
+                erg.append(obj)
+                cache.cahe(obj)
         return erg
 
     @classmethod
@@ -359,6 +369,10 @@ class SQLiteEntity(object):
             if i < len(cols) - 1:
                 erg += ","
         erg += ")"
+        if not self.__primaryKey__ in dir(self):
+            #we do not yet have a primary key
+            #set a dummy
+            self.__setattr__(self.__primaryKey__,None)
         vals = self.attributeList(cols)
         logger.info(erg + str(vals))
         c = store.con.cursor()
