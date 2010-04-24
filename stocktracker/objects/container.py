@@ -1,6 +1,7 @@
 from stocktracker.objects.model import SQLiteEntity
 from stocktracker.objects.exchange import Exchange
 from stocktracker.objects.stock import Stock
+import controller
 
 class Container(object):
 
@@ -61,6 +62,9 @@ class Portfolio(SQLiteEntity, Container):
                    "comment": "TEXT",
                    "cash": "FLOAT",
                    }
+    
+    def __iter__(self):
+        return controller.getPositionForPortfolio(self).__iter__()
     
     def get_cash_over_time(self):
         cash = self.cash

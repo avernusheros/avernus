@@ -83,7 +83,9 @@ class Test(unittest.TestCase):
 
     def testControllerFunctions(self):
         port0pos = controller.getPositionForPortfolio(self.portfolios[0])
-        print port0pos
+        for port in self.portfolios:
+            for pos in port:
+                print pos
         self.assertEquals(len(port0pos),3)
         for pos in port0pos:
             self.assertEquals(pos.portfolio,self.portfolios[0])
