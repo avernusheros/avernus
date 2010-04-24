@@ -110,7 +110,21 @@ class SQLiteEntity(object):
         """
         for arg, val in kwargs.items():
             #process the keyword args
-            self.__setattr__(arg, val)
+            #does the colum the arg refers to denote a one2one?
+            if isinstance(self.__columns__[arg], SQLiteEntity):
+                #yes it does
+                #did we receive a key or an object
+                if isinstance(val, SQLiteEntity):#an object
+                    self.__setattr__(arg, val)
+                else:#a key
+                    #retrieve the object to reference
+                    self.__setattr__(
+                                     arg, 
+                                     self.__columns__[arg].getByPrimaryKey(val)
+                                     )
+            else:#a non-compley value
+                self.__setattr__(arg, val)
+        #policy gate for resolving of composite relations
         if store.policy['retrieveCompositeOnCreate']:
             #the entity shall retrieve its relations upon creation
             #loop all relations
@@ -119,7 +133,7 @@ class SQLiteEntity(object):
                 relKey = self.__class__.generateRelationTableOtherKey(relation)
                 #the column name of myself in the relations table
                 myKey = self.__class__.generateRelationTableMyKey()
-                
+                #select all of my relations
                 query = "SELECT " + relKey
                 query += " FROM " + self.__class__.generateRelationTableName(relation, name)
                 query += " WHERE " + myKey +"=:temp"
@@ -129,12 +143,11 @@ class SQLiteEntity(object):
                 c.execute(query,vals)
                 rows = c.fetchall()
                 erg = SQList(self)
+                #retrieve all related objects by their primary key
                 for row in rows:
                     erg.append(relation.getByPrimaryKey(row[relKey]), store=False)
+                #attach the list under the name specified by the relations dict
                 self.__setattr__(name,erg)
-            for name, type in self.__columns__.items():
-                if isinstance(type, SQLiteEntity):
-                    self.__setattr__(name, type.getByPrimaryKey(row[name]))
            
            
     def getPrimaryKey(self):
