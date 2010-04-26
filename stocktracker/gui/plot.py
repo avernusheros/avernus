@@ -5,6 +5,7 @@ from datetime import date
 from stocktracker.cairoplot.gtkcairoplot import gtk_dot_line_plot, gtk_vertical_bar_plot
 from stocktracker.gui.gui_utils import get_green_red_string
 from stocktracker import updater
+from stocktracker.objects.quotation import Quotation
 
 
 class ChartWindow(gtk.Window):
@@ -65,16 +66,16 @@ class Chart(gtk.VBox):
             ret =  date(date1.year-20, date1.month,date1.day)
         if ret > date1:
             ret = date(ret.year-1, ret.month, ret.day)
-        return ret
+        return ret 
                 
     def get_chart(self, zoom):
         vbox = gtk.VBox()
         date1 = date.today()
         date2 = self.get_date2(zoom, date1)
         
-        data = model.Quotation.query.filter(model.Quotation.stock==self.stock).\
-                                    filter(model.Quotation.date>=date2).\
-                                    order_by(model.Quotation.date).all()
+        data = Quotation.query.filter(Quotation.stock==self.stock).\
+                                    filter(Quotation.date>=date2).\
+                                    order_by(Quotation.date).all()
         
         quotes = [d.close for d in data]
         y_min = 0.95*min(quotes)

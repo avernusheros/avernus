@@ -7,12 +7,14 @@ from stocktracker.gui.plot import ChartWindow
 from stocktracker.gui.dialogs import SellDialog, NewWatchlistPositionDialog, SplitDialog, BuyDialog
 from stocktracker.gui.gui_utils import ContextMenu, float_to_red_green_string, float_to_string, get_price_string, get_name_string, datetime_format
 import stocktracker.objects
+from stocktracker.objects.position import PortfolioPosition
+from stocktracker.objects.position import Position
 
 
 class PositionContextMenu(ContextMenu):
     def __init__(self, position):
         ContextMenu.__init__(self)
-        if isinstance(position, model.PortfolioPosition):
+        if isinstance(position, PortfolioPosition):
             type = 0
             remove_string = 'Sell'
         else:
@@ -339,7 +341,7 @@ class PositionsTree(Tree):
             #Something is selected so get the object
             obj = treestore.get_value(selection_iter, 0)
             self.selected_item = obj, selection_iter
-            if isinstance(obj, objects.model.position.Position):
+            if isinstance(obj, Position):
                 pubsub.publish('positionstree.select', obj)
                 return
         pubsub.publish('positionstree.unselect')

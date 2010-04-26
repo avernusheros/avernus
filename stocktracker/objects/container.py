@@ -4,6 +4,7 @@ from stocktracker.objects.stock import Stock
 import controller
 from stocktracker import updater, pubsub
 from datetime import datetime
+import datetime.date as date
 
 class Container(object):
 
