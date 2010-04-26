@@ -125,5 +125,3 @@ class Chart(gtk.VBox):
             self.current_chart = self.get_chart(zoom)
             self.add(self.current_chart)
             self.show_all()
-        
-

@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 
 import datetime
-from stocktracker.objects.container import Portfolio, Watchlist, Index
-from stocktracker.objects.tag import Tag
+from stocktracker.objects.container import Portfolio, Watchlist, Index, Tag
 from stocktracker.objects.transaction import Transaction
 from stocktracker.objects.position import PortfolioPosition, WatchlistPosition
 from stocktracker.objects.stock import Stock
@@ -179,6 +178,10 @@ def getPositionForWatchlist(watchlist):
     key = watchlist.getPrimaryKey()
     return WatchlistPosition.getAllFromOneColumn("watchlist",key)
 
+def getPositionForTag(tag):
+    key = tag.getPrimaryKey()
+    #FIXME
+    return []
 
 def getTransactionForPortfolio(portfolio):
     key = portfolio.getPrimaryKey()
@@ -199,4 +202,3 @@ def getNewestQuotation(stock):
         return None
     else:
         return erg[0].date
-

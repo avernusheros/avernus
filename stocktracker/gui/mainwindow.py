@@ -203,7 +203,7 @@ class MainWindow(gtk.Window):
         
     def on_key_press_event(self, widget, event):
         if event.keyval == gtk.gdk.keyval_from_name('F5'):
-             model.update_all_stocks()
+             stocktracker.objects.controller.update_all()
              return True
         if event.keyval == gtk.gdk.keyval_from_name('q'):
             self.on_destroy(widget) 
@@ -229,7 +229,7 @@ class MainWindow(gtk.Window):
         type = None
         if isinstance(item, stocktracker.objects.container.Portfolio):
             type = "portfolio"
-        elif isinstance(item, stocktracker.objects.tag.Tag):
+        elif isinstance(item, stocktracker.objects.container.Tag):
             type = "tag"
         elif isinstance(item, stocktracker.objects.container.Watchlist):
             type = "watchlist"

@@ -122,9 +122,7 @@ class AddStockDialog(gtk.Dialog):
             isin = ''
             exchange = Exchange.query.filter_by(name=exchange_name).first()
             if exchange is None:
-                exchange = model.Exchange(name=exchange_name)
-            
-                        
+                exchange = model.Exchange(name=exchange_name)                        
             model.Stock(yahoo_symbol = symbol, name = name, type = type, exchange = exchange, currency = currency, isin = isin)
 
 
@@ -175,8 +173,8 @@ class SellDialog(gtk.Dialog):
             ta_costs = 0.0
 
             self.pos.quantity -= shares
-            ta = model.Transaction(position=self.pos, type=0, date=date, quantity=shares, price=price, ta_costs=ta_costs)              
-            pubsub.publish('position.transaction.added', self.pos, ta)
+            ta = controller.newTransaction(portfolio=self.pf, position=self.pos, type=0, date=date, quantity=shares, price=price, costs=ta_costs)              
+            pubsub.publish('transaction.added', ta)
             self.pf.cash += shares*price - ta_costs
             
 class PrefDialog(gtk.Dialog):
@@ -307,7 +305,7 @@ class BuyDialog(gtk.Dialog):
             date = datetime(year, month+1, day)
             ta_costs = self.tacosts_entry.get_value()
             pos = controller.newPortfolioPosition(price=price, date=date, quantity=shares, portfolio=self.pf, stock = stock)
-            ta = controller.newTransaction(type=1, date=date,quantity=shares,price=price,costs=ta_costs, position=pos)
+            ta = controller.newTransaction(type=1, date=date,quantity=shares,price=price,costs=ta_costs, position=pos, portfolio=self.pf)
             pubsub.publish('container.position.added', self.pf, pos)
             pubsub.publish('transaction.added', ta)
 

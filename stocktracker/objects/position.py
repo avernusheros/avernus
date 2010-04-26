@@ -1,7 +1,6 @@
 from stocktracker.objects.model import SQLiteEntity
-from stocktracker.objects.container import Portfolio, Watchlist
+from stocktracker.objects.container import Portfolio, Watchlist, Tag
 from stocktracker.objects.stock import Stock
-from stocktracker.objects.tag import Tag
 from datetime import datetime
 
 TYPES = {None: 'n/a', 0:'stock', 1:'fund'}
@@ -74,11 +73,13 @@ class PortfolioPosition(SQLiteEntity, Position):
         taglist = []
         for tagstring in tags:
             #ensure tag exists
-            tag = Tag.query.get(tagstring)
+            tag = Tag.getByPrimaryKey(tagstring)
             if tag is None:
                 tag = Tag(name = tagstring)
+                tag.insert()
             taglist.append(tag)
         self._tags = taglist
+        print self._tags
 
     def get_value_over_time(self, start_day, end_day=datetime.today()):
         #transactions on same day!

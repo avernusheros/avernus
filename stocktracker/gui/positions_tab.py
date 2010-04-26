@@ -23,7 +23,8 @@ class PositionContextMenu(ContextMenu):
         self.position = position
         
         self.add_item(remove_string+' position',  self.__remove_position, 'gtk-remove')
-        self.add_item(_('Edit position'),  self.__edit_position, 'gtk-edit')
+        #FIXME nothing to edit now
+        #self.add_item(_('Edit position'),  self.__edit_position, 'gtk-edit')
         self.add_item(_('Chart position'),  self.on_chart_position, 'gtk-info')
         
         #FIXME splitting does not work completely. we need to change all transactions of the position
@@ -54,6 +55,8 @@ class PositionsToolbar(gtk.Toolbar):
             self.type = 1
         elif isinstance(container, stocktracker.objects.container.Watchlist):
             self.type = 2
+        elif isinstance(container, stocktracker.objects.container.Tag):
+            self.type = 3
         
         button = gtk.ToolButton('gtk-add')
         button.connect('clicked', self.on_add_clicked)
@@ -63,7 +66,6 @@ class PositionsToolbar(gtk.Toolbar):
         self.insert(button,-1)
         
         button = gtk.ToolButton('gtk-delete')
-        #button.set_label('Remove tag'
         button.connect('clicked', self.on_remove_clicked)
         if self.type == 1:
             button.set_tooltip_text('Sell selected position')
@@ -71,11 +73,11 @@ class PositionsToolbar(gtk.Toolbar):
         self.conditioned.append(button)
         self.insert(button,-1)
         
+        #FIXME no edit dialog
         button = gtk.ToolButton('gtk-edit')
-        #button.set_label('Remove tag'
         button.connect('clicked', self.on_edit_clicked)
         button.set_tooltip_text('Edit selected position') 
-        self.insert(button,-1)
+        #self.insert(button,-1)
         self.conditioned.append(button)
         button.set_sensitive(False)
         
@@ -302,6 +304,7 @@ class PositionsTree(Tree):
             dlg.destroy()
             if response == gtk.RESPONSE_OK:
                 position.delete()
+                self.get_model().remove(iter)
         else:
             d = SellDialog(self.container, position)
             if d.response == gtk.RESPONSE_ACCEPT:

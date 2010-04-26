@@ -136,7 +136,7 @@ class MainTree(Tree):
                 pubsub.publish('maintree.select', obj)   
             return
         self.selected_item = None
-        return pubsub.publish('maintree.unselect')
+        pubsub.publish('maintree.unselect')
         
     def on_edit(self):
         if self.selected_item is None:

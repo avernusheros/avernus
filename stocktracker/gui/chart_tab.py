@@ -19,9 +19,10 @@ class ChartTab(gtk.ScrolledWindow):
     def show(self):
         self.clear()
         table = gtk.Table()
-
-        table.attach(gtk.Label(_('Cash over time')), 0,2,0,1)
-        table.attach(self.cash_chart(),0,2,1,2)
+    
+        #FIXME 
+        #table.attach(gtk.Label(_('Cash over time')), 0,2,0,1)
+        #table.attach(self.cash_chart(),0,2,1,2)
 
         table.attach(gtk.Label(_('Market value')), 0, 1, 2, 3)
         table.attach(self.current_pie(),0,1,3,4)
@@ -36,8 +37,9 @@ class ChartTab(gtk.ScrolledWindow):
         table.attach(gtk.Label(_('Tags')),1,2,4,5)
         table.attach(self.tags_pie(),1,2,5,6)
         
-        table.attach(gtk.Label(_('Countries')),0,1,6,7)
-        table.attach(self.country_pie(),0,1,7,8)
+        #FIXME countries not supported yet
+        #table.attach(gtk.Label(_('Countries')),0,1,6,7)
+        #table.attach(self.country_pie(),0,1,7,8)
         
         self.add_with_viewport(table)
         self.show_all()

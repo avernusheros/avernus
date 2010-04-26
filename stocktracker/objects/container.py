@@ -166,3 +166,15 @@ class Index(SQLiteEntity):
             return round(self.change * 100 / (self.price - self.change),2)
         except:
             return 0
+
+
+class Tag(SQLiteEntity, Container):
+
+    __primaryKey__ = 'name'
+    __tableName__ = "tag"
+    __columns__ = {
+                   'name': 'VARCHAR',
+                  }
+
+    def __iter__(self):
+        return controller.getPositionForTag(self).__iter__()
