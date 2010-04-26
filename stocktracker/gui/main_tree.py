@@ -6,6 +6,11 @@ from stocktracker import pubsub
 from stocktracker.gui.treeviews import Tree
 from stocktracker.gui.gui_utils import ContextMenu
 from stocktracker.objects import controller
+#from stocktracker.objects import model
+from stocktracker.objects import container
+from stocktracker.objects.container import Portfolio
+from stocktracker.objects.container import Watchlist
+from stocktracker.objects.transaction import Transaction
 
 
 class Category(object):
@@ -99,7 +104,7 @@ class MainTree(Tree):
         if self.selected_item is None:
             return
         obj, iter = self.selected_item
-        if isinstance(obj, model.Container):
+        if isinstance(obj, container.Container):
             dlg = gtk.MessageDialog(None, 
                  gtk.DIALOG_DESTROY_WITH_PARENT, gtk.MESSAGE_QUESTION, 
                  gtk.BUTTONS_OK_CANCEL, 
@@ -137,9 +142,9 @@ class MainTree(Tree):
         if self.selected_item is None:
             return
         obj, row = self.selected_item
-        if isinstance(obj, model.Portfolio):
+        if isinstance(obj, Portfolio): 
             EditPortfolio(obj)
-        elif isinstance(obj, model.Watchlist):# or obj.type == 'tag':
+        elif isinstance(obj, Watchlist):# or obj.type == 'tag':
             EditWatchlist(obj)
 
 
@@ -315,7 +320,7 @@ class ContainerContextMenu(ContextMenu):
         self.add_item(_('Edit '),  self.__edit_container, 'gtk-edit')
         self.add_item('----')
         
-        if isinstance(container, model.Portfolio):
+        if isinstance(container, Portfolio):
             self.add_item(_('Deposit cash'),  self.__deposit_cash, 'gtk-add')
             self.add_item(_('Withdraw cash'),  self.__withdraw_cash, 'gtk-remove')
 
@@ -367,8 +372,8 @@ class CashDialog(gtk.Dialog):
             date = datetime(year, month+1, day)
             if self.action_type == 0:
                 self.pf.cash += amount
-                ta = model.PortfolioTransaction(date=date, portfolio=self.pf, type=3, price=amount, quantity=1, ta_costs=0.0)
+                ta = Transaction(date=date, portfolio=self.pf, type=3, price=amount, quantity=1, ta_costs=0.0)
             else:
                 self.pf.cash -= amount
-                ta = model.PortfolioTransaction(date=date, portfolio=self.pf, type=4, price=amount, quantity=1, ta_costs=0.0)
+                ta = Transaction(date=date, portfolio=self.pf, type=4, price=amount, quantity=1, ta_costs=0.0)
             pubsub.publish('portfolio.transaction.added', self.pf, ta)
