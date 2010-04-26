@@ -161,6 +161,8 @@ class SQLiteEntity(object):
         #retrieve all related objects by their primary key
         for row in rows:
             erg.append(relation.getByPrimaryKey(row[relKey]), store=False)
+        if 'onRetrieveComposite' in self.__callbacks__:
+            self.__callbacks__['onRetrieveComposite'](self, name=name,relation=relation,erg=erg)
         return erg
            
     def getPrimaryKey(self):
@@ -189,6 +191,8 @@ class SQLiteEntity(object):
             store.commit()
         else:
             store.dirty = True
+        if 'onAddRelationEntry' in self.__callbacks__:
+            self.__callbacks__['onAddRelationEntry'](self,name=name,li=li,other=other)
             
     def removeRelationEntry(self, li, other):
         name = self.getRelationNameFromList(li)
@@ -205,6 +209,8 @@ class SQLiteEntity(object):
             store.commit()
         else:
             store.dirty = True
+        if 'onRemoveRelationEntry' in self.__callbacks__:
+            self.__callbacks__['onRemoveRelationEntry'](self,name=name,li=li,other=other)
 
     @classmethod
     def argumentList(cls, cols, types = False, additions = False, prefix=""):
@@ -393,6 +399,8 @@ class SQLiteEntity(object):
         else:
             store.dirty = True
         cache.cache(self)
+        if 'onInsert' in self.__callbacks__:
+            self.__callbacks__['onInsert'](self,vals=vals)
 
     def update(self):
         erg = "UPDATE " + self.__tableName__ + " SET "
@@ -413,6 +421,8 @@ class SQLiteEntity(object):
             store.commit()
         else:
             store.dirty = True
+        if 'onUpdate' in self.__callbacks__:
+            self.__callbacks__['onUpdate'](self,vals=vals)
 
     def delete(self):
         erg = "DELETE FROM " + self.__tableName__ + " WHERE " + self.primaryKeyString()
@@ -425,10 +435,12 @@ class SQLiteEntity(object):
             store.commit()
         else:
             store.dirty = True
+        if 'onDelete' in self.__callbacks__:
+            self.__callbacks__['onDelete'](self)
 
     def __repr__(self):
         erg = self.__class__.__name__ +"@"+str(id(self))+ "["
-        erg += self.__primaryKey__+":"+str(self.__getattribute__(self.__primaryKey__))
+        erg += self.__primaryKey__+":"+str(self.getPrimaryKey())
         #erg = erg[:-1]
         erg += "]"
         return erg
