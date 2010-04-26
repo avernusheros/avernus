@@ -12,7 +12,7 @@ if __name__ == '__main__':
 
 
 import logging, gtk,os #, gobject
-from stocktracker import pubsub
+from stocktracker import pubsub, updater
 from stocktracker.gui import dialogs, chart_tab
 from stocktracker.gui.positions_tab import PositionsTab
 from stocktracker.gui.overview_tab import OverviewTab
@@ -114,7 +114,7 @@ class MenuBar(gtk.MenuBar):
         dialogs.MergeDialog()
     
     def on_update(self, widget):
-        model.update_all_stocks()
+        stocktracker.objects.controller.update_all()
         
     def on_add(self,widget):
         dialogs.AddStockDialog()

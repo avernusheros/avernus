@@ -27,6 +27,8 @@ def update_stocks(stocks):
     s = 0
     res = __request(symbols, 'l1d1d3c1')
     for row in csv.reader(res):
+        if row[1] == 'N/A':
+            continue 
         stocks[s].price = float(row[0])
         try:
             date = datetime.strptime(row[1] + ' ' + row[2], '%m/%d/%Y %H:%M%p')

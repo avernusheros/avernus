@@ -9,6 +9,7 @@ from stocktracker.objects.stock import Stock
 from stocktracker.objects.exchange import Exchange
 from stocktracker.objects.dividend import Dividend
 from stocktracker.objects.quotation import Quotation
+from stocktracker import updater
 
 modelClasses = [Portfolio, Transaction, Tag, Watchlist, Index, Dividend,
                 PortfolioPosition, WatchlistPosition, Exchange,
@@ -18,13 +19,17 @@ def createTables():
     for cl in modelClasses:
         cl.createTable()
 
+def update_all():
+    updater.update_stocks(getAllStock()+getAllIndex())
+    for container in getAllPortfolio()+getAllWatchlist()+getAllIndex():
+        container.last_update = datetime.datetime.now()
 
 def load_stocks():
     #FIXME should check for duplicates
     from stocktracker import yahoo
     for ind in ['^GDAXI', '^TECDAX', '^STOXX50E', '^DJI', '^IXIC']:
         yahoo.get_index(ind)
-
+    
 
 def newPortfolio(name, id=None, last_update = datetime.datetime.now(), comment="",cash=0.0):
     # Check for existence of name
