@@ -62,7 +62,7 @@ def update_historical_prices(stock, start_date, end_date):
     """
     Update historical prices for the given ticker symbol.
     """
-    from stocktracker.model import Quotation
+    from stocktracker.objects import controller
     symbol = stock.yahoo_symbol
     #print "fetch data", start_date, end_date
     url = 'http://ichart.yahoo.com/table.csv?s=%s&' % symbol + \
@@ -81,7 +81,7 @@ def update_historical_prices(stock, start_date, end_date):
     for row in [day[:-2].split(',') for day in days[1:]]:
         #print row[0]
         dt = datetime.strptime(row[0], '%Y-%m-%d')
-        Quotation(date=dt, stock=stock, open=float(row[1]), high=float(row[2])\
+        controller.newQuotation(date=dt, stock=stock, open=float(row[1]), high=float(row[2])\
                         , low=float(row[3]), close=float(row[6]), vol=int(row[5]))
     #    data.append((dt, float(row[1]), float(row[2]), float(row[3]), float(row[6]), int(row[5])))
 

@@ -3,8 +3,8 @@ from stocktracker.objects.exchange import Exchange
 from stocktracker.objects.stock import Stock
 import controller
 from stocktracker import updater, pubsub
-from datetime import datetime
-import datetime.date as date
+from datetime import datetime, date
+
 
 class Container(object):
 
