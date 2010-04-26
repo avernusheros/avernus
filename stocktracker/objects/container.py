@@ -86,6 +86,11 @@ class Portfolio(SQLiteEntity, Container):
     @property
     def transactions(self):
         return controller.getTransactionForPortfolio(self)
+    
+    def onInit(self):
+        print "Portfolio.onInit"
+        
+    __callbacks__ = {'onInit':onInit}
                     
                    
 class Watchlist(SQLiteEntity):

@@ -10,6 +10,7 @@ def checkTableExistence(name):
     c.execute("pragma table_info("+name+")")
     return len(c.fetchall())>0
 
+
 class Cache(object):
     """
     Caches Objects that have already been retrieved from the database.
@@ -102,12 +103,14 @@ class SQLiteEntity(object):
     __primaryKey__ = None
     #non one2one relations to other entities like name:type
     __relations__ = {}
+    __callbacks__ = {}
 
     def __init__(self, *args, **kwargs):
         """
         The constructor always shall receive all the values for the database relevant
         attributes in kwargs, at the very least the primary key.
         """
+        
         for arg, val in kwargs.items():
             #process the keyword args
             #does the colum the arg refers to denote a one2one?
@@ -133,6 +136,8 @@ class SQLiteEntity(object):
                 erg = self.retrieveComposite(name, relation)
             #attach the list under the name specified by the relations dict
             self.__setattr__(name,erg)
+        if 'onInit' in self.__callbacks__:
+            self.__callbacks__['onInit'](self)
             
     def retrieveAllComposite(self):
         for name,relation in self.__relations__.items():
@@ -256,7 +261,7 @@ class SQLiteEntity(object):
             else:
                 obj = cls(**row)
                 erg.append(obj)
-                cache.cahe(obj)
+                cache.cache(obj)
         return erg
 
     @classmethod
