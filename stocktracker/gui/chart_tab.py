@@ -48,7 +48,7 @@ class ChartTab(gtk.ScrolledWindow):
     
     def current_pie(self):
         data = {}
-        for pos in self.pf.positions:
+        for pos in self.pf:
             val = pos.cvalue
             if val != 0:
                 data[pos.name] = val
@@ -60,7 +60,7 @@ class ChartTab(gtk.ScrolledWindow):
 
     def buy_pie(self):
         data = {}
-        for pos in self.pf.positions:
+        for pos in self.pf:
             val = pos.bvalue
             if val != 0:
                 data[pos.name] = val
@@ -72,7 +72,7 @@ class ChartTab(gtk.ScrolledWindow):
    
     def types_chart(self, chart_type):
         sum = {0:0.0, 1:0.0}
-        for pos in self.pf.positions:
+        for pos in self.pf:
             sum[pos.stock.type] += pos.cvalue
         data = {'stock':sum[0], 'fund':sum[1]}
         if sum[0]+sum[1] == 0.0:
@@ -86,7 +86,7 @@ class ChartTab(gtk.ScrolledWindow):
         
     def tags_pie(self):
         data = {}
-        for pos in self.pf.positions:
+        for pos in self.pf:
             for tag in pos.tags:
                 try:
                     data[tag] += pos.cvalue
@@ -100,7 +100,7 @@ class ChartTab(gtk.ScrolledWindow):
         
     def country_pie(self):
         data = {}
-        for pos in self.pf.positions:
+        for pos in self.pf:
             try:
                 data[pos.stock.country] += pos.cvalue
             except:
