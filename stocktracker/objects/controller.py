@@ -20,7 +20,8 @@ def createTables():
 
 def newPortfolio(name, id=None, last_update = datetime.datetime.now(), comment="",cash=0.0):
     # Check for existence of name
-    pre = Portfolio.getByPrimaryKey(name)
+    #FIXME name isnt primary key
+    pre = None#Portfolio.getByPrimaryKey(name)
     if pre:
         return pre
     result = Portfolio(id=id, name=name,last_update=last_update,comment=comment,cash=cash)
@@ -29,7 +30,8 @@ def newPortfolio(name, id=None, last_update = datetime.datetime.now(), comment="
     
 def newWatchlist(name, id=None, last_update = datetime.datetime.now(), comment=""):
     # Check for existence of name
-    pre = Watchlist.getByPrimaryKey(name)
+    #FIXME name isnt primary key
+    pre = None#Watchlist.getByPrimaryKey(name)
     if pre:
         return pre
     result = Watchlist(id=id, name=name,last_update=last_update,comment=comment)
@@ -69,3 +71,7 @@ def getPositionForPortfolio(portfolio):
     erg = PortfolioPosition.getAllFromOneColumn("portfolio",key)
     return erg
 
+def getTransactionForPortfolio(portfolio):
+    key = portfolio.getPrimaryKey()
+    erg = PortfolioPosition.getAllFromOneColumn("portfolio",key)
+    return erg

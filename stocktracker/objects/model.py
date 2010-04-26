@@ -111,7 +111,7 @@ class SQLiteEntity(object):
         for arg, val in kwargs.items():
             #process the keyword args
             #does the colum the arg refers to denote a one2one?
-            if isinstance(self.__columns__[arg], SQLiteEntity):
+            if isclass(self.__columns__[arg]):
                 #yes it does
                 #did we receive a key or an object
                 if isinstance(val, SQLiteEntity):#an object
@@ -220,6 +220,8 @@ class SQLiteEntity(object):
 
     @classmethod
     def getByPrimaryKey(cls, primary):
+        if primary is None:
+            return None
         if not checkTableExistence(cls.__tableName__):
             logger.error("Table not existent: "+cls.__tableName__)
             return None

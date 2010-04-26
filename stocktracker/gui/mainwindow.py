@@ -24,9 +24,9 @@ from stocktracker.gui.news_tab import NewsTab
 from stocktracker.gui.index_tab import IndexTab
 from webbrowser import open as web
 import stocktracker
+import stocktracker.objects
 
-
-logger = logging.getLogger(__name__)
+logger= logging.getLogger(__name__)
 
 
 
@@ -211,7 +211,8 @@ class MainWindow(gtk.Window):
     def on_destroy(self, widget, data=None):
         """on_destroy - called when the StocktrackerWindow is close. """
         #clean up code for saving application state should be added here
-        model.commit()
+        #FIXME save db on quit
+        #model.commit()
         gtk.main_quit()
     
     def clear_notebook(self):
@@ -224,19 +225,30 @@ class MainWindow(gtk.Window):
             
     def on_maintree_select(self, item):
         self.clear_notebook()
-        if isinstance(item, model.Portfolio) or isinstance(item, model.Tag) or isinstance(item, model.Watchlist): 
+        type = None
+        if isinstance(item, stocktracker.objects.container.Portfolio):
+            type = "portfolio"
+        elif isinstance(item, stocktracker.objects.tag.Tag):
+            type = "tag"
+        elif isinstance(item, stocktracker.objects.container.Watchlist):
+            type = "watchlist"
+        elif isinstance(item, stocktracker.objects.container.Index):
+            type = "index"
+        elif isinstance(item, Category):
+            type = "category"
+        if type == "portfolio" or type == "tag" or type == "watchlist":
             #self.notebook.append_page(OverviewTab(item), gtk.Label(_('Overview')))
             self.notebook.append_page(PositionsTab(item), gtk.Label(_('Positions')))
-        if isinstance(item, model.Portfolio) or isinstance(item, model.Tag): 
+        if type == "portfolio" or type == "tag": 
             self.notebook.append_page(TransactionsTab(item), gtk.Label(_('Transactions')))
             #FIXME
             #self.notebook.append_page(DividendsTab(item), gtk.Label(_('Dividends')))
             self.notebook.append_page(chart_tab.ChartTab(item), gtk.Label(_('Charts')))
-        if isinstance(item, model.Index): 
+        if type == "index":
             self.notebook.append_page(IndexPositionsTab(item), gtk.Label(_('Positions')))
-        if isinstance(item, Category) and item.name == 'Indices':
+        if type == "category" and item.name == 'Indices':
             self.notebook.append_page(IndexTab(item), gtk.Label(_('Indices')))
-        if not isinstance(item, Category):
+        if not type == "category":
             self.notebook.append_page(NewsTab(item), gtk.Label(_('News')))
 
     def on_maintree_unselect(self):

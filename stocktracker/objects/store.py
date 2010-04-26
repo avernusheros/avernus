@@ -23,7 +23,7 @@ class Store(object):
     def connect(self):
         if self.dirty and self.commitDirty:
             self.con.commit()
-        self.con = db.connect(self.fileName)
+        self.con = db.connect(self.fileName, detect_types=db.PARSE_DECLTYPES|db.PARSE_COLNAMES)
         self.con.row_factory = db.Row
         self.dirty = False
 

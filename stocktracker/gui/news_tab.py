@@ -21,7 +21,7 @@ class NewsTab(gtk.VBox):
      
     def show(self):
         symbols = ''
-        for pos in self.container.positions:
+        for pos in self.container:
             symbols+= pos.stock.yahoo_symbol+'+'
         symbols = symbols.strip('+')
         url = 'http://finance.yahoo.com/rss/headline?s=%s' % (symbols,)

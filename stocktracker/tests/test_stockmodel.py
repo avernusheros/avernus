@@ -12,8 +12,9 @@ from stocktracker.objects.position import PortfolioPosition as Position
 #from stocktracker.objects.stock import Stock
 import datetime
 
-dbfile = "stocktracker/tests/stockmodel.db"
-create = False
+#dbfile = "stocktracker/tests/stockmodel.db"
+dbfile = ":memory:"
+create = True
 
 class Test(unittest.TestCase):
 
@@ -88,6 +89,7 @@ class Test(unittest.TestCase):
                 print pos
         self.assertEquals(len(port0pos),3)
         for pos in port0pos:
+            print pos.portfolio, self.portfolios[0]
             self.assertEquals(pos.portfolio,self.portfolios[0])
 
 

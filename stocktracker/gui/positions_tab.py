@@ -6,6 +6,8 @@ from stocktracker.gui.treeviews import Tree
 from stocktracker.gui.plot import ChartWindow
 from stocktracker.gui.dialogs import SellDialog, NewWatchlistPositionDialog, SplitDialog, BuyDialog
 from stocktracker.gui.gui_utils import ContextMenu, float_to_red_green_string, float_to_string, get_price_string, get_name_string, datetime_format
+import stocktracker.objects
+
 
 class PositionContextMenu(ContextMenu):
     def __init__(self, position):
@@ -46,9 +48,9 @@ class PositionsToolbar(gtk.Toolbar):
         self.tree = tree
         self.conditioned = []
         
-        if isinstance(container, model.Portfolio):
+        if isinstance(container, stocktracker.objects.container.Portfolio):
             self.type = 1
-        elif isinstance(container, model. Watchlist):
+        elif isinstance(container, stocktracker.objects.container.Watchlist):
             self.type = 2
         
         button = gtk.ToolButton('gtk-add')
@@ -164,15 +166,18 @@ class PositionsTree(Tree):
         
         self.set_model(gtk.TreeStore(object,str, str, str,float, float, int, float, float, str, float, float, float, str, float))
         
-        if not isinstance(self.container, model.Watchlist):
+        watchlist = False
+        if not isinstance(self.container, stocktracker.objects.container.Watchlist):
+            watchlist = True
+        if not watchlist:
             self.create_column(_('Shares'), self.cols['shares'])
         self.create_column(_('Name'), self.cols['name'])
-        if not isinstance(self.container, model.Watchlist):
+        if not watchlist:
             col, cell = self.create_column(_('Portfolio %'), self.cols['pf_percent'])
             col.set_cell_data_func(cell, float_to_string, self.cols['pf_percent'])
         self.create_column(_('Type'), self.cols['type'])
         self.create_column(_('Start'), self.cols['start'])
-        if not isinstance(self.container, model.Watchlist):
+        if not watchlist:
             col, cell = self.create_column(_('Buy value'), self.cols['buy_value'])
             col.set_cell_data_func(cell, float_to_string, self.cols['buy_value'])
         self.create_column(_('Last price'), self.cols['last_price'])
@@ -180,14 +185,14 @@ class PositionsTree(Tree):
         col.set_cell_data_func(cell, float_to_red_green_string, self.cols['change'])
         col, cell = self.create_column(_('Change %'), self.cols['change_percent'])
         col.set_cell_data_func(cell, float_to_red_green_string, self.cols['change_percent'])
-        if not isinstance(self.container, model.Watchlist):
+        if not watchlist:
             col, cell = self.create_column(_('Mkt value'), self.cols['mkt_value'])
             col.set_cell_data_func(cell, float_to_string, self.cols['mkt_value'])
         col, cell = self.create_column(_('Gain'), self.cols['gain'])
         col.set_cell_data_func(cell, float_to_red_green_string, self.cols['gain'])
         col, cell = self.create_column(_('Gain %'), self.cols['gain_percent'])
         col.set_cell_data_func(cell, float_to_red_green_string, self.cols['gain_percent'])
-        if not isinstance(self.container, model.Watchlist):
+        if not watchlist:
             col, cell = self.create_column(_('Day\'s gain'), self.cols['days_gain'])
             col.set_cell_data_func(cell, float_to_red_green_string, self.cols['days_gain'])
         col, cell = self.create_column(_('Tags'), self.cols['tags'])
@@ -251,7 +256,7 @@ class PositionsTree(Tree):
             pubsub.unsubscribe(topic, callback)
 
     def load_positions(self):
-        for pos in self.container.positions:
+        for pos in self.container:
             self.insert_position(pos)
     
     def on_tag_edited(self, cellrenderertext, path, new_text):
@@ -401,7 +406,7 @@ class InfoBar(gtk.HBox):
         self.overall_label = label = gtk.Label()
         self.pack_start(label, expand = False, fill = False)
         
-        if isinstance(container, model.Watchlist) or isinstance(container, model.Portfolio):
+        if isinstance(container, stocktracker.objects.container.Watchlist) or isinstance(container, stocktracker.objects.container.Portfolio):
             self.pack_start(gtk.VSeparator(), expand = True, fill = True)
             self.last_update_label = label = gtk.Label()
             self.pack_start(label, expand = True, fill = False)
@@ -417,7 +422,7 @@ class InfoBar(gtk.HBox):
             text = '<b>'+_('Gain')+'</b>\n'+self.get_change_string(self.container.overall_change)
             self.overall_label.set_markup(text)
             
-            if isinstance(container, model.Portfolio):
+            if isinstance(container, stocktracker.objects.container.Portfolio):
                 text = '<b>'+_('Investments')+'</b> :'+str(round(self.container.cvalue,2))
                 text += '\n<b>'+_('Cash')+'</b> :'+str(round(self.container.cash,2))
                 self.total_label.set_markup(text)
@@ -425,7 +430,7 @@ class InfoBar(gtk.HBox):
                 text = '<b>'+_('Total')+'</b>\n'+str(round(self.container.cvalue,2))
                 self.total_label.set_markup(text)
             
-            if isinstance(container, model.Portfolio) or isinstance(container, model.Watchlist):
+            if isinstance(container, stocktracker.objects.container.Portfolio) or isinstance(container, stocktracker.objects.container.Watchlist):
                 text = '<b>'+_('Last update')+'</b>\n'+datetime_format(self.container.last_update)
                 self.last_update_label.set_markup(text)
         

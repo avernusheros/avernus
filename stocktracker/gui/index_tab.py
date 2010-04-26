@@ -5,6 +5,7 @@ from stocktracker import pubsub
 from stocktracker.gui.treeviews import Tree
 from stocktracker.gui.gui_utils import float_to_red_green_string, get_price_string, get_name_string, ContextMenu   
 from stocktracker.gui.plot      import ChartWindow
+from stocktracker.objects import controller
 
 
 class IndexTab(gtk.VBox):
@@ -101,7 +102,7 @@ class IndexTree(Tree):
             pubsub.unsubscribe(topic, callback)
 
     def load_indices(self):
-        for index in model.Index.query.all():
+        for index in controller.getAllIndex():
             self.insert_index(index)
 
     def on_stocks_updated(self, container):

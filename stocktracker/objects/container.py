@@ -10,14 +10,14 @@ class Container(object):
     @property
     def bvalue(self):
         value = 0.0
-        for pos in self.positions:
+        for pos in self:
             value += pos.bvalue
         return value
     
     @property
     def cvalue(self):
         value = 0.0
-        for pos in self.positions:
+        for pos in self:
             value += pos.cvalue
         return value
     
@@ -35,7 +35,7 @@ class Container(object):
     @property
     def current_change(self):
         change = 0.0
-        for pos in self.positions:
+        for pos in self:
             stock, percent = pos.current_change
             change +=stock * pos.quantity
         start = self.cvalue - change
@@ -80,6 +80,10 @@ class Portfolio(SQLiteEntity, Container):
         #FIXME should be last day - 1 day
         res.append((date(last_date.year, last_date.month, 1) , cash))
         return res   
+    
+    @property
+    def transactions(self):
+        return controller.getTransactionForPortfolio(self)
                     
                    
 class Watchlist(SQLiteEntity):
