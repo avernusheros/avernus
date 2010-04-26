@@ -7,13 +7,12 @@ class Quotation(SQLiteEntity):
     __tableName__ = "quotation"
     __columns__ = {
                    'id': 'INTEGER',
-                   'name': 'VARCHAR',
                    'stock': Stock,
                    'date': 'TIMESTAMP',
                    'open': 'FLOAT',
                    'high': 'FLOAT',
                    'low': 'FLOAT',
                    'close': 'FLOAT',
-                   'vol': 'INTEGER',
+                   'volume': 'INTEGER',
                    
                   }

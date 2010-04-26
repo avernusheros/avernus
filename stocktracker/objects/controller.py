@@ -131,6 +131,24 @@ def newStock(price=0.0, change=0.0, currency='', type=0, name='', isin='', date=
     result.insert()
     return result
 
+def newQuotation(date=datetime.datetime.now(),\
+                 stock=None,\
+                 open=0,\
+                 high=0,\
+                 low=0,\
+                 close=0,\
+                 vol=0):
+    result = Quotation(id=None,\
+                       date=date,\
+                       open=open,\
+                       high=high,\
+                       low=low,\
+                       close=close,\
+                       stock=stock,\
+                       volume=vol)
+    result.insert()
+    return result
+
 def getAllPortfolio():
     return Portfolio.getAll()
 
@@ -167,8 +185,18 @@ def getTransactionForPortfolio(portfolio):
     erg = Transaction.getAllFromOneColumn("portfolio",key)
     return erg
 
+
 def getQuotationsFromStock(stock, start):
     erg = Quotation.getAllFromOneColumn('stock', stock.getPrimaryKey())
     erg = filter(lambda quote: quote.date > start)
     erg = sorted(erg,lambda quote: quote.date)
     return erg
+
+def getNewestQuotation(stock):
+    key = stock.getPrimaryKey()
+    erg = Quotation.getAllFromOneColumn("stock", key)
+    if len(erg) == 0:
+        return None
+    else:
+        return erg[0].date
+
