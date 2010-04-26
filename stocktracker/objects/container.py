@@ -3,8 +3,7 @@ from stocktracker.objects.exchange import Exchange
 from stocktracker.objects.stock import Stock
 import controller
 from stocktracker import updater, pubsub
-from datetime import datetime
-import datetime.date as date
+from datetime import datetime, date
 
 class Container(object):
 
@@ -79,9 +78,10 @@ class Portfolio(SQLiteEntity, Container):
             if ta.type == 2 or ta.type == 3 or ta.type == 10:
                 res.append((ta.date.date(), cash))
                 cash -= ta.quantity*ta.price-ta.ta_costs
-        last_date = self.transactions[-1].date
-        #FIXME should be last day - 1 day
-        res.append((date(last_date.year, last_date.month, 1) , cash))
+        if len(self.transactions)>0:
+            last_date = self.transactions[-1].date
+            #FIXME should be last day - 1 day
+            res.append((date(last_date.year, last_date.month, 1) , cash))
         return res   
     
     @property

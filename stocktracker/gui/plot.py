@@ -6,6 +6,7 @@ from stocktracker.cairoplot.gtkcairoplot import gtk_dot_line_plot, gtk_vertical_
 from stocktracker.gui.gui_utils import get_green_red_string
 from stocktracker import updater
 from stocktracker.objects.quotation import Quotation
+from stocktracker.objects import controller
 
 
 class ChartWindow(gtk.Window):
@@ -73,9 +74,10 @@ class Chart(gtk.VBox):
         date1 = date.today()
         date2 = self.get_date2(zoom, date1)
         
-        data = Quotation.query.filter(Quotation.stock==self.stock).\
-                                    filter(Quotation.date>=date2).\
-                                    order_by(Quotation.date).all()
+        data = controller.getQuotationsFromStock(self.stock, date2)
+        #data = Quotation.query.filter(Quotation.stock==self.stock).\
+        #                            filter(Quotation.date>=date2).\
+        #                            order_by(Quotation.date).all()
         
         quotes = [d.close for d in data]
         y_min = 0.95*min(quotes)

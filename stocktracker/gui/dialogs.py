@@ -4,6 +4,7 @@ import gtk
 from stocktracker import pubsub, config, updater, logger
 from datetime import datetime
 from stocktracker.objects import controller
+from stocktracker.objects.exchange import Exchange
 
 class StockSelector(gtk.Entry):
     def __init__(self, stocks):
@@ -119,7 +120,7 @@ class AddStockDialog(gtk.Dialog):
             currency = self.currency_label.get_text()
             #FIXME get isin from yahoo????
             isin = ''
-            exchange = model.Exchange.query.filter_by(name=exchange_name).first()
+            exchange = Exchange.query.filter_by(name=exchange_name).first()
             if exchange is None:
                 exchange = model.Exchange(name=exchange_name)
             

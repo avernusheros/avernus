@@ -166,3 +166,9 @@ def getTransactionForPortfolio(portfolio):
     key = portfolio.getPrimaryKey()
     erg = Transaction.getAllFromOneColumn("portfolio",key)
     return erg
+
+def getQuotationsFromStock(stock, start):
+    erg = Quotation.getAllFromOneColumn('stock', stock.getPrimaryKey())
+    erg = filter(lambda quote: quote.date > start)
+    erg = sorted(erg,lambda quote: quote.date)
+    return erg
