@@ -343,7 +343,7 @@ class NewWatchlistPositionDialog(gtk.Dialog):
     def process_result(self, response):
         if response == gtk.RESPONSE_ACCEPT:
             stock = self.stock_selector.selected_stock
-            stock.update()
+            stock.update_price()
             pos = controller.newWatchlistPosition(price=stock.price, date=stock.date, watchlist=self.wl, stock = stock)
             pubsub.publish('container.position.added', self.wl, pos)
 

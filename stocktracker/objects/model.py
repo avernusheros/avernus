@@ -118,15 +118,16 @@ class SQLiteEntity(object):
                 #yes it does
                 #did we receive a key or an object
                 if isinstance(val, SQLiteEntity):#an object
-                    self.__setattr__(arg, val)
+                    self.__setattr__(arg, val, True)
                 else:#a key
                     #retrieve the object to reference
                     self.__setattr__(
                                      arg, 
-                                     self.__columns__[arg].getByPrimaryKey(val)
+                                     self.__columns__[arg].getByPrimaryKey(val),
+                                     True
                                      )
             else:#a non-complex value
-                self.__setattr__(arg, val)
+                self.__setattr__(arg, val, True)
         #the entity shall retrieve its relations upon creation
         #loop all relations
         for name,relation in self.__relations__.items():
@@ -135,9 +136,14 @@ class SQLiteEntity(object):
             if store.policy['retrieveCompositeOnCreate']:
                 erg = self.retrieveComposite(name, relation)
             #attach the list under the name specified by the relations dict
-            self.__setattr__(name,erg)
+            self.__setattr__(name,erg, True)
         if 'onInit' in self.__callbacks__:
             self.__callbacks__['onInit'](self)
+    
+    def __setattr__(self, name, val, insert = False):
+        object.__setattr__(self, name, val)
+        if not insert and name in self.__columns__.keys():
+            self.update()
             
     def retrieveAllComposite(self):
         for name,relation in self.__relations__.items():

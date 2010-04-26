@@ -38,7 +38,7 @@ class Stock(SQLiteEntity):
         except:
             return 0
     
-    def update(self):
+    def update_price(self):
         updater.update_stocks([self])
     
     def __str__(self):
