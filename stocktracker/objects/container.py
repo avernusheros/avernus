@@ -86,6 +86,36 @@ class Portfolio(SQLiteEntity, Container):
     @property
     def transactions(self):
         return controller.getTransactionForPortfolio(self)
+    
+    def onInit(self, **kwargs):
+        print "Portfolio.onInit"
+        
+    def onUpdate(self, **kwargs):
+        print "Portfolio.onUpdate"
+        
+    def onInsert(self, **kwargs):
+        print "Portfolio.onInsert"
+        
+    def onDelete(self, **kwargs):
+        print "Portfolio.onDelete"
+        
+    def onRemoveRelationEntry(self, **kwargs):
+        print "Portfolio.onRemoveRelationEntry"
+        
+    def onAddRelationEntry(self, **kwargs):
+        print "Portfolio.onAddRelationEntry"
+        
+    def onRetrieveComposite(self, **kwargs):
+        print "Portfolio.onRetrieveComposite"
+    
+    __callbacks__ = {'onInit':onInit,
+                     'onUpdate':onUpdate,
+                     'onInsert':onInsert,
+                     'onDelete':onDelete,
+                     'onRemoveRelationEntry':onRemoveRelationEntry,
+                     'onAddRelationEntry':onAddRelationEntry,
+                     'onRetrieveComposite':onRetrieveComposite,
+                     }
                     
                    
 class Watchlist(SQLiteEntity, Container):
