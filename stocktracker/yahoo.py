@@ -1,20 +1,28 @@
 #!/usr/bin/env python
 
 from urllib import urlopen
-import csv, pytz
+import csv, pytz, logging
 from datetime import datetime
+
+
+logger= logging.getLogger(__name__)
+
 
 
 def __request(symbol, stat):
     url = 'http://finance.yahoo.com/d/quotes.csv?s=%s&f=%s' % (symbol, stat)
+    logger.info(url)
     return urlopen(url)
 
 
-def update_stocks(stocks):
+def __get_symbols_from_stocks(stocks):
     symbols = ''
     for stock in stocks:
         symbols+= stock.yahoo_symbol+'+'
-    symbols = symbols.strip('+')
+    return symbols.strip('+')
+
+def update_stocks(stocks):
+    symbols = __get_symbols_string(stocks)
     
     s = 0
     res = __request(symbols, 'l1d1d3c1')
@@ -29,20 +37,22 @@ def update_stocks(stocks):
         stocks[s].date = stocks[s].date.replace(tzinfo = None)
         stocks[s].change = float(row[3])
         s+=1
-             
-               
+                         
 def get_info(symbol):
     #name, isin, exchange, currency
     for row in csv.reader(__request(symbol, 'nxc4')):
         if len(row) == 0 or row[1] == 'N/A':
             return None
         return row[0], 'n/a', row[1], row[2]
+
+
         
 def test_api(symbol):
     for row in csv.reader(__request(symbol, 'nxc4n0n1n2n3n4')):
         print row
      
 def check_symbol(symbol):
+    #FIXME
     return __request(symbol, 'e1').read().strip().strip('"') == "N/A"
     
 
@@ -77,10 +87,31 @@ def update_historical_prices(stock, start_date, end_date):
     #return data #(date, open, high, low, close, vol)        , Adj. Schluss
 
 
-
-
+def get_index(name):
+    #FIXME could be improved to fetch stocks from all indices with one request
+    from stocktracker.objects import controller
+    iname, isin, exchange, currency = get_info(name)
+    ex = controller.newExchange(name=exchange)
+    ind = controller.newIndex(name=iname, exchange=ex,yahoo_symbol=name)
+    
+    #get symbols from yahoo
+    name = name.replace('^', 'E')
+    symbols = ''
+    for row in csv.reader(__request('@%5'+name, 's')):
+        if len(row) > 0:
+            symbols+=row[0]+'+'
+    symbols = symbols.strip('+')
+        
+    #get infos for symbols    
+    for row in csv.reader(__request(symbols, 'nxc4s')):  
+        sname, exchange, currency, symbol = row
+        ex = controller.newExchange(name=exchange)
+        st = controller.newStock(exchange=ex, yahoo_symbol=symbol, name=sname, currency=currency)
+        ind.positions.append(st)
+      
+        
 
 if __name__ == "__main__":
     s = 'GOOG'
-    print check_symbol([s])
-    test_api(s)
+    #print check_symbol([s])
+    print get_infos(['BMW.DE', 'GOOG'])

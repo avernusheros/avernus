@@ -18,6 +18,14 @@ def createTables():
     for cl in modelClasses:
         cl.createTable()
 
+
+def load_stocks():
+    #FIXME should check for duplicates
+    from stocktracker import yahoo
+    for ind in ['^GDAXI', '^TECDAX', '^STOXX50E', '^DJI', '^IXIC']:
+        yahoo.get_index(ind)
+
+
 def newPortfolio(name, id=None, last_update = datetime.datetime.now(), comment="",cash=0.0):
     # Check for existence of name
     #FIXME name isnt primary key
@@ -43,8 +51,27 @@ def newTransaction(date=datetime.datetime.now(),portfolio=None,type=0,quantity=0
     result.insert()
     return result
 
+def newIndex(name='', isin='', currency='', date=datetime.datetime.now(), exchange=None, yahoo_symbol=''):
+    result = Index(id=None, name=name, currency=currency, isin=isin, date=date, exchange=exchange, yahoo_symbol=yahoo_symbol, price=0, change=0)
+    result.insert()
+    return result
+
+def newExchange(name):
+    #FIXME
+    #pre = Exchange.getAllFromOneColumn('name', name)
+    #if pre:
+        #return pre
+    result = Exchange(name=name)
+    result.insert()
+    return result
+
 def newTag(name):
     result = Tag(name=name)
+    result.insert()
+    return result
+  
+def newStock(price=0.0, change=0.0, currency='', type=0, name='', isin='', date=datetime.datetime.now(), exchange=None, yahoo_symbol=''):
+    result = Stock(id=None, price=price, currency=currency, type=type, name=name, isin=isin, change=change, date=date, exchange=exchange, yahoo_symbol=yahoo_symbol)
     result.insert()
     return result
 
@@ -65,6 +92,9 @@ def getAllIndex():
 
 def getAllTag():
     return Tag.getAll()
+    
+def getAllStock():
+    return Stock.getAll()
 
 def getPositionForPortfolio(portfolio):
     key = portfolio.getPrimaryKey()

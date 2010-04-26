@@ -61,6 +61,7 @@ class MenuBar(gtk.MenuBar):
                            (_("Preferences"),gtk.STOCK_PREFERENCES,self.on_pref),
                            )
         tools_menu_items = ((_('Update all stocks') , gtk.STOCK_REFRESH, self.on_update),
+                            (_('Reload stocks from yahoo'), gtk.STOCK_REFRESH, lambda x: stocktracker.objects.controller.load_stocks()), 
                             (_('Add a stock'), gtk.STOCK_ADD, self.on_add),
                             (_("Merge two positions"), gtk.STOCK_CONVERT, self.on_merge),
                            )                   

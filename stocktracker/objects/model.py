@@ -230,7 +230,7 @@ class SQLiteEntity(object):
         erg = "SELECT * FROM " + cls.__tableName__ + " WHERE "
         erg += cls.__primaryKey__ + "=?" #+ cls.__primaryKey__
         c = store.con.cursor()
-        logger.info(erg+primary)
+        logger.info(erg+str(primary))
         c.execute(erg,[primary])
         row = c.fetchone()
         if not row:

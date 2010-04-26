@@ -2,6 +2,8 @@ from stocktracker.objects.model import SQLiteEntity
 from stocktracker.objects.exchange import Exchange
 from stocktracker.objects.stock import Stock
 import controller
+from stocktracker import updater, pubsub
+from datetime import datetime
 
 class Container(object):
 
@@ -46,7 +48,7 @@ class Container(object):
         return change, percent 
      
     def update_positions(self):
-        updater.update_stocks([pos.stock for pos in self.positions])
+        updater.update_stocks([pos.stock for pos in self])
         self.last_update = datetime.now()
         pubsub.publish("stocks.updated", self)
 
@@ -108,10 +110,11 @@ class Index(SQLiteEntity):
                    'name': 'VARCHAR',
                    'isin': "VARCHAR",
                    'change': 'FLOAT',
+                   'price': 'FLOAT',
                    'date': 'TIMESTAMP',
                    'exchange': Exchange,
                    'yahoo_symbol': 'VARCHAR',
-                   'last_update':'TIMESTAMP',
+                   'currency': 'VARCHAR'
                   }
     
     __relations__ = {

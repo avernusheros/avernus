@@ -200,6 +200,8 @@ class IndexPositionsTree(Tree):
             pubsub.unsubscribe(topic, callback)
 
     def load_positions(self):
+        print self.container
+        print self.container.positions
         for pos in self.container.positions:
             self.insert_position(pos)
 

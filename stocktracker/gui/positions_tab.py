@@ -166,18 +166,18 @@ class PositionsTree(Tree):
         
         self.set_model(gtk.TreeStore(object,str, str, str,float, float, int, float, float, str, float, float, float, str, float))
         
-        watchlist = False
+        self.watchlist = False
         if not isinstance(self.container, stocktracker.objects.container.Watchlist):
-            watchlist = True
-        if not watchlist:
+            self.watchlist = True
+        if not self.watchlist:
             self.create_column(_('Shares'), self.cols['shares'])
         self.create_column(_('Name'), self.cols['name'])
-        if not watchlist:
+        if not self.watchlist:
             col, cell = self.create_column(_('Portfolio %'), self.cols['pf_percent'])
             col.set_cell_data_func(cell, float_to_string, self.cols['pf_percent'])
         self.create_column(_('Type'), self.cols['type'])
         self.create_column(_('Start'), self.cols['start'])
-        if not watchlist:
+        if not self.watchlist:
             col, cell = self.create_column(_('Buy value'), self.cols['buy_value'])
             col.set_cell_data_func(cell, float_to_string, self.cols['buy_value'])
         self.create_column(_('Last price'), self.cols['last_price'])
@@ -185,14 +185,14 @@ class PositionsTree(Tree):
         col.set_cell_data_func(cell, float_to_red_green_string, self.cols['change'])
         col, cell = self.create_column(_('Change %'), self.cols['change_percent'])
         col.set_cell_data_func(cell, float_to_red_green_string, self.cols['change_percent'])
-        if not watchlist:
+        if not self.watchlist:
             col, cell = self.create_column(_('Mkt value'), self.cols['mkt_value'])
             col.set_cell_data_func(cell, float_to_string, self.cols['mkt_value'])
         col, cell = self.create_column(_('Gain'), self.cols['gain'])
         col.set_cell_data_func(cell, float_to_red_green_string, self.cols['gain'])
         col, cell = self.create_column(_('Gain %'), self.cols['gain_percent'])
         col.set_cell_data_func(cell, float_to_red_green_string, self.cols['gain_percent'])
-        if not watchlist:
+        if not self.watchlist:
             col, cell = self.create_column(_('Day\'s gain'), self.cols['days_gain'])
             col.set_cell_data_func(cell, float_to_red_green_string, self.cols['days_gain'])
         col, cell = self.create_column(_('Tags'), self.cols['tags'])
@@ -292,7 +292,7 @@ class PositionsTree(Tree):
             if self.selected_item is None:
                 return
             position, iter = self.selected_item
-        if isinstance(self.container, model.Watchlist):
+        if self.watchlist:
             dlg = gtk.MessageDialog(None, 
                  gtk.DIALOG_DESTROY_WITH_PARENT, gtk.MESSAGE_QUESTION, 
                     gtk.BUTTONS_OK_CANCEL, _("Are you sure?"))
@@ -300,7 +300,7 @@ class PositionsTree(Tree):
             dlg.destroy()
             if response == gtk.RESPONSE_OK:
                 position.delete()
-        elif isinstance(self.container, model.Portfolio):
+        else:
             d = SellDialog(self.container, position)
             if d.response == gtk.RESPONSE_ACCEPT:
                 if position.quantity == 0:
@@ -309,9 +309,9 @@ class PositionsTree(Tree):
                     self.get_model()[iter][self.cols['shares']] = position.quantity    
     
     def on_add_position(self):
-        if isinstance(self.container, model.Watchlist):
+        if self.watchlist:
             NewWatchlistPositionDialog(self.container)  
-        elif isinstance(self.container, model.Portfolio):
+        else:
             BuyDialog(self.container)
     
     def on_split(self, position = None):
@@ -339,7 +339,7 @@ class PositionsTree(Tree):
             #Something is selected so get the object
             obj = treestore.get_value(selection_iter, 0)
             self.selected_item = obj, selection_iter
-            if isinstance(obj, model.Position):
+            if isinstance(obj, objects.model.position.Position):
                 pubsub.publish('positionstree.select', obj)
                 return
         pubsub.publish('positionstree.unselect')

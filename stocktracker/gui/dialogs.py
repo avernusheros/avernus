@@ -3,7 +3,7 @@
 import gtk
 from stocktracker import pubsub, config, updater, logger
 from datetime import datetime
-
+from stocktracker.objects import controller
 
 class StockSelector(gtk.Entry):
     def __init__(self, stocks):
@@ -326,7 +326,7 @@ class NewWatchlistPositionDialog(gtk.Dialog):
         label = gtk.Label(_('Stock:'))
         hbox.pack_start(label)
 
-        self.stock_selector = StockSelector(model.Stock.query.all())
+        self.stock_selector = StockSelector(controller.getAllStock())
         hbox.pack_start(self.stock_selector)
         self.stock_selector.completion.connect('match-selected', self.on_stock_selection)
 
