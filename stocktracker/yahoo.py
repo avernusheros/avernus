@@ -22,7 +22,7 @@ def __get_symbols_from_stocks(stocks):
     return symbols.strip('+')
 
 def update_stocks(stocks):
-    symbols = __get_symbols_string(stocks)
+    symbols = __get_symbols_from_stocks(stocks)
     
     s = 0
     res = __request(symbols, 'l1d1d3c1')

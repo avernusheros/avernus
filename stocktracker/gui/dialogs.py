@@ -243,7 +243,7 @@ class BuyDialog(gtk.Dialog):
         label = gtk.Label(_('Stock:'))
         hbox.pack_start(label)
 
-        self.stock_selector = StockSelector(model.Stock.query.all())
+        self.stock_selector = StockSelector(controller.getAllStock())
         hbox.pack_start(self.stock_selector)
         self.stock_selector.completion.connect('match-selected', self.on_stock_selection)
 
@@ -305,10 +305,10 @@ class BuyDialog(gtk.Dialog):
             year, month, day = self.calendar.get_date()
             date = datetime(year, month+1, day)
             ta_costs = self.tacosts_entry.get_value()
-            pos = model.PortfolioPosition(price=price, date=date, quantity=shares, portfolio=self.pf, stock = stock)
-            ta = model.Transaction(type=1, date=date,quantity=shares,price=price,ta_costs=ta_costs, position=pos)
+            pos = controller.newPortfolioPosition(price=price, date=date, quantity=shares, portfolio=self.pf, stock = stock)
+            ta = controller.newTransaction(type=1, date=date,quantity=shares,price=price,costs=ta_costs, position=pos)
             pubsub.publish('container.position.added', self.pf, pos)
-            pubsub.publish('position.transaction.added', pos, ta)
+            pubsub.publish('transaction.added', ta)
 
 
 class NewWatchlistPositionDialog(gtk.Dialog):
@@ -343,7 +343,7 @@ class NewWatchlistPositionDialog(gtk.Dialog):
         if response == gtk.RESPONSE_ACCEPT:
             stock = self.stock_selector.selected_stock
             stock.update()
-            pos = model.WatchlistPosition(stock=stock, price = stock.price, date=stock.date, watchlist=self.wl)
+            pos = controller.newWatchlistPosition(price=stock.price, date=stock.date, watchlist=self.wl, stock = stock)
             pubsub.publish('container.position.added', self.wl, pos)
 
 

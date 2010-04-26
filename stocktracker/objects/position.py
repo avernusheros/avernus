@@ -3,6 +3,8 @@ from stocktracker.objects.container import Portfolio, Watchlist
 from stocktracker.objects.stock import Stock
 from stocktracker.objects.tag import Tag
 from datetime import datetime
+
+TYPES = {None: 'n/a', 0:'stock', 1:'fund'}
  
 class Position(object):
     tagstring = ''
@@ -46,7 +48,6 @@ class PortfolioPosition(SQLiteEntity, Position):
     __columns__ = {
                    "id": "INTEGER",
                    "date": "TIMESTAMP",
-                   "type": "INTEGER",
                    "price": "FLOAT",
                    "quantity":  "INTEGER",
                    "portfolio": Portfolio,
@@ -113,9 +114,7 @@ class WatchlistPosition(SQLiteEntity, Position):
     __columns__ = {
                    "id": "INTEGER",
                    "date": "TIMESTAMP",
-                   "type": "INTEGER",
                    "price": "FLOAT",
-                   
                    "watchlist": Watchlist,
                    "stock":     Stock,
                    "comment":   "TEXT"

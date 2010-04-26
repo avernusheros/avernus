@@ -32,25 +32,25 @@ class TransactionsTree(Tree):
         self.create_column(_('Transaction Costs'), 6)
         
         self.load_transactions()
-        pubsub.subscribe('position.transaction.added', self.on_transaction_created)
-        pubsub.subscribe('portfolio.transaction.added', self.on_pf_transaction_created)
+        pubsub.subscribe('transaction.added', self.on_transaction_created)
         
     def load_transactions(self):
         if isinstance(self.portfolio, stocktracker.objects.container.Portfolio):
             for ta in self.portfolio.transactions:
+                print "!!!!", ta
                 self.insert_transaction(ta)
         else:
             for pos in self.portfolio:          
                 for ta in pos.transactions:
-                    self.insert_transaction(ta, pos)
-    
-    def on_pf_transaction_created(self, portfolio, ta):
-        if portfolio.name == self.portfolio.name:
-            self.insert_pf_transaction(ta)
-    
-    def on_transaction_created(self, position, item):
-        if position.portfolio.name == self.portfolio.name:
-            self.insert_transaction(item, position)    
+                    self.insert_transaction(ta)
+      
+    def on_transaction_created(self, ta):
+        if ta.portfolio is None:
+            portfolio = ta.position.portfolio
+        else:
+            portfolio = ta.portfolio
+        if portfolio.id == self.portfolio.id:
+            self.insert_transaction(ta)    
     
     def get_action_string(self, type):
         if type == 1:
@@ -66,11 +66,8 @@ class TransactionsTree(Tree):
         else:
             return ''
         
-    def insert_transaction(self, ta, pos):
+    def insert_transaction(self, ta):
         model = self.get_model()
         if model:
-            model.append(None, [ta, self.get_action_string(ta.type), get_name_string(pos.stock), get_datetime_string(ta.date), ta.quantity, ta.price, ta.ta_costs])
-
-    def insert_pf_transaction(self, ta):
-        self.get_model().append(None, [ta, self.get_action_string(ta.type), '', get_datetime_string(ta.date), ta.quantity, ta.price, ta.ta_costs]) 
+            model.append(None, [ta, self.get_action_string(ta.type), get_name_string(ta.position.stock), get_datetime_string(ta.date), ta.quantity, ta.price, ta.costs])
 

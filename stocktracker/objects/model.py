@@ -256,7 +256,7 @@ class SQLiteEntity(object):
             else:
                 obj = cls(**row)
                 erg.append(obj)
-                cache.cahe(obj)
+                cache.cache(obj)
         return erg
 
     @classmethod

@@ -1,5 +1,7 @@
 from stocktracker.objects.model import SQLiteEntity
 from stocktracker.objects.exchange import Exchange
+from stocktracker import updater
+
 
 class Stock(SQLiteEntity):
 

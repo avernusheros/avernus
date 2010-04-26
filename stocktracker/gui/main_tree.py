@@ -298,9 +298,11 @@ class NewContainerDialog(gtk.Dialog):
             #grab the name
             name = self.name_entry.get_text()
             if self.radiobutton.get_active():
-                controller.newPortfolio(name, cash=0.0)
+                pf = controller.newPortfolio(name, cash=0.0)
+                pubsub.publish('portfolio.created', pf)
             else:
-                controller.newWatchlist(name)
+                wl = controller.newWatchlist(name)
+                pubsub.publish('watchlist.created', wl)
         self.destroy()
 
 

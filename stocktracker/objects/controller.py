@@ -46,15 +46,66 @@ def newWatchlist(name, id=None, last_update = datetime.datetime.now(), comment="
     result.insert()
     return result
 
-def newTransaction(date=datetime.datetime.now(),portfolio=None,type=0,quantity=0,price=0.0,costs=0.0):
-    result = Transaction(id=None, portfolio=portfolio, date=date, type=type, quantity=quantity, price=price, costs=costs)
+def newTransaction(date=datetime.datetime.now(),\
+                   portfolio=None,\
+                   position=None,\
+                   type=0,\
+                   quantity=0,\
+                   price=0.0,\
+                   costs=0.0):
+    result = Transaction(id=None,\
+                         portfolio=portfolio,\
+                         position=position,\
+                         date=date,\
+                         type=type,\
+                         quantity=quantity,\
+                         price=price,\
+                         costs=costs)
     result.insert()
     return result
+    
 
 def newIndex(name='', isin='', currency='', date=datetime.datetime.now(), exchange=None, yahoo_symbol=''):
     result = Index(id=None, name=name, currency=currency, isin=isin, date=date, exchange=exchange, yahoo_symbol=yahoo_symbol, price=0, change=0)
     result.insert()
     return result
+
+def newPortfolioPosition(price=0,\
+                         date=datetime.datetime.now(),\
+                         quantity=1,\
+                         portfolio=None,\
+                         stock=None,\
+                         comment=''\
+                         ):
+    result = PortfolioPosition(id=None,\
+                               price=price,\
+                               date=date,\
+                               quantity=quantity,\
+                               portfolio=portfolio,\
+                               stock = stock,\
+                               comment=comment\
+                               )
+    result.insert()
+    return result   
+
+
+def newWatchlistPosition(price=0,\
+                         date=datetime.datetime.now(),\
+                         quantity=1,\
+                         watchlist=None,\
+                         stock=None,\
+                         comment=''\
+                         ):
+    result = WatchlistPosition(id=None,\
+                               price=price,\
+                               date=date,\
+                               watchlist=watchlist,\
+                               stock = stock,\
+                               comment=comment\
+                               )
+    result.insert()
+    return result 
+
 
 def newExchange(name):
     #FIXME
@@ -100,8 +151,13 @@ def getPositionForPortfolio(portfolio):
     key = portfolio.getPrimaryKey()
     erg = PortfolioPosition.getAllFromOneColumn("portfolio",key)
     return erg
+    
+def getPositionForWatchlist(watchlist):
+    key = watchlist.getPrimaryKey()
+    return WatchlistPosition.getAllFromOneColumn("watchlist",key)
+
 
 def getTransactionForPortfolio(portfolio):
     key = portfolio.getPrimaryKey()
-    erg = PortfolioPosition.getAllFromOneColumn("portfolio",key)
+    erg = Transaction.getAllFromOneColumn("portfolio",key)
     return erg

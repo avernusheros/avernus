@@ -167,7 +167,7 @@ class PositionsTree(Tree):
         self.set_model(gtk.TreeStore(object,str, str, str,float, float, int, float, float, str, float, float, float, str, float))
         
         self.watchlist = False
-        if not isinstance(self.container, stocktracker.objects.container.Watchlist):
+        if isinstance(self.container, stocktracker.objects.container.Watchlist):
             self.watchlist = True
         if not self.watchlist:
             self.create_column(_('Shares'), self.cols['shares'])
@@ -233,9 +233,9 @@ class PositionsTree(Tree):
             ('positionstoolbar.tag', self.on_tag),
             ('positionstoolbar.split', self.on_split),
             ('position_menu.split', self.on_split),
-            ('position.created', self.on_position_added),
             ('position.tags.changed', self.on_positon_tags_changed),
-            ('shortcut.update', self.on_update)
+            ('shortcut.update', self.on_update),
+            ('container.position.added', self.on_position_added)
         )
         for topic, callback in self.subscriptions:
             pubsub.subscribe(topic, callback)
@@ -284,7 +284,7 @@ class PositionsTree(Tree):
                 row[self.cols['mkt_value']] = round(item.cvalue,2)
                 
     def on_position_added(self, container, item):
-        if container.name == self.container.name:
+        if container.id == self.container.id:
             self.insert_position(item)
      
     def on_remove_position(self, position = None):

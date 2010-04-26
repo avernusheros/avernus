@@ -88,7 +88,7 @@ class Portfolio(SQLiteEntity, Container):
         return controller.getTransactionForPortfolio(self)
                     
                    
-class Watchlist(SQLiteEntity):
+class Watchlist(SQLiteEntity, Container):
 
     __primaryKey__ = 'id'
     __tableName__ = "watchlist"
@@ -98,7 +98,9 @@ class Watchlist(SQLiteEntity):
                    'last_update':'TIMESTAMP',
                    'comment':'TEXT',
                   }
-
+    
+    def __iter__(self):
+        return controller.getPositionForWatchlist(self).__iter__()
 
 
 class Index(SQLiteEntity):
