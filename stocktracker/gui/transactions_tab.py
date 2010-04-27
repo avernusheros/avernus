@@ -37,7 +37,6 @@ class TransactionsTree(Tree):
     def load_transactions(self):
         if isinstance(self.portfolio, stocktracker.objects.container.Portfolio):
             for ta in self.portfolio.transactions:
-                print "!!!!", ta
                 self.insert_transaction(ta)
         else:
             for pos in self.portfolio:          
@@ -69,5 +68,8 @@ class TransactionsTree(Tree):
     def insert_transaction(self, ta):
         model = self.get_model()
         if model:
-            model.append(None, [ta, self.get_action_string(ta.type), get_name_string(ta.position.stock), get_datetime_string(ta.date), ta.quantity, ta.price, ta.costs])
+            if ta.position is None: #a portfolio related transaction
+                model.append(None, [ta, self.get_action_string(ta.type), '', get_datetime_string(ta.date), ta.quantity, ta.price, ta.costs])
+            else:
+                model.append(None, [ta, self.get_action_string(ta.type), get_name_string(ta.position.stock), get_datetime_string(ta.date), ta.quantity, ta.price, ta.costs])
 

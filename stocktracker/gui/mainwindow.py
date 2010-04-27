@@ -63,7 +63,8 @@ class MenuBar(gtk.MenuBar):
         tools_menu_items = ((_('Update all stocks') , gtk.STOCK_REFRESH, self.on_update),
                             (_('Reload stocks from yahoo'), gtk.STOCK_REFRESH, lambda x: stocktracker.objects.controller.load_stocks()), 
                             (_('Add a stock'), gtk.STOCK_ADD, self.on_add),
-                            (_("Merge two positions"), gtk.STOCK_CONVERT, self.on_merge),
+                            #FIXME
+                            #(_("Merge two positions"), gtk.STOCK_CONVERT, self.on_merge),
                            )                   
         help_menu_items  = (#("Help"  , gtk.STOCK_HELP, None),
                             (_("Website"), None, lambda x:web("https://launchpad.net/stocktracker")),

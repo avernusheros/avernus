@@ -64,7 +64,9 @@ class IconManager(object):
                     icon_size = size if size != 'scalable' else -1
                     self.add_icon_name_from_file(icon_name, files[0], icon_size)
                 except IndexError: # Give up
-                    print "index error in icons.py IconManager.add_icon_name_from_directory", icon_name, directory
+                    pass
+                    #FIXME
+                    #print "index error in icons.py IconManager.add_icon_name_from_directory", icon_name, directory
                     
 
     def add_icon_name_from_file(self, icon_name, filename, size=None):

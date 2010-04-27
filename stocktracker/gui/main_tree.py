@@ -8,9 +8,7 @@ from stocktracker.gui.gui_utils import ContextMenu
 from stocktracker.objects import controller
 #from stocktracker.objects import model
 from stocktracker.objects import container
-from stocktracker.objects.container import Portfolio
-from stocktracker.objects.container import Watchlist
-from stocktracker.objects.transaction import Transaction
+from stocktracker.objects.container import Portfolio, Watchlist
 
 
 class Category(object):
@@ -50,6 +48,7 @@ class MainTree(Tree):
         
         self.connect('button-press-event', self.on_button_press_event)
         self.connect('cursor_changed', self.on_cursor_changed)
+        self.connect('row-activated', self.on_edit)
         pubsub.subscribe("watchlist.created", self.insert_watchlist)
         pubsub.subscribe("portfolio.created", self.insert_portfolio)
         pubsub.subscribe("container.edited", self.on_updated)
@@ -130,7 +129,6 @@ class MainTree(Tree):
         if (selection_iter and treestore):
             #Something is selected so get the object
             obj = treestore.get_value(selection_iter, 0)
-
             if self.selected_item is None or self.selected_item[0] != obj:
                 self.selected_item = obj, selection_iter
                 pubsub.publish('maintree.select', obj)   
@@ -138,7 +136,7 @@ class MainTree(Tree):
         self.selected_item = None
         pubsub.publish('maintree.unselect')
         
-    def on_edit(self):
+    def on_edit(self, treeview=None, iter=None, path=None):
         if self.selected_item is None:
             return
         obj, row = self.selected_item
@@ -372,8 +370,8 @@ class CashDialog(gtk.Dialog):
             date = datetime(year, month+1, day)
             if self.action_type == 0:
                 self.pf.cash += amount
-                ta = Transaction(date=date, portfolio=self.pf, type=3, price=amount, quantity=1, ta_costs=0.0)
+                ta = controller.newTransaction(date=date, portfolio=self.pf, type=3, price=amount, quantity=1, costs=0.0)
             else:
                 self.pf.cash -= amount
-                ta = Transaction(date=date, portfolio=self.pf, type=4, price=amount, quantity=1, ta_costs=0.0)
-            pubsub.publish('portfolio.transaction.added', self.pf, ta)
+                ta = controller.newTransaction(date=date, portfolio=self.pf, type=4, price=amount, quantity=1, costs=0.0)
+            pubsub.publish('transaction.added', ta)

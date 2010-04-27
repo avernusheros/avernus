@@ -112,6 +112,7 @@ class AddStockDialog(gtk.Dialog):
             self.currency_label.set_text('')
         
     def process_result(self, response):
+        #FIXME should check existing stocks first
         if response == gtk.RESPONSE_ACCEPT:
             name = self.name_entry.get_text()
             symbol = self.symbol_entry.get_text()
@@ -120,10 +121,8 @@ class AddStockDialog(gtk.Dialog):
             currency = self.currency_label.get_text()
             #FIXME get isin from yahoo????
             isin = ''
-            exchange = Exchange.query.filter_by(name=exchange_name).first()
-            if exchange is None:
-                exchange = model.Exchange(name=exchange_name)                        
-            model.Stock(yahoo_symbol = symbol, name = name, type = type, exchange = exchange, currency = currency, isin = isin)
+            exchange = controller.newExchange(name=exchange_name)
+            controller.newStock(yahoo_symbol = symbol, name = name, type = type, exchange = exchange, currency = currency, isin = isin)
 
 
         

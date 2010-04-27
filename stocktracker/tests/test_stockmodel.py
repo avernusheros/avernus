@@ -37,7 +37,6 @@ class Test(unittest.TestCase):
                                                        cash=5.0
                                                        ))
             self.positions.append(Position(date=datetime.datetime.now(),
-                                           type=0,
                                            price=1.58,
                                            quantity=152,
                                            portfolio=self.portfolios[0],
@@ -45,7 +44,6 @@ class Test(unittest.TestCase):
                                            comment="allesKommentieren"
                                   ))
             self.positions.append(Position(date=datetime.datetime.now(),
-                                           type=1,
                                            price=1.85,
                                            quantity=125,
                                            portfolio=self.portfolios[0],
@@ -53,7 +51,6 @@ class Test(unittest.TestCase):
                                            comment="allesKommentieren2"
                                   ))
             self.positions.append(Position(date=datetime.datetime.now(),
-                                           type=2,
                                            price=14.5,
                                            quantity=512,
                                            portfolio=self.portfolios[0],
@@ -61,7 +58,6 @@ class Test(unittest.TestCase):
                                            comment="allesKommentieren3"
                                   ))
             self.positions.append(Position(date=datetime.datetime.now(),
-                                           type=3,
                                            price=11.5,
                                            quantity=142,
                                            portfolio=self.portfolios[1],
