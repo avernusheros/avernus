@@ -5,6 +5,7 @@ from stocktracker import pubsub
 from stocktracker.gui.treeviews import Tree
 from stocktracker.gui.gui_utils import get_datetime_string, get_name_string
 import stocktracker.objects
+from stocktracker.objects import controller
 
 
 class TransactionsTab(gtk.ScrolledWindow):
@@ -35,13 +36,14 @@ class TransactionsTree(Tree):
         pubsub.subscribe('transaction.added', self.on_transaction_created)
         
     def load_transactions(self):
+        list = []
         if isinstance(self.portfolio, stocktracker.objects.container.Portfolio):
-            for ta in self.portfolio.transactions:
-                self.insert_transaction(ta)
+            list = [self.portfolio]
         else:
-            for pos in self.portfolio:          
-                for ta in pos.transactions:
-                    self.insert_transaction(ta)
+            list = self.portfolio
+        for port in list:
+            for ta in controller.getTransactionForPortfolio(port):
+                self.insert_transaction(ta)
       
     def on_transaction_created(self, ta):
         if ta.portfolio is None:

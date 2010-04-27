@@ -54,32 +54,19 @@ class PortfolioPosition(SQLiteEntity, Position):
                    "comment":   "TEXT"
                    }
     __relations__  = {
-                    "_tags"       : Tag,
+                    "tags"       : Tag,
                     }
 
     @property
     def tagstring(self):
         ret = ''
-        for t in self._tags:
+        for t in self.tags:
             ret += t.name + ' '
         return ret 
     
-    @property
-    def tags(self):
-        return self._tags
+    def hasTag(self, tag):
+        return tag in self.tags
       
-    @tags.setter
-    def tags(self, tags):
-        taglist = []
-        for tagstring in tags:
-            #ensure tag exists
-            tag = Tag.getByPrimaryKey(tagstring)
-            if tag is None:
-                tag = Tag(name = tagstring)
-                tag.insert()
-            taglist.append(tag)
-        self._tags = taglist
-        print self._tags
 
     def get_value_over_time(self, start_day, end_day=datetime.today()):
         #transactions on same day!

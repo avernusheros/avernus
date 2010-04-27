@@ -95,7 +95,7 @@ class PositionsToolbar(gtk.Toolbar):
             #FIXME 
             #self.insert(button,-1) 
         
-        button = gtk.ToolButton('gtk-info')
+        button = gtk.ToolButton('gtk-select-all')
         button.connect('clicked', self.on_chart_clicked)
         button.set_tooltip_text('Chart selected position')
         self.conditioned.append(button) 
@@ -143,7 +143,7 @@ class PositionsToolbar(gtk.Toolbar):
         if self.tree.selected_item is None:
             return
         position, iter = self.tree.selected_item
-        d = ChartWindow(position.stock)
+        ChartWindow(position.stock)
 
 
 class PositionsTree(Tree):
@@ -267,7 +267,9 @@ class PositionsTree(Tree):
         if self.selected_item is None:
             return
         obj, iter = self.selected_item
-        obj.tags = new_text.split()
+        for tag in new_text.split():
+            pubsub.publish('position.newTag',position=obj,tagText=tag)
+        #FIXME the new_text has to be set to the cell, or does it?
     
    
     def on_positon_tags_changed(self, tags, item):
@@ -324,7 +326,7 @@ class PositionsTree(Tree):
             if self.selected_item is None:
                 return
             position, iter = self.selected_item
-        d = SplitDialog(position)
+        SplitDialog(position)
         
     def on_tag(self):
         if self.selected_item is None:

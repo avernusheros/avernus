@@ -9,6 +9,8 @@ from stocktracker.objects.exchange import Exchange
 from stocktracker.objects.dividend import Dividend
 from stocktracker.objects.quotation import Quotation
 from stocktracker import updater
+from stocktracker import pubsub
+from stocktracker import logger
 
 modelClasses = [Portfolio, Transaction, Tag, Watchlist, Index, Dividend,
                 PortfolioPosition, WatchlistPosition, Exchange,
@@ -123,6 +125,7 @@ def newExchange(name):
 def newTag(name):
     result = Tag(name=name)
     result.insert()
+    pubsub.publish('tag.created',result)
     return result
   
 def newStock(price=0.0, change=0.0, currency='', type=0, name='', isin='', date=datetime.datetime.now(), exchange=None, yahoo_symbol=''):
@@ -179,9 +182,14 @@ def getPositionForWatchlist(watchlist):
     return WatchlistPosition.getAllFromOneColumn("watchlist",key)
 
 def getPositionForTag(tag):
-    key = tag.getPrimaryKey()
+    possible = getAllPosition()
     #FIXME
-    return []
+    #print "all: ", possible, possible[0].tags
+    for pos in possible:
+        if not pos.__composite_retrieved__:
+            pos.retrieveAllComposite()
+    possible = filter(lambda pos: pos.hasTag(tag), possible)
+    return possible
 
 def getTransactionForPortfolio(portfolio):
     key = portfolio.getPrimaryKey()
@@ -202,3 +210,15 @@ def getNewestQuotation(stock):
         return None
     else:
         return erg[0].date
+    
+def onPositionNewTag(position=None,tagText=None):
+    if not position or not tagText:
+        logger.logger.error("Malformed onPositionNewTag Call (position,tagText)" + str((position,tagText)))
+    tag = None
+    if Tag.primaryKeyExists(tagText):
+        tag = Tag.getByPrimaryKey(tagText)
+    else:
+        tag = newTag(tagText)
+    position.tags.append(tag)
+
+pubsub.subscribe('position.newTag', onPositionNewTag)

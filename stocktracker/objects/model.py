@@ -110,7 +110,7 @@ class SQLiteEntity(object):
         The constructor always shall receive all the values for the database relevant
         attributes in kwargs, at the very least the primary key.
         """
-        
+        self.__composite_retrieved__ = False
         for arg, val in kwargs.items():
             #process the keyword args
             #does the colum the arg refers to denote a one2one?
@@ -148,6 +148,7 @@ class SQLiteEntity(object):
     def retrieveAllComposite(self):
         for name,relation in self.__relations__.items():
             self.__setattr__(name,self.retrieveComposite(name, relation))
+        self.__composite_retrieved__ = True
             
     def retrieveComposite(self, name, relation):
         #the column name of the partner in the relations table
@@ -234,9 +235,13 @@ class SQLiteEntity(object):
             if cols.index(col) < len(cols) - 1:
                     erg += ", "
         return erg
+    
+    @classmethod
+    def primaryKeyExists(cls, primary):
+        return not cls.getByPrimaryKey(primary, True) == None
 
     @classmethod
-    def getByPrimaryKey(cls, primary):
+    def getByPrimaryKey(cls, primary, internal = False):
         if primary is None:
             return None
         if not checkTableExistence(cls.__tableName__):
@@ -251,7 +256,8 @@ class SQLiteEntity(object):
         c.execute(erg,[primary])
         row = c.fetchone()
         if not row:
-            logger.error("Primary Key not found in Database: " + str(primary))
+            if not internal:
+                logger.error("Primary Key not found in Database: " + str(primary))
             return None
         res = cls(**row)
         cache.cache(res)
