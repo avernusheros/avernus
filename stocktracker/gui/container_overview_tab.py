@@ -8,24 +8,24 @@ from stocktracker.gui.plot      import ChartWindow
 from stocktracker.objects import controller
 
 
-class IndexTab(gtk.VBox):
-    def __init__(self, index):
+class ContainerOverviewTab(gtk.VBox):
+    def __init__(self, item):
         gtk.VBox.__init__(self)
-        self.index = index
-        index_tree = IndexTree(index)
+        tree = ContainerOverviewTree(item)
 
         sw = gtk.ScrolledWindow()
         sw.set_property('hscrollbar-policy', gtk.POLICY_AUTOMATIC)
         sw.set_property('vscrollbar-policy', gtk.POLICY_AUTOMATIC)
-        sw.add(index_tree)
+        sw.add(tree)
         
         self.pack_start(sw)
         self.show_all()
         
 
-class IndexTree(Tree):
+class ContainerOverviewTree(Tree):
     def __init__(self, container):
         self.container = container
+        
         Tree.__init__(self)
         self.cols = {'obj':0,
                      'name':1, 
@@ -59,7 +59,7 @@ class IndexTree(Tree):
 
         self.set_rules_hint(True)
     
-        self.load_indices()
+        self.load_items()
         
         self.connect('button-press-event', self.on_button_press_event)
         self.connect('cursor_changed', self.on_cursor_changed)
@@ -101,9 +101,17 @@ class IndexTree(Tree):
         for topic, callback in self.subscriptions:
             pubsub.unsubscribe(topic, callback)
 
-    def load_indices(self):
-        for index in controller.getAllIndex():
-            self.insert_index(index)
+    def load_items(self):
+        if self.container.name == 'Tags':
+            items = controller.getAllTag()
+        elif self.container.name == 'Watchlists':
+            items = controller.getAllWatchlist()
+        elif self.container.name == 'Portfolios':
+            items = controller.getAllPortfolio()
+        elif self.container.name == 'Indices':
+            items = controller.getAllIndex()
+        for item in items:
+            self.insert_item(item)
 
     def on_stocks_updated(self, container):
         if container.id == self.container.id:
@@ -113,9 +121,9 @@ class IndexTree(Tree):
                 row[self.cols['change']] = item.change
                 row[self.cols['change_percent']] = item.percent
         
-    def insert_index(self, index):
-        self.get_model().append(None, [index, 
-                                       get_name_string(index),  
-                                       get_price_string(index), 
-                                       index.change,
-                                       index.percent])
+    def insert_item(self, item):
+        self.get_model().append(None, [item, 
+                                       item.name,  
+                                       get_price_string(item), 
+                                       item.change,
+                                       item.percent])

@@ -420,7 +420,8 @@ class InfoBar(gtk.HBox):
             
         self.on_container_update(self.container)
         pubsub.subscribe('position.created', self.on_container_update)
-
+        pubsub.subscribe('stocks.updated', self.on_container_update)
+        pubsub.subscribe('container.updated', self.on_container_update)
 
     def on_container_update(self, container, position=None):
         if self.container == container:

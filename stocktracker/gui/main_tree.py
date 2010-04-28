@@ -49,16 +49,21 @@ class MainTree(Tree):
         self.connect('button-press-event', self.on_button_press_event)
         self.connect('cursor_changed', self.on_cursor_changed)
         self.connect('row-activated', self.on_edit)
-        pubsub.subscribe("watchlist.created", self.insert_watchlist)
-        pubsub.subscribe("portfolio.created", self.insert_portfolio)
-        pubsub.subscribe("container.edited", self.on_updated)
-        pubsub.subscribe("tag.created", self.insert_tag)
-        pubsub.subscribe("tag.updated", self.on_updated)
-        pubsub.subscribe("maintoolbar.remove", self.on_remove)
-        pubsub.subscribe("maincontextmenu.remove", self.on_remove)
-        pubsub.subscribe('maintoolbar.edit', self.on_edit)
-        pubsub.subscribe('maincontextmenu.edit', self.on_edit)
-        pubsub.subscribe('clear!', self.on_clear)
+        self.subscriptions = (
+                    ("watchlist.created", self.insert_watchlist),
+                    ("portfolio.created", self.insert_portfolio),
+                    ('index.created', self.insert_index),
+                    ("container.edited", self.on_updated),
+                    ("tag.created", self.insert_tag),
+                    ("tag.updated", self.on_updated),
+                    ("maintoolbar.remove", self.on_remove),
+                    ("maincontextmenu.remove", self.on_remove),
+                    ('maintoolbar.edit', self.on_edit),
+                    ('maincontextmenu.edit', self.on_edit),
+                    ('clear!', self.on_clear),
+                )
+        for topic, callback in self.subscriptions:
+            pubsub.subscribe(topic, callback)
         
         #loading portfolios...
         for pf in controller.getAllPortfolio():
@@ -131,8 +136,8 @@ class MainTree(Tree):
             obj = treestore.get_value(selection_iter, 0)
             if self.selected_item is None or self.selected_item[0] != obj:
                 self.selected_item = obj, selection_iter
-                pubsub.publish('maintree.select', obj)   
-            return
+                pubsub.publish('maintree.select', obj)  
+            return 
         self.selected_item = None
         pubsub.publish('maintree.unselect')
         

@@ -23,11 +23,11 @@ def __get_symbols_from_stocks(stocks):
 
 def update_stocks(stocks):
     symbols = __get_symbols_from_stocks(stocks)
-    
     s = 0
     res = __request(symbols, 'l1d1d3c1')
     for row in csv.reader(res):
         if row[1] == 'N/A':
+            s+=1
             continue 
         stocks[s].price = float(row[0])
         try:
@@ -94,7 +94,7 @@ def get_index(name):
     from stocktracker.objects import controller
     iname, isin, exchange, currency = get_info(name)
     ex = controller.newExchange(name=exchange)
-    ind = controller.newIndex(name=iname, exchange=ex,yahoo_symbol=name)
+    ind = controller.newIndex(name=iname, exchange=ex,yahoo_symbol=name, currency=currency)
     
     #get symbols from yahoo
     name = name.replace('^', 'E')
@@ -116,4 +116,5 @@ def get_index(name):
 if __name__ == "__main__":
     s = 'GOOG'
     #print check_symbol([s])
-    print get_infos(['BMW.DE', 'GOOG'])
+    
+    print update_stocks(['^GDAXI'])

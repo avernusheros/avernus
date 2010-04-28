@@ -24,6 +24,22 @@ class Container(object):
         return value
     
     @property
+    def price(self):
+        return self.cvalue
+    
+    @property
+    def date(self):
+        return self.last_update
+        
+    @property
+    def change(self):
+        return self.current_change[0]    
+    
+    @property
+    def percent(self):
+        return self.current_change[1]
+    
+    @property
     def overall_change(self):
         end = self.cvalue
         start = self.bvalue
@@ -92,7 +108,7 @@ class Portfolio(SQLiteEntity, Container):
         print "Portfolio.onInit"
         
     def onUpdate(self, **kwargs):
-        print "Portfolio.onUpdate"
+        pubsub.publish('container.updated', self)
         
     def onInsert(self, **kwargs):
         print "Portfolio.onInsert"

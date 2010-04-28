@@ -21,7 +21,7 @@ from stocktracker.gui.dividends_tab import DividendsTab
 from stocktracker.gui.transactions_tab import TransactionsTab
 from stocktracker.gui.indexpositions_tab import IndexPositionsTab
 from stocktracker.gui.news_tab import NewsTab
-from stocktracker.gui.index_tab import IndexTab
+from stocktracker.gui.container_overview_tab import ContainerOverviewTab
 from webbrowser import open as web
 import stocktracker
 import stocktracker.objects
@@ -248,8 +248,8 @@ class MainWindow(gtk.Window):
             self.notebook.append_page(chart_tab.ChartTab(item), gtk.Label(_('Charts')))
         if type == "index":
             self.notebook.append_page(IndexPositionsTab(item), gtk.Label(_('Positions')))
-        if type == "category" and item.name == 'Indices':
-            self.notebook.append_page(IndexTab(item), gtk.Label(_('Indices')))
+        if type == "category":
+            self.notebook.append_page(ContainerOverviewTab(item), gtk.Label(_('Overview')))
         if not type == "category":
             self.notebook.append_page(NewsTab(item), gtk.Label(_('News')))
 
