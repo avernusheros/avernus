@@ -26,6 +26,16 @@ def createTables():
     if model.store.new:
         m = Meta(id=1, version=version)
         m.insert()
+    else:
+        db_version = Meta.getByPrimaryKey(1).version
+        if db_version < version:
+            upgrade_db(db_version)
+
+def upgrade_db(from_version):
+    print "need to upgrade db from version", from_version,'to version', version
+
+
+
 
 def update_all():
     updater.update_stocks(getAllStock()+getAllIndex())
