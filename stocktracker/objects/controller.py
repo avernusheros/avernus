@@ -33,7 +33,8 @@ def createTables():
 
 def upgrade_db(from_version):
     print "need to upgrade db from version", from_version,'to version', version
-
+    #1. do upgrade
+    #2. update version number
 
 
 

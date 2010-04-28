@@ -84,7 +84,8 @@ class MainTree(Tree):
         if event.button == 3:
             if self.selected_item is not None:
                 obj, iter = self.selected_item
-                ContainerContextMenu(obj).show(event)
+                if not isinstance(obj, Category):
+                    ContainerContextMenu(obj).show(event)
 
     def insert_categories(self):
         self.pf_iter = self.get_model().append(None, [Category('Portfolios'),'gtk-dnd-multiple', _("<b>Portfolios</b>")])
@@ -185,8 +186,11 @@ class MainTreeToolbar(gtk.Toolbar):
             button.set_sensitive(False)       
         
     def on_select(self, obj):
-        for button in self.conditioned:
-            button.set_sensitive(True)
+        if isinstance(obj, Category):
+            self.on_unselect()
+        else:
+            for button in self.conditioned:
+                button.set_sensitive(True)
              
     def on_add_clicked(self, widget):
         NewContainerDialog()
