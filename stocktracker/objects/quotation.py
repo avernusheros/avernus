@@ -8,7 +8,7 @@ class Quotation(SQLiteEntity):
     __columns__ = {
                    'id': 'INTEGER',
                    'stock': Stock,
-                   'date': 'TIMESTAMP',
+                   'date': 'DATE',
                    'open': 'FLOAT',
                    'high': 'FLOAT',
                    'low': 'FLOAT',

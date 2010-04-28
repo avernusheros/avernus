@@ -104,7 +104,7 @@ class Chart(gtk.VBox):
         vbox.add(gtk.Label(_('Volume (mil/1d)')))
         
         p2 = gtk_vertical_bar_plot()
-        vols = [d.vol for d in data]
+        vols = [d.volume for d in data]
         p2.set_args({'data':vols, 
                      #'x_labels':legend, 
                      'grid': True,

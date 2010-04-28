@@ -80,7 +80,7 @@ def update_historical_prices(stock, start_date, end_date):
     
     for row in [day[:-2].split(',') for day in days[1:]]:
         #print row[0]
-        dt = datetime.strptime(row[0], '%Y-%m-%d')
+        dt = datetime.strptime(row[0], '%Y-%m-%d').date()
         controller.newQuotation(date=dt, stock=stock, open=float(row[1]), high=float(row[2])\
                         , low=float(row[3]), close=float(row[6]), vol=int(row[5]))
     #    data.append((dt, float(row[1]), float(row[2]), float(row[3]), float(row[6]), int(row[5])))
