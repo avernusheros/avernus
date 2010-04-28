@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
 import datetime
+from stocktracker.objects import model
+from stocktracker.objects.model import SQLiteEntity, Meta
 from stocktracker.objects.container import Portfolio, Watchlist, Index, Tag
 from stocktracker.objects.transaction import Transaction
 from stocktracker.objects.position import PortfolioPosition, WatchlistPosition
@@ -12,13 +14,18 @@ from stocktracker import updater
 from stocktracker import pubsub
 from stocktracker import logger
 
+
 modelClasses = [Portfolio, Transaction, Tag, Watchlist, Index, Dividend,
                 PortfolioPosition, WatchlistPosition, Exchange,
-                Quotation, Stock]
+                Quotation, Stock, Meta]
+version = 1
 
 def createTables():
     for cl in modelClasses:
         cl.createTable()
+    if model.store.new:
+        m = Meta(id=1, version=version)
+        m.insert()
 
 def update_all():
     updater.update_stocks(getAllStock()+getAllIndex())

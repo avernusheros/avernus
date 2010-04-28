@@ -183,6 +183,10 @@ class Index(SQLiteEntity):
         except:
             return 0
 
+    def __iter__(self):
+        for pos in self.positions:
+            yield pos
+    
 
 class Tag(SQLiteEntity, Container):
 

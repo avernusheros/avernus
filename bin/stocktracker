@@ -69,14 +69,9 @@ def start():
     configs = config.StocktrackerConfig()
     db_file = configs.get_option('database file')
     
-    if os.path.exists(db_file):
-        new = False
-    else: new = True
     from stocktracker.objects import model, controller, store
     model.store = store.Store(db_file)
     controller.createTables()
-   
-    
     
     from stocktracker.gui.mainwindow import MainWindow    
     window = MainWindow()

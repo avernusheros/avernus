@@ -5,6 +5,7 @@ from inspect import isclass
 
 store = None
 
+
 def checkTableExistence(name):
     c = store.con.cursor()
     c.execute("pragma table_info("+name+")")
@@ -40,6 +41,7 @@ class Cache(object):
 
 # module global cache
 cache = Cache()
+
 
 class SQList(list):
     """
@@ -89,6 +91,7 @@ class SQList(list):
         """
         list.remove(self,x)
         self.parent.removeRelationEntry(self,x)
+
 
 class SQLiteEntity(object):
     """
@@ -457,6 +460,15 @@ class SQLiteEntity(object):
         erg += "]"
         return erg
         
+
+class Meta(SQLiteEntity):
+    __primaryKey__ = "id"
+    __tableName__ = 'meta'
+    __columns__ = {
+                   "id"     : "INTEGER",
+                   "version": "INTEGER",
+                   }        
+
 
 
 if __name__ == '__main__':

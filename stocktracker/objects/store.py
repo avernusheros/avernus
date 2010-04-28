@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
 import sqlite3 as db
+import os
+
 
 class Store(object):
 
@@ -15,6 +17,10 @@ class Store(object):
                 }
 
     def __init__(self, fileName):
+        if os.path.exists(fileName):
+            self.new = False
+        else: self.new = True
+        
         self.fileName = fileName
         self.con = None
         self.dirty = False
