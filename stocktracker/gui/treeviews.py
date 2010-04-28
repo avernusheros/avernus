@@ -4,7 +4,6 @@ import gtk
 from stocktracker import pubsub
 
 
-
 class Tree(gtk.TreeView):
     def __init__(self):
         self.selected_item = None

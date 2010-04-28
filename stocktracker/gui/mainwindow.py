@@ -50,13 +50,15 @@ class AboutDialog(gtk.AboutDialog):
 class MenuBar(gtk.MenuBar):
     def __init__(self, parent=None):
         gtk.MenuBar.__init__(self)
-        file_menu_items  = (('New', gtk.STOCK_NEW, self.on_new),
-                            ('Open', gtk.STOCK_OPEN, OpenDialog),
-                            ('Save', gtk.STOCK_SAVE, self.on_save),
-                            ('Save As', gtk.STOCK_SAVE, SaveAsDialog),
-                            ('----'  , None, None),
+        file_menu_items  = (
+        #FIXME - i dont think we need those, and currently it doesnt work 
+                            #('New', gtk.STOCK_NEW, self.on_new),
+                            #('Open', gtk.STOCK_OPEN, OpenDialog),
+                            #('Save', gtk.STOCK_SAVE, self.on_save),
+                            #('Save As', gtk.STOCK_SAVE, SaveAsDialog),
+                            #('----'  , None, None),
                             (_("Quit"), gtk.STOCK_QUIT, parent.on_destroy),
-                           )
+                           )                   
         edit_menu_items = (
                            (_("Preferences"),gtk.STOCK_PREFERENCES,self.on_pref),
                            )
@@ -87,7 +89,11 @@ class MenuBar(gtk.MenuBar):
         helpmenu.set_submenu(self.build_menu(help_menu_items))
 
         self.append(filemenu)
-        self.append(editmenu)
+        #FIXME doent work currently and i dont think we need it
+        #most applications support only one database (eg. rhythmbox, gtg ..). if a
+        #user wants to put the db file somewhere else, one can either edit
+        #the config file manually or just link to the db.  
+        #self.append(editmenu)
         self.append(toolsmenu)
         self.append(helpmenu)
         
