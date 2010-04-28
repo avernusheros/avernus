@@ -31,7 +31,7 @@ def getdatapath():
 
 
 
-config_path = os.path.join( os.getenv('HOME'), '.stocktracker')
+config_path = os.path.join( os.getenv('HOME'), '.config/stocktracker')
 #media_path = os.path.join(getdatapath(), 'media')
 
 timezone = 'CET'
