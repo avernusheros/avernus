@@ -2,7 +2,7 @@
 
 import gtk, feedparser
 from webbrowser import open as web
-from stocktracker.gui.treeviews import Tree
+from stocktracker.gui.gui_utils import Tree
 
 
 class NewsTab(gtk.VBox):

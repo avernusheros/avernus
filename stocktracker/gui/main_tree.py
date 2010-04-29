@@ -3,8 +3,7 @@
 import gtk
 from datetime import datetime
 from stocktracker import pubsub
-from stocktracker.gui.treeviews import Tree
-from stocktracker.gui.gui_utils import ContextMenu
+from stocktracker.gui.gui_utils import ContextMenu, Tree
 from stocktracker.objects import controller
 #from stocktracker.objects import model
 from stocktracker.objects import container
@@ -61,6 +60,7 @@ class MainTree(Tree):
                     ('maintoolbar.edit', self.on_edit),
                     ('maincontextmenu.edit', self.on_edit),
                     ('clear!', self.on_clear),
+                    ('overview.item.selected', self.on_item_selected),
                 )
         for topic, callback in self.subscriptions:
             pubsub.subscribe(topic, callback)
@@ -126,6 +126,14 @@ class MainTree(Tree):
         if row: 
             #row[1] = item
             row[2] = item.name
+
+    def on_item_selected(self, item):
+        #FIXME
+        return 
+        #activate the correct row
+        #self.row_activated(path, column)
+
+        #show notebook    
 
     def on_cursor_changed(self, widget):
         #Get the current selection in the gtk.TreeView

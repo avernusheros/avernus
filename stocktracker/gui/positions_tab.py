@@ -2,10 +2,9 @@
 
 import gtk
 from stocktracker import pubsub
-from stocktracker.gui.treeviews import Tree
 from stocktracker.gui.plot import ChartWindow
 from stocktracker.gui.dialogs import SellDialog, NewWatchlistPositionDialog, SplitDialog, BuyDialog
-from stocktracker.gui.gui_utils import ContextMenu, float_to_red_green_string, float_to_string, get_price_string, get_name_string, datetime_format
+from stocktracker.gui.gui_utils import Tree, ContextMenu, float_to_red_green_string, float_to_string, get_price_string, get_name_string, datetime_format
 import stocktracker.objects
 from stocktracker.objects.position import PortfolioPosition
 from stocktracker.objects.position import Position
@@ -269,8 +268,6 @@ class PositionsTree(Tree):
         obj, iter = self.selected_item
         for tag in new_text.split():
             pubsub.publish('position.newTag',position=obj,tagText=tag)
-        #FIXME the new_text has to be set to the cell, or does it?
-    
    
     def on_positon_tags_changed(self, tags, item):
         row = self.find_position(item.id)

@@ -2,11 +2,11 @@
 
 import gtk
 from stocktracker import pubsub
-from stocktracker.gui.treeviews import Tree
-from stocktracker.gui.gui_utils import float_to_red_green_string, get_price_string, get_name_string, ContextMenu   
-from stocktracker.gui.plot      import ChartWindow
+from stocktracker.gui.gui_utils import Tree, float_to_red_green_string, get_price_string, get_name_string, ContextMenu   
+from stocktracker.gui.plot import ChartWindow
 from stocktracker.objects import controller
-
+from stocktracker.objects.position import WatchlistPosition, PortfolioPosition
+from stocktracker.objects.stock import Stock
 
 class ContainerOverviewTab(gtk.VBox):
     def __init__(self, item):
@@ -57,14 +57,10 @@ class ContainerOverviewTree(Tree):
 
         self.get_model().set_sort_func(self.cols['last_price'], sort_price)
 
-        self.set_rules_hint(True)
-    
+        self.set_rules_hint(True)    
         self.load_items()
-        
-        self.connect('button-press-event', self.on_button_press_event)
-        self.connect('cursor_changed', self.on_cursor_changed)
         self.connect("destroy", self.on_destroy)
-        
+        self.connect("row-activated", self.on_row_activated)
         self.subscriptions = (
             ('stocks.updated', self.on_stocks_updated),
             ('shortcut.update', self.on_update)
@@ -77,25 +73,9 @@ class ContainerOverviewTree(Tree):
     def on_update(self):
         self.container.update_positions()
 
-    def on_button_press_event(self, widget, event):
-        if event.button == 3:
-            if self.selected_item is not None:
-                obj, iter = self.selected_item
-                StockContextMenu(obj).show(event)
-    
-    def on_cursor_changed(self, widget):
-        #Get the current selection in the gtk.TreeView
-        selection = widget.get_selection()
-        # Get the selection iter
-        treestore, selection_iter = selection.get_selected()
-        if (selection_iter and treestore):
-            #Something is selected so get the object
-            obj = treestore.get_value(selection_iter, 0)
-            self.selected_item = obj, selection_iter
-            if isinstance(obj, model.Stock):
-                pubsub.publish('indextree.select', obj)
-                return
-        pubsub.publish('indextree.unselect')
+    def on_row_activated(self, treeview, path, view_column):
+        item = self.get_model()[path][0]
+        pubsub.publish('overview.item.selected', item)
 
     def on_destroy(self, x):
         for topic, callback in self.subscriptions:
