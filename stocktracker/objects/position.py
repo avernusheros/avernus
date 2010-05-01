@@ -3,14 +3,9 @@ from stocktracker.objects.container import Portfolio, Watchlist, Tag
 from stocktracker.objects.stock import Stock
 from datetime import datetime
 
-TYPES = {None: 'n/a', 0:'stock', 1:'fund'}
  
 class Position(object):
     tagstring = ''
-    
-    @property
-    def type_string(self):
-        return TYPES[self.stock.type]
     
     @property
     def days_gain(self):

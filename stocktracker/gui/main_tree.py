@@ -6,11 +6,10 @@ from stocktracker import pubsub
 from stocktracker.gui.gui_utils import ContextMenu, Tree
 from stocktracker.objects import controller
 #from stocktracker.objects import model
-from stocktracker.objects import container
-from stocktracker.objects.container import Portfolio, Watchlist
 
 
 class Category(object):
+    __name__ = 'Category'
     def __init__(self, name):
         self.name = name
 
@@ -108,7 +107,7 @@ class MainTree(Tree):
         if self.selected_item is None:
             return
         obj, iter = self.selected_item
-        if isinstance(obj, container.Container):
+        if not isinstance(obj, Category):
             dlg = gtk.MessageDialog(None, 
                  gtk.DIALOG_DESTROY_WITH_PARENT, gtk.MESSAGE_QUESTION, 
                  gtk.BUTTONS_OK_CANCEL, 
@@ -153,9 +152,9 @@ class MainTree(Tree):
         if self.selected_item is None:
             return
         obj, row = self.selected_item
-        if isinstance(obj, Portfolio): 
+        if obj.__name__ == 'Portfolio':
             EditPortfolio(obj)
-        elif isinstance(obj, Watchlist):# or obj.type == 'tag':
+        elif obj.__name__ == 'Watchlist':# or obj.type == 'tag':
             EditWatchlist(obj)
 
 
@@ -334,7 +333,7 @@ class ContainerContextMenu(ContextMenu):
         self.add_item(_('Edit '),  self.__edit_container, 'gtk-edit')
         self.add_item('----')
         
-        if isinstance(container, Portfolio):
+        if container.__name__ == 'Portfolio':
             self.add_item(_('Deposit cash'),  self.__deposit_cash, 'gtk-add')
             self.add_item(_('Withdraw cash'),  self.__withdraw_cash, 'gtk-remove')
 

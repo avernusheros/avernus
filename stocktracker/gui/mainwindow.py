@@ -11,8 +11,8 @@ if __name__ == '__main__':
     sys.path.append('..') 
 
 
-import logging, gtk,os #, gobject
-from stocktracker import pubsub, updater
+import gtk,os #, gobject
+from stocktracker import pubsub, updater, logger
 from stocktracker.gui import dialogs, chart_tab
 from stocktracker.gui.positions_tab import PositionsTab
 from stocktracker.gui.overview_tab import OverviewTab
@@ -24,10 +24,9 @@ from stocktracker.gui.news_tab import NewsTab
 from stocktracker.gui.container_overview_tab import ContainerOverviewTab
 from webbrowser import open as web
 import stocktracker
-import stocktracker.objects
 
-logger= logging.getLogger(__name__)
 
+logger = logger.logger
 
 
 class AboutDialog(gtk.AboutDialog):
@@ -169,7 +168,6 @@ class SaveAsDialog(gtk.FileChooserDialog):
         if response == gtk.RESPONSE_ACCEPT:
             model.save_as(self.get_filename)
     
-    
 
 class MainWindow(gtk.Window):
     def __init__(self):
@@ -234,15 +232,15 @@ class MainWindow(gtk.Window):
     def on_maintree_select(self, item):
         self.clear_notebook()
         type = None
-        if isinstance(item, stocktracker.objects.container.Portfolio):
+        if item.__name__ == 'Portfolio':
             type = "portfolio"
-        elif isinstance(item, stocktracker.objects.container.Tag):
+        elif item.__name__ == 'Tag':
             type = "tag"
-        elif isinstance(item, stocktracker.objects.container.Watchlist):
+        elif item.__name__ == 'Watchlist':
             type = "watchlist"
-        elif isinstance(item, stocktracker.objects.container.Index):
+        elif item.__name__ == 'Index':
             type = "index"
-        elif isinstance(item, Category):
+        elif item.__name__ == 'Category':
             type = "category"
         if type == "portfolio" or type == "tag" or type == "watchlist":
             #self.notebook.append_page(OverviewTab(item), gtk.Label(_('Overview')))
@@ -265,4 +263,3 @@ class MainWindow(gtk.Window):
 def check_path(path):
     if not os.path.isdir(path):
         os.mkdir(path)    
-

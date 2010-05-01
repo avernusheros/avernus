@@ -4,7 +4,7 @@ import gtk
 from stocktracker import pubsub, config, updater, logger
 from datetime import datetime
 from stocktracker.objects import controller
-from stocktracker.objects.exchange import Exchange
+
 
 class StockSelector(gtk.Entry):
     def __init__(self, stocks):

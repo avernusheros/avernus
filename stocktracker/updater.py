@@ -25,8 +25,7 @@ def update_historical_prices(stock):
     Update historical prices for the given ticker symbol.
     """
     from stocktracker.objects import controller
-    today = datetime.date.today()
-    today = datetime.date(today.year, today.month, today.day-1)
+    today = datetime.date.today() - datetime.timedelta(days=1)
     newest = controller.getNewestQuotation(stock)
     if newest == None:
         newest = datetime.date(today.year -20, today.month, today.day)

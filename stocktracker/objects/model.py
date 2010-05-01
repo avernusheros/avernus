@@ -258,6 +258,10 @@ class SQLiteEntity(object):
         if 'onRemoveRelationEntry' in self.__callbacks__:
             self.__callbacks__['onRemoveRelationEntry'](self,name=name,li=li,other=other)
 
+    @property
+    def __name__(self):
+        return self.__class__.__name__
+
     @classmethod
     def argumentList(cls, cols, types = False, additions = False, prefix=""):
         erg = ""
