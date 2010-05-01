@@ -17,6 +17,7 @@ class Store(object):
                 }
 
     def __init__(self, fileName):
+        #print "Creating new store at", fileName
         if os.path.exists(fileName):
             self.new = False
         else: self.new = True

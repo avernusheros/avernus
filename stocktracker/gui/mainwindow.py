@@ -8,7 +8,7 @@ except:
 
 if __name__ == '__main__':
     import sys
-    sys.path.append('..')
+    sys.path.append('..') 
 
 
 import logging, gtk,os #, gobject
@@ -76,7 +76,7 @@ class MenuBar(gtk.MenuBar):
                             (_("About"), gtk.STOCK_ABOUT , AboutDialog),
                            )
 
-        filemenu = gtk.MenuItem(_("File"))
+        filemenu = gtk.MenuItem(_("Stocktracker"))
         filemenu.set_submenu(self.build_menu(file_menu_items))
         
         editmenu = gtk.MenuItem(_('Edit'))
