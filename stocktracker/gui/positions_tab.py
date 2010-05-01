@@ -176,7 +176,7 @@ class PositionsTree(Tree):
             self.create_column(_('Shares'), self.cols['shares'])
         self.create_column(_('Name'), self.cols['name'])
         if not self.watchlist:
-            col, cell = self.create_column(_('Portfolio %'), self.cols['pf_percent'])
+            col, cell = self.create_column(_('%'), self.cols['pf_percent'])
             col.set_cell_data_func(cell, float_to_string, self.cols['pf_percent'])
         self.create_column(_('Type'), self.cols['type'])
         self.create_column(_('Start'), self.cols['start'])
@@ -329,10 +329,11 @@ class PositionsTree(Tree):
         if self.selected_item is None:
             return
         path, col = self.get_cursor()
-        obj, iter = self.selected_item
-        cell = self.get_column(8).get_cell_renderers()[0]
-        self.set_cursor(path, focus_column = self.get_column(8), start_editing=True)
-        #self.grab_focus()
+        col = self.get_column(13)
+        cell = col.get_cell_renderers()[0]
+        #print col.get_cell_renderers()
+        self.set_cursor_on_cell(path,focus_cell=cell, focus_column = col, start_editing=True)
+        self.grab_focus()
         
     def on_cursor_changed(self, widget):
         #Get the current selection in the gtk.TreeView

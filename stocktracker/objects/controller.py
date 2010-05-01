@@ -19,7 +19,26 @@ import gobject
 modelClasses = [Portfolio, Transaction, Tag, Watchlist, Index, Dividend,
                 PortfolioPosition, WatchlistPosition, Exchange,
                 Quotation, Stock, Meta]
+
+#these classes will be loaded with one single call and will also load composite
+#relations. therefore it is important that the list is complete in the sense
+#that there are no classes holding composite keys to classes outside the list
+initialLoadingClasses = [Portfolio,Transaction,Tag,Watchlist,Index,Dividend,
+                         PortfolioPosition, WatchlistPosition, Exchange, Meta]
+
 version = 1
+
+def initialLoading():
+    #first load all the objects from the database so that they are cached
+    for cl in initialLoadingClasses:
+        logger.logger.debug("Loading Objects of Class: " + cl.__name__)
+        cl.getAll()
+    #now load all of the composite
+    for cl in initialLoadingClasses:
+        #this will now be much faster as everything is in the cache
+        for obj in cl.getAll():
+            logger.logger.debug("Loading Composites of Objekt: " + str(obj))
+            obj.retrieveAllComposite()
 
 def createTables():
     for cl in modelClasses:

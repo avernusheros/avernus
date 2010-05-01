@@ -74,6 +74,7 @@ def start():
     from stocktracker.objects import model, controller, store
     model.store = store.Store(db_file)
     controller.createTables()
+    controller.initialLoading()
     
     from stocktracker.gui.mainwindow import MainWindow    
     window = MainWindow()

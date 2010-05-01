@@ -89,7 +89,7 @@ class IconManager(object):
         if size is None:
             size = pixbuf.get_width()
         gtk.icon_theme_add_builtin_icon(icon_name, size, pixbuf)
-        #print "added ",icon_name, size
+        # print "added ",icon_name, size
 
     def add_stock_from_directory(self, stock_id, directory):
         """
