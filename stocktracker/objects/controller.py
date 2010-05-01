@@ -12,7 +12,8 @@ from stocktracker.objects.dividend import Dividend
 from stocktracker.objects.quotation import Quotation
 from stocktracker import updater
 from stocktracker import pubsub
-from stocktracker import logger
+from stocktracker import logger 
+import gobject
 
 
 modelClasses = [Portfolio, Transaction, Tag, Watchlist, Index, Dividend,
@@ -47,7 +48,7 @@ def load_stocks():
     #FIXME should check for duplicates
     from stocktracker import yahoo
     for ind in ['^GDAXI', '^TECDAX', '^STOXX50E', '^DJI', '^IXIC']:
-        yahoo.get_index(ind)
+        gobject.idle_add(yahoo.get_index,ind)
     
 
 def newPortfolio(name, id=None, last_update = datetime.datetime.now(), comment="",cash=0.0):
