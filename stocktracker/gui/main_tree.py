@@ -87,12 +87,12 @@ class MainTree(Tree):
 
     def insert_categories(self):
         self.pf_iter = self.get_model().append(None, [Category('Portfolios'),'gtk-dnd-multiple', _("<b>Portfolios</b>")])
-        self.wl_iter = self.get_model().append(None, [Category('Watchlists'),'gtk-dnd-multiple', _("<b>Watchlists</b>")])
+        self.wl_iter = self.get_model().append(None, [Category('Watchlists'),'watchlists', _("<b>Watchlists</b>")])
         self.tag_iter = self.get_model().append(None, [Category('Tags'),'tags', _("<b>Tags</b>")])
         self.index_iter = self.get_model().append(None, [Category('Indices'),'gtk-dnd-multiple', _("<b>Indices</b>")])
 
     def insert_watchlist(self, item):
-        self.get_model().append(self.wl_iter, [item, 'gtk-dnd', item.name])
+        self.get_model().append(self.wl_iter, [item, 'watchlist', item.name])
     
     def insert_portfolio(self, item):
         self.get_model().append(self.pf_iter, [item, 'gtk-dnd', item.name])
