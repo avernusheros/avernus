@@ -78,7 +78,8 @@ class PositionsToolbar(gtk.Toolbar):
         button.set_sensitive(False)
         
         if self.type == 1:
-            button = gtk.ToolButton('gtk-paste')
+            button = gtk.ToolButton()
+            button.set_icon_name('tag')
             button.connect('clicked', self.on_tag_clicked)
             button.set_tooltip_text('Tag selected position') 
             self.conditioned.append(button)
@@ -91,7 +92,8 @@ class PositionsToolbar(gtk.Toolbar):
             #FIXME 
             #self.insert(button,-1) 
         
-        button = gtk.ToolButton('gtk-select-all')
+        button = gtk.ToolButton()
+        button.set_icon_name('stocktracker')
         button.connect('clicked', self.on_chart_clicked)
         button.set_tooltip_text('Chart selected position')
         self.conditioned.append(button) 
@@ -171,7 +173,8 @@ class PositionsTree(Tree):
             self.watchlist = True
         if not self.watchlist:
             self.create_column('#', self.cols['shares'])
-        self.create_column(_('Name'), self.cols['name'])
+        col, cell = self.create_column(_('Name'), self.cols['name'])
+        #col.get_widget().set_tooltip_text('foo') 
         self.create_icon_column(_('Type'), self.cols['type'])
         if not self.watchlist:
             col, cell = self.create_column(_('Pf %'), self.cols['pf_percent'])

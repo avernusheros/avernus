@@ -11,8 +11,8 @@ if __name__ == '__main__':
     sys.path.append('..') 
 
 
-import logging, gtk,os #, gobject
-from stocktracker import pubsub, updater
+import gtk,os #, gobject
+from stocktracker import pubsub, updater, logger
 from stocktracker.gui import dialogs, chart_tab
 from stocktracker.gui.positions_tab import PositionsTab
 from stocktracker.gui.overview_tab import OverviewTab
@@ -26,8 +26,7 @@ from webbrowser import open as web
 import stocktracker
 
 
-logger= logging.getLogger(__name__)
-
+logger = logger.logger
 
 
 class AboutDialog(gtk.AboutDialog):
@@ -168,7 +167,6 @@ class SaveAsDialog(gtk.FileChooserDialog):
     def process_result(self, response):
         if response == gtk.RESPONSE_ACCEPT:
             model.save_as(self.get_filename)
-    
     
 
 class MainWindow(gtk.Window):
