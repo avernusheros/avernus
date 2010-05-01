@@ -56,7 +56,10 @@ def init_icons():
     from stocktracker.gui.icons import IconManager
     icons = IconManager()
     path = os.path.join(config.getdatapath(),'images')
-    iconNames = ['stocktracker','tags','tag','watchlists','watchlist']
+    iconNames = [
+    'stocktracker','tags','tag','watchlists','watchlist','portfolio',
+    'portfolios'
+    ]
     for name in iconNames:
         icons.add_icon_name_from_directory(name, path)
     #icons.add_icon_name_from_directory('tag', path)

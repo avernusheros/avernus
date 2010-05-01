@@ -86,7 +86,7 @@ class MainTree(Tree):
                     ContainerContextMenu(obj).show(event)
 
     def insert_categories(self):
-        self.pf_iter = self.get_model().append(None, [Category('Portfolios'),'gtk-dnd-multiple', _("<b>Portfolios</b>")])
+        self.pf_iter = self.get_model().append(None, [Category('Portfolios'),'portfolios', _("<b>Portfolios</b>")])
         self.wl_iter = self.get_model().append(None, [Category('Watchlists'),'watchlists', _("<b>Watchlists</b>")])
         self.tag_iter = self.get_model().append(None, [Category('Tags'),'tags', _("<b>Tags</b>")])
         self.index_iter = self.get_model().append(None, [Category('Indices'),'gtk-dnd-multiple', _("<b>Indices</b>")])
@@ -95,7 +95,7 @@ class MainTree(Tree):
         self.get_model().append(self.wl_iter, [item, 'watchlist', item.name])
     
     def insert_portfolio(self, item):
-        self.get_model().append(self.pf_iter, [item, 'gtk-dnd', item.name])
+        self.get_model().append(self.pf_iter, [item, 'portfolio', item.name])
          
     def insert_tag(self, item):
         self.get_model().append(self.tag_iter, [item, 'tag', item.name])
