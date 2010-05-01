@@ -5,15 +5,12 @@ from stocktracker import pubsub
 from stocktracker.gui.plot import ChartWindow
 from stocktracker.gui.dialogs import SellDialog, NewWatchlistPositionDialog, SplitDialog, BuyDialog
 from stocktracker.gui.gui_utils import Tree, ContextMenu, float_to_red_green_string, float_to_string, get_price_string, get_name_string, datetime_format
-import stocktracker.objects
-from stocktracker.objects.position import PortfolioPosition
-from stocktracker.objects.position import Position
 
 
 class PositionContextMenu(ContextMenu):
     def __init__(self, position):
         ContextMenu.__init__(self)
-        if isinstance(position, PortfolioPosition):
+        if position.__name__ == 'PortfolioPosition':
             type = 0
             remove_string = 'Sell'
         else:
@@ -50,11 +47,11 @@ class PositionsToolbar(gtk.Toolbar):
         self.tree = tree
         self.conditioned = []
         
-        if isinstance(container, stocktracker.objects.container.Portfolio):
+        if container.__name__ == 'Portfolio':
             self.type = 1
-        elif isinstance(container, stocktracker.objects.container.Watchlist):
+        elif container.__name__ == 'Watchlist':
             self.type = 2
-        elif isinstance(container, stocktracker.objects.container.Tag):
+        elif container.__name__ == 'Tag':
             self.type = 3
         
         button = gtk.ToolButton('gtk-add')
@@ -170,7 +167,7 @@ class PositionsTree(Tree):
         self.set_model(gtk.TreeStore(object,str, str, str,float, float, int, float, float, str, float, float, float, str, float))
         
         self.watchlist = False
-        if isinstance(self.container, stocktracker.objects.container.Watchlist):
+        if container.__name__ == 'Watchlist':
             self.watchlist = True
         if not self.watchlist:
             self.create_column('#', self.cols['shares'])
@@ -344,7 +341,7 @@ class PositionsTree(Tree):
             #Something is selected so get the object
             obj = treestore.get_value(selection_iter, 0)
             self.selected_item = obj, selection_iter
-            if isinstance(obj, Position):
+            if obj.__name__ == "PortfolioPosition" or obj.__name__ == 'WatchlistPosition':
                 pubsub.publish('positionstree.select', obj)
                 return
         pubsub.publish('positionstree.unselect')
@@ -416,7 +413,7 @@ class InfoBar(gtk.HBox):
         self.overall_label = label = gtk.Label()
         self.pack_start(label, expand = False, fill = False)
         
-        if isinstance(container, stocktracker.objects.container.Watchlist) or isinstance(container, stocktracker.objects.container.Portfolio):
+        if container.__name__ == 'Portfolio' or container.__name__ == 'Watchlist':
             self.pack_start(gtk.VSeparator(), expand = True, fill = True)
             self.last_update_label = label = gtk.Label()
             self.pack_start(label, expand = True, fill = False)
@@ -433,7 +430,8 @@ class InfoBar(gtk.HBox):
             text = '<b>'+_('Gain')+'</b>\n'+self.get_change_string(self.container.overall_change)
             self.overall_label.set_markup(text)
             
-            if isinstance(container, stocktracker.objects.container.Portfolio):
+            
+            if container.__name__ == 'Portfolio':
                 text = '<b>'+_('Investments')+'</b> :'+str(round(self.container.cvalue,2))
                 text += '\n<b>'+_('Cash')+'</b> :'+str(round(self.container.cash,2))
                 self.total_label.set_markup(text)
@@ -441,7 +439,7 @@ class InfoBar(gtk.HBox):
                 text = '<b>'+_('Total')+'</b>\n'+str(round(self.container.cvalue,2))
                 self.total_label.set_markup(text)
             
-            if isinstance(container, stocktracker.objects.container.Portfolio) or isinstance(container, stocktracker.objects.container.Watchlist):
+            if container.__name__ == 'Portfolio' or container.__name__ == 'Watchlist':
                 text = '<b>'+_('Last update')+'</b>\n'+datetime_format(self.container.last_update, False)
                 self.last_update_label.set_markup(text)
         
