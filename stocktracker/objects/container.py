@@ -169,6 +169,14 @@ class Index(SQLiteEntity):
     __relations__ = {
                     'positions': Stock,
                     }
+    __comparisonPositives__ = ['name']
+    __defaultValues__ = {
+                         'date':datetime.now(),
+                         'isin':'',
+                         'change':0.0,
+                         'price':0.0,
+                         
+                         }
 
     def update_positions(self):
         #update stocks and index

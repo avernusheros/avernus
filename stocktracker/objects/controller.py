@@ -24,7 +24,7 @@ modelClasses = [Portfolio, Transaction, Tag, Watchlist, Index, Dividend,
 #relations. therefore it is important that the list is complete in the sense
 #that there are no classes holding composite keys to classes outside the list
 initialLoadingClasses = [Portfolio,Transaction,Tag,Watchlist,Index,Dividend,
-                         PortfolioPosition, WatchlistPosition, Exchange, Meta]
+                         PortfolioPosition, WatchlistPosition, Exchange, Meta, Stock]
 
 version = 1
 
@@ -39,6 +39,26 @@ def initialLoading():
         for obj in cl.getAll():
             logger.logger.debug("Loading Composites of Objekt: " + str(obj))
             obj.retrieveAllComposite()
+            
+def detectDuplicate(tp,**kwargs):
+    #print tp, kwargs
+    sqlArgs = {}
+    for req in tp.__comparisonPositives__:
+        sqlArgs[req] = kwargs[req]
+    present = tp.getByColumns(sqlArgs,operator=" OR ",create=True)
+    if present:
+        if len(present) == 1:
+            print "Found duplicate in Database!"
+            return present[0]
+        else:
+            #print tp, kwargs
+            #print present
+            raise Exception("Multiple results for duplicate detection")
+    print "Did not find duplicate. Creating new..."
+    new = tp(**kwargs)
+    new.insert()
+    print "success"
+    return new
 
 def createTables():
     for cl in modelClasses:
@@ -67,7 +87,8 @@ def load_stocks():
     #FIXME should check for duplicates
     from stocktracker import yahoo
     for ind in ['^GDAXI', '^TECDAX', '^STOXX50E', '^DJI', '^IXIC']:
-        gobject.idle_add(yahoo.get_index,ind)
+        #gobject.idle_add(yahoo.get_index,ind)
+        yahoo.get_index(ind)
     
 
 def newPortfolio(name, id=None, last_update = datetime.datetime.now(), comment="",cash=0.0):
@@ -167,9 +188,10 @@ def newTag(name):
     pubsub.publish('tag.created',result)
     return result
   
-def newStock(price=0.0, change=0.0, currency='', type=0, name='', isin='', date=datetime.datetime.now(), exchange=None, yahoo_symbol=''):
+def newStock(price=0.0, change=0.0, currency='', type=0, name='', isin='', date=datetime.datetime.now(), exchange=None, yahoo_symbol='',insert=True):
     result = Stock(id=None, price=price, currency=currency, type=type, name=name, isin=isin, change=change, date=date, exchange=exchange, yahoo_symbol=yahoo_symbol)
-    result.insert()
+    if insert:
+        result.insert()
     return result
 
 def newQuotation(date=datetime.date.today(),\

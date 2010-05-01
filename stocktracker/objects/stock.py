@@ -2,6 +2,7 @@ from stocktracker.objects.model import SQLiteEntity
 from stocktracker.objects.exchange import Exchange
 from stocktracker import updater
 
+import datetime
 
 class Stock(SQLiteEntity):
 
@@ -19,6 +20,17 @@ class Stock(SQLiteEntity):
                    'date': 'TIMESTAMP',
                    'change': 'FLOAT'
                   }
+    __comparisonPositives__ = ['yahoo_symbol']
+    __defaultValues__ = {
+                         'isin':'',
+                         'exchange':None,
+                         'type':1,
+                         'name':'',
+                         'currency':'',
+                         'price':0.0,
+                         'date':datetime.datetime.now(),
+                         'change':0.0
+                         }
 
     #needed for some treeviews, e.g. news_tab
     @property
@@ -42,7 +54,12 @@ class Stock(SQLiteEntity):
         updater.update_stocks([self])
     
     def __str__(self):
-        return self.name +' | '+self.isin+' | '+self.exchange.name
+        erg = self.name +' | '+self.isin+' | '
+        if self.exchange:
+            erg += self.exchange.name
+        else:
+            erg += 'no Exchange'
+        return  erg
 
 
 COUNTRIES = {

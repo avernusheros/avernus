@@ -4,8 +4,9 @@ from urllib import urlopen
 import csv, pytz, logging
 from datetime import datetime
 
+from stocktracker import logger
 
-logger= logging.getLogger(__name__)
+logger= logger.logger
 
 
 
@@ -26,19 +27,25 @@ def update_stocks(stocks):
     s = 0
     res = __request(symbols, 'l1d1d3c1')
     for row in csv.reader(res):
-        if row[1] == 'N/A':
+        if len(row) > 1:
+            if row[1] == 'N/A':
+                s+=1
+                continue 
+            try:
+                stocks[s].price = float(row[0])
+            except Exception as e:
+                logger.info(e)
+                stocks[s].price = 0.0
+            try:
+                date = datetime.strptime(row[1] + ' ' + row[2], '%m/%d/%Y %H:%M%p')
+            except Exception as e:
+                logger.info(e)
+                date = datetime.strptime(row[1], '%m/%d/%Y')
+            date = pytz.timezone('US/Eastern').localize(date)
+            stocks[s].date = date.astimezone(pytz.utc)
+            stocks[s].date = stocks[s].date.replace(tzinfo = None)
+            stocks[s].change = float(row[3])
             s+=1
-            continue 
-        stocks[s].price = float(row[0])
-        try:
-            date = datetime.strptime(row[1] + ' ' + row[2], '%m/%d/%Y %H:%M%p')
-        except:
-            date = datetime.strptime(row[1], '%m/%d/%Y')
-        date = pytz.timezone('US/Eastern').localize(date)
-        stocks[s].date = date.astimezone(pytz.utc)
-        stocks[s].date = stocks[s].date.replace(tzinfo = None)
-        stocks[s].change = float(row[3])
-        s+=1
                          
 def get_info(symbol):
     #name, isin, exchange, currency
@@ -92,9 +99,12 @@ def update_historical_prices(stock, start_date, end_date):
 def get_index(name):
     #FIXME could be improved to fetch stocks from all indices with one request
     from stocktracker.objects import controller
+    from stocktracker.objects.stock import Stock
+    from stocktracker.objects.exchange import Exchange
+    from stocktracker.objects.container import Index
     iname, isin, exchange, currency = get_info(name)
-    ex = controller.newExchange(name=exchange)
-    ind = controller.newIndex(name=iname, exchange=ex,yahoo_symbol=name, currency=currency)
+    ex = controller.detectDuplicate(Exchange,name=exchange)
+    ind = controller.detectDuplicate(Index,name=iname, exchange=ex,yahoo_symbol=name, currency=currency)
     
     #get symbols from yahoo
     name = name.replace('^', 'E')
@@ -107,8 +117,10 @@ def get_index(name):
     #get infos for symbols    
     for row in csv.reader(__request(symbols, 'nxc4s')):  
         sname, exchange, currency, symbol = row
-        ex = controller.newExchange(name=exchange)
-        st = controller.newStock(exchange=ex, yahoo_symbol=symbol, name=sname, currency=currency)
+        ex = controller.detectDuplicate(Exchange, name=exchange)
+        #ex = controller.newExchange(name=exchange)
+        st = controller.detectDuplicate(Stock,exchange=ex, yahoo_symbol=symbol, name=sname, currency=currency)
+        #st = controller.newStock(exchange=ex, yahoo_symbol=symbol, name=sname, currency=currency)
         ind.positions.append(st)
       
         

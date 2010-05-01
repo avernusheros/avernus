@@ -9,3 +9,4 @@ class Exchange(SQLiteEntity):
                    'id'  : 'INTEGER',
                    'name': 'VARCHAR',
                   }
+    __comparisonPositives__ = ['name']

@@ -59,6 +59,14 @@ class SQList(list):
         """
         list.__init__(self,*args,**kwargs)
         self.parent = parent
+        
+    def _alreadyPresent(self,x):
+        for y in self:
+            for attr in y.__comparisonPositives__:
+                if attr in dir(x):
+                    if y.__getattribute__(attr) == x.__getattribute__(attr):
+                        return True
+        return False
     
     def append(self,x,store=True):
         """
@@ -68,6 +76,9 @@ class SQList(list):
         if x in self:
             logger.error("Duplicate Relation Entry parent: " + str(self.parent) + " entity " + str(x))
             return None
+        if self._alreadyPresent(x):
+            logger.error(str(x) + " already present in " + str(self))
+            return
         list.append(self,x)
         if store:
             self.parent.addRelationEntry(self,x)
@@ -107,6 +118,11 @@ class SQLiteEntity(object):
     #non one2one relations to other entities like name:type
     __relations__ = {}
     __callbacks__ = {}
+    #the relevant attributes for comparison, in order of importance. If one of these
+    #attributes matches, the comparison will be true
+    __comparisonPositives__ = []
+    #default values
+    __defaultValues__ = {}
 
     def __init__(self, *args, **kwargs):
         """
@@ -131,6 +147,12 @@ class SQLiteEntity(object):
                                      )
             else:#a non-complex value
                 self.__setattr__(arg, val, True)
+        #set anything that was not given to default
+        for attr in self.__columns__:
+            #if it has not been set
+            if not attr in kwargs and not attr == 'id':
+                #print type(self)
+                self.__setattr__(attr,self.__defaultValues__[attr],insert=True)
         #the entity shall retrieve its relations upon creation
         #loop all relations
         for name,relation in self.__relations__.items():
@@ -142,6 +164,20 @@ class SQLiteEntity(object):
             self.__setattr__(name,erg, True)
         if 'onInit' in self.__callbacks__:
             self.__callbacks__['onInit'](self)
+            
+    #UNTESTED
+    def equals(self,other):
+        if not isinstance(other,type(self)):
+            #print "not equals because not the same type",type(self),type(other)
+            return False
+        for attr in self.__comparisonPositives__:
+            if not attr in dir(other):
+                #print "not equals because has not attribute", attr, other
+                return False
+            if self.__getattribute__(attr) == other.__getattribute__(attr):
+                return True
+        #print "not equals because non of the primary attributes matched"
+        return False
     
     def __setattr__(self, name, val, insert = False):
         object.__setattr__(self, name, val)
@@ -265,6 +301,30 @@ class SQLiteEntity(object):
         res = cls(**row)
         cache.cache(res)
         return res
+    
+    @classmethod
+    def getByColumns(cls, cols, operator=" AND ",create=False):
+        print cols
+        query = "SELECT * FROM " + cls.__tableName__
+        query += " WHERE "
+        vals = []
+        i = 0
+        for col,val in cols.items():
+            query += col+"=? "
+            if i < len(cols) - 1:
+                query += operator
+            vals.append(val)
+        c = store.con.cursor()
+        #print query
+        logger.info(query+str(vals))
+        c.execute(query,vals)
+        rows = c.fetchall()
+        if not create:
+            return rows
+        erg = []
+        for row in rows:
+            erg.append(cls(**row))
+        return erg
 
     @classmethod
     def getAllFromOneColumn(cls, column, value):
@@ -356,6 +416,10 @@ class SQLiteEntity(object):
     def attributeList(self, cols):
         ret = []
         for c in cols:
+            if not c in dir(self):
+                print "Falling back to default value for ", c
+                ret.append(self.__defaultValues__[c])
+                continue
             if isinstance(self.__getattribute__(c),SQLiteEntity):
                 ret.append(self.__getattribute__(c).getPrimaryKey())
             else:
@@ -372,6 +436,9 @@ class SQLiteEntity(object):
     def attributeDict(self, cols):
         erg = {}
         for c in cols:
+            if not c in dir(self):
+                erg[c] = self.__defaultValues__[c]
+                continue
             if isinstance(self.__getattribute__(c),SQLiteEntity):
                 erg[c] = self.__getattribute__(c).getPrimaryKey()
             else:
@@ -399,11 +466,12 @@ class SQLiteEntity(object):
         erg += ")"
         if not self.__primaryKey__ in dir(self):
             #we do not yet have a primary key
-            #set a dummy
-            self.__setattr__(self.__primaryKey__,None)
+            #set a dummy but do not update in the database
+            self.__setattr__(self.__primaryKey__,None,insert=True)
         vals = self.attributeList(cols)
         logger.info(erg + str(vals))
         c = store.con.cursor()
+        
         c.execute(erg,vals)
         rowID = c.lastrowid
         if 'id' in dir(self) and not rowID == self.__getattribute__('id'):

@@ -18,13 +18,18 @@ class Position(object):
     
     @property
     def gain(self):
-        stock = self.stock.price - self.price
+        if self.stock:
+            stock = self.stock.price - self.price
+        else:
+            return 0,0
         absolute = stock * self.quantity
         percent = round(absolute * 100 / (self.price*self.quantity),2)
         return absolute, percent
 
     @property
     def current_change(self):
+        if not self.stock:
+            return 0,0
         return self.stock.change, round(self.stock.percent,2)
     
     @property    
@@ -33,10 +38,14 @@ class Position(object):
     
     @property
     def cvalue(self):
+        if not self.stock:
+            return 0
         return self.quantity * self.stock.price 
      
     @property
     def name(self):
+        if not self.stock:
+            return "No Stock"
         return self.stock.name    
 
    
