@@ -76,8 +76,9 @@ class IconManager(object):
         try:# TODO: Make svg actually recognized
             pixbuf = gtk.gdk.pixbuf_new_from_file(filename)
             self.add_icon_name_from_pixbuf(icon_name, pixbuf, size)
-        except Exception:
+        except Exception as e:
             print "exception in icons.py IconManager.add_icon_name_from_file"
+            print e
             # Happens if, e.g., librsvg is not installed.
             
 
@@ -87,8 +88,8 @@ class IconManager(object):
         """
         if size is None:
             size = pixbuf.get_width()
-
         gtk.icon_theme_add_builtin_icon(icon_name, size, pixbuf)
+        #print "added ",icon_name, size
 
     def add_stock_from_directory(self, stock_id, directory):
         """

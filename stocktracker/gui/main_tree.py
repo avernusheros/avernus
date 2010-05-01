@@ -35,8 +35,7 @@ class MainTree(Tree):
         # Icon Renderer
         renderer = gtk.CellRendererPixbuf()
         column.pack_start(renderer, expand = False)
-        column.add_attribute(renderer, "pixbuf", 1)
-        column.set_attributes(renderer, stock_id=1)
+        column.set_attributes(renderer, icon_name=1)
 
         # Text Renderer
         renderer = gtk.CellRendererText()
@@ -90,7 +89,7 @@ class MainTree(Tree):
     def insert_categories(self):
         self.pf_iter = self.get_model().append(None, [Category('Portfolios'),'gtk-dnd-multiple', _("<b>Portfolios</b>")])
         self.wl_iter = self.get_model().append(None, [Category('Watchlists'),'gtk-dnd-multiple', _("<b>Watchlists</b>")])
-        self.tag_iter = self.get_model().append(None, [Category('Tags'),'gtk-dnd-multiple', _("<b>Tags</b>")])
+        self.tag_iter = self.get_model().append(None, [Category('Tags'),'tags', _("<b>Tags</b>")])
         self.index_iter = self.get_model().append(None, [Category('Indices'),'gtk-dnd-multiple', _("<b>Indices</b>")])
 
     def insert_watchlist(self, item):
@@ -100,7 +99,7 @@ class MainTree(Tree):
         self.get_model().append(self.pf_iter, [item, 'gtk-dnd', item.name])
          
     def insert_tag(self, item):
-        self.get_model().append(self.tag_iter, [item, 'gtk-dnd', item.name])
+        self.get_model().append(self.tag_iter, [item, 'tag', item.name])
     
     def insert_index(self, item):
         self.get_model().append(self.index_iter, [item, 'gtk-dnd', item.name])

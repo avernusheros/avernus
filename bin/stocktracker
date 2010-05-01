@@ -57,6 +57,8 @@ def init_icons():
     icons = IconManager()
     path = os.path.join(config.getdatapath(),'images')
     icons.add_icon_name_from_directory('stocktracker', path)
+    icons.add_icon_name_from_directory('tag', path)
+    icons.add_icon_name_from_directory('tags', path)
     #icons.add_stock_from_directory('stocktracker-chart', path)
     gtk.window_set_default_icon_name('stocktracker')    
 
