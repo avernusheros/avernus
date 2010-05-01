@@ -173,12 +173,12 @@ class PositionsTree(Tree):
         if isinstance(self.container, stocktracker.objects.container.Watchlist):
             self.watchlist = True
         if not self.watchlist:
-            self.create_column(_('Shares'), self.cols['shares'])
+            self.create_column('#', self.cols['shares'])
         self.create_column(_('Name'), self.cols['name'])
+        self.create_icon_column(_('Type'), self.cols['type'])
         if not self.watchlist:
-            col, cell = self.create_column(_('%'), self.cols['pf_percent'])
+            col, cell = self.create_column(_('Pf %'), self.cols['pf_percent'])
             col.set_cell_data_func(cell, float_to_string, self.cols['pf_percent'])
-        self.create_column(_('Type'), self.cols['type'])
         self.create_column(_('Start'), self.cols['start'])
         if not self.watchlist:
             col, cell = self.create_column(_('Buy value'), self.cols['buy_value'])
@@ -186,17 +186,17 @@ class PositionsTree(Tree):
         self.create_column(_('Last price'), self.cols['last_price'])
         col, cell = self.create_column(_('Change'), self.cols['change'])
         col.set_cell_data_func(cell, float_to_red_green_string, self.cols['change'])
-        col, cell = self.create_column(_('Change %'), self.cols['change_percent'])
+        col, cell = self.create_column(_('%'), self.cols['change_percent'])
         col.set_cell_data_func(cell, float_to_red_green_string, self.cols['change_percent'])
         if not self.watchlist:
             col, cell = self.create_column(_('Mkt value'), self.cols['mkt_value'])
             col.set_cell_data_func(cell, float_to_string, self.cols['mkt_value'])
         col, cell = self.create_column(_('Gain'), self.cols['gain'])
         col.set_cell_data_func(cell, float_to_red_green_string, self.cols['gain'])
-        col, cell = self.create_column(_('Gain %'), self.cols['gain_percent'])
+        col, cell = self.create_column(_('%'), self.cols['gain_percent'])
         col.set_cell_data_func(cell, float_to_red_green_string, self.cols['gain_percent'])
         if not self.watchlist:
-            col, cell = self.create_column(_('Day\'s gain'), self.cols['days_gain'])
+            col, cell = self.create_column(_('Today'), self.cols['days_gain'])
             col.set_cell_data_func(cell, float_to_red_green_string, self.cols['days_gain'])
         col, cell = self.create_column(_('Tags'), self.cols['tags'])
         cell.set_property('editable', True)
@@ -354,6 +354,11 @@ class PositionsTree(Tree):
             stock = position.stock
             gain = position.gain
             c_change = position.current_change
+            if position.stock.type == 0:
+                type_icon = 'tag'
+            elif position.stock.type == 1:
+                type_icon = 'tag'
+            
             if self.container.cvalue == 0:
                 change = 0
             else:
@@ -371,7 +376,7 @@ class PositionsTree(Tree):
                                            position.days_gain,
                                            gain[1],
                                            c_change[1],
-                                           position.type_string,
+                                           type_icon,
                                            change])
 
     def find_position_from_stock(self, sid):
@@ -437,7 +442,7 @@ class InfoBar(gtk.HBox):
                 self.total_label.set_markup(text)
             
             if isinstance(container, stocktracker.objects.container.Portfolio) or isinstance(container, stocktracker.objects.container.Watchlist):
-                text = '<b>'+_('Last update')+'</b>\n'+datetime_format(self.container.last_update)
+                text = '<b>'+_('Last update')+'</b>\n'+datetime_format(self.container.last_update, False)
                 self.last_update_label.set_markup(text)
         
     def get_change_string(self, item):

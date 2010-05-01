@@ -17,6 +17,13 @@ class Tree(gtk.TreeView):
         column.set_sort_column_id(attribute)
         return column, cell
 
+    def create_icon_column(self, name, attribute):
+        column = gtk.TreeViewColumn(name)
+        self.append_column(column)
+        cell = gtk.CellRendererPixbuf()
+        column.pack_start(cell, expand = True)
+        column.set_attributes(cell, icon_name=attribute)
+        return column, cell
     
     def find_item(self, id, type = None):
         def search(rows):
@@ -102,9 +109,12 @@ def get_green_red_string(num, string = None):
         text = '<span foreground="dark green">'+ string + '</span>'
     return text
     
-def datetime_format(date):
+def datetime_format(date, nl = True):
     if date is not None:
-        return date.strftime("%d.%m.%Y %I:%M%p")
+        if nl:
+            return date.strftime("%d.%m.%Y\n%I:%M%p")
+        else: 
+            return date.strftime("%d.%m.%Y %I:%M%p")
     return 'never'
 
 
