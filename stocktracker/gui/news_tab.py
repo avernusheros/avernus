@@ -43,8 +43,15 @@ class NewsTree(Tree):
         #self.connect('cursor_changed', self.on_cursor_changed)
                 
     def insert_item(self, item):
-        text = '<b>'+item.title+'</b>\t'+item.date+'\n'+item.summary
-        self.get_model().append(None, [text, item.link])
+        
+        text = '<b>'+item.title+'</b>\t'
+        if 'date' in dir(item):
+            text += item.date
+        text += '\n'+item.summary
+        link = "No Link found"
+        if "link" in dir(item):
+            link = item.link
+        self.get_model().append(None, [text, link])
 
     def on_row_activated(self, treeview, iter, path):
         web(treeview.get_model()[iter][1])
