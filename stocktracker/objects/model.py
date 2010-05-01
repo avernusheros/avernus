@@ -511,19 +511,34 @@ class SQLiteEntity(object):
         if 'onUpdate' in self.__callbacks__:
             self.__callbacks__['onUpdate'](self,vals=vals)
 
-    def delete(self):
+    def delete(self, delRelations = True):
         erg = "DELETE FROM " + self.__tableName__ + " WHERE " + self.primaryKeyString()
         vals = self.attributeDict([self.__primaryKey__])
         logger.info(erg + str(vals))
         c = store.con.cursor()
         c.execute(erg,vals)
         cache.unCache(self)
+        if delRelations:
+            self.deleteRelations()
         if store.policy['commitAfterDelete']:
             store.commit()
         else:
             store.dirty = True
         if 'onDelete' in self.__callbacks__:
             self.__callbacks__['onDelete'](self)
+            
+    def deleteRelations(self):
+        for name,rel in self.__relations__.items():
+            query = "DELETE FROM "
+            query += type(self).generateRelationTableName(rel,name)
+            query += " WHERE "
+            query += type(self).generateRelationTableMyKey()
+            query += "=?"
+            c = store.con.cursor()
+            vals = [self.getPrimaryKey()]
+            logger.info(query+str(vals))
+            c.execute(query,vals)
+            self.__setattr__(name,SQList(self))
 
     def __repr__(self):
         erg = self.__class__.__name__ +"@"+str(id(self))+ "["
