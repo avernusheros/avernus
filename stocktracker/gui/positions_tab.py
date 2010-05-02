@@ -6,6 +6,13 @@ from stocktracker.gui.plot import ChartWindow
 from stocktracker.gui.dialogs import SellDialog, NewWatchlistPositionDialog, SplitDialog, BuyDialog
 from stocktracker.gui.gui_utils import Tree, ContextMenu, float_to_red_green_string, float_to_string, get_price_string, get_name_string, datetime_format
 
+gain_thresholds = {
+                   (-100,-0.5):'arrow_down',
+                   (-0.5,-0.2):'arrow_med_down',
+                   (-0.2,0.2):'arrow_right',
+                   (0.2,0.5):'arrow_med_up',
+                   (0.5,100):'arrow_up'
+                   }
 
 class PositionContextMenu(ContextMenu):
     def __init__(self, position):
