@@ -355,10 +355,9 @@ class PositionsTree(Tree):
             gain = position.gain
             c_change = position.current_change
             if position.stock.type == 0:
-                type_icon = 'tag'
+                type_icon = 'F'
             elif position.stock.type == 1:
-                type_icon = 'tag'
-            
+                type_icon = 'A'
             if self.container.cvalue == 0:
                 change = 0
             else:
