@@ -116,7 +116,8 @@ class MainTree(Tree):
             dlg.destroy()
             if response == gtk.RESPONSE_OK:
                 obj.delete()
-                self.get_model().remove(iter)  
+                self.get_model().remove(iter)
+                pubsub.publish('maintree.unselect')
     
     def on_updated(self, item):
         obj, iter = self.selected_item

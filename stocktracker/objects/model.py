@@ -480,8 +480,7 @@ class SQLiteEntity(object):
         erg = "DELETE FROM " + self.__tableName__ + " WHERE " + self.primaryKeyString()
         vals = self.attributeDict([self.__primaryKey__])
         logger.info(erg + str(vals))
-        c = store.get_cursor()
-        c.execute(erg,vals)
+        store.execute(erg,vals)
         cache.unCache(self)
         if delRelations:
             self.deleteRelations()
@@ -495,10 +494,9 @@ class SQLiteEntity(object):
             query += " WHERE "
             query += type(self).generateRelationTableMyKey()
             query += "=?"
-            c = store.get_cursor()
             vals = [self.getPrimaryKey()]
             logger.info(query+str(vals))
-            c.execute(query,vals)
+            store.execute(query,vals)
             self.__setattr__(name,SQList(self))
             
     def __repr__(self):
