@@ -83,11 +83,11 @@ def update_all():
 
 def load_stocks():
     from stocktracker import yahoo
-    for ind in ['^GDAXI', '^TECDAX', '^STOXX50E', '^DJI', '^IXIC']:
-        GeneratorTask(yahoo.get_index, callback).start(ind)  
+    indices = ['^GDAXI', '^TECDAX', '^STOXX50E', '^DJI', '^IXIC']
+    GeneratorTask(yahoo.get_indices, callback).start(indices)
         
 def callback(*args, **kwargs):
-    print "callback"
+    pass
 
 def newPortfolio(name, id=None, last_update = datetime.datetime.now(), comment="",cash=0.0):
     # Check for existence of name

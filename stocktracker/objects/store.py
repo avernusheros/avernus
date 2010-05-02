@@ -20,10 +20,13 @@ class Store(Thread):
         super(Store, self).__init__()
         self.db = db
         self.reqs=Queue()
+        self.batch = False
+        
         self.start()
 
     def run(self):
         cnx = sqlite3.connect(self.db, detect_types=sqlite3.PARSE_DECLTYPES|sqlite3.PARSE_COLNAMES)
+        cnx.isolation_level = "DEFERRED"
         cnx.row_factory = sqlite3.Row
         cursor = cnx.cursor()
         while True:
@@ -37,7 +40,7 @@ class Store(Thread):
             else:
                 cnx.commit()
         cnx.close()
-        
+    
     def execute(self, req, arg=None, res=None):
         self.reqs.put((req, arg or tuple(), res))
         

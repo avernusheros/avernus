@@ -231,10 +231,6 @@ class SQLiteEntity(object):
         vals = [self.getPrimaryKey(), other.getPrimaryKey()]
         logger.info(query+str(vals))
         store.execute(query,vals)
-        if store.policy['commitAfterDelete']:
-            store.commit()
-        else:
-            store.dirty = True
         if 'onRemoveRelationEntry' in self.__callbacks__:
             self.__callbacks__['onRemoveRelationEntry'](self,name=name,li=li,other=other)
 
@@ -304,7 +300,12 @@ class SQLiteEntity(object):
             return res
         erg = []
         for row in res:
-            erg.append(cls(**row))
+            if cache.isCached(cls,row[cls.__primaryKey__]):
+                erg.append(cache.get(cls,row[cls.__primaryKey__]))
+            else:
+                temp = cls(**row)
+                cache.cache(temp)
+                erg.append(temp)
         return erg
 
     @classmethod

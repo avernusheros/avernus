@@ -125,9 +125,7 @@ class MenuBar(gtk.MenuBar):
         
     def on_add(self,widget):
         dialogs.AddStockDialog()
-    
-    def on_save(self, widget):
-        model.commit()
+   
         
     def on_pref(self, widget):
         dialogs.PrefDialog()
