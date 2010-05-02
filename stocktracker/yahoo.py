@@ -122,7 +122,7 @@ def get_index(name):
         st = controller.detectDuplicate(Stock,exchange=ex, yahoo_symbol=symbol, name=sname, currency=currency)
         #st = controller.newStock(exchange=ex, yahoo_symbol=symbol, name=sname, currency=currency)
         ind.positions.append(st)
-      
+        yield 0
         
 
 if __name__ == "__main__":

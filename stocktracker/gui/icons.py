@@ -151,4 +151,3 @@ class IconManager(object):
             icon_set.add_source(icon_source)
         
         self.icon_factory.add(stock_id, icon_set)
-

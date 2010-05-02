@@ -14,6 +14,7 @@ from stocktracker import updater
 from stocktracker import pubsub
 from stocktracker import logger 
 import gobject
+from stocktracker.gui.gui_utils import GeneratorTask
 
 
 modelClasses = [Portfolio, Transaction, Tag, Watchlist, Index, Dividend,
@@ -48,16 +49,13 @@ def detectDuplicate(tp,**kwargs):
     present = tp.getByColumns(sqlArgs,operator=" OR ",create=True)
     if present:
         if len(present) == 1:
-            print "Found duplicate in Database!"
             return present[0]
         else:
             #print tp, kwargs
             #print present
             raise Exception("Multiple results for duplicate detection")
-    print "Did not find duplicate. Creating new..."
     new = tp(**kwargs)
     new.insert()
-    print "success"
     return new
 
 def createTables():
@@ -87,9 +85,10 @@ def load_stocks():
     #FIXME should check for duplicates
     from stocktracker import yahoo
     for ind in ['^GDAXI', '^TECDAX', '^STOXX50E', '^DJI', '^IXIC']:
-        #gobject.idle_add(yahoo.get_index,ind)
-        yahoo.get_index(ind)
-    
+        GeneratorTask(yahoo.get_index, callback).start(ind)  
+        
+def callback(*args, **kwargs):
+    print "callback"
 
 def newPortfolio(name, id=None, last_update = datetime.datetime.now(), comment="",cash=0.0):
     # Check for existence of name
@@ -133,7 +132,6 @@ def newTransaction(date=datetime.datetime.now(),\
 def newIndex(name='', isin='', currency='', date=datetime.datetime.now(), exchange=None, yahoo_symbol=''):
     result = Index(id=None, name=name, currency=currency, isin=isin, date=date, exchange=exchange, yahoo_symbol=yahoo_symbol, price=0, change=0)
     result.insert()
-    pubsub.publish('index.created',result)
     return result
 
 def newPortfolioPosition(price=0,\

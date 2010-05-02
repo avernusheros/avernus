@@ -109,7 +109,7 @@ class StockContextMenu(ContextMenu):
         ContextMenu.__init__(self)
         self.position = position
         
-        self.add_item(_('Edit position'),  self.__edit_position, 'gtk-edit')
+        #self.add_item(_('Edit position'),  self.__edit_position, 'gtk-edit')
         self.add_item(_('Chart position'),  self.on_chart_position, 'gtk-info')
        
     def __edit_position(self, *arg):
@@ -189,7 +189,7 @@ class IndexPositionsTree(Tree):
             #Something is selected so get the object
             obj = treestore.get_value(selection_iter, 0)
             self.selected_item = obj, selection_iter
-            if isinstance(obj, model.Stock):
+            if obj.__name__ == 'Stock':
                 pubsub.publish('indextree.select', obj)
                 return
         pubsub.publish('indextree.unselect')

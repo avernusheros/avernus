@@ -103,29 +103,26 @@ class Portfolio(SQLiteEntity, Container):
     @property
     def transactions(self):
         return controller.getTransactionForPortfolio(self)
-    
-    def onInit(self, **kwargs):
-        print "Portfolio.onInit"
         
     def onUpdate(self, **kwargs):
         pubsub.publish('container.updated', self)
         
     def onInsert(self, **kwargs):
-        print "Portfolio.onInsert"
+        pass
         
     def onDelete(self, **kwargs):
-        print "Portfolio.onDelete"
+        pass
         
     def onRemoveRelationEntry(self, **kwargs):
-        print "Portfolio.onRemoveRelationEntry"
+        pass
         
     def onAddRelationEntry(self, **kwargs):
-        print "Portfolio.onAddRelationEntry"
+        pass
         
     def onRetrieveComposite(self, **kwargs):
-        print "Portfolio.onRetrieveComposite"
+        pass
     
-    __callbacks__ = {'onInit':onInit,
+    __callbacks__ = {
                      'onUpdate':onUpdate,
                      'onInsert':onInsert,
                      'onDelete':onDelete,
@@ -175,14 +172,17 @@ class Index(SQLiteEntity):
                          'isin':'',
                          'change':0.0,
                          'price':0.0,
-                         
                          }
-
+    
     def update_positions(self):
         #update stocks and index
         updater.update_stocks(self.positions+[self]) 
         self.last_update = datetime.now()
         pubsub.publish("stocks.updated", self)
+   
+    def onInit(self, **kwargs):
+        pubsub.publish('index.created', self)
+    __callbacks__ = {'onInit':onInit}
    
     @property      
     def percent(self):

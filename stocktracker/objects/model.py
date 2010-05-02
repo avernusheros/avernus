@@ -60,25 +60,14 @@ class SQList(list):
         list.__init__(self,*args,**kwargs)
         self.parent = parent
         
-    def _alreadyPresent(self,x):
-        for y in self:
-            for attr in y.__comparisonPositives__:
-                if attr in dir(x):
-                    if y.__getattribute__(attr) == x.__getattribute__(attr):
-                        return True
-        return False
-    
     def append(self,x,store=True):
         """
         if x is already present, nothing happens.
         if x is new, the parent gets noticed
-        """
+        """        
         if x in self:
             logger.error("Duplicate Relation Entry parent: " + str(self.parent) + " entity " + str(x))
             return None
-        if self._alreadyPresent(x):
-            logger.error(str(x) + " already present in " + str(self))
-            return
         list.append(self,x)
         if store:
             self.parent.addRelationEntry(self,x)
@@ -224,7 +213,7 @@ class SQLiteEntity(object):
         tName = self.__class__.generateRelationTableName(other.__class__, name)
         mKey = self.__class__.generateRelationTableMyKey()
         oKey = self.__class__.generateRelationTableOtherKey(other.__class__)
-        query = "INSERT INTO "
+        query = "INSERT OR REPLACE INTO "
         query += tName
         query += " ( " + mKey
         query += ", " + oKey
@@ -308,7 +297,6 @@ class SQLiteEntity(object):
     
     @classmethod
     def getByColumns(cls, cols, operator=" AND ",create=False):
-        print cols
         query = "SELECT * FROM " + cls.__tableName__
         query += " WHERE "
         vals = []
