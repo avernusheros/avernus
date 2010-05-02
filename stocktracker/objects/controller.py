@@ -234,10 +234,29 @@ def getPositionForPortfolio(portfolio):
     key = portfolio.getPrimaryKey()
     erg = PortfolioPosition.getAllFromOneColumn("portfolio",key)
     return erg
+
+def deleteAllPortfolioPosition(portfolio):
+    #print "in deleteAllPortfolioPosition"
+    for pos in getPositionForPortfolio(portfolio):
+        #print "deleting ",pos
+        pos.delete()
+        
+def getTransactionForPosition(position):
+    key = position.getPrimaryKey()
+    erg = Transaction.getAllFromOneColumn("position", key)
+    return erg
+
+def deleteAllPositionTransaction(position):
+    for trans in getTransactionForPosition(position):
+        trans.delete()
     
 def getPositionForWatchlist(watchlist):
     key = watchlist.getPrimaryKey()
     return WatchlistPosition.getAllFromOneColumn("watchlist",key)
+
+def deleteAllWatchlistPosition(watchlist):
+    for pos in getPositionForWatchlist(watchlist):
+        pos.delete()
 
 def getPositionForTag(tag):
     possible = getAllPosition()
@@ -254,6 +273,9 @@ def getTransactionForPortfolio(portfolio):
     erg = Transaction.getAllFromOneColumn("portfolio",key)
     return erg
 
+def deleteAllPortfolioTransaction(portfolio):
+    for trans in getTransactionForPortfolio(portfolio):
+        trans.delete() 
 
 def getQuotationsFromStock(stock, start):
     erg = Quotation.getAllFromOneColumn('stock', stock.getPrimaryKey())

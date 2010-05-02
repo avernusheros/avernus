@@ -81,6 +81,7 @@ class Portfolio(SQLiteEntity, Container):
                    "cash": "FLOAT",
                    }
     
+    
     def __iter__(self):
         return controller.getPositionForPortfolio(self).__iter__()
     
@@ -111,7 +112,12 @@ class Portfolio(SQLiteEntity, Container):
         pass
         
     def onDelete(self, **kwargs):
+<<<<<<< TREE
         pass
+=======
+        controller.deleteAllPortfolioPosition(self)
+        controller.deleteAllPortfolioTransaction(self)
+>>>>>>> MERGE-SOURCE
         
     def onRemoveRelationEntry(self, **kwargs):
         pass
@@ -145,6 +151,13 @@ class Watchlist(SQLiteEntity, Container):
     
     def __iter__(self):
         return controller.getPositionForWatchlist(self).__iter__()
+    
+    def onDelete(self, **kwargs):
+        controller.deleteAllWatchlistPosition(self)
+        
+    __callbacks__ = {
+                     'onDelete':onDelete,
+                     }
 
 
 class Index(SQLiteEntity):

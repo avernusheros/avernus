@@ -61,6 +61,14 @@ class PortfolioPosition(SQLiteEntity, Position):
                     "tags"       : Tag,
                     }
 
+    def onDelete(self, **kwargs):
+        from stocktracker.objects import controller
+        controller.deleteAllPositionTransaction(self)
+        
+    __callbacks__ = {
+                     'onDelete':onDelete
+                     }
+
     @property
     def tagstring(self):
         ret = ''
@@ -97,6 +105,7 @@ class PortfolioPosition(SQLiteEntity, Position):
                         pass
             res.append((current, ta.quantity*price))    
         return res
+    
 
 
 class WatchlistPosition(SQLiteEntity, Position):
