@@ -1,18 +1,23 @@
 #!/usr/bin/env python
 
-import gtk
+import gtk,sys
 from stocktracker import pubsub
 from stocktracker.gui.plot import ChartWindow
 from stocktracker.gui.dialogs import SellDialog, NewWatchlistPositionDialog, SplitDialog, BuyDialog
 from stocktracker.gui.gui_utils import Tree, ContextMenu, float_to_red_green_string, float_to_string, get_price_string, get_name_string, datetime_format
 
 gain_thresholds = {
-                   (-100,-0.5):'arrow_down',
+                   (-sys.maxint,-0.5):'arrow_down',
                    (-0.5,-0.2):'arrow_med_down',
                    (-0.2,0.2):'arrow_right',
                    (0.2,0.5):'arrow_med_up',
-                   (0.5,100):'arrow_up'
+                   (0.5,sys.maxint):'arrow_up'
                    }
+
+def get_arrow_icon(perc):
+    for (min,max),name in gain_thresholds.items():
+        if min<=perc and max>=perc:
+            return name
 
 class PositionContextMenu(ContextMenu):
     def __init__(self, position):
@@ -167,13 +172,14 @@ class PositionsTree(Tree):
                      'tags':9,
                      'days_gain':10,
                      'gain_percent':11,
-                     'change_percent':12,
-                     'type': 13,
-                     'pf_percent': 14
+                     'gain_icon':12, 
+                     'change_percent':13,
+                     'type': 14,
+                     'pf_percent': 15
                       }
         
         
-        self.set_model(gtk.TreeStore(object,str, str, str,float, float, int, float, float, str, float, float, float, str, float))
+        self.set_model(gtk.TreeStore(object,str, str, str,float, float, int, float, float, str, float, float,str, float, str, float))
         
         self.watchlist = False
         if container.__name__ == 'Watchlist':
@@ -200,8 +206,19 @@ class PositionsTree(Tree):
             col.set_cell_data_func(cell, float_to_string, self.cols['mkt_value'])
         col, cell = self.create_column(_('Gain'), self.cols['gain'])
         col.set_cell_data_func(cell, float_to_red_green_string, self.cols['gain'])
-        col, cell = self.create_column(_('%'), self.cols['gain_percent'])
-        col.set_cell_data_func(cell, float_to_red_green_string, self.cols['gain_percent'])
+        rendererP = gtk.CellRendererPixbuf()
+        column = gtk.TreeViewColumn()
+        column.pack_start(rendererP, expand = False)
+        column.set_attributes(rendererP, icon_name=self.cols['gain_icon'])
+
+        # Text Renderer
+        rendererT = gtk.CellRendererText()
+        column.pack_start(rendererT, expand = True)
+        column.add_attribute(rendererT, "markup", self.cols['gain_percent'])
+        self.append_column(column)
+        #col, cell = self.create_column(_('%'), self.cols['gain_percent'])
+        column.set_cell_data_func(rendererT, float_to_red_green_string, self.cols['gain_percent'])
+        
         if not self.watchlist:
             col, cell = self.create_column(_('Today'), self.cols['days_gain'])
             col.set_cell_data_func(cell, float_to_red_green_string, self.cols['days_gain'])
@@ -360,6 +377,7 @@ class PositionsTree(Tree):
         if position.quantity != 0:
             stock = position.stock
             gain = position.gain
+            gain_icon = get_arrow_icon(gain[1])
             c_change = position.current_change
             if position.stock.type == 0:
                 type_icon = 'F'
@@ -381,6 +399,7 @@ class PositionsTree(Tree):
                                            position.tagstring,
                                            position.days_gain,
                                            gain[1],
+                                           gain_icon,
                                            c_change[1],
                                            type_icon,
                                            change])
