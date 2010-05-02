@@ -29,6 +29,6 @@ def update_historical_prices(stock):
     newest = controller.getNewestQuotation(stock)
     if newest == None:
         newest = datetime.date(today.year -20, today.month, today.day)
-    print newest, today
+    #print newest, today
     if newest <= today:
         updater.update_historical_prices(stock, today, newest)

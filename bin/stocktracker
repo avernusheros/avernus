@@ -103,7 +103,7 @@ if __name__ == "__main__":
         import stocktracker.logger
     
     #gobject.threads_init()
-
+    gtk.gdk.threads_init()
     #run the application
     start()
 

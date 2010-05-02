@@ -1,39 +1,66 @@
 #!/usr/bin/env python
 
-import sqlite3 as db
+import sqlite3
 import os
+from Queue import Queue
+from threading import Thread
 
+class Store(Thread):
 
-class Store(object):
-
-    commitDirty = True
     policy = {
-                'commitAfterInsert': True,
-                'commitAfterUpdate': True,
-                'commitAfterDelete': True,
                 'retrieveOnGetAll':True,
                 'createCompositeOnCreate':True,
                 'retrieveCompositeOnCreate':False,
                 }
 
-    def __init__(self, fileName):
-        #print "Creating new store at", fileName
-        if os.path.exists(fileName):
+    def __init__(self, db):
+        if os.path.exists(db):
             self.new = False
         else: self.new = True
+        super(Store, self).__init__()
+        self.db = db
+        self.reqs=Queue()
+        self.batch = False
         
-        self.fileName = fileName
-        self.con = None
-        self.dirty = False
-        self.connect()
+        self.start()
 
-    def connect(self):
-        if self.dirty and self.commitDirty:
-            self.con.commit()
-        self.con = db.connect(self.fileName, detect_types=db.PARSE_DECLTYPES|db.PARSE_COLNAMES)
-        self.con.row_factory = db.Row
-        self.dirty = False
+    def run(self):
+        cnx = sqlite3.connect(self.db, detect_types=sqlite3.PARSE_DECLTYPES|sqlite3.PARSE_COLNAMES)
+        cnx.isolation_level = "DEFERRED"
+        cnx.row_factory = sqlite3.Row
+        cursor = cnx.cursor()
+        while True:
+            req, arg, res = self.reqs.get()
+            if req=='--close--': break
+            cursor.execute(req, arg)
+            if res:
+                for rec in cursor:
+                    res.put(rec)
+                res.put('--no more--')
+            else:
+                cnx.commit()
+        cnx.close()
+    
+    def execute(self, req, arg=None, res=None):
+        self.reqs.put((req, arg or tuple(), res))
+        
+    def select(self, req, arg=None):
+        res=Queue()
+        self.execute(req, arg, res)
+        while True:
+            rec=res.get()
+            if rec=='--no more--': break
+            yield rec
+            
+    def close(self):
+        self.execute('--close--')
+    
+if __name__ == "__main__":
+    sql = Store(":memory:")
+    sql.execute("create table people(name,first)")
+    sql.execute("insert into people values('VAN ROSSUM','Guido')")
+    sql.execute("insert into people values(?,?)", ('TORVALDS','Linus'))
+    for f, n in sql.select("select first, name from people"):
+        print f, n
+    sql.close()
 
-    def commit(self):
-        self.con.commit()
-        self.dirty = False
