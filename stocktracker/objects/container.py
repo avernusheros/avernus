@@ -114,7 +114,8 @@ class Portfolio(SQLiteEntity, Container):
         print "Portfolio.onInsert"
         
     def onDelete(self, **kwargs):
-        print "Portfolio.onDelete"
+        controller.deleteAllPortfolioPosition(self)
+        controller.deleteAllPortfolioTransaction(self)
         
     def onRemoveRelationEntry(self, **kwargs):
         print "Portfolio.onRemoveRelationEntry"
