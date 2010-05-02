@@ -3,6 +3,7 @@ from stocktracker import config, pubsub
 import threading
 import time
 import gobject
+from stocktracker.objects import model
 
 
 
@@ -33,7 +34,7 @@ class GeneratorTask(object):
        self.loop_callback(*ret)
 
     def start(self, *args, **kwargs):
-       threading.Thread(target=self._start, args=args, kwargs=kwargs).start()
+        threading.Thread(target=self._start, args=args, kwargs=kwargs).start()
 
     def stop(self):
        self._stopped = True

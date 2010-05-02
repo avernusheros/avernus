@@ -62,7 +62,7 @@ def createTables():
     for cl in modelClasses:
         cl.createTable()
     if model.store.new:
-        m = Meta(id=1, version=version)
+        m = Meta(version=version)
         m.insert()
     else:
         db_version = Meta.getByPrimaryKey(1).version
@@ -82,7 +82,6 @@ def update_all():
         container.last_update = datetime.datetime.now()
 
 def load_stocks():
-    #FIXME should check for duplicates
     from stocktracker import yahoo
     for ind in ['^GDAXI', '^TECDAX', '^STOXX50E', '^DJI', '^IXIC']:
         GeneratorTask(yahoo.get_index, callback).start(ind)  

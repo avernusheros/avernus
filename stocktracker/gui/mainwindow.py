@@ -24,6 +24,7 @@ from stocktracker.gui.news_tab import NewsTab
 from stocktracker.gui.container_overview_tab import ContainerOverviewTab
 from webbrowser import open as web
 import stocktracker
+from stocktracker.objects import model
 
 
 logger = logger.logger
@@ -217,8 +218,8 @@ class MainWindow(gtk.Window):
     def on_destroy(self, widget, data=None):
         """on_destroy - called when the StocktrackerWindow is close. """
         #clean up code for saving application state should be added here
-        #FIXME save db on quit
-        #model.commit()
+        #save db on quit
+        model.store.close()
         gtk.main_quit()
     
     def clear_notebook(self):
