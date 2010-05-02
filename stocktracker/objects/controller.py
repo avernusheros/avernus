@@ -257,6 +257,10 @@ def getPositionForWatchlist(watchlist):
     key = watchlist.getPrimaryKey()
     return WatchlistPosition.getAllFromOneColumn("watchlist",key)
 
+def deleteAllWatchlistPosition(watchlist):
+    for pos in getPositionForWatchlist(watchlist):
+        pos.delete()
+
 def getPositionForTag(tag):
     possible = getAllPosition()
     #FIXME

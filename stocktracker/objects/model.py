@@ -117,12 +117,12 @@ class SQLiteEntity(object):
     __primaryKey__ = None
     #non one2one relations to other entities like name:type
     __relations__ = {}
-    __callbacks__ = {}
     #the relevant attributes for comparison, in order of importance. If one of these
     #attributes matches, the comparison will be true
     __comparisonPositives__ = []
     #default values
     __defaultValues__ = {}
+    __callbacks__ = {}
 
     def __init__(self, *args, **kwargs):
         """
@@ -539,7 +539,7 @@ class SQLiteEntity(object):
             logger.info(query+str(vals))
             c.execute(query,vals)
             self.__setattr__(name,SQList(self))
-
+            
     def __repr__(self):
         erg = self.__class__.__name__ +"@"+str(id(self))+ "["
         erg += self.__primaryKey__+":"+str(self.getPrimaryKey())

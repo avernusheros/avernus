@@ -81,6 +81,7 @@ class Portfolio(SQLiteEntity, Container):
                    "cash": "FLOAT",
                    }
     
+    
     def __iter__(self):
         return controller.getPositionForPortfolio(self).__iter__()
     
@@ -149,6 +150,13 @@ class Watchlist(SQLiteEntity, Container):
     
     def __iter__(self):
         return controller.getPositionForWatchlist(self).__iter__()
+    
+    def onDelete(self, **kwargs):
+        controller.deleteAllWatchlistPosition(self)
+        
+    __callbacks__ = {
+                     'onDelete':onDelete,
+                     }
 
 
 class Index(SQLiteEntity):
