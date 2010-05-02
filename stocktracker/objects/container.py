@@ -112,12 +112,9 @@ class Portfolio(SQLiteEntity, Container):
         pass
         
     def onDelete(self, **kwargs):
-<<<<<<< TREE
-        pass
-=======
         controller.deleteAllPortfolioPosition(self)
         controller.deleteAllPortfolioTransaction(self)
->>>>>>> MERGE-SOURCE
+
         
     def onRemoveRelationEntry(self, **kwargs):
         pass
