@@ -5,8 +5,7 @@ from datetime import datetime
 from stocktracker import pubsub
 from stocktracker.gui.gui_utils import ContextMenu, Tree
 from stocktracker.objects import controller
-#from stocktracker.objects import model
-
+from stocktracker.gui import progress_manager
 
 class Category(object):
     __name__ = 'Category'
@@ -21,7 +20,9 @@ class MainTreeBox(gtk.VBox):
         self.pack_start(main_tree)
         main_tree_toolbar = MainTreeToolbar()
         self.pack_start(main_tree_toolbar, expand=False, fill=False)
-
+        vbox = gtk.VBox()
+        self.pack_start(vbox, expand=False, fill=False)
+        progress_manager.box = vbox 
 
 class MainTree(Tree):
     def __init__(self):

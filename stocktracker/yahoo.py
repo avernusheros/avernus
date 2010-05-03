@@ -102,6 +102,10 @@ def get_indices(indices):
     from stocktracker.objects.exchange import Exchange
     from stocktracker.objects.container import Index
     
+    current = 0
+    count = len(indices)
+    
+    
     for name in indices:
         iname, isin, exchange, currency = get_info(name)
         ex = controller.detectDuplicate(Exchange,name=exchange)
@@ -123,7 +127,9 @@ def get_indices(indices):
             st = controller.detectDuplicate(Stock,exchange=ex, yahoo_symbol=symbol, name=sname, currency=currency)
             #st = controller.newStock(exchange=ex, yahoo_symbol=symbol, name=sname, currency=currency)
             ind.positions.append(st)
-            yield 0
+        current += 1
+        
+        yield float(current)/count*100
         
 
 if __name__ == "__main__":

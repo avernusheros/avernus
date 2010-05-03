@@ -32,3 +32,4 @@ def update_historical_prices(stock):
     #print newest, today
     if newest <= today:
         updater.update_historical_prices(stock, today, newest)
+    yield 1

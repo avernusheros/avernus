@@ -49,12 +49,13 @@ class IndexToolbar(gtk.Toolbar):
         #button.set_label('Remove tag'
         button.connect('clicked', self.on_edit_clicked)
         button.set_tooltip_text('Edit selected stock') 
-        self.insert(button,-1)
+        #self.insert(button,-1)
         #FIXME
         #self.conditioned.append(button)
         button.set_sensitive(False)
                 
-        button = gtk.ToolButton('gtk-info')
+        button = gtk.ToolButton()
+        button.set_icon_name('stocktracker')
         button.connect('clicked', self.on_chart_clicked)
         button.set_tooltip_text('Chart selected stock')
         self.conditioned.append(button) 
@@ -67,7 +68,8 @@ class IndexToolbar(gtk.Toolbar):
         button.set_tooltip_text('Update stock quotes') 
         self.insert(button,-1)
         
-        button = gtk.ToolButton('gtk-info')
+        button = gtk.ToolButton()
+        button.set_icon_name('stocktracker')
         button.connect('clicked', self.on_indexchart_clicked)
         button.set_tooltip_text('Chart index '+self.index.name)
         self.insert(button,-1) 
@@ -91,7 +93,6 @@ class IndexToolbar(gtk.Toolbar):
         self.index.update_positions()
            
     def on_edit_clicked(self, widget):
-        #FIXME
         pass
         
     def on_chart_clicked(self, widget):
@@ -113,11 +114,10 @@ class StockContextMenu(ContextMenu):
         self.add_item(_('Chart position'),  self.on_chart_position, 'gtk-info')
        
     def __edit_position(self, *arg):
-        #FIXME
         pass
     
     def on_chart_position(self, *arg):
-        ChartWindow(self.stock)
+        ChartWindow(self.position.stock)
         
 
 class IndexPositionsTree(Tree):

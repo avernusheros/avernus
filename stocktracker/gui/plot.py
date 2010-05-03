@@ -35,12 +35,14 @@ class Chart(gtk.VBox):
         combobox.set_active(3)
         combobox.connect('changed', self.on_zoom_change)
         hbox.add(combobox)
-        
-        updater.update_historical_prices(stock)
-        self.current_zoom = 'YTD'
-        self.current_chart = self.get_chart(self.current_zoom)
+        self.current_chart = gtk.Label('Fetching data...')
         self.add(self.current_chart)
+        self.current_zoom = 'YTD'
+        controller.GeneratorTask(updater.update_historical_prices, self.loop_callback, complete_callback=self.add_chart).start(stock)
         
+    
+    def loop_callback(self, *args, **kwargs):
+        pass
         
     def get_date2(self, zoom, date1):
         ret = None
@@ -69,16 +71,14 @@ class Chart(gtk.VBox):
             ret = date(ret.year-1, ret.month, ret.day)
         return ret 
                 
-    def get_chart(self, zoom):
+    def add_chart(self):
+        self.remove(self.current_chart)
         vbox = gtk.VBox()
         date1 = date.today()
-        date2 = self.get_date2(zoom, date1)
+        date2 = self.get_date2(self.current_zoom, date1)
         
         data = controller.getQuotationsFromStock(self.stock, date2)
-        #data = Quotation.query.filter(Quotation.stock==self.stock).\
-        #                            filter(Quotation.date>=date2).\
-        #                            order_by(Quotation.date).all()
-        
+                
         quotes = [d.close for d in data]
         y_min = 0.95*min(quotes)
         y_max = 1.05*max(quotes)
@@ -114,14 +114,13 @@ class Chart(gtk.VBox):
                      'colors':['blue' for i in range(len(vols))]})
                      
         vbox.add(p2)
-        return vbox
+        self.current_chart = vbox
+        self.add(vbox)
+        self.show_all()
         
         
     def on_zoom_change(self, cb):
         zoom = self.zooms[cb.get_active()]
         if zoom != self.current_zoom:
             self.current_zoom = zoom
-            self.remove(self.current_chart)
-            self.current_chart = self.get_chart(zoom)
-            self.add(self.current_chart)
-            self.show_all()
+            self.add_chart()

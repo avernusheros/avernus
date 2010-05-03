@@ -14,7 +14,8 @@ from stocktracker import updater
 from stocktracker import pubsub
 from stocktracker import logger 
 import gobject
-from stocktracker.gui.gui_utils import GeneratorTask
+import threading
+import time
 
 
 modelClasses = [Portfolio, Transaction, Tag, Watchlist, Index, Dividend,
@@ -83,28 +84,17 @@ def update_all():
 
 def load_stocks():
     from stocktracker import yahoo
+    from stocktracker.gui.progress_manager import add_monitor
     indices = ['^GDAXI', '^TECDAX', '^STOXX50E', '^DJI', '^IXIC']
-    GeneratorTask(yahoo.get_indices, callback).start(indices)
-        
-def callback(*args, **kwargs):
-    pass
+    monitor = add_monitor(1, 'loading stocks...', 'gtk-refresh')
+    GeneratorTask(yahoo.get_indices, monitor.progress_update, monitor.stop).start(indices)
 
 def newPortfolio(name, id=None, last_update = datetime.datetime.now(), comment="",cash=0.0):
-    # Check for existence of name
-    #FIXME name isnt primary key
-    pre = None#Portfolio.getByPrimaryKey(name)
-    if pre:
-        return pre
     result = Portfolio(id=id, name=name,last_update=last_update,comment=comment,cash=cash)
     result.insert()
     return result
     
 def newWatchlist(name, id=None, last_update = datetime.datetime.now(), comment=""):
-    # Check for existence of name
-    #FIXME name isnt primary key
-    pre = None#Watchlist.getByPrimaryKey(name)
-    if pre:
-        return pre
     result = Watchlist(id=id, name=name,last_update=last_update,comment=comment)
     result.insert()
     return result
@@ -169,15 +159,6 @@ def newWatchlistPosition(price=0,\
     result.insert()
     return result 
 
-
-def newExchange(name):
-    #FIXME
-    #pre = Exchange.getAllFromOneColumn('name', name)
-    #if pre:
-        #return pre
-    result = Exchange(name=name)
-    result.insert()
-    return result
 
 def newTag(name):
     result = Tag(name=name)
@@ -260,8 +241,7 @@ def deleteAllWatchlistPosition(watchlist):
 
 def getPositionForTag(tag):
     possible = getAllPosition()
-    #FIXME
-    #print "all: ", possible, possible[0].tags
+    #FIXME besser machen, als sql abfrage
     for pos in possible:
         if not pos.__composite_retrieved__:
             pos.retrieveAllComposite()
@@ -302,3 +282,37 @@ def onPositionNewTag(position=None,tagText=None):
     position.tags.append(tag)
 
 pubsub.subscribe('position.newTag', onPositionNewTag)
+
+
+
+class GeneratorTask(object):
+    """
+    http://unpythonic.blogspot.com/2007/08/using-threads-in-pygtk.html
+    Thanks!    
+    """
+    def __init__(self, generator, loop_callback, complete_callback=None):
+        self.generator = generator
+        self.loop_callback = loop_callback
+        self.complete_callback = complete_callback
+        
+    def _start(self, *args, **kwargs):
+        self._stopped = False
+        for ret in self.generator(*args, **kwargs):
+           if self._stopped:
+               thread.exit()
+           gobject.idle_add(self._loop, ret)
+        if self.complete_callback is not None:
+           gobject.idle_add(self.complete_callback)
+
+    def _loop(self, ret):
+       if ret is None:
+           ret = ()
+       if not isinstance(ret, tuple):
+           ret = (ret,)
+       self.loop_callback(*ret)
+
+    def start(self, *args, **kwargs):
+        threading.Thread(target=self._start, args=args, kwargs=kwargs).start()
+
+    def stop(self):
+       self._stopped = True
