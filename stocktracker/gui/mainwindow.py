@@ -115,16 +115,10 @@ class MenuBar(gtk.MenuBar):
         
     def on_add(self,widget):
         dialogs.AddStockDialog()
-   
         
     def on_pref(self, widget):
         dialogs.PrefDialog()
-    
-    def on_new(self, widget):
-        print "not implemented"
-        #session['model'].clear()
-        #session['model'].store.new() 
-        #session['model'].initialize()   
+      
         
 
 class OpenDialog(gtk.FileChooserDialog):            

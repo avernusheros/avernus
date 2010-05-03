@@ -353,11 +353,7 @@ class PositionsTree(Tree):
         if self.selected_item is None:
             return
         path, col = self.get_cursor()
-        col = self.get_column(13)
-        cell = col.get_cell_renderers()[0]
-        #print col.get_cell_renderers()
-        self.set_cursor_on_cell(path,focus_cell=cell, focus_column = col, start_editing=True)
-        self.grab_focus()
+        self.set_cursor(path, focus_column = self.get_column(13), start_editing=True)
         
     def on_cursor_changed(self, widget):
         #Get the current selection in the gtk.TreeView
