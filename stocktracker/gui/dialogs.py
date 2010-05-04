@@ -4,6 +4,7 @@ import gtk
 from stocktracker import pubsub, config, updater, logger
 from datetime import datetime
 from stocktracker.objects import controller
+from stocktracker.objects.exchange import Exchange
 
 class EditStockDialog(gtk.Dialog):
     def __init__(self, stock):
@@ -150,6 +151,18 @@ class AddStockDialog(gtk.Dialog):
         #self.country_entry.set_editable(False)
         #table.attach(self.country_entry, 1,2,5,6)
 
+        table.attach(gtk.Label(_('Sector')),0,1,5,6)
+        self.sector_cb = gtk.combo_box_new_text()
+        self.sectors = {}
+        count = 1
+        self.sector_cb.append_text('None')
+        for s in controller.getAllSector():
+            self.sector_cb.append_text(s.name)
+            self.sectors[count] = s
+            count+=1
+        self.sector_cb.set_active(0)
+        table.attach(self.sector_cb, 1,2,5,6)
+
         self.show_all()
         self.process_result(self.run())
         
@@ -184,10 +197,11 @@ class AddStockDialog(gtk.Dialog):
             type = self.type_cb.get_active()
             exchange_name = self.exchange_label.get_text()
             currency = self.currency_label.get_text()
+            sector = self.sectors[self.sector_cb.get_active()]
             #FIXME get isin from yahoo????
             isin = ''
-            exchange = controller.newExchange(name=exchange_name)
-            controller.newStock(yahoo_symbol = symbol, name = name, type = type, exchange = exchange, currency = currency, isin = isin)
+            ex = controller.detectDuplicate(Exchange, name=exchange_name)
+            controller.newStock(yahoo_symbol = symbol, name = name, type = type, exchange = ex, currency = currency, isin = isin, sector=sector)
 
 
         

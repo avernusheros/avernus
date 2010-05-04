@@ -73,15 +73,9 @@ def createTables():
             upgrade_db(db_version)
 
 def load_fixtures():
-    for sname in ['Energy','Finance','IT']:
+    for sname in ['Basic Materials','Conglomerates','Consumer Goods','Energy','Financial','Healthcare','Industrial Goods','Services','Technology','Transportation','Utilities']:
         s = Sector(name=sname)
         s.insert()
-
-def upgrade_db(from_version):
-    print "need to upgrade db from version", from_version,'to version', version
-    #1. do upgrade
-    #2. update version number
-
 
 
 def update_all():
@@ -173,8 +167,8 @@ def newTag(name):
     pubsub.publish('tag.created',result)
     return result
   
-def newStock(price=0.0, change=0.0, currency='', type=0, name='', isin='', date=datetime.datetime.now(), exchange=None, yahoo_symbol='',insert=True):
-    result = Stock(id=None, price=price, currency=currency, type=type, name=name, isin=isin, change=change, date=date, exchange=exchange, yahoo_symbol=yahoo_symbol)
+def newStock(price=0.0, change=0.0, currency='', type=0, name='', isin='', date=datetime.datetime.now(), exchange=None, yahoo_symbol='',insert=True, sector=None):
+    result = Stock(id=None, price=price, currency=currency, type=type, name=name, isin=isin, change=change, date=date, exchange=exchange, yahoo_symbol=yahoo_symbol, sector=sector)
     if insert:
         result.insert()
     return result
