@@ -199,7 +199,7 @@ class PositionsTree(Tree):
         self.create_column(_('Last price'), self.cols['last_price'])
         col, cell = self.create_column(_('Change'), self.cols['change'])
         col.set_cell_data_func(cell, float_to_red_green_string, self.cols['change'])
-        col, cell = self.create_column(_('%'), self.cols['change_percent'])
+        col, cell = self.create_column('%', self.cols['change_percent'])
         col.set_cell_data_func(cell, float_to_red_green_string, self.cols['change_percent'])
         if not self.watchlist:
             col, cell = self.create_column(_('Mkt value'), self.cols['mkt_value'])
@@ -207,16 +207,14 @@ class PositionsTree(Tree):
         col, cell = self.create_column(_('Gain'), self.cols['gain'])
         col.set_cell_data_func(cell, float_to_red_green_string, self.cols['gain'])
         rendererP = gtk.CellRendererPixbuf()
-        column = gtk.TreeViewColumn()
+        column = gtk.TreeViewColumn('%')
         column.pack_start(rendererP, expand = False)
         column.set_attributes(rendererP, icon_name=self.cols['gain_icon'])
-
         # Text Renderer
         rendererT = gtk.CellRendererText()
         column.pack_start(rendererT, expand = True)
         column.add_attribute(rendererT, "markup", self.cols['gain_percent'])
         self.append_column(column)
-        #col, cell = self.create_column(_('%'), self.cols['gain_percent'])
         column.set_cell_data_func(rendererT, float_to_red_green_string, self.cols['gain_percent'])
         
         if not self.watchlist:
@@ -302,11 +300,13 @@ class PositionsTree(Tree):
         if container.name == self.container.name:
             for row in self.get_model():
                 item = row[0]
+                gain, gain_percent = item.gain
                 row[self.cols['last_price']] = get_price_string(item)
                 row[self.cols['change']] = item.current_change[0]
                 row[self.cols['change_percent']] = item.current_change[1]
-                row[self.cols['gain']] = item.gain[0]
-                row[self.cols['gain_percent']] = item.gain[1]
+                row[self.cols['gain']] = gain
+                row[self.cols['gain_percent']] = gain_percent
+                row[self.cols['gain_icon']] = get_arrow_icon(gain_percent)
                 row[self.cols['days_gain']] = item.days_gain
                 row[self.cols['mkt_value']] = round(item.cvalue,2)
                 
