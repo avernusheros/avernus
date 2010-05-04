@@ -5,6 +5,71 @@ from stocktracker import pubsub, config, updater, logger
 from datetime import datetime
 from stocktracker.objects import controller
 
+class EditStockDialog(gtk.Dialog):
+    def __init__(self, stock):
+        gtk.Dialog.__init__(self, _("Edit stock"), None
+                            , gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
+                     (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
+                      gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
+        
+        self.stock = stock
+        vbox = self.get_content_area()
+        table = gtk.Table()
+        vbox.pack_start(table)
+        
+        table.attach(gtk.Label(_('Name')),0,1,0,1)
+        self.name_entry = gtk.Entry()
+        self.name_entry.set_text(stock.name)
+        table.attach(self.name_entry,1,2,0,1)
+
+        table.attach(gtk.Label(_('ISIN')),0,1,1,2)
+        self.isin_entry = gtk.Entry()
+        self.isin_entry.set_text(stock.isin)
+        table.attach(self.isin_entry,1,2,1,2)
+        
+        table.attach(gtk.Label(_('Type')),0,1,2,3)
+        self.types = {'fund':0, 'stock':1}
+        self.type_cb = gtk.combo_box_new_text()
+        for key, val in self.types.items():
+            self.type_cb.append_text(key)
+        self.type_cb.set_active(self.stock.type)
+        table.attach(self.type_cb, 1,2,2,3)
+
+        table.attach(gtk.Label(_('yahoo symbol')),0,1,3,4)
+        self.yahoo_entry = gtk.Entry()
+        self.yahoo_entry.set_text(stock.yahoo_symbol)
+        table.attach(self.yahoo_entry,1,2,3,4)
+
+        table.attach(gtk.Label(_('Sector')),0,1,4,5)
+        self.sector_cb = gtk.combo_box_new_text()
+        self.sectors = {}
+        current = 0
+        count = 1
+        self.sector_cb.append_text('None')
+        for s in controller.getAllSector():
+            self.sector_cb.append_text(s.name)
+            self.sectors[count] = s
+            if self.stock.sector == s:
+                current = count
+            count+=1
+        self.sector_cb.set_active(current)
+        table.attach(self.sector_cb, 1,2,4,5)
+
+        self.show_all()
+        response = self.run()  
+        self.process_result(response = response)
+
+    def process_result(self, widget=None, response = gtk.RESPONSE_ACCEPT):
+        if response == gtk.RESPONSE_ACCEPT:
+            self.stock.name = self.name_entry.get_text()
+            self.stock.isin = self.isin_entry.get_text()
+            self.stock.type = self.types[self.type_cb.get_active_text()]
+            self.stock.yahoo_symbol = self.yahoo_entry.get_text()
+            if self.sector_cb.get_active != 0:   
+                self.stock.sector = self.sectors[self.sector_cb.get_active()]
+            pubsub.publish("stock.edited", self.stock) 
+        self.destroy()
+
 
 class StockSelector(gtk.Entry):
     def __init__(self, stocks):

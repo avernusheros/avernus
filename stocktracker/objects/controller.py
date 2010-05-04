@@ -10,6 +10,7 @@ from stocktracker.objects.stock import Stock
 from stocktracker.objects.exchange import Exchange
 from stocktracker.objects.dividend import Dividend
 from stocktracker.objects.quotation import Quotation
+from stocktracker.objects.sector import Sector
 from stocktracker import updater
 from stocktracker import pubsub
 from stocktracker import logger 
@@ -20,12 +21,12 @@ import time
 
 modelClasses = [Portfolio, Transaction, Tag, Watchlist, Index, Dividend,
                 PortfolioPosition, WatchlistPosition, Exchange,
-                Quotation, Stock, Meta]
+                Quotation, Stock, Meta, Sector]
 
 #these classes will be loaded with one single call and will also load composite
 #relations. therefore it is important that the list is complete in the sense
 #that there are no classes holding composite keys to classes outside the list
-initialLoadingClasses = [Portfolio,Transaction,Tag,Watchlist,Index,Dividend,
+initialLoadingClasses = [Portfolio,Transaction,Tag,Watchlist,Index,Dividend,Sector,
                          PortfolioPosition, WatchlistPosition, Exchange, Meta, Stock]
 
 version = 1
@@ -65,10 +66,16 @@ def createTables():
     if model.store.new:
         m = Meta(version=version)
         m.insert()
+        load_fixtures()
     else:
         db_version = Meta.getByPrimaryKey(1).version
         if db_version < version:
             upgrade_db(db_version)
+
+def load_fixtures():
+    for sname in ['Energy','Finance','IT']:
+        s = Sector(name=sname)
+        s.insert()
 
 def upgrade_db(from_version):
     print "need to upgrade db from version", from_version,'to version', version
@@ -204,6 +211,9 @@ def getAllWatchlist():
 
 def getAllIndex():
     return Index.getAll()
+
+def getAllSector():
+    return Sector.getAll()
 
 def getAllTag():
     return Tag.getAll()

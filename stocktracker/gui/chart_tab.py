@@ -3,7 +3,7 @@
 from stocktracker.cairoplot.gtkcairoplot \
     import gtk_pie_plot, gtk_vertical_bar_plot, gtk_dot_line_plot
 import gtk
-
+from stocktracker.objects import controller
 no_data_string = '\nNo Data!\nAdd positions to portfolio first.\n\n'
 
 
@@ -36,6 +36,9 @@ class ChartTab(gtk.ScrolledWindow):
         
         table.attach(gtk.Label(_('Tags')),1,2,4,5)
         table.attach(self.tags_pie(),1,2,5,6)
+        
+        table.attach(gtk.Label(_('Sectors')),0,1,6,7)
+        table.attach(self.sector_pie(),0,1,7,8)
         
         #FIXME countries not supported yet
         #table.attach(gtk.Label(_('Countries')),0,1,6,7)
@@ -109,6 +112,22 @@ class ChartTab(gtk.ScrolledWindow):
                 data[pos.stock.country] = pos.cvalue
         if len(data) == 0:
             return gtk.Label(no_data_string)        
+        pie = gtk_pie_plot()        
+        pie.set_args({'data':data, 'width':300, 'height':300, 'gradient':True})
+        return pie
+    
+    def sector_pie(self):       
+        data = {}
+        data['None'] = 0.0
+        for s in controller.getAllSector():
+            data[s.name] = 0.0
+        for pos in self.pf:
+            if pos.stock.sector is None:
+                data['None'] += pos.cvalue
+            else:
+                data[pos.stock.sector.name] += pos.cvalue
+        if sum(data.values()) == 0:
+            return gtk.Label(no_data_string)         
         pie = gtk_pie_plot()        
         pie.set_args({'data':data, 'width':300, 'height':300, 'gradient':True})
         return pie

@@ -4,6 +4,7 @@ import gtk
 from stocktracker import pubsub
 from stocktracker.gui.gui_utils import Tree, float_to_red_green_string, get_price_string, get_name_string, ContextMenu   
 from stocktracker.gui.plot import ChartWindow
+from stocktracker.gui.dialogs import EditStockDialog
 
 
 class IndexPositionsTab(gtk.VBox):
@@ -33,8 +34,7 @@ class IndexPositionsTab(gtk.VBox):
         self.pack_start(sw)
         
         #pubsub.subscribe('container.updated', self.on_container_update)
-        
-        
+                
         self.show_all()
         
     
@@ -46,12 +46,10 @@ class IndexToolbar(gtk.Toolbar):
         self.conditioned = []
         
         button = gtk.ToolButton('gtk-edit')
-        #button.set_label('Remove tag'
         button.connect('clicked', self.on_edit_clicked)
         button.set_tooltip_text('Edit selected stock') 
-        #self.insert(button,-1)
-        #FIXME
-        #self.conditioned.append(button)
+        self.insert(button,-1)
+        self.conditioned.append(button)
         button.set_sensitive(False)
                 
         button = gtk.ToolButton()
@@ -93,7 +91,8 @@ class IndexToolbar(gtk.Toolbar):
         self.index.update_positions()
            
     def on_edit_clicked(self, widget):
-        pass
+        obj, iter = self.tree.selected_item
+        EditStockDialog(obj)
         
     def on_chart_clicked(self, widget):
         if self.tree.selected_item is None:
@@ -106,18 +105,18 @@ class IndexToolbar(gtk.Toolbar):
         
         
 class StockContextMenu(ContextMenu):
-    def __init__(self, position):
+    def __init__(self, stock):
         ContextMenu.__init__(self)
-        self.position = position
+        self.stock = stock
         
-        #self.add_item(_('Edit position'),  self.__edit_position, 'gtk-edit')
+        self.add_item(_('Edit position'),  self.__edit_position, 'gtk-edit')
         self.add_item(_('Chart position'),  self.on_chart_position, 'gtk-info')
        
     def __edit_position(self, *arg):
-        pass
+        EditStockDialog(self.stock)
     
     def on_chart_position(self, *arg):
-        ChartWindow(self.position.stock)
+        ChartWindow(self.stock)
         
 
 class IndexPositionsTree(Tree):

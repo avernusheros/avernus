@@ -1,5 +1,6 @@
 from stocktracker.objects.model import SQLiteEntity
 from stocktracker.objects.exchange import Exchange
+from stocktracker.objects.sector import Sector
 from stocktracker import updater
 
 import datetime
@@ -18,7 +19,8 @@ class Stock(SQLiteEntity):
                    'yahoo_symbol': 'VARCHAR',
                    'price': 'FLOAT',
                    'date': 'TIMESTAMP',
-                   'change': 'FLOAT'
+                   'change': 'FLOAT',
+                   'sector': Sector
                   }
     __comparisonPositives__ = ['yahoo_symbol']
     __defaultValues__ = {
@@ -29,7 +31,8 @@ class Stock(SQLiteEntity):
                          'currency':'',
                          'price':0.0,
                          'date':datetime.datetime.now(),
-                         'change':0.0
+                         'change':0.0,
+                         'sector':None,
                          }
 
     #needed for some treeviews, e.g. news_tab
