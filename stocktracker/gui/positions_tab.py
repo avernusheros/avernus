@@ -3,7 +3,7 @@
 import gtk,sys
 from stocktracker import pubsub
 from stocktracker.gui.plot import ChartWindow
-from stocktracker.gui.dialogs import SellDialog, NewWatchlistPositionDialog, SplitDialog, BuyDialog
+from stocktracker.gui.dialogs import SellDialog, NewWatchlistPositionDialog, SplitDialog, BuyDialog, EditPositionDialog
 from stocktracker.gui.gui_utils import Tree, ContextMenu, float_to_red_green_string, float_to_string, get_price_string, get_name_string, datetime_format
 
 gain_thresholds = {
@@ -20,7 +20,7 @@ def get_arrow_icon(perc):
             return name
 
 class PositionContextMenu(ContextMenu):
-    def __init__(self, position):
+    def __init__(self, position, tree):
         ContextMenu.__init__(self)
         if position.__name__ == 'PortfolioPosition':
             type = 0
@@ -29,10 +29,10 @@ class PositionContextMenu(ContextMenu):
             type = 1
             remove_string = 'Remove'
         self.position = position
+        self.tree = tree
         
         self.add_item(remove_string+' position',  self.__remove_position, 'gtk-remove')
-        #FIXME nothing to edit now
-        #self.add_item(_('Edit position'),  self.__edit_position, 'gtk-edit')
+        self.add_item(_('Edit position'),  self.__edit_position, 'gtk-edit')
         self.add_item(_('Chart position'),  self.on_chart_position, 'gtk-info')
         
         #FIXME splitting does not work completely. we need to change all transactions of the position
@@ -43,10 +43,10 @@ class PositionContextMenu(ContextMenu):
         pubsub.publish('position_menu.remove', self.position)
     
     def __edit_position(self, *arg):
-        pubsub.publish('position_menu.edit', self.position)
-
+        self.tree.edit_position()
+        
     def __split_position(self, *arg):
-        pubsub.publish('position_menu.split', self.position)
+        SplitDialog(self.position)
     
     def on_chart_position(self, *arg):
         ChartWindow(self.position.stock)
@@ -81,11 +81,10 @@ class PositionsToolbar(gtk.Toolbar):
         self.conditioned.append(button)
         self.insert(button,-1)
         
-        #FIXME no edit dialog
         button = gtk.ToolButton('gtk-edit')
         button.connect('clicked', self.on_edit_clicked)
         button.set_tooltip_text('Edit selected position') 
-        #self.insert(button,-1)
+        self.insert(button,-1)
         self.conditioned.append(button)
         button.set_sensitive(False)
         
@@ -143,11 +142,13 @@ class PositionsToolbar(gtk.Toolbar):
         pubsub.publish('positionstoolbar.tag')   
            
     def on_edit_clicked(self, widget):
-        #TODO
-        pubsub.publish('positionstoolbar.edit')
+        self.tree.edit_position()
         
     def on_split_clicked(self, widget):
-        pubsub.publish('positionstoolbar.split')
+        if self.tree.selected_item is None:
+            return
+        position, iter = self.tree.selected_item
+        SplitDialog(position)
         
     def on_chart_clicked(self, widget):
         if self.tree.selected_item is None:
@@ -256,8 +257,6 @@ class PositionsTree(Tree):
             ('positionstoolbar.add', self.on_add_position),
             ('position_menu.add', self.on_add_position),
             ('positionstoolbar.tag', self.on_tag),
-            ('positionstoolbar.split', self.on_split),
-            ('position_menu.split', self.on_split),
             ('position.tags.changed', self.on_positon_tags_changed),
             ('shortcut.update', self.on_update),
             ('container.position.added', self.on_position_added)
@@ -274,7 +273,7 @@ class PositionsTree(Tree):
         if event.button == 3:
             if self.selected_item is not None:
                 obj, iter = self.selected_item
-                PositionContextMenu(obj).show(event)
+                PositionContextMenu(obj, self).show(event)
 
     def on_destroy(self, x):
         for topic, callback in self.subscriptions:
@@ -341,19 +340,27 @@ class PositionsTree(Tree):
             NewWatchlistPositionDialog(self.container)  
         else:
             BuyDialog(self.container)
-    
-    def on_split(self, position = None):
-        if position is None:
-            if self.selected_item is None:
-                return
-            position, iter = self.selected_item
-        SplitDialog(position)
         
     def on_tag(self):
         if self.selected_item is None:
             return
         path, col = self.get_cursor()
         self.set_cursor(path, focus_column = self.get_column(13), start_editing=True)
+    
+    def edit_position(self):
+        if self.selected_item is None:
+            return 
+        position, iter = self.selected_item
+        EditPositionDialog(position)
+        self.update_position_after_edit(position, iter)
+    
+    def update_position_after_edit(self, pos, iter):
+        m = self.get_model()
+        row = m[iter]
+        col = 0
+        for item in self._get_row(pos):
+            m.set_value(iter, col, item)    
+            col+=1
         
     def on_cursor_changed(self, widget):
         #Get the current selection in the gtk.TreeView
@@ -369,36 +376,39 @@ class PositionsTree(Tree):
                 return
         pubsub.publish('positionstree.unselect')
             
+    def _get_row(self, position):
+        stock = position.stock
+        gain = position.gain
+        gain_icon = get_arrow_icon(gain[1])
+        c_change = position.current_change
+        if position.stock.type == 0:
+            type_icon = 'F'
+        elif position.stock.type == 1:
+            type_icon = 'A'
+        if self.container.cvalue == 0:
+            change = 0
+        else:
+            change = 100 * position.cvalue / self.container.cvalue
+        return [position, 
+               get_name_string(stock), 
+               get_price_string(position), 
+               get_price_string(stock), 
+               c_change[0],
+               gain[0],
+               position.quantity,
+               position.bvalue,
+               position.cvalue,
+               position.tagstring,
+               position.days_gain,
+               gain[1],
+               gain_icon,
+               c_change[1],
+               type_icon,
+               change]
+            
     def insert_position(self, position):
         if position.quantity != 0:
-            stock = position.stock
-            gain = position.gain
-            gain_icon = get_arrow_icon(gain[1])
-            c_change = position.current_change
-            if position.stock.type == 0:
-                type_icon = 'F'
-            elif position.stock.type == 1:
-                type_icon = 'A'
-            if self.container.cvalue == 0:
-                change = 0
-            else:
-                change = 100 * position.cvalue / self.container.cvalue
-            self.get_model().append(None, [position, 
-                                           get_name_string(stock), 
-                                           get_price_string(position), 
-                                           get_price_string(stock), 
-                                           c_change[0],
-                                           gain[0],
-                                           position.quantity,
-                                           position.bvalue,
-                                           position.cvalue,
-                                           position.tagstring,
-                                           position.days_gain,
-                                           gain[1],
-                                           gain_icon,
-                                           c_change[1],
-                                           type_icon,
-                                           change])
+            self.get_model().append(None, self._get_row(position))
 
     def find_position_from_stock(self, sid):
         def search(rows):

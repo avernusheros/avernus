@@ -10,12 +10,15 @@ from stocktracker.objects import controller
 class TransactionsTab(gtk.ScrolledWindow):
     def __init__(self, item):
         gtk.ScrolledWindow.__init__(self)
-        transactions_tree = TransactionsTree(item)
+        self.transactions_tree = TransactionsTree(item)
         self.set_property('hscrollbar-policy', gtk.POLICY_AUTOMATIC)
         self.set_property('vscrollbar-policy', gtk.POLICY_AUTOMATIC)
-        self.add(transactions_tree)
+        self.add(self.transactions_tree)
         self.show_all()
-
+    
+    def show(self):
+        self.transactions_tree.clear()
+        self.transactions_tree.load_transactions()
 
 class TransactionsTree(Tree):
     def __init__(self, portfolio):
@@ -31,7 +34,6 @@ class TransactionsTree(Tree):
         self.create_column(_('Price'), 5)
         self.create_column(_('Transaction Costs'), 6)
         
-        self.load_transactions()
         pubsub.subscribe('transaction.added', self.on_transaction_created)
         
     def load_transactions(self):

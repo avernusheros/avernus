@@ -79,7 +79,7 @@ class ChartTab(gtk.ScrolledWindow):
         sum = {0:0.0, 1:0.0}
         for pos in self.pf:
             sum[pos.stock.type] += pos.cvalue
-        data = {'stock':sum[0], 'fund':sum[1]}
+        data = {'fund':sum[0], 'stock':sum[1]}
         if sum[0]+sum[1] == 0.0:
             return gtk.Label(no_data_string)      
         if chart_type == 'pie':

@@ -31,6 +31,10 @@ class Position(object):
     def bvalue(self):
         return self.quantity * self.price
     
+    def split(self, val1, val2, date):
+        #FIXME
+        pass
+    
     @property
     def cvalue(self):
         if not self.stock:
@@ -52,10 +56,10 @@ class PortfolioPosition(SQLiteEntity, Position):
                    "id": "INTEGER",
                    "date": "TIMESTAMP",
                    "price": "FLOAT",
-                   "quantity":  "INTEGER",
+                   "quantity": "INTEGER",
                    "portfolio": Portfolio,
-                   "stock":     Stock,
-                   "comment":   "TEXT"
+                   "stock": Stock,
+                   "comment": "TEXT"
                    }
     __relations__  = {
                     "tags"       : Tag,

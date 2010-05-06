@@ -275,6 +275,12 @@ def getNewestQuotation(stock):
     else:
         return erg[0].date
     
+def getBuyTransaction(portfolio_position):
+    key = portfolio_position.getPrimaryKey()
+    for ta in Transaction.getAllFromOneColumn('position', key):
+        if ta.type == 1:
+            return ta    
+    
 def onPositionNewTag(position=None,tagText=None):
     if not position or not tagText:
         logger.logger.error("Malformed onPositionNewTag Call (position,tagText)" + str((position,tagText)))
