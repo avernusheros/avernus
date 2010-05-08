@@ -261,6 +261,12 @@ def deleteAllPortfolioTransaction(portfolio):
     for trans in getTransactionForPortfolio(portfolio):
         trans.delete() 
 
+def getStockForSearchstring(searchstring):
+    sqlArgs = {}
+    for req in Stock.__comparisonPositives__:
+        sqlArgs[req] = searchstring+'%'
+    return Stock.getByColumns(sqlArgs,operator=" OR ",operator2=' LIKE ', create=True)
+
 def getQuotationsFromStock(stock, start):
     erg = Quotation.getAllFromOneColumn('stock', stock.getPrimaryKey())
     erg = filter(lambda quote: quote.date > start, erg)

@@ -5,7 +5,7 @@ from stocktracker import pubsub, config, updater, logger
 from datetime import datetime
 from stocktracker.objects import controller
 from stocktracker.objects.exchange import Exchange
-
+from stocktracker.gui import gui_utils
 
 class EditPositionDialog(gtk.Dialog):
     def __init__(self, position):
@@ -150,7 +150,52 @@ class EditPositionTable(gtk.Table):
             self.pos.comment = buffer.get_text(buffer.get_start_iter(), buffer.get_end_iter())            
 
 
-class StockSelector(gtk.Entry):
+
+class StockSelector(gtk.Table):
+    def __init__(self):
+        gtk.Table.__init__(self)
+        
+        self.search_field = gtk.Entry()
+        self.search_field.connect('activate', self.on_search)
+        self.search_field.set_icon_from_stock(1, gtk.STOCK_FIND)
+        self.attach(self.search_field,0,1,0,1)
+        
+        button = gtk.Button(label='search', stock='gtk-find')
+        self.attach(button,1,2,0,1)
+        button.connect('clicked', self.on_search)
+        
+        sw = gtk.ScrolledWindow()
+        sw.set_property('hscrollbar-policy', gtk.POLICY_NEVER)
+        sw.set_property('vscrollbar-policy', gtk.POLICY_AUTOMATIC)
+        self.result_tree = gui_utils.Tree()
+        self.result_tree.set_model(gtk.TreeStore(object,str, str, str,str))
+        self.result_tree.create_icon_column(None, 1)
+        self.result_tree.create_column(_('Name'), 2)
+        self.result_tree.create_column('ISIN', 3)
+        self.result_tree.create_column(_('Exchange'), 4)
+        sw.add(self.result_tree)
+        self.attach(sw, 0,2,1,2)
+
+    def get_stock(self):
+        path, col = self.result_tree.get_cursor()
+        return self.result_tree.get_model()[path][0]
+
+    def on_search(self, *args):
+        self.result_tree.clear()
+        for item in controller.getStockForSearchstring(self.search_field.get_text()):
+            self.insert_item(item)
+        
+    def insert_item(self, stock, icon='gtk-harddisk'):
+        self.result_tree.get_model().append(None, [
+                                       stock, 
+                                       icon,
+                                       stock.name,
+                                       stock.isin,
+                                       stock.exchange.name
+                                       ])
+
+
+class StockSelectorOld(gtk.Entry):
     def __init__(self, stocks):
         self.stocks = stocks
         gtk.Entry.__init__(self)
@@ -393,50 +438,40 @@ class BuyDialog(gtk.Dialog):
         self.pf = pf
         
         vbox = self.get_content_area()
+        table = gtk.Table()
+        vbox.pack_start(table)
         #stock entry
-        hbox = gtk.HBox()
-        vbox.pack_start(hbox)
-        label = gtk.Label(_('Stock:'))
-        hbox.pack_start(label)
-
-        self.stock_selector = StockSelector(controller.getAllStock())
-        hbox.pack_start(self.stock_selector)
-        self.stock_selector.completion.connect('match-selected', self.on_stock_selection)
+        self.stock_selector = StockSelector()
+        table.attach(self.stock_selector,0,2,0,1)
+        self.stock_selector.result_tree.connect('cursor-changed', self.on_stock_selection)
+        self.stock_selector.result_tree.get_model().connect('row-deleted', self.on_stock_deselection)
 
         #shares entry
-        hbox = gtk.HBox()
-        vbox.pack_start(hbox)
-        hbox.pack_start(gtk.Label(_('Shares:')))
+        table.attach(gtk.Label(_('Shares')),0,1,1,2)
         self.shares_entry = gtk.SpinButton(gtk.Adjustment(lower=0, upper=100000,step_incr=1.0, value = 0), digits=2)
         self.shares_entry.connect("value-changed", self.on_change)
-        hbox.pack_start(self.shares_entry)
+        table.attach(self.shares_entry,1,2,1,2)
         
         #price entry
-        hbox = gtk.HBox()
-        vbox.pack_start(hbox)
-        hbox.pack_start(gtk.Label(_('Price:')))
+        table.attach(gtk.Label(_('Price')),0,1,2,3)
         self.price_entry = gtk.SpinButton(gtk.Adjustment(lower=0, upper=100000,step_incr=0.1, value = 1.0), digits=2)
         self.price_entry.connect("value-changed", self.on_change)
-        hbox.pack_start(self.price_entry)
+        table.attach(self.price_entry,1,2,2,3)
         
         #ta_costs entry
-        hbox = gtk.HBox()
-        vbox.pack_start(hbox)
-        hbox.pack_start(gtk.Label(_('Transaction Costs:')))
+        table.attach(gtk.Label(_('Transaction Costs')),0,1,3,4)
         self.tacosts_entry = gtk.SpinButton(gtk.Adjustment(lower=0, upper=100000,step_incr=0.1, value = 0.0), digits=2)
         self.tacosts_entry.connect("value-changed", self.on_change)
-        hbox.pack_start(self.tacosts_entry)
+        table.attach(self.tacosts_entry,1,2,3,4)
         
         #total
-        hbox = gtk.HBox()
-        vbox.pack_start(hbox)
-        hbox.pack_start(gtk.Label(_('Total:')))
+        table.attach(gtk.Label(_('Total')),0,1,4,5)
         self.total = gtk.Label('0.0')
-        hbox.pack_start(self.total)
+        table.attach(self.total,1,2,4,5)
         
         #date 
         self.calendar = gtk.Calendar()
-        vbox.pack_start(self.calendar)
+        table.attach(self.calendar,0,2,5,6)
         
         self.set_response_sensitive(gtk.RESPONSE_ACCEPT, False)
         self.show_all()
@@ -449,11 +484,14 @@ class BuyDialog(gtk.Dialog):
         self.total.set_text(str(total))
 
     def on_stock_selection(self, *args):
-        self.set_response_sensitive(gtk.RESPONSE_ACCEPT, True)  
+        self.set_response_sensitive(gtk.RESPONSE_ACCEPT, True)
+    
+    def on_stock_deselection(self, *args):
+        self.set_response_sensitive(gtk.RESPONSE_ACCEPT, False)   
         
     def process_result(self, response):
         if response == gtk.RESPONSE_ACCEPT:
-            stock = self.stock_selector.selected_stock
+            stock = self.stock_selector.get_stock()
             shares = self.shares_entry.get_value()
             if shares == 0.0:
                 return
@@ -476,15 +514,10 @@ class NewWatchlistPositionDialog(gtk.Dialog):
         self.wl = wl
         
         vbox = self.get_content_area()
-        #stock entry
-        hbox = gtk.HBox()
-        vbox.pack_start(hbox)
-        label = gtk.Label(_('Stock:'))
-        hbox.pack_start(label)
-
-        self.stock_selector = StockSelector(controller.getAllStock())
-        hbox.pack_start(self.stock_selector)
-        self.stock_selector.completion.connect('match-selected', self.on_stock_selection)
+        self.stock_selector = StockSelector()
+        vbox.pack_start(self.stock_selector)
+        self.stock_selector.result_tree.connect('cursor-changed', self.on_stock_selection)
+        self.stock_selector.result_tree.get_model().connect('row-deleted', self.on_stock_deselection)
 
         self.set_response_sensitive(gtk.RESPONSE_ACCEPT, False)
         self.show_all()
@@ -493,11 +526,14 @@ class NewWatchlistPositionDialog(gtk.Dialog):
         self.destroy()
 
     def on_stock_selection(self, *args):
-        self.set_response_sensitive(gtk.RESPONSE_ACCEPT, True)  
+        self.set_response_sensitive(gtk.RESPONSE_ACCEPT, True)
+    
+    def on_stock_deselection(self, *args):
+        self.set_response_sensitive(gtk.RESPONSE_ACCEPT, False)   
         
     def process_result(self, response):
         if response == gtk.RESPONSE_ACCEPT:
-            stock = self.stock_selector.selected_stock
+            stock = self.stock_selector.get_stock()
             stock.update_price()
             pos = controller.newWatchlistPosition(price=stock.price, date=stock.date, watchlist=self.wl, stock = stock)
             pubsub.publish('container.position.added', self.wl, pos)

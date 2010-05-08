@@ -121,37 +121,6 @@ class MenuBar(gtk.MenuBar):
       
         
 
-class OpenDialog(gtk.FileChooserDialog):            
-    def __init__(self, *arg, **args):
-        gtk.FileChooserDialog.__init__(self, title='Open...', 
-                    action=gtk.FILE_CHOOSER_ACTION_OPEN, 
-                    buttons=(gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
-                        gtk.STOCK_OK, gtk.RESPONSE_ACCEPT), backend=None)    
-        response = self.run()  
-        self.process_result(response)
-        self.destroy()
-    
-    def process_result(self, response):
-        if response == gtk.RESPONSE_ACCEPT:
-            print "not implemented"
-            #session['model'].clear()
-            #session['model'].store.open(self.get_filename())
-            #session['model'].initialize()
-            
-
-class SaveAsDialog(gtk.FileChooserDialog):            
-    def __init__(self, *arg, **args):
-        gtk.FileChooserDialog.__init__(self, title='Save as...',  action=gtk.FILE_CHOOSER_ACTION_SAVE, buttons=(gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
-                      gtk.STOCK_OK, gtk.RESPONSE_ACCEPT), backend=None)    
-        response = self.run()  
-        self.process_result(response)
-        self.destroy()
-    
-    def process_result(self, response):
-        if response == gtk.RESPONSE_ACCEPT:
-            model.save_as(self.get_filename)
-    
-
 class MainWindow(gtk.Window):
     def __init__(self):
         gtk.Window.__init__(self)

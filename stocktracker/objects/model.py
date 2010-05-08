@@ -283,17 +283,17 @@ class SQLiteEntity(object):
         return res
     
     @classmethod
-    def getByColumns(cls, cols, operator=" AND ",create=False):
+    def getByColumns(cls, cols, operator=" AND ",operator2='=', create=False):
         query = "SELECT * FROM " + cls.__tableName__
         query += " WHERE "
         vals = []
         i = 0
         for col,val in cols.items():
-            query += col+"=? "
+            query += col+operator2+"? "
             if i < len(cols) - 1:
                 query += operator
             vals.append(val)
-        #print query
+            i+=1
         logger.info(query+str(vals))
         res = store.select(query,vals)
         if not create:
