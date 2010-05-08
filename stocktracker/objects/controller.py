@@ -263,7 +263,7 @@ def deleteAllPortfolioTransaction(portfolio):
 
 def getStockForSearchstring(searchstring):
     sqlArgs = {}
-    for req in Stock.__comparisonPositives__:
+    for req in ['name', 'yahoo_symbol', 'isin']:
         sqlArgs[req] = searchstring+'%'
     return Stock.getByColumns(sqlArgs,operator=" OR ",operator2=' LIKE ', create=True)
 

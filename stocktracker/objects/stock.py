@@ -22,7 +22,7 @@ class Stock(SQLiteEntity):
                    'change': 'FLOAT',
                    'sector': Sector
                   }
-    __comparisonPositives__ = ['yahoo_symbol', 'isin', 'name']
+    __comparisonPositives__ = ['yahoo_symbol']
     __defaultValues__ = {
                          'isin':'',
                          'exchange':None,
