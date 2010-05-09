@@ -52,6 +52,7 @@ class SingleISINSpider(BaseSpider, FinanzpartnerSpider):
     def __init__(self, isin):
         self.start_urls = [u+isin+"/" for u in self.start_urls]
         self.parse = self.parse_fonds_page
+        BaseSpider.__init__(self)
     
 class AllFondsSpider(CrawlSpider, FinanzpartnerSpider):
     
