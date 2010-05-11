@@ -1,0 +1,7 @@
+[stocktracker Plugin]
+Module=helloworld
+Name=Hello World
+Description=Plugin Description goes here. Hello World!
+Authors=Wolfgang
+Version=0.0.1
+Enabled=False

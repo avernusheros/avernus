@@ -12,7 +12,7 @@ if __name__ == '__main__':
 
 
 import gtk,os #, gobject
-from stocktracker import pubsub, updater, logger
+from stocktracker import pubsub, updater, logger, plugin_api
 from stocktracker.gui import dialogs, chart_tab
 from stocktracker.gui.positions_tab import PositionsTab
 from stocktracker.gui.overview_tab import OverviewTab
@@ -22,6 +22,7 @@ from stocktracker.gui.transactions_tab import TransactionsTab
 from stocktracker.gui.indexpositions_tab import IndexPositionsTab
 from stocktracker.gui.news_tab import NewsTab
 from stocktracker.gui.container_overview_tab import ContainerOverviewTab
+from stocktracker.gui.plugin_manager import PluginManager
 from webbrowser import open as web
 import stocktracker
 from stocktracker.objects import model
@@ -59,6 +60,7 @@ class MenuBar(gtk.MenuBar):
         tools_menu_items = ((_('Update all stocks') , gtk.STOCK_REFRESH, self.on_update),
                             (_('Reload stocks from yahoo'), gtk.STOCK_REFRESH, lambda x: stocktracker.objects.controller.load_stocks()), 
                             (_('Add a stock'), gtk.STOCK_ADD, self.on_add),
+                            (_('Plugin Manager'), None, parent.on_plugin_manager)
                             #FIXME
                             #(_("Merge two positions"), gtk.STOCK_CONVERT, self.on_merge),
                            )                   
@@ -71,15 +73,19 @@ class MenuBar(gtk.MenuBar):
                            )
 
         filemenu = gtk.MenuItem(_("Stocktracker"))
+        filemenu.mname = "Stocktracker"
         filemenu.set_submenu(self.build_menu(file_menu_items))
         
         editmenu = gtk.MenuItem(_('Edit'))
+        editmenu.mname = "Edit"
         editmenu.set_submenu(self.build_menu(edit_menu_items))
         
         toolsmenu = gtk.MenuItem(_('Tools'))
+        toolsmenu.mname = "Tools"
         toolsmenu.set_submenu(self.build_menu(tools_menu_items))
 
         helpmenu = gtk.MenuItem(_("Help"))
+        helpmenu.mname = "Help"
         helpmenu.set_submenu(self.build_menu(help_menu_items))
 
         self.append(filemenu)
@@ -124,6 +130,8 @@ class MenuBar(gtk.MenuBar):
 class MainWindow(gtk.Window):
     def __init__(self):
         gtk.Window.__init__(self)
+        
+        self.api = plugin_api.PluginAPI(self)
         #self.set_title(__appname__)
 
         # Use two thirds of the screen by default
@@ -136,8 +144,8 @@ class MainWindow(gtk.Window):
         vbox = gtk.VBox()
         self.add(vbox)
         
-        #the main menu
-        vbox.pack_start(MenuBar(parent = self), expand=False, fill=False)
+        self.main_menu = MenuBar(parent = self)
+        vbox.pack_start(self.main_menu, expand=False, fill=False)
         
         hpaned = gtk.HPaned()
         hpaned.set_position(int(width*0.15))
@@ -211,6 +219,9 @@ class MainWindow(gtk.Window):
 
     def on_maintree_unselect(self):
         self.clear_notebook()
+    
+    def on_plugin_manager(self, *args):
+        PluginManager(self, self.pengine)
 
 def check_path(path):
     if not os.path.isdir(path):

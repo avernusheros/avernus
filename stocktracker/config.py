@@ -10,7 +10,7 @@ class project_path_not_found(Exception):
     pass
 
 def getdatapath():
-    """Retrieve foo data path
+    """Retrieve data path
 
     This path is by default <stocktracker_lib_path>/../data/ in trunk
     and /usr/share/stocktracker in an installed version but this path
@@ -29,8 +29,7 @@ def getdatapath():
     else:
         raise project_path_not_found
 
-
-
+plugins_path = [os.path.join(os.getcwd(), 'stocktracker/plugins')]
 config_path = os.path.join( os.getenv('HOME'), '.config/stocktracker')
 #media_path = os.path.join(getdatapath(), 'media')
 
