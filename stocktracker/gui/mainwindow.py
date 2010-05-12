@@ -131,7 +131,6 @@ class MainWindow(gtk.Window):
     def __init__(self):
         gtk.Window.__init__(self)
         
-        self.api = plugin_api.PluginAPI(self)
         #self.set_title(__appname__)
 
         # Use two thirds of the screen by default
@@ -222,7 +221,3 @@ class MainWindow(gtk.Window):
     
     def on_plugin_manager(self, *args):
         PluginManager(self, self.pengine)
-
-def check_path(path):
-    if not os.path.isdir(path):
-        os.mkdir(path)    

@@ -57,7 +57,8 @@ class StocktrackerConfig():
 
         if not self.parser.has_section('General'):
             self.parser.add_section('General')
-        
+        if not self.parser.has_section('Plugins'):
+            self.parser.add_section('Plugins')
         self.set_option('database file', os.path.join(config_path, 'stocktracker.db'))
         self.write()
 
@@ -70,4 +71,7 @@ class StocktrackerConfig():
             return self.parser.get(section, name)
 
     def set_option(self, name, value, section = 'General'):
+        if not self.parser.has_section(section):
+            self.parser.add_section(section)
         self.parser.set(section, name, value)
+        self.write()

@@ -61,7 +61,7 @@ class PluginManager(gtk.Dialog):
         row[1] = not row[1]
         if row[1]:
             plugin.enabled = True
-            self.pengine.activate_plugins([plugin], self.main_window.api)
+            self.pengine.activate_plugins([plugin])
         else:
             plugin.enabled = False
             self.pengine.deactivate_plugins([plugin])

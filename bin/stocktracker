@@ -20,6 +20,7 @@ sys.path.insert(0, os.path.dirname(fullPath))
 
 from stocktracker import config
 from stocktracker.plugin_engine import PluginEngine
+from stocktracker.plugin_api    import PluginAPI
 
 def init_translations():
     import locale
@@ -69,27 +70,11 @@ def init_icons():
     gtk.window_set_default_icon_name('stocktracker')    
 
 
-def init_plugin_engine():
-    pengine = PluginEngine(config.plugins_path)
+def init_plugin_engine(api):
+    pengine = PluginEngine(config.plugins_path, api)
     pengine.load_plugins()
+    pengine.enable_from_config()
     return pengine
-    #FIXME
-    if len(pengine.plugins) > 0:
-        # checks the conf for user settings
-        if "plugins" in self.config:
-            if "enabled" in self.config["plugins"]:
-                plugins_enabled = self.config["plugins"]["enabled"]
-            if "disabled" in self.config["plugins"]:
-                plugins_disabled = self.config["plugins"]["disabled"]
-            for name, plugin in self.pengine.plugins.iteritems():
-                if name in plugins_enabled and name not in plugins_disabled:
-                    plugin.enabled = True
-                else:
-                    # plugins not explicitly enabled are disabled
-                    plugin.enabled = False
-    # initializes and activates each plugin (that is enabled)
-    pengine.activate_plugins(plugin_api)
-
     
 def start():
     init_translations()
@@ -107,7 +92,8 @@ def start():
     
     from stocktracker.gui.mainwindow import MainWindow    
     window = MainWindow()
-    window.pengine = init_plugin_engine()
+    api = PluginAPI(window)
+    window.pengine = init_plugin_engine(api)
     gtk.main()
 
 

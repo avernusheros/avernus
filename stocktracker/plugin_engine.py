@@ -5,7 +5,7 @@ import os
 import types
 
 from configobj import ConfigObj
-
+from stocktracker import config
 
 class Plugin(object):
     instance = None
@@ -29,7 +29,6 @@ class Plugin(object):
                 setattr(self, attr, info[field])
             except KeyError:
                 setattr(self, attr, [])
-        self.enabled = eval(info['Enabled'])
         self._load_module(module_path)
     
     def _get_active(self):
@@ -84,10 +83,12 @@ class Plugin(object):
 
 
 class PluginEngine():
-    def __init__(self, plugin_path):
+    def __init__(self, plugin_path, api):
         self.plugins = {}
+        self.api = api
         self.plugin_path = plugin_path
         self.initialized_plugins = []
+        self.config = config.StocktrackerConfig()
     
     def load_plugins(self):       
         plugin_info_files = []
@@ -101,31 +102,51 @@ class PluginEngine():
             p = Plugin(info["stocktracker Plugin"], self.plugin_path)
             self.plugins[p.module_name] = p
     
-    def get_active_plugins(self):
+    @property 
+    def active_plugins(self):
         plugins = filter(lambda (name,p): p.active, self.plugins.iteritems())
         return dict(plugins)
     
-    def get_inactive_plugins(self):
+    @property 
+    def inactive_plugins(self):
         plugins = filter(lambda (name,p): not p.active,
           self.plugins.iteritems())
         return dict(plugins)
     
-    def get_enabled_plugins(self):
+    @property 
+    def enabled_plugins(self):
         plugins = filter(lambda (name,p): p.enabled, self.plugins.iteritems())
         return dict(plugins)
     
-    def get_disabled_plugins(self):
+    @property 
+    def disabled_plugins(self):
         return dict(filter(lambda (name,p): not p.enabled,
           self.plugins.iteritems()))
     
-    def activate_plugins(self, plugins, api):
+    def activate_plugins(self, plugins):
         for plugin in plugins:
             if plugin.enabled and not plugin.error:
-                plugin.api = api
+                plugin.api = self.api
                 plugin.active = True
+        self.save_to_config()
                 
     def deactivate_plugins(self, plugins):
         for plugin in plugins:
             if not plugin.enabled:
                 plugin.active = False
+        self.save_to_config()
+    
+    def save_to_config(self):
+        self.config.set_option('enabled', self.enabled_plugins, section = 'Plugins')
+
+    def enable_from_config(self):
+        if len(self.plugins) > 0:
+            enabled = self.config.get_option('enabled', section='Plugins')
+            if enabled:
+                for name, plugin in self.plugins.iteritems():
+                    if name in enabled:
+                        plugin.enabled = True
+                    else:
+                        plugin.enabled = False
+                self.activate_plugins(self.enabled_plugins.values())
     
