@@ -20,3 +20,10 @@ class PluginAPI():
                 if sm == item:
                     child.get_submenu().remove(item)
                     
+    def add_tab(self, item, name, categories):
+        for cat in categories:
+            self.main_window.tabs[cat].append((item, name))           
+
+    def remove_tab(self, item, name, categories):
+        for cat in categories:
+            self.main_window.tabs[cat].remove((item, name))

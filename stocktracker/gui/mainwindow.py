@@ -20,7 +20,6 @@ from stocktracker.gui.left_pane import MainTreeBox, Category
 from stocktracker.gui.dividends_tab import DividendsTab
 from stocktracker.gui.transactions_tab import TransactionsTab
 from stocktracker.gui.indexpositions_tab import IndexPositionsTab
-from stocktracker.gui.news_tab import NewsTab
 from stocktracker.gui.container_overview_tab import ContainerOverviewTab
 from stocktracker.gui.plugin_manager import PluginManager
 from webbrowser import open as web
@@ -162,6 +161,17 @@ class MainWindow(gtk.Window):
         pubsub.subscribe('maintree.select', self.on_maintree_select)
         pubsub.subscribe('maintree.unselect', self.on_maintree_unselect)
         
+        self.tabs = {}
+        self.tabs['Portfolio'] = [(PositionsTab, 'Positions'), 
+                                  (TransactionsTab, 'Transaction'),
+                                  (chart_tab.ChartTab, 'Charts')]
+        self.tabs['Watchlist'] = [(PositionsTab, 'Positions')]
+        self.tabs['Tag']       = [(PositionsTab, 'Positions'),
+                                  (TransactionsTab, 'Transactions'),
+                                  (chart_tab.ChartTab, 'Charts')]
+        self.tabs['Index']     = [(IndexPositionsTab, 'Positions')]
+        self.tabs['Category']  = [(ContainerOverviewTab, 'Overview')]    
+        
         #display everything    
         self.show_all()
         
@@ -190,31 +200,8 @@ class MainWindow(gtk.Window):
             
     def on_maintree_select(self, item):
         self.clear_notebook()
-        type = None
-        if item.__name__ == 'Portfolio':
-            type = "portfolio"
-        elif item.__name__ == 'Tag':
-            type = "tag"
-        elif item.__name__ == 'Watchlist':
-            type = "watchlist"
-        elif item.__name__ == 'Index':
-            type = "index"
-        elif item.__name__ == 'Category':
-            type = "category"
-        if type == "portfolio" or type == "tag" or type == "watchlist":
-            #self.notebook.append_page(OverviewTab(item), gtk.Label(_('Overview')))
-            self.notebook.append_page(PositionsTab(item), gtk.Label(_('Positions')))
-        if type == "portfolio" or type == "tag": 
-            self.notebook.append_page(TransactionsTab(item), gtk.Label(_('Transactions')))
-            #FIXME
-            #self.notebook.append_page(DividendsTab(item), gtk.Label(_('Dividends')))
-            self.notebook.append_page(chart_tab.ChartTab(item), gtk.Label(_('Charts')))
-        if type == "index":
-            self.notebook.append_page(IndexPositionsTab(item), gtk.Label(_('Positions')))
-        if type == "category":
-            self.notebook.append_page(ContainerOverviewTab(item), gtk.Label(_('Overview')))
-        if not type == "category":
-            self.notebook.append_page(NewsTab(item), gtk.Label(_('News')))
+        for tab, name in self.tabs[item.__name__]:
+            self.notebook.append_page(tab(item), gtk.Label(name))
 
     def on_maintree_unselect(self):
         self.clear_notebook()

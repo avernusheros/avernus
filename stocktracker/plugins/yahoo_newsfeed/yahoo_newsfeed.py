@@ -1,16 +1,25 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 import gtk, feedparser
 from webbrowser import open as web
-from stocktracker.gui.gui_utils import Tree
+
+class Main():
+    def __init__(self):
+        pass
+    def activate(self):
+        self.api.add_tab(NewsfeedTab, 'News', ['Portfolio', 'Watchlist', 'Index', 'Tag'])
+                
+    def deactivate(self):
+        self.api.remove_tab(NewsfeedTab, 'News', ['Portfolio', 'Watchlist', 'Index', 'Tag'])
 
 
-class NewsTab(gtk.VBox):
+class NewsfeedTab(gtk.VBox):
+    
     def __init__(self, container):
         gtk.VBox.__init__(self)
         self.container = container
         self.tree = NewsTree()
-
         sw = gtk.ScrolledWindow()
         sw.set_property('hscrollbar-policy', gtk.POLICY_AUTOMATIC)
         sw.set_property('vscrollbar-policy', gtk.POLICY_AUTOMATIC)
@@ -18,7 +27,8 @@ class NewsTab(gtk.VBox):
         
         self.pack_start(sw)
         self.show_all()
-     
+    
+    #on select container on show 
     def show(self):
         symbols = ''
         for pos in self.container:
@@ -30,17 +40,21 @@ class NewsTab(gtk.VBox):
             self.tree.insert_item(item)
         
 
-class NewsTree(Tree):
+class NewsTree(gtk.TreeView):
     def __init__(self):
-        Tree.__init__(self)
+        gtk.TreeView.__init__(self)
         self.set_model(gtk.TreeStore(str, str))
-        col, cell = self.create_column("text", 0)
+        
+        column = gtk.TreeViewColumn("text")
+        self.append_column(column)
+        cell = gtk.CellRendererText()
         cell.props.wrap_width = 800
+        column.pack_start(cell, expand = True)
+        column.add_attribute(cell, "markup", 0)        
 
         self.set_rules_hint(True)
         self.set_headers_visible(False)
         self.connect('row-activated', self.on_row_activated)
-        #self.connect('cursor_changed', self.on_cursor_changed)
                 
     def insert_item(self, item):
         
