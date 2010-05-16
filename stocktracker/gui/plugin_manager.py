@@ -73,6 +73,7 @@ class PluginManager(gtk.Dialog):
         if (selection_iter and treestore):
             #Something is selected so get the object
             obj = treestore.get_value(selection_iter, 0)
+            self.on_selection(obj)
     
     def on_selection(self, obj):
         text = '<span size="x-large">' +obj.name+'</span>'+\
