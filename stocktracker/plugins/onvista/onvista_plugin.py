@@ -5,10 +5,11 @@ import gtk
 class OnvistaPlugin():
     
     def __init__(self):
-        self.menu_item = gtk.MenuItem("Hello World Plugin")
+        self.menu_item = gtk.MenuItem("Onvista")
         self.menu_item.connect('activate', self.on_menu_clicked)
 
     def activate(self):
+        print "activate..:"
         self.api.add_menu_item(self.menu_item, 'Tools')
                 
     def deactivate(self):
