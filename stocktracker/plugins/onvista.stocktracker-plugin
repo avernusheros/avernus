@@ -1,5 +1,5 @@
 [stocktracker Plugin]
-Module=onvista_plugin
+Module=onvista
 Name=Onvista
 Description=A Search Engine Plugin that uses scrapy to search onvista.de
 Authors=Bastian
