@@ -15,7 +15,7 @@ BOT_VERSION = '1.0'
 
 SPIDER_MODULES = ['finanzpartner.spiders']
 NEWSPIDER_MODULE = 'finanzpartner.spiders'
-DEFAULT_ITEM_CLASS = 'finanzpartner.items.FinanzpartnerItem'
+DEFAULT_ITEM_CLASS = 'finanzpartner.items.StockInfoItem'
 USER_AGENT = '%s/%s' % (BOT_NAME, BOT_VERSION)
 
-ITEM_PIPELINES = ['finanzpartner.pipelines.FinanzpartnerPipeline']
+ITEM_PIPELINES = ['finanzpartner.pipelines.PublishSearchResultItem']

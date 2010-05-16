@@ -5,7 +5,7 @@ from scrapy.selector import HtmlXPathSelector
 from scrapy.contrib.linkextractors.sgml import SgmlLinkExtractor
 from scrapy.http import Request
 
-from finanzpartner.items import FinanzpartnerItem
+from finanzpartner.items import StockInfoItem
 
 class FinanzpartnerSpider:
     
@@ -32,7 +32,7 @@ class FinanzpartnerSpider:
         sellLine = hxs.select('html/body/div[@class="page_margins"]/div[@class="page"]/div[@id="main"]/div[@id="col3"]/div[@id="col3_content"]/center/table[1]/tr[7]/td[2]/text()').extract()
         sellstring = sellLine[0]
         sellList = sellstring.split()
-        erg = FinanzpartnerItem()
+        erg = StockInfoItem()
         erg['name'] = name
         erg['ISIN'] = isin
         erg['WKN'] = wkn

@@ -5,7 +5,7 @@
 
 from scrapy.item import Item, Field
 
-class FinanzpartnerItem(Item):
+class StockInfoItem(Item):
     # define the fields for your item here like:
     name = Field()
     ISIN = Field()
@@ -14,3 +14,11 @@ class FinanzpartnerItem(Item):
     currency = Field()
     date = Field()
     sell = Field()
+    
+class OnvistaSearchStockItem(Item):
+    name = Field()
+    isin = Field()
+    wkn = Field()
+    exchange = Field()
+    date = Field()
+    rate = Field()
