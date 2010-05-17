@@ -93,10 +93,11 @@ class PluginEngine():
     def load_plugins(self):       
         plugin_info_files = []
         for path in self.plugin_path:
-            for f in os.listdir(path):
-                info_file = os.path.join(path, f)
-                if os.path.isfile(info_file) and f.endswith('.stocktracker-plugin'):
-                    plugin_info_files.append(info_file)
+            if os.path.exists(path):
+                for f in os.listdir(path):
+                    info_file = os.path.join(path, f)
+                    if os.path.isfile(info_file) and f.endswith('.stocktracker-plugin'):
+                        plugin_info_files.append(info_file)
         for info_file in plugin_info_files:
             info = ConfigObj(info_file)
             p = Plugin(info["stocktracker Plugin"], self.plugin_path)
