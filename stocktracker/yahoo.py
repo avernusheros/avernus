@@ -17,10 +17,7 @@ def __request(symbol, stat):
 
 
 def __get_symbols_from_stocks(stocks):
-    symbols = ''
-    for stock in stocks:
-        symbols+= stock.yahoo_symbol+'+'
-    return symbols.strip('+')
+    return '+'.join(s.yahoo_symbol for s in stocks)
 
 def update_stocks(stocks):
     symbols = __get_symbols_from_stocks(stocks)

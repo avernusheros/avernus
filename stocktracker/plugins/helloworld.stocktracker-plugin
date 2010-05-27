@@ -3,4 +3,4 @@ Module=helloworld
 Name=Hello World
 Description=Plugin Description goes here. Hello World!
 Authors=Wolfgang
-Version=0.0.1
+Version=0.2.0

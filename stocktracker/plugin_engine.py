@@ -31,6 +31,12 @@ class Plugin(object):
                 setattr(self, attr, [])
         self._load_module(module_path)
     
+    @property
+    def configurable(self):
+        if self.instance is None:
+            return False
+        else: return self.instance.configurable
+
     def _get_active(self):
         return self._active
     

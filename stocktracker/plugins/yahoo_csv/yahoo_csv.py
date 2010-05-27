@@ -1,0 +1,88 @@
+# -*- coding: utf-8 -*-
+
+import gtk
+
+class YahooCSV():
+    configurable = False
+    
+    def __init__(self):
+        self.name = 'yahoo'
+
+    def activate(self):
+        self.api.register_datasource(self, self.name)
+                
+    def deactivate(self):
+        self.api.deregister_datasource(self, self.name)
+        
+            
+    def __request(self, symbol, stat):
+        url = 'http://finance.yahoo.com/d/quotes.csv?s=%s&f=%s' % (symbol, stat)
+        logger.info(url)
+        return urlopen(url)
+        
+    def __get_symbols_from_stocks(stocks):
+        return '+'.join(s.yahoo_symbol for s in stocks)
+
+
+    def update_stocks(stocks):
+        symbols = __get_symbols_from_stocks(stocks)
+        s = 0
+        res = __request(symbols, 'l1d1d3c1')
+        for row in csv.reader(res):
+            if len(row) > 1:
+                if row[1] == 'N/A':
+                    s+=1
+                    continue 
+                try:
+                    stocks[s].price = float(row[0])
+                except Exception as e:
+                    logger.info(e)
+                    stocks[s].price = 0.0
+                try:
+                    date = datetime.strptime(row[1] + ' ' + row[2], '%m/%d/%Y %H:%M%p')
+                except Exception as e:
+                    logger.info(e)
+                    date = datetime.strptime(row[1], '%m/%d/%Y')
+                date = pytz.timezone('US/Eastern').localize(date)
+                stocks[s].date = date.astimezone(pytz.utc)
+                stocks[s].date = stocks[s].date.replace(tzinfo = None)
+                stocks[s].change = float(row[3])
+                s+=1
+                         
+    def get_info(symbol):
+        #name, isin, exchange, currency
+        for row in csv.reader(__request(symbol, 'nxc4')):
+            if len(row) < 2 or row[1] == 'N/A':
+                return None
+        return row[0], 'n/a', row[1], row[2]
+        
+    def _test_api(symbol):
+        for row in csv.reader(__request(symbol, 'nxc4n0n1n2n3n4')):
+            print row
+    
+    def update_historical_prices(stock, start_date, end_date):
+        """
+        Update historical prices for the given ticker symbol.
+        """
+        #FIXME should return tupel
+        from stocktracker.objects import controller
+        symbol = stock.yahoo_symbol
+        #print "fetch data", start_date, end_date
+        url = 'http://ichart.yahoo.com/table.csv?s=%s&' % symbol + \
+              'd=%s&' % str(start_date.month-1) + \
+              'e=%s&' % str(start_date.day) + \
+              'f=%s&' % str(start_date.year) + \
+              'g=d&' + \
+              'a=%s&' % str(end_date.month-1) + \
+              'b=%s&' % str(end_date.day) + \
+              'c=%s&' % str(end_date.year) + \
+              'ignore=.csv'
+        #print url
+        days = urlopen(url).readlines()
+        data = []
+        
+        for row in [day[:-2].split(',') for day in days[1:]]:
+            #print row[0]
+            dt = datetime.strptime(row[0], '%Y-%m-%d').date()
+            controller.newQuotation(date=dt, stock=stock, open=float(row[1]), high=float(row[2])\
+                            , low=float(row[3]), close=float(row[6]), vol=int(row[5]))

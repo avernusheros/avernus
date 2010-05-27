@@ -90,10 +90,13 @@ def start():
     controller.createTables()
     controller.initialLoading()
     
-    from stocktracker.gui.mainwindow import MainWindow    
+    from stocktracker.gui.mainwindow import MainWindow
+    from stocktracker.datasource_manager import DatasourceManager
+    dsm = DatasourceManager()   
     window = MainWindow()
-    api = PluginAPI(window)
+    api = PluginAPI(window, dsm)
     window.pengine = init_plugin_engine(api)
+    window.datasource_manager = dsm
     gtk.main()
 
 

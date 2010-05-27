@@ -5,8 +5,9 @@ import gtk, feedparser
 from webbrowser import open as web
 
 class Main():
-    def __init__(self):
-        pass
+    
+    configurable = False
+
     def activate(self):
         self.api.add_tab(NewsfeedTab, 'News', ['Portfolio', 'Watchlist', 'Index', 'Tag'])
                 

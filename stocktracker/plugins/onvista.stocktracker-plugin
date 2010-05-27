@@ -4,3 +4,4 @@ Name=Onvista
 Description=A Search Engine Plugin that uses scrapy to search onvista.de
 Authors=Bastian
 Version=0.0.1b
+Dependencies=scrapy,
