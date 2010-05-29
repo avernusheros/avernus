@@ -8,4 +8,9 @@ import sys
 sys.path.append("finanzpartner")
 #import the execute function and invoke it with the appropriate commands
 from scrapy.command.cmdline import execute
-execute(['start.py','crawl','finanzpartner.de'])
+
+def onvista_search(string, only = True):
+    from finanzpartner.spiders import onvistaSpider
+    onvistaSpider.SPIDER.schedule_search(string, only=only)
+    execute(['start.py','crawl','onvista.de'])
+#execute(['start.py','crawl','finanzpartner.de'])
