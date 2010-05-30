@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-import datetime
 from stocktracker.objects import model
 from stocktracker.objects.model import SQLiteEntity, Meta
 from stocktracker.objects.container import Portfolio, Watchlist, Index, Tag
@@ -14,6 +13,7 @@ from stocktracker.objects.sector import Sector
 from stocktracker import updater
 from stocktracker import pubsub
 from stocktracker import logger 
+import datetime
 import gobject
 import threading
 import time
@@ -30,6 +30,7 @@ initialLoadingClasses = [Portfolio,Transaction,Tag,Watchlist,Index,Dividend,Sect
                          PortfolioPosition, WatchlistPosition, Exchange, Meta, Stock]
 
 version = 1
+datasource_manager = None
 
 def initialLoading():
     #first load all the objects from the database so that they are cached
@@ -265,6 +266,7 @@ def getStockForSearchstring(searchstring):
     sqlArgs = {}
     for req in ['name', 'yahoo_symbol', 'isin']:
         sqlArgs[req] = searchstring+'%'
+    datasource_manager.search(searchstring)
     return Stock.getByColumns(sqlArgs,operator=" OR ",operator2=' LIKE ', create=True)
 
 def getQuotationsFromStock(stock, start):

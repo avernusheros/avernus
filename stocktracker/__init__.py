@@ -5,7 +5,7 @@ __url__='https://launchpad.net/stocktracker'
 __authors__ = ['Wolfgang Steitz', 'Bastian Kennel']
 __mail__ = 'wsteitz(at)gmail.com'
 __copyright__ = '''\
-Copyright (c) 2008-2009
+Copyright (c) 2008-2010
 
 '''
 __license__='''\
@@ -18,4 +18,3 @@ This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 '''
-

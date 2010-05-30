@@ -150,7 +150,6 @@ class EditPositionTable(gtk.Table):
             self.pos.comment = buffer.get_text(buffer.get_start_iter(), buffer.get_end_iter())            
 
 
-
 class StockSelector(gtk.Table):
     def __init__(self):
         gtk.Table.__init__(self)

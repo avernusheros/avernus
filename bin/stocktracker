@@ -96,7 +96,7 @@ def start():
     window = MainWindow()
     api = PluginAPI(window, dsm)
     window.pengine = init_plugin_engine(api)
-    window.datasource_manager = dsm
+    controller.datasource_manager = dsm
     gtk.main()
 
 
