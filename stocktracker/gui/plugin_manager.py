@@ -17,17 +17,27 @@ class PluginManager(gtk.Dialog):
         vbox = self.get_content_area()
         
         self.tree = gui_utils.Tree()
-        self.tree.set_model(gtk.TreeStore(object, bool, str, bool))
+        self.tree.set_model(gtk.TreeStore(object, bool, str, str, bool))
         self.tree.set_rules_hint(True)
         
         cell = gtk.CellRendererToggle()
         cell.connect("toggled", self.on_toggled)
-        column = gtk.TreeViewColumn(None,cell, activatable=3) 
+        column = gtk.TreeViewColumn(None,cell, activatable=4) 
         column.add_attribute(cell, "active", 1)
         self.tree.append_column(column)
         
-        col, cell = self.tree.create_column('Name', 2)
-        col.set_cell_data_func(cell, self._plugin_markup)
+        column = gtk.TreeViewColumn()
+        cell = gtk.CellRendererPixbuf()
+        column.pack_start(cell, expand = False)
+        column.set_attributes(cell, icon_name=2)
+        column.set_cell_data_func(cell, self._plugin_markup)
+
+        cell = gtk.CellRendererText()
+        column.pack_start(cell, expand = True)
+        column.add_attribute(cell, "markup", 3)
+        column.set_cell_data_func(cell, self._plugin_markup)
+        self.tree.append_column(column)
+        
         self.tree.set_headers_visible(False)
         self.tree.connect('cursor-changed', self.on_cursor_changed)
         vbox.pack_start(self.tree, expand = False)
@@ -53,7 +63,7 @@ class PluginManager(gtk.Dialog):
         self.destroy()
     
     def _plugin_markup(self, column, cell, store, iter):
-        cell.set_property('sensitive', store.get_value(iter,3))        
+        cell.set_property('sensitive', store.get_value(iter,4))        
         
     def _insert_plugins(self):
         self.tree.clear()
@@ -63,7 +73,7 @@ class PluginManager(gtk.Dialog):
             if plugin.error:
                 text+='\nMissing dependencies: ' +\
                 "<small><b>%s</b></small>" % ', '.join(plugin.missing_modules)
-            iter = m.append(None, [plugin, plugin.enabled, text, not plugin.error])   
+            iter = m.append(None, [plugin, plugin.enabled, plugin.icon, text, not plugin.error])   
     
     def on_prefs_clicked(self, *args, **kwargs):
         self.selected_obj.instance.configure()            
@@ -74,6 +84,7 @@ class PluginManager(gtk.Dialog):
         d.set_name(pl.name)
         d.set_version(pl.version)
         #d.set_copyright()
+        d.set_logo_icon_name(pl.icon)
         description = pl.description
         if pl.error:
             description += '\n\nMissing dependencies: '+', '.join(pl.missing_modules)

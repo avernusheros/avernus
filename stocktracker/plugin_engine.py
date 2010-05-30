@@ -11,6 +11,7 @@ class Plugin(object):
     instance = None
     enabled = False
     error = False
+    icon = 'gtk-add'
     _active = False
     missing_modules = []
     
