@@ -19,6 +19,10 @@ class OnvistaSearchStockItem(Item):
     name = Field()
     isin = Field()
     wkn = Field()
-    exchange = Field()
+    rate = Field()
+    currency = Field()
+    
+class OnvistaHistoricalRateItem(Item):
+    wkn = Field()
     date = Field()
     rate = Field()
