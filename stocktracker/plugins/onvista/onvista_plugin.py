@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import gtk
+from stocktracker.engine import engine
 
 class OnvistaPlugin():
     configurable = False
@@ -16,4 +17,4 @@ class OnvistaPlugin():
         
     def search(self, searchstring):
         print "searching using ", self.name
-        
+        engine.onvista_search(searchstring)

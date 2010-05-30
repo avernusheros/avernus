@@ -1,8 +1,20 @@
 from scrapy.contrib.spiders import CrawlSpider, Rule
 from scrapy.selector import HtmlXPathSelector
 from scrapy.contrib.linkextractors.sgml import SgmlLinkExtractor
+from scrapy.spider import BaseSpider
 
 from finanzpartner.items import OnvistaSearchStockItem
+
+class OnvistaHistorySpider(BaseSpider):
+
+    domain_name = "onvista.de"
+    #http://fonds.onvista.de/kurshistorie.html?ID_NOTATION=4198043&RANGE=60M
+    #problem: WAS IST DIE NUMMER HINTER ID_NOTATION
+    start_urls = ["http://fonds.onvista.de/kurshistorie.html?ID_NOTATION=4198043&RANGE=60M"]
+
+    def parse(self, response):
+        self.log('Fonds page: %s' % response.url)
+        hxs = HtmlXPathSelector(response)
 
 class OnvistaSpider(CrawlSpider):
 
@@ -19,17 +31,17 @@ class OnvistaSpider(CrawlSpider):
             'ALL':'WKN,ISIN,Name',
             }
     start_urls = []
-    
+
     rules = (
              Rule(SgmlLinkExtractor(allow=('http://[^\\.]+\.onvista\.de/snapshot\.html\\?ID_OSI=\\d+',)), callback='detail_page_snapshot'),
              )
 
     search_URL ='http://www.onvista.de/suche.html?SELECTED_TOOL=%%TOOL%%&SEARCH_TEXT=%%MODE%%&SEARCH_VALUE=%%SEARCH%%&q.x=38&q.y=6&q=q'
-    
+
     def __init__(self):
         CrawlSpider.__init__(self)
         self.state = "SEARCH"
-    
+
     def schedule_search(self, value, tool='ALL', mode='ALL', only=True):
         url = self.search_URL.replace('%%TOOL%%',self.tools[tool])
         url = url.replace('%%MODE%%', self.modes[mode])
@@ -38,8 +50,8 @@ class OnvistaSpider(CrawlSpider):
             self.start_urls = [url]
         else:
             self.start_urls.append(url)
-        
-            
+
+
     def detail_page_snapshot(self, response):
         #self.log("Parsing Response from " + response.url)
         hxs = HtmlXPathSelector(response)
@@ -59,7 +71,7 @@ class OnvistaSpider(CrawlSpider):
         item['rate'] = kurs
         item['date'] = kursdatum
         return item
-        
-        
-SPIDER = OnvistaSpider()
-SPIDER.schedule_search("Telekom")
+
+SPIDER = OnvistaHistorySpider()
+#SPIDER = OnvistaSpider()
+#SPIDER.schedule_search("Telekom")
