@@ -76,6 +76,7 @@ class Plugin(object):
                     self.class_name = item.__dict__['__module__'].split('.')[1]
                     break
         except ImportError, e:
+            print e
             # load_module() failed, probably because of a module dependency
             if len(self.module_depends) > 0:
                 self._check_module_depends()
