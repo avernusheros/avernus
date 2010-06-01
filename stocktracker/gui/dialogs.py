@@ -181,8 +181,11 @@ class StockSelector(gtk.Table):
 
     def on_search(self, *args):
         self.result_tree.clear()
-        for item in controller.getStockForSearchstring(self.search_field.get_text()):
+        searchstring = self.search_field.get_text()
+        controller.datasource_manager.search(searchstring, self.insert_item)
+        for item in controller.getStockForSearchstring(searchstring):
             self.insert_item(item)
+    
         
     def insert_item(self, stock, icon='gtk-harddisk'):
         self.result_tree.get_model().append(None, [

@@ -264,7 +264,6 @@ def getStockForSearchstring(searchstring):
     sqlArgs = {}
     for req in ['name', 'yahoo_symbol', 'isin']:
         sqlArgs[req] = searchstring+'%'
-    datasource_manager.search(searchstring)
     return Stock.getByColumns(sqlArgs,operator=" OR ",operator2=' LIKE ', create=True)
 
 def getQuotationsFromStock(stock, start):

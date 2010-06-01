@@ -15,10 +15,17 @@ class DatasourceManager():
     def deregister(self, item, name):
         del self.sources[name]
         
-    def search(self, searchstring):
+    def search(self, searchstring, callback):
+        self.search_callback = callback
         for name, source in self.sources.iteritems():
             #if source has function search:
-                source.search(searchstring)
+                source.search(searchstring, self._item_found_callback)
+
+    def _item_found_callback(self, item, plugin):
+        print "item found from",plugin.name,'plugin': item
+        #FIXME
+        #create a stock object
+        #self.search_callback(stock_object, plugin.icon)
 
     def update_stocks(self, stocks):
         if len(stocks) == 0:
