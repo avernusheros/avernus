@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import gtk
-from stocktracker import pubsub, config, updater, logger
+from stocktracker import pubsub, config, logger
 from datetime import datetime
 from stocktracker.objects import controller
 from stocktracker.objects.exchange import Exchange
@@ -297,7 +297,7 @@ class AddStockDialog(gtk.Dialog):
         
     def on_symbol_entry(self, widget, event = None):
         symbol = self.symbol_entry.get_text()
-        stock_info = updater.get_info(symbol)
+        stock_info = controller.datasource_manager.get_info(symbol)
         if stock_info is not None:
             name, isin, exchange, currency = stock_info
             self.symbol_entry.set_icon_from_stock(1, gtk.STOCK_YES)

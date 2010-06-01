@@ -10,9 +10,8 @@ from stocktracker.objects.exchange import Exchange
 from stocktracker.objects.dividend import Dividend
 from stocktracker.objects.quotation import Quotation
 from stocktracker.objects.sector import Sector
-from stocktracker import updater
-from stocktracker import pubsub
-from stocktracker import logger 
+from stocktracker import pubsub, logger
+
 import datetime
 import gobject
 import threading
@@ -78,9 +77,8 @@ def load_fixtures():
         s = Sector(name=sname)
         s.insert()
 
-
 def update_all():
-    updater.update_stocks(getAllStock()+getAllIndex())
+    datasource_manager.update_stocks(getAllStock()+getAllIndex())
     for container in getAllPortfolio()+getAllWatchlist()+getAllIndex():
         container.last_update = datetime.datetime.now()
 
