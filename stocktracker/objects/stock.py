@@ -1,7 +1,6 @@
 from stocktracker.objects.model import SQLiteEntity
 from stocktracker.objects.exchange import Exchange
 from stocktracker.objects.sector import Sector
-from stocktracker import updater
 
 import datetime
 
@@ -52,9 +51,6 @@ class Stock(SQLiteEntity):
             return round(self.change * 100 / (self.price - self.change),2)
         except:
             return 0
-    
-    def update_price(self):
-        updater.update_stocks([self])
     
     def __str__(self):
         erg = self.name +' | '+self.isin+' | '

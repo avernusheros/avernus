@@ -1,9 +1,13 @@
 from stocktracker.objects.model import SQLiteEntity
 from stocktracker.objects.exchange import Exchange
 from stocktracker.objects.stock import Stock
+#FIXME why does the following import give an error
+#from stocktracker.objects import controller
 import controller
-from stocktracker import updater, pubsub
+from stocktracker import pubsub
+
 from datetime import datetime, date
+
 
 class Container(object):
 
@@ -64,10 +68,9 @@ class Container(object):
         return change, percent 
      
     def update_positions(self):
-        updater.update_stocks([pos.stock for pos in self])
+        controller.datasource_manager.update_stocks([pos.stock for pos in self])
         self.last_update = datetime.now()
         pubsub.publish("stocks.updated", self)
-
 
 class Portfolio(SQLiteEntity, Container):
 

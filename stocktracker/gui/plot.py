@@ -4,7 +4,6 @@ import gtk
 from datetime import date
 from stocktracker.cairoplot.gtkcairoplot import gtk_dot_line_plot, gtk_vertical_bar_plot
 from stocktracker.gui.gui_utils import get_green_red_string
-from stocktracker import updater
 from stocktracker.objects.quotation import Quotation
 from stocktracker.objects import controller
 
@@ -38,7 +37,7 @@ class Chart(gtk.VBox):
         self.current_chart = gtk.Label('Fetching data...')
         self.add(self.current_chart)
         self.current_zoom = 'YTD'
-        controller.GeneratorTask(updater.update_historical_prices, self.loop_callback, complete_callback=self.add_chart).start(stock)
+        controller.GeneratorTask(controller.datasource_manager.update_historical_prices, self.loop_callback, complete_callback=self.add_chart).start(stock)
         
     
     def loop_callback(self, *args, **kwargs):

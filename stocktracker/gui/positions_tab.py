@@ -300,7 +300,7 @@ class PositionsTree(Tree):
             for row in self.get_model():
                 item = row[0]
                 gain, gain_percent = item.gain
-                row[self.cols['last_price']] = get_price_string(item)
+                row[self.cols['last_price']] = get_price_string(item.stock)
                 row[self.cols['change']] = item.current_change[0]
                 row[self.cols['change_percent']] = item.current_change[1]
                 row[self.cols['gain']] = gain

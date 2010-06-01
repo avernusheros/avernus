@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import gtk
-from stocktracker import pubsub, config, updater, logger
+from stocktracker import pubsub, config, logger
 from datetime import datetime
 from stocktracker.objects import controller
 from stocktracker.objects.exchange import Exchange
@@ -181,8 +181,11 @@ class StockSelector(gtk.Table):
 
     def on_search(self, *args):
         self.result_tree.clear()
-        for item in controller.getStockForSearchstring(self.search_field.get_text()):
+        searchstring = self.search_field.get_text()
+        controller.datasource_manager.search(searchstring, self.insert_item)
+        for item in controller.getStockForSearchstring(searchstring):
             self.insert_item(item)
+    
         
     def insert_item(self, stock, icon='gtk-harddisk'):
         self.result_tree.get_model().append(None, [
@@ -297,7 +300,7 @@ class AddStockDialog(gtk.Dialog):
         
     def on_symbol_entry(self, widget, event = None):
         symbol = self.symbol_entry.get_text()
-        stock_info = updater.get_info(symbol)
+        stock_info = controller.datasource_manager.get_info(symbol)
         if stock_info is not None:
             name, isin, exchange, currency = stock_info
             self.symbol_entry.set_icon_from_stock(1, gtk.STOCK_YES)
