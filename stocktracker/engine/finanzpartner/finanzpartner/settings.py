@@ -9,13 +9,12 @@
 # 
 #     scrapy/conf/default_settings.py
 #
-
+EXTENSIONS_BASE = {}
 BOT_NAME = 'finanzpartner'
 BOT_VERSION = '1.0'
-
-SPIDER_MODULES = ['finanzpartner.spiders']
-NEWSPIDER_MODULE = 'finanzpartner.spiders'
-DEFAULT_ITEM_CLASS = 'finanzpartner.items.StockInfoItem'
+SPIDER_MODULES = ['stocktracker.engine.finanzpartner.finanzpartner.spiders']
+NEWSPIDER_MODULE = 'stocktracker.engine.finanzpartner.finanzpartner.spiders'
+DEFAULT_ITEM_CLASS = 'stocktracker.engine.finanzpartner.finanzpartner.items.StockInfoItem'
 USER_AGENT = '%s/%s' % (BOT_NAME, BOT_VERSION)
 
-ITEM_PIPELINES = ['finanzpartner.pipelines.PublishSearchResultItem']
+ITEM_PIPELINES = ['stocktracker.engine.finanzpartner.finanzpartner.pipelines.PublishSearchResultItem']
