@@ -15,6 +15,6 @@ class OnvistaPlugin():
     def deactivate(self):
         self.api.deregister_datasource(self, self.name)
         
-    def search(self, searchstring):
+    def search(self, searchstring, callback):
         print "searching using ", self.name
-        engine.onvista_search(searchstring)
+        engine.onvista_search(searchstring, callback)

@@ -57,6 +57,10 @@ class OnvistaSpider(CrawlSpider):
     def __init__(self):
         CrawlSpider.__init__(self)
         self.state = "SEARCH"
+        self.callback = None
+        
+    def setCallback(self, cb):
+        self.callback = cb
 
     def schedule_search(self, value, mode='ALL', only=True):
         url = self.search_URL
@@ -69,7 +73,7 @@ class OnvistaSpider(CrawlSpider):
 
 
     def detail_page_snapshot(self, response):
-        self.log("Parsing Response from " + response.url)
+        #self.log("Parsing Response from " + response.url)
         hxs = HtmlXPathSelector(response)
         name = hxs.select('html/body/div[@id="ONVISTA"]/table[@class="RAHMEN"]/tr/td[@class="WEBSEITE"]/div[@class="content"]/h2/text()').extract()
         #print "Name: ", name
@@ -88,7 +92,8 @@ class OnvistaSpider(CrawlSpider):
         item['isin'] = isin
         item['rate'] = rate
         item['currency'] = currency
-        yield item
+        if self.callback:
+            self.callback(item, self)
 
 #SPIDER = None
 #SPIDER = OnvistaHistorySpider("926200")

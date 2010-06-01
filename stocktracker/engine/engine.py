@@ -12,9 +12,10 @@ from scrapy.cmdline import execute
 
 from stocktracker.engine.finanzpartner.finanzpartner.spiders import onvistaSpider
 
-def onvista_search(string, only = True):
+def onvista_search(string, callback, only = True):
     spider = onvistaSpider.SPIDER
+    spider.setCallback(callback)
     spider.schedule_search(string, only=only)
-    execute(['start.py','crawl','onvista.de'])
+    execute(['start.py','crawl','onvistaSearch'])
     print "Finished Search"
 #execute(['start.py','crawl','finanzpartner.de'])
