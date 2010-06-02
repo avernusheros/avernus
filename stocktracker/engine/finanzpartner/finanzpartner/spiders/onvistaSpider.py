@@ -2,9 +2,9 @@ from scrapy.contrib.spiders import CrawlSpider, Rule
 from scrapy.selector import HtmlXPathSelector
 from scrapy.contrib.linkextractors.sgml import SgmlLinkExtractor
 from scrapy.spider import BaseSpider
-from scrapy.http import Request
+from scrapy.http import Request 
 
-from finanzpartner.items import OnvistaSearchStockItem, OnvistaHistoricalRateItem
+from stocktracker.engine.finanzpartner.finanzpartner.items import  OnvistaSearchStockItem, OnvistaHistoricalRateItem
 
 class OnvistaHistorySpider(BaseSpider):
 
@@ -41,7 +41,8 @@ class OnvistaHistorySpider(BaseSpider):
 
 class OnvistaSpider(CrawlSpider):
 
-    domain_name = "onvista.de"
+    name = "onvistaSearch"
+    allowed_domains = ['onvista.de']
     modes = {
             'ALL':'WKN,ISIN,Name',
             }
@@ -56,6 +57,10 @@ class OnvistaSpider(CrawlSpider):
     def __init__(self):
         CrawlSpider.__init__(self)
         self.state = "SEARCH"
+        self.callback = None
+        
+    def setCallback(self, cb):
+        self.callback = cb
 
     def schedule_search(self, value, mode='ALL', only=True):
         url = self.search_URL
@@ -74,10 +79,11 @@ class OnvistaSpider(CrawlSpider):
         #print "Name: ", name
         wkn = hxs.select('html/body/div[@id="ONVISTA"]/table[@class="RAHMEN"]/tr/td[@class="WEBSEITE"]/div[@class="content"]/table[@class="hgrau1"][1]/tr/td/table[@class="weiss"]/tr[@class="hgrau2"][1]/td[2]/text()').extract()
         isin = hxs.select('html/body/div[@id="ONVISTA"]/table[@class="RAHMEN"]/tr/td[@class="WEBSEITE"]/div[@class="content"]/table[@class="hgrau1"][1]/tr/td/table[@class="weiss"]/tr[@class="hgrau2"][2]/td[2]/text()').extract()
-        kurs = hxs.select('html/body/div[@id="ONVISTA"]/table[@class="RAHMEN"]/tr/td[@class="WEBSEITE"]/div[@class="content"]/table[@class="hgrau1"][2]/tr/td/table[@class="weiss"]/tr[@class="hgrau1"]/td/span[@class="g"]/text()').extract()
-        kursSearch = hxs.select('html/body/div[@id="ONVISTA"]/table[@class="RAHMEN"]/tr/td[@class="WEBSEITE"]/div[@class="content"]/div[@class="hp_50_l"]/div[@class="t"]/table[@class="weiss"]').extract()
+        kurs = hxs.select('html/body/div[@id="ONVISTA"]/table[@class="RAHMEN"]/tr/td[@class="WEBSEITE"]/div[@class="content"]/table[@class="hgrau1"][2]/tr/td/table[@class="weiss"]/tr[@class="hgrau1"]/td/span/text()').extract()
+        #kursSearch = hxs.select('html/body/div[@id="ONVISTA"]/table[@class="RAHMEN"]/tr/td[@class="WEBSEITE"]/div[@class="content"]/div[@class="hp_50_l"]/div[@class="t"]/table[@class="weiss"]').extract()
         #print "KursSearch: ", kursSearch
         #boerse = [unicode(kursinfo[0].partition("(")[2].partition(",")[0])]
+        #print kurs
         currency = [unicode(kurs[0][-3:])]
         rate = [unicode(kurs[0][:-4])] 
         item = OnvistaSearchStockItem()
@@ -86,8 +92,10 @@ class OnvistaSpider(CrawlSpider):
         item['isin'] = isin
         item['rate'] = rate
         item['currency'] = currency
-        return item
+        if self.callback:
+            self.callback(item, self)
 
-SPIDER = OnvistaHistorySpider("926200")
-#SPIDER = OnvistaSpider()
+#SPIDER = None
+#SPIDER = OnvistaHistorySpider("926200")
+SPIDER = OnvistaSpider()
 #SPIDER.schedule_search("multi invest")
