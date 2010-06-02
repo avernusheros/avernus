@@ -5,9 +5,6 @@ from stocktracker.engine import engine
 
 class OnvistaPlugin():
     configurable = False
-    
-    def __init__(self):
-        self.name = 'onvista.de'
 
     def activate(self):
         self.api.register_datasource(self, self.name)

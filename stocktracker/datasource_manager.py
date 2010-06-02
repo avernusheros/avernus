@@ -22,7 +22,7 @@ class DatasourceManager():
                 source.search(searchstring, self._item_found_callback)
 
     def _item_found_callback(self, item, plugin):
-        print "item found from",plugin.name,'plugin': item
+        print "item found from",plugin.name,'plugin:', item
         #FIXME
         #create a stock object
         #self.search_callback(stock_object, plugin.icon)
