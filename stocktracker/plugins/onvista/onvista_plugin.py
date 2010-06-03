@@ -39,7 +39,7 @@ class OnvistaPlugin():
             base = ssoup.html.body.find('div', {'id':'ONVISTA'}).find('table','RAHMEN').tr.find('td','WEBSEITE').find('div','content')
             name = base.h2.contents[0]
             isin = base.find('table','hgrau1').tr.td.find('table','weiss').findAll('tr','hgrau2')[1].findAll('td')[1].contents[0].replace('&nbsp;','')
-            callback([name,isin,'KAG'],self)
+            callback({'name':name,'isin':isin,'exchange':'KAG'},self)
         
 if __name__ == "__main__":
     plugin = OnvistaPlugin()

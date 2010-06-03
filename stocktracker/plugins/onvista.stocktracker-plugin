@@ -1,7 +1,7 @@
 [stocktracker Plugin]
 Module=onvista
 Name=Onvista
-Description=A Search Engine Plugin that uses scrapy to search onvista.de
+Description=A Search Engine Plugin that uses curl and beautifulsoup to search onvista.de for fonds
 Authors=Bastian
-Version=0.0.1b
-Dependencies=scrapy,
+Version=0.0.8b
+Dependencies=curl, python-beautifulsoup
