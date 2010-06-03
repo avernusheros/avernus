@@ -4,8 +4,8 @@ import gtk
 
 class helloWorldPlugin():
     prefs = {'text': "This is the hello world plugin"}
-    name = "HelloWorld"
     configurable = True
+    name = "HelloWorld"
     
     def __init__(self):
         self.menu_item = gtk.MenuItem("Hello World Plugin")
