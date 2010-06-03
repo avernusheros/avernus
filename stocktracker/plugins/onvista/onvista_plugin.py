@@ -11,18 +11,17 @@ class OnvistaPlugin():
 
     def activate(self):
         self.api.register_datasource(self, self.name)
-        
                         
     def deactivate(self):
         self.api.deregister_datasource(self, self.name)
         
     def curlURL(self, url):
         url = "'" + url.replace("'", "'\\''") + "'"
-        print url
+        #print url
         import os, tempfile
         fd, tempname = tempfile.mkstemp(prefix='scrape')
         command = 'curl --include --insecure --silent ' + url
-        print "Command: ", command
+        #print "Command: ", command
         os.system(command + ' > ' + tempname)
         reply = open(tempname).read()
         os.remove(tempname)
@@ -34,12 +33,13 @@ class OnvistaPlugin():
         soup = BeautifulSoup(self.curlURL(search_URL))
         linkTags = soup.findAll(attrs={'href' : re.compile('http://fonds\\.onvista\\.de/snapshot\\.html\?ID_INSTRUMENT=\d+')})
         links = [tag['href'] for tag in linkTags]
-        erg = []
         for link in links:
             snapshot = self.curlURL(link)
             ssoup = BeautifulSoup(snapshot)
-            name = ssoup.html.body.find('div', {'id':'ONVISTA'}).find('table','RAHMEN').tr.find('td','WEBSEITE').find('div','content').h2.contents[0]
-            print name
+            base = ssoup.html.body.find('div', {'id':'ONVISTA'}).find('table','RAHMEN').tr.find('td','WEBSEITE').find('div','content')
+            name = base.h2.contents[0]
+            isin = base.find('table','hgrau1').tr.td.find('table','weiss').findAll('tr','hgrau2')[1].findAll('td')[1].contents[0].replace('&nbsp;','')
+            callback([name,isin,'KAG'],self)
         
 if __name__ == "__main__":
     plugin = OnvistaPlugin()
