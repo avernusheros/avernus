@@ -1,29 +1,47 @@
 # -*- coding: utf-8 -*-
-
-import gtk
-from stocktracker.engine import engine
-from scrapy.core.manager import ExecutionManager
-from stocktracker.engine.finanzpartner.finanzpartner.spiders import onvistaSpider
+from BeautifulSoup import BeautifulSoup 
+import re
+    
 
 class OnvistaPlugin():
     configurable = False
     
     def __init__(self):
         self.name = 'onvista.de'
-        self.manager = ExecutionManager()
-        self.manager.configure()
 
     def activate(self):
         self.api.register_datasource(self, self.name)
-        
                         
     def deactivate(self):
         self.api.deregister_datasource(self, self.name)
         
+    def curlURL(self, url):
+        url = "'" + url.replace("'", "'\\''") + "'"
+        #print url
+        import os, tempfile
+        fd, tempname = tempfile.mkstemp(prefix='scrape')
+        command = 'curl --include --insecure --silent ' + url
+        #print "Command: ", command
+        os.system(command + ' > ' + tempname)
+        reply = open(tempname).read()
+        os.remove(tempname)
+        return reply
+        
     def search(self, searchstring, callback):
         print "searching using ", self.name
-        spider = onvistaSpider.SPIDER
-        spider.setCallback(callback)
-        spider.schedule_search(searchstring)
-        self.manager.queue.append_spider(spider)
-        self.manager.start()
+        search_URL ='http://www.onvista.de/suche.html?TARGET=snapshot&ID_TOOL=FUN&SEARCH_VALUE='+searchstring
+        soup = BeautifulSoup(self.curlURL(search_URL))
+        linkTags = soup.findAll(attrs={'href' : re.compile('http://fonds\\.onvista\\.de/snapshot\\.html\?ID_INSTRUMENT=\d+')})
+        links = [tag['href'] for tag in linkTags]
+        for link in links:
+            snapshot = self.curlURL(link)
+            ssoup = BeautifulSoup(snapshot)
+            base = ssoup.html.body.find('div', {'id':'ONVISTA'}).find('table','RAHMEN').tr.find('td','WEBSEITE').find('div','content')
+            name = base.h2.contents[0]
+            isin = base.find('table','hgrau1').tr.td.find('table','weiss').findAll('tr','hgrau2')[1].findAll('td')[1].contents[0].replace('&nbsp;','')
+            callback({'name':name,'isin':isin,'exchange':'KAG'},self)
+        
+if __name__ == "__main__":
+    plugin = OnvistaPlugin()
+    searchstring = "multi"
+    plugin.search(searchstring, lambda:None)

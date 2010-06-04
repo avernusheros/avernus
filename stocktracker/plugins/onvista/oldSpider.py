@@ -95,7 +95,7 @@ class OnvistaSpider(CrawlSpider):
         if self.callback:
             self.callback(item, self)
 
-#SPIDER = None
+SPIDER = None
 #SPIDER = OnvistaHistorySpider("926200")
-SPIDER = OnvistaSpider()
+#SPIDER = OnvistaSpider()
 #SPIDER.schedule_search("multi invest")
