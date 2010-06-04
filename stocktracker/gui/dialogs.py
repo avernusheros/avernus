@@ -157,21 +157,22 @@ class StockSelector(gtk.Table):
         self.search_field = gtk.Entry()
         self.search_field.connect('activate', self.on_search)
         self.search_field.set_icon_from_stock(1, gtk.STOCK_FIND)
-        self.attach(self.search_field,0,1,0,1)
+        self.attach(self.search_field,0,1,0,1,xoptions=gtk.FILL, yoptions=gtk.FILL)
         
         button = gtk.Button(label='search', stock='gtk-find')
-        self.attach(button,1,2,0,1)
+        self.attach(button,1,2,0,1,xoptions=gtk.FILL, yoptions=gtk.FILL)
         button.connect('clicked', self.on_search)
         
         sw = gtk.ScrolledWindow()
         sw.set_property('hscrollbar-policy', gtk.POLICY_NEVER)
         sw.set_property('vscrollbar-policy', gtk.POLICY_AUTOMATIC)
         self.result_tree = gui_utils.Tree()
-        self.result_tree.set_model(gtk.TreeStore(object,str, str, str,str))
+        self.result_tree.set_model(gtk.TreeStore(object,str, str, str,str,str))
         self.result_tree.create_icon_column(None, 1)
         self.result_tree.create_column(_('Name'), 2)
         self.result_tree.create_column('ISIN', 3)
         self.result_tree.create_column(_('Exchange'), 4)
+        self.result_tree.create_icon_column(_('Type'), 5)
         sw.add(self.result_tree)
         self.attach(sw, 0,2,1,2)
 
@@ -184,16 +185,17 @@ class StockSelector(gtk.Table):
         searchstring = self.search_field.get_text()
         controller.datasource_manager.search(searchstring, self.insert_item)
         for item in controller.getStockForSearchstring(searchstring):
-            self.insert_item(item)
-    
+            self.insert_item(item)    
         
     def insert_item(self, stock, icon='gtk-harddisk'):
+        icons = ['F', 'A']
         self.result_tree.get_model().append(None, [
                                        stock, 
                                        icon,
                                        stock.name,
                                        stock.isin,
-                                       stock.exchange.name
+                                       stock.exchange.name,
+                                       icons[stock.type]
                                        ])
 
 

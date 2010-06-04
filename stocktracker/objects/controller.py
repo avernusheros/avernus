@@ -42,6 +42,15 @@ def initialLoading():
         for obj in cl.getAll():
             logger.logger.debug("Loading Composites of Objekt: " + str(obj))
             obj.retrieveAllComposite()
+
+def is_duplicate(tp, **kwargs):
+    sqlArgs = {}
+    for req in tp.__comparisonPositives__:
+        sqlArgs[req] = kwargs[req]
+    present = tp.getByColumns(sqlArgs,operator=" OR ",create=True)
+    if present:
+        return True
+    else: return False
             
 def detectDuplicate(tp,**kwargs):
     #print tp, kwargs

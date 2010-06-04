@@ -381,10 +381,7 @@ class PositionsTree(Tree):
         gain = position.gain
         gain_icon = get_arrow_icon(gain[1])
         c_change = position.current_change
-        if position.stock.type == 0:
-            type_icon = 'F'
-        elif position.stock.type == 1:
-            type_icon = 'A'
+        icons = ['F', 'A']
         if self.container.cvalue == 0:
             change = 0
         else:
@@ -403,7 +400,7 @@ class PositionsTree(Tree):
                gain[1],
                gain_icon,
                c_change[1],
-               type_icon,
+               icons[position.stock.type],
                change]
             
     def insert_position(self, position):

@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
 from stocktracker.objects import controller
+from stocktracker.objects.exchange import Exchange
+from stocktracker.objects.stock import Stock
 import datetime
 
 
@@ -22,10 +24,26 @@ class DatasourceManager():
                 source.search(searchstring, self._item_found_callback)
 
     def _item_found_callback(self, item, plugin):
-        print "item found from",plugin.name,'plugin:', item
-        #FIXME
-        #create a stock object
-        #self.search_callback(stock_object, plugin.icon)
+        #FIXME check duplicate
+        exchange = controller.detectDuplicate(Exchange, name=item['exchange'])
+        if controller.is_duplicate(Stock,price=item['price'],\
+                            change=item['change'],\
+                            name=item['name'],\
+                            isin=item['isin'],\
+                            exchange=exchange,\
+                            type=item['type'],\
+                            yahoo_symbol=item['yahoo_symbol']):
+            return
+        stock = controller.newStock(price=item['price'],\
+                            change=item['change'],\
+                            name=item['name'],\
+                            isin=item['isin'],\
+                            exchange=exchange,\
+                            type=item['type'],\
+                            yahoo_symbol=item['yahoo_symbol']
+                            )
+        #FIXME use icon of plugin or maybe some 'web' icon
+        self.search_callback(stock, 'gtk-add')
 
     def update_stocks(self, stocks):
         if len(stocks) == 0:

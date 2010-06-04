@@ -38,8 +38,7 @@ class Chart(gtk.VBox):
         self.add(self.current_chart)
         self.current_zoom = 'YTD'
         controller.GeneratorTask(controller.datasource_manager.update_historical_prices, self.loop_callback, complete_callback=self.add_chart).start(stock)
-        
-    
+            
     def loop_callback(self, *args, **kwargs):
         pass
         

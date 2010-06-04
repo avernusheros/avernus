@@ -4,6 +4,8 @@ from urllib import urlopen
 import re
 
 
+TYPES = ['Fond', 'Aktie']
+
 class YahooSearch():
     configurable = False
     name = "yahoo search"
@@ -23,6 +25,8 @@ class YahooSearch():
         return urlopen(url)
     
     def __parse(self, doc):
+        #1. beatifull soup does not like this part of the html file
+        #2. remove newlines
         my_massage = [(re.compile('OPTION VALUE=>---------------------<'), ''), \
                       (re.compile('\n'), '')]
         soup = BeautifulSoup(doc, markupMassage=my_massage)
@@ -35,16 +39,20 @@ class YahooSearch():
                         if s is not None and s!=unicode(''):
                             item.append(s)
                     if len(item) == 12:
-                        self.callback(self.__to_dict(item[:-2]), self)
-                
+                        item = self.__to_dict(item[:-2])
+                        if item is not None:
+                            self.callback(item, self)
+                    
     def __to_dict(self, item):
+        if not item[5] in TYPES:
+            return None
         res = {}
         res['name']         = item[0]
         res['yahoo_symbol'] = item[1]
         res['isin']         = item[2]
         res['wkn']          = item[3]
         res['exchange']     = item[4]
-        res['type']         = item[5]
+        res['type']         = TYPES.index(item[5])
         res['price']        = item[6]
         res['time']         = item[7]
         res['change']       = item[8]
