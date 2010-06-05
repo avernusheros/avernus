@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
 from BeautifulSoup import BeautifulSoup 
+from BeautifulSoup import NavigableString
 import re
     
+    
+TYPE = 0
 
 class OnvistaPlugin():
     configurable = False
@@ -29,6 +32,7 @@ class OnvistaPlugin():
         
     def search(self, searchstring, callback):
         print "searching using ", self.name
+        exchangeBlacklist = ['KAG-Kurs','Summe:','Realtime-Kurse','Neartime-Kurse', 'Leider stehen zu diesem Fonds keine Informationen zur Verfügung.']
         search_URL ='http://www.onvista.de/suche.html?TARGET=snapshot&ID_TOOL=FUN&SEARCH_VALUE='+searchstring
         soup = BeautifulSoup(self.curlURL(search_URL))
         linkTags = soup.findAll(attrs={'href' : re.compile('http://fonds\\.onvista\\.de/snapshot\\.html\?ID_INSTRUMENT=\d+')})
@@ -39,9 +43,49 @@ class OnvistaPlugin():
             base = ssoup.html.body.find('div', {'id':'ONVISTA'}).find('table','RAHMEN').tr.find('td','WEBSEITE').find('div','content')
             name = base.h2.contents[0]
             isin = base.find('table','hgrau1').tr.td.find('table','weiss').findAll('tr','hgrau2')[1].findAll('td')[1].contents[0].replace('&nbsp;','')
-            callback({'name':name,'isin':isin,'exchange':'KAG'},self)
+            kagKursText = base.find('span','KURSRICHTUNG').findNextSibling('span').contents[0]
+            kagKursCurrency = kagKursText[-3:]
+            kagKurs = kagKursText[:-3].replace('&nbsp;','')
+            kagDateText = base.find('div',{'id':'KURSINFORMATIONEN'}).find('div','sm').contents[0]
+            kagDateTimeBase = kagDateText.partition('(')[2].partition(';')[2]
+            kagDate = kagDateTimeBase.partition(',')[0]
+            kagTime = kagDateTimeBase.partition(';')[2].partition(')')[0]
+            print "Returning KAG"
+            callback({'name':name,'isin':isin,'exchange':'KAG','price':kagKurs,
+                      'date':kagDate,'time':kagTime,'change':kagKursCurrency,
+                      'type':TYPE,'yahoo_symbol':'FURZ'}
+            ,self)
+            kurslink = ssoup.find(attrs={'href':re.compile('http://fonds\\.onvista\\.de/kurse\\.html')})['href']
+            kursPage = self.curlURL(kurslink)
+            kursSoup = BeautifulSoup(kursPage)
+            tableRows = kursSoup.find('table','weiss abst').findAll('tr')
+            for row in tableRows:
+                tds = row.findAll('td')
+                if len(tds)>0:
+                    exchangeTag = tds[0]
+                    if not exchangeTag.contents[0] in exchangeBlacklist:
+                        exchange = ""
+                        #print type(exchangeTag.contents[0])
+                        if not isinstance(exchangeTag.contents[0], NavigableString):
+                            exchange = exchangeTag.a.contents[0]
+                        else:
+                            exchange = exchangeTag.contents[0]
+                        currencyTag = tds[1]
+                        currency = currencyTag.contents[0]
+                        buyPrice = tds[3].contents[0]
+                        sellPrice = tds[6].contents[0]
+                        day = tds[8].contents[0]
+                        timeOfDay = tds[9].contents[0]
+                        volume = tds[12].contents[0]
+                        #print name, isin, exchange, currency, buyPrice,sellPrice,day,timeOfDay,volume
+                        print "Returning ",exchange
+                        callback({'name':name,'isin':isin,'exchange':exchange,
+                                  'change':currency,'price':buyPrice,'sell':sellPrice,
+                                  'date':day,'time':timeOfDay,'volume':volume,
+                                  'type':TYPE,'yahoo_symbol':'FURZ'}
+                        ,self)
         
 if __name__ == "__main__":
     plugin = OnvistaPlugin()
-    searchstring = "multi"
-    plugin.search(searchstring, lambda:None)
+    searchstring = "emerging"
+    plugin.search(searchstring, lambda a,b:None)

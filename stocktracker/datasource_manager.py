@@ -32,7 +32,8 @@ class DatasourceManager():
                             isin=item['isin'],\
                             exchange=exchange,\
                             type=item['type'],\
-                            yahoo_symbol=item['yahoo_symbol']):
+                            yahoo_symbol=item['yahoo_symbol']
+                            ):
             return
         stock = controller.newStock(price=item['price'],\
                             change=item['change'],\
