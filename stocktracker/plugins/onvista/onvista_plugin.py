@@ -50,10 +50,11 @@ class OnvistaPlugin():
             kagDateTimeBase = kagDateText.partition('(')[2].partition(';')[2]
             kagDate = kagDateTimeBase.partition(',')[0]
             kagTime = kagDateTimeBase.partition(';')[2].partition(')')[0]
+            kagChange = base.findAll('table','hgrau1')[3].tr.td.find('table','weiss').findAll('tr','hgrau2')[1].findAll('td')[1].span.contents[0]
             print "Returning KAG"
             callback({'name':name,'isin':isin,'exchange':'KAG','price':kagKurs,
-                      'date':kagDate,'time':kagTime,'change':kagKursCurrency,
-                      'type':TYPE,'yahoo_symbol':'FURZ'}
+                      'date':kagDate,'time':kagTime,'currency':kagKursCurrency,
+                      'type':TYPE,'change':kagChange,'yahoo_symbol':'FURZ'}
             ,self)
             kurslink = ssoup.find(attrs={'href':re.compile('http://fonds\\.onvista\\.de/kurse\\.html')})['href']
             kursPage = self.curlURL(kurslink)
@@ -77,12 +78,16 @@ class OnvistaPlugin():
                         day = tds[8].contents[0]
                         timeOfDay = tds[9].contents[0]
                         volume = tds[12].contents[0]
+                        change = tds[14]
+                        if change.span:
+                            change = change.span
+                        change = change.contents[0]
                         #print name, isin, exchange, currency, buyPrice,sellPrice,day,timeOfDay,volume
                         print "Returning ",exchange
                         callback({'name':name,'isin':isin,'exchange':exchange,
-                                  'change':currency,'price':buyPrice,'sell':sellPrice,
+                                  'currency':currency,'price':buyPrice,'sell':sellPrice,
                                   'date':day,'time':timeOfDay,'volume':volume,
-                                  'type':TYPE,'yahoo_symbol':'FURZ'}
+                                  'type':TYPE,'change':change,'yahoo_symbol':'FURZ'}
                         ,self)
         
 if __name__ == "__main__":
