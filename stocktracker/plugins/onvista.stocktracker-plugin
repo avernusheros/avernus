@@ -2,6 +2,6 @@
 Module=onvista
 Name=Onvista
 Description=A Search Engine Plugin that uses curl and beautifulsoup to search onvista.de for fonds
-Authors=Bastian
-Version=0.0.8b
+Authors=simpsus (bastian.kennel@gmail.com)
+Version=0.0.9b
 Dependencies=curl, python-beautifulsoup

@@ -90,7 +90,7 @@ class PluginManager(gtk.Dialog):
             description += '\n\nMissing dependencies: '+', '.join(pl.missing_modules)
         d.set_comments(description)
         #d.set_license()
-        d.set_authors(pl.authors)
+        d.set_authors([pl.authors])
         #d.set_website(pl.url)
         #d.set_logo_icon_name('stocktracker')        
         d.run()
