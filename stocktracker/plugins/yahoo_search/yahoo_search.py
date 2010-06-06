@@ -42,22 +42,33 @@ class YahooSearch():
                         item = self.__to_dict(item[:-2])
                         if item is not None:
                             self.callback(item, self)
+    
+    def __parse_price(self, pricestring):
+        if pricestring[-1] == '$':
+            price = pricestring[:-1]
+            cur = '$'
+        else:
+            price, cur = pricestring.strip(';').split('&')
+        return float(price), cur
+        
                     
     def __to_dict(self, item):
         if not item[5] in TYPES:
             return None
         res = {}
-        res['name']         = item[0]
-        res['yahoo_symbol'] = item[1]
-        res['isin']         = item[2]
-        res['wkn']          = item[3]
-        res['exchange']     = item[4]
-        res['type']         = TYPES.index(item[5])
-        res['price']        = item[6]
-        res['time']         = item[7]
-        res['change']       = item[8]
+        res['name']                   = item[0]
+        res['yahoo_symbol']           = item[1]
+        res['isin']                   = item[2]
+        res['wkn']                    = item[3]
+        res['exchange']               = item[4]
+        res['type']                   = TYPES.index(item[5])
+        res['price'], res['currency'] = self.__parse_price(item[6])
+        res['time']                   = item[7]
+        res['change']                 = item[8]
         return res
 
 if __name__ == '__main__':
+    def cb(item, plugin):
+        pass
     ys = YahooSearch()
-    ys.search('yahoo', None)
+    ys.search('yahoo', cb)
