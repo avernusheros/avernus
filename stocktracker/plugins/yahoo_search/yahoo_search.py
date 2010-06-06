@@ -46,7 +46,9 @@ class YahooSearch():
         else:
             price, cur = pricestring.strip(';').split('&')
         return float(price), cur
-        
+    
+    def __parse_change(self, changestring, price):
+        return price - (price*100 / (100 + float(changestring.strip('%'))))
                     
     def __to_dict(self, item):
         if not item[5] in TYPES:
@@ -59,8 +61,8 @@ class YahooSearch():
         res['exchange']               = item[4]
         res['type']                   = TYPES.index(item[5])
         res['price'], res['currency'] = self.__parse_price(item[6])
-        res['time']                   = item[7]
-        res['change']                 = item[8]
+        #res['time']                   = item[7]  #only time not date
+        res['change']                 = self.__parse_change(item[8], res['price'])
         res['volume']                 = int(item[9].replace(",", ""))
         return res
 
@@ -68,3 +70,4 @@ if __name__ == '__main__':
     ys = YahooSearch()
     for item in ys.search('yahoo'):
         print item
+        break

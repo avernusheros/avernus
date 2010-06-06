@@ -88,3 +88,13 @@ class YahooCSV():
             data.append((stock,dt,float(row[1]),float(row[2]),\
                         float(row[3]),float(row[6]), int(row[5])))
         return data
+
+
+if __name__ == '__main__':
+    class Stock():
+        yahoo_symbol = ''
+    s =Stock()
+    s.yahoo_symbol = 'GOOG'
+    y = YahooCSV()
+    y.update_stocks([s])
+    print s.change
