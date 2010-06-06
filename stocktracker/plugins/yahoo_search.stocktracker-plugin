@@ -3,4 +3,4 @@ Module=yahoo_search
 Name=Yahoo Search
 Description=A plugin to scrape results from yahoo finance search
 Authors=Wolfgang
-Version=0.2.1
+Version=0.3.0

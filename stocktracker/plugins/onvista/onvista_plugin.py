@@ -32,7 +32,7 @@ class OnvistaPlugin():
         os.remove(tempname)
         return reply
         
-    def search(self, searchstring, callback):
+    def search(self, searchstring):
         print "searching using ", self.name
         #blacklist to filter table rows that do not contain a price
         exchangeBlacklist = ['KAG-Kurs','Summe:','Realtime-Kurse','Neartime-Kurse', 'Leider stehen zu diesem Fonds keine Informationen zur Verfügung.']
@@ -64,10 +64,10 @@ class OnvistaPlugin():
             kagChange = kagChange.contents[0]
             #print "Returning KAG"
             # return the result with the kag price
-            callback({'name':name,'isin':isin,'exchange':'KAG','price':kagKurs,
+            yield ({'name':name,'isin':isin,'exchange':'KAG','price':kagKurs,
                       'date':kagDate,'time':kagTime,'currency':kagKursCurrency,
                       'type':TYPE,'change':kagChange,'yahoo_symbol':'FURZ'}
-            ,self)
+                ,self)
             #for the prices on the different stock exchanges, there is a detail page
             kurslink = ssoup.find(attrs={'href':re.compile('http://fonds\\.onvista\\.de/kurse\\.html')})['href']
             kursPage = self.curlURL(kurslink)
@@ -97,11 +97,11 @@ class OnvistaPlugin():
                         change = change.contents[0]
                         #print name, isin, exchange, currency, buyPrice,sellPrice,day,timeOfDay,volume
                         #print "Returning ",exchange
-                        callback({'name':name,'isin':isin,'exchange':exchange,
+                        yield ({'name':name,'isin':isin,'exchange':exchange,
                                   'currency':currency,'price':buyPrice,'sell':sellPrice,
                                   'date':day,'time':timeOfDay,'volume':volume,
                                   'type':TYPE,'change':change,'yahoo_symbol':'FURZ'}
-                        ,self)
+                            ,self)
         
 if __name__ == "__main__":
     plugin = OnvistaPlugin()

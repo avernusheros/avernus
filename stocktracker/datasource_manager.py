@@ -10,6 +10,7 @@ class DatasourceManager():
     
     def __init__(self):
         self.sources = {}
+        self.current_searches = []
 
     def register(self, item, name):
         self.sources[name] = item
@@ -18,10 +19,16 @@ class DatasourceManager():
         del self.sources[name]
         
     def search(self, searchstring, callback):
+        for search in self.current_searches:
+            search.stop()
+        self.current_searches = []
         self.search_callback = callback
         for name, source in self.sources.iteritems():
+            #FIXME
             #if source has function search:
-                source.search(searchstring, self._item_found_callback)
+                task = controller.GeneratorTask(source.search, self._item_found_callback)
+                self.current_searches.append(task)
+                task.start(searchstring)
 
     def _item_found_callback(self, item, plugin):
         exchange = controller.detectDuplicate(Exchange, name=item['exchange'])

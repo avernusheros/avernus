@@ -15,16 +15,13 @@ class YahooSearch():
                 
     def deactivate(self):
         self.api.deregister_datasource(self, self.name)
-            
-    def search(self, searchstring, callback):
-        self.callback = callback
-        self.__parse(self.__request(searchstring))
-    
+        
     def __request(self, searchstring):
         url = 'http://de.finsearch.yahoo.com/de/index.php?nm='+searchstring+'&tp=*&r=*&sub=Suchen'
         return urlopen(url)
-    
-    def __parse(self, doc):
+            
+    def search(self, searchstring):
+        doc = self.__request(searchstring)
         #1. beatifull soup does not like this part of the html file
         #2. remove newlines
         my_massage = [(re.compile('OPTION VALUE=>---------------------<'), ''), \
@@ -41,7 +38,7 @@ class YahooSearch():
                     if len(item) == 12:
                         item = self.__to_dict(item[:-2])
                         if item is not None:
-                            self.callback(item, self)
+                            yield (item, self)
     
     def __parse_price(self, pricestring):
         if pricestring[-1] == '$':
