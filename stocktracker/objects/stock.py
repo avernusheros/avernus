@@ -64,6 +64,10 @@ class Stock(SQLiteEntity):
         return self.stockinfo.type    
     
     @property
+    def sector(self):
+        return self.stockinfo.sector
+    
+    @property
     def country(self):
         return "N/A"
         #FIXME

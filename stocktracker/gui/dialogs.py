@@ -160,7 +160,7 @@ class StockSelector(gtk.Table):
         self.attach(self.search_field,0,1,0,1,xoptions=gtk.FILL, yoptions=gtk.FILL)
         
         button = gtk.Button(label='search', stock='gtk-find')
-        self.attach(button,1,2,0,1,xoptions=gtk.FILL, yoptions=gtk.FILL)
+        self.attach(button,1,2,0,1, xoptions=gtk.FILL, yoptions=gtk.FILL)
         button.connect('clicked', self.on_search)
         
         sw = gtk.ScrolledWindow()
@@ -173,6 +173,7 @@ class StockSelector(gtk.Table):
         self.result_tree.create_column('ISIN', 3)
         self.result_tree.create_column(_('Exchange'), 4)
         self.result_tree.create_icon_column(_('Type'), 5)
+        self.result_tree.set_size_request(300,300)
         sw.add(self.result_tree)
         self.attach(sw, 0,2,1,2)
 
@@ -197,6 +198,7 @@ class StockSelector(gtk.Table):
                                        stock.exchange.name,
                                        icons[stock.type]
                                        ])
+
 
 class SellDialog(gtk.Dialog):
     def __init__(self, pf, pos):
