@@ -24,9 +24,10 @@ class DatasourceManager():
         self.current_searches = []
         self.search_callback = callback
         for name, source in self.sources.iteritems():
-            #FIXME
-            #if source has function search:
-                task = controller.GeneratorTask(source.search, self._item_found_callback)
+            #check whether search function exists
+            func = getattr(source, "search", None)
+            if func:
+                task = controller.GeneratorTask(func, self._item_found_callback)
                 self.current_searches.append(task)
                 task.start(searchstring)
 
