@@ -3,7 +3,6 @@ from BeautifulSoup import BeautifulSoup
 from urllib import urlopen
 import re
 
-
 TYPES = ['Fonds', 'Aktie']
 
 class YahooSearch():
@@ -62,10 +61,10 @@ class YahooSearch():
         res['price'], res['currency'] = self.__parse_price(item[6])
         res['time']                   = item[7]
         res['change']                 = item[8]
+        res['volume']                 = int(item[9].replace(",", ""))
         return res
 
 if __name__ == '__main__':
-    def cb(item, plugin):
-        pass
     ys = YahooSearch()
-    ys.search('yahoo', cb)
+    for item in ys.search('yahoo'):
+        print item
