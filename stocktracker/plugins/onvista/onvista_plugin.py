@@ -2,9 +2,16 @@
 from BeautifulSoup import BeautifulSoup 
 from BeautifulSoup import NavigableString
 import re
-    
+from datetime import datetime 
     
 TYPE = 0
+
+def to_float(s):
+    return float(s.replace(',','.'))
+
+def to_datetime(date, time):
+    return datetime.strptime(date+time, "%d.%m.%Y%H:%M:%S")
+
 
 class OnvistaPlugin():
     configurable = False
@@ -53,19 +60,20 @@ class OnvistaPlugin():
             # the KAG kurs is on the snapshot page
             kagKursText = base.find('span','KURSRICHTUNG').findNextSibling('span').contents[0]
             kagKursCurrency = kagKursText[-3:]
-            kagKurs = kagKursText[:-3].replace('&nbsp;','')
+            kagKurs = to_float(kagKursText[:-3].replace('&nbsp;',''))
             kagDateText = base.find('div',{'id':'KURSINFORMATIONEN'}).find('div','sm').contents[0]
             kagDateTimeBase = kagDateText.partition('(')[2].partition(';')[2]
             kagDate = kagDateTimeBase.partition(',')[0]
             kagTime = kagDateTimeBase.partition(';')[2].partition(')')[0]
+            date = to_datetime(kagDate, kagTime)
             kagChange = base.findAll('table','hgrau1')[3].tr.td.find('table','weiss').findAll('tr','hgrau2')[1].findAll('td')[1]
             if kagChange.span:
                 kagChange = kagChange.span
-            kagChange = kagChange.contents[0]
+            kagChange = to_float(kagChange.contents[0])
             #print "Returning KAG"
             # return the result with the kag price
             yield ({'name':name,'isin':isin,'exchange':'KAG','price':kagKurs,
-                      'date':kagDate,'time':kagTime,'currency':kagKursCurrency,
+                      'date':date,'currency':kagKursCurrency,
                       'type':TYPE,'change':kagChange}
                 ,self)
             #for the prices on the different stock exchanges, there is a detail page
@@ -86,24 +94,25 @@ class OnvistaPlugin():
                             exchange = exchangeTag.contents[0]
                         currencyTag = tds[1]
                         currency = currencyTag.contents[0]
-                        buyPrice = tds[3].contents[0]
+                        buyPrice = to_float(tds[3].contents[0])
                         sellPrice = tds[6].contents[0]
-                        day = tds[8].contents[0]
-                        timeOfDay = tds[9].contents[0]
+                        date = to_datetime(tds[8].contents[0], tds[9].contents[0])
                         volume = tds[12].contents[0]
                         change = tds[14]
                         if change.span:
                             change = change.span
-                        change = change.contents[0]
+                        change = to_float(change.contents[0])
                         #print name, isin, exchange, currency, buyPrice,sellPrice,day,timeOfDay,volume
                         #print "Returning ",exchange
                         yield ({'name':name,'isin':isin,'exchange':exchange,
                                   'currency':currency,'price':buyPrice,'sell':sellPrice,
-                                  'date':day,'time':timeOfDay,'volume':volume,
+                                  'date':date,'volume':volume,
                                   'type':TYPE,'change':change}
                             ,self)
         
 if __name__ == "__main__":
     plugin = OnvistaPlugin()
     searchstring = "emerging"
-    plugin.search(searchstring, lambda a,b:None)
+    for item in plugin.search(searchstring):
+        print item
+        break

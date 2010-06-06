@@ -45,6 +45,8 @@ class YahooSearch():
             cur = '$'
         else:
             price, cur = pricestring.strip(';').split('&')
+            if cur == 'euro':
+                cur = 'EUR'
         return float(price), cur
     
     def __parse_change(self, changestring, price):
