@@ -14,7 +14,7 @@ from stocktracker import pubsub, logger
 
 import datetime
 import gobject
-import threading
+import threading, thread
 import time
 
 
