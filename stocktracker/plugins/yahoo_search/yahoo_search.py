@@ -4,7 +4,7 @@ from urllib import urlopen
 import re
 
 
-TYPES = ['Fond', 'Aktie']
+TYPES = ['Fonds', 'Aktie']
 
 class YahooSearch():
     configurable = False
