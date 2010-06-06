@@ -298,6 +298,10 @@ class SQLiteEntity(object):
         res = store.select(query,vals)
         if not create:
             return res
+        return cls.create_objects(res)
+        
+    @classmethod
+    def create_objects(cls, res):
         erg = []
         for row in res:
             if cache.isCached(cls,row[cls.__primaryKey__]):

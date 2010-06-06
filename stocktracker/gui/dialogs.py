@@ -183,9 +183,9 @@ class StockSelector(gtk.Table):
     def on_search(self, *args):
         self.result_tree.clear()
         searchstring = self.search_field.get_text()
-        controller.datasource_manager.search(searchstring, self.insert_item)
         for item in controller.getStockForSearchstring(searchstring):
             self.insert_item(item)    
+        controller.datasource_manager.search(searchstring, self.insert_item)
         
     def insert_item(self, stock, icon='gtk-harddisk'):
         icons = ['F', 'A']
@@ -198,38 +198,6 @@ class StockSelector(gtk.Table):
                                        icons[stock.type]
                                        ])
 
-
-class StockSelectorOld(gtk.Entry):
-    def __init__(self, stocks):
-        self.stocks = stocks
-        gtk.Entry.__init__(self)
-        self.completion = completion = gtk.EntryCompletion()
-        self.set_completion(completion)
-        self.model = liststore = gtk.ListStore(int, str)
-        completion.set_model(liststore)
-        completion.set_text_column(1)
-        i = 0
-        for stock in stocks:
-            liststore.append([i, str(stock)])       
-            i += 1
-        #completion.insert_action_text(4,'test')
-        #completion.insert_action_markup(4,'test')
-    
-        completion.set_match_func(self.match_func)
-        completion.connect("match-selected", self.on_completion_match)
-
-    def match_func(self, completion, key, iter):
-        stock = self.stocks[self.model[iter][0]]
-        key = key.lower()
-        if stock.name.lower().startswith(key)  \
-                or stock.yahoo_symbol.lower().startswith(key) \
-                or stock.isin.lower().startswith(key):
-            return True
-        return False
-
-    def on_completion_match(self, completion, model, iter):
-        self.selected_stock = self.stocks[model[iter][0]]
-        
 
 class AddStockDialog(gtk.Dialog):
     def __init__(self):

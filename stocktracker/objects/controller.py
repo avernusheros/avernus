@@ -5,7 +5,7 @@ from stocktracker.objects.model import SQLiteEntity, Meta
 from stocktracker.objects.container import Portfolio, Watchlist, Index, Tag
 from stocktracker.objects.transaction import Transaction
 from stocktracker.objects.position import PortfolioPosition, WatchlistPosition
-from stocktracker.objects.stock import Stock
+from stocktracker.objects.stock import Stock, StockInfo
 from stocktracker.objects.exchange import Exchange
 from stocktracker.objects.dividend import Dividend
 from stocktracker.objects.quotation import Quotation
@@ -20,13 +20,14 @@ import time
 
 modelClasses = [Portfolio, Transaction, Tag, Watchlist, Index, Dividend,
                 PortfolioPosition, WatchlistPosition, Exchange,
-                Quotation, Stock, Meta, Sector]
+                Quotation, Stock, StockInfo, Meta, Sector]
 
 #these classes will be loaded with one single call and will also load composite
 #relations. therefore it is important that the list is complete in the sense
 #that there are no classes holding composite keys to classes outside the list
 initialLoadingClasses = [Portfolio,Transaction,Tag,Watchlist,Index,Dividend,Sector,
-                         PortfolioPosition, WatchlistPosition, Exchange, Meta, Stock]
+                         PortfolioPosition, WatchlistPosition, Exchange,
+                         StockInfo, Meta, Stock]
 
 version = 1
 datasource_manager = None
@@ -47,7 +48,7 @@ def is_duplicate(tp, **kwargs):
     sqlArgs = {}
     for req in tp.__comparisonPositives__:
         sqlArgs[req] = kwargs[req]
-    present = tp.getByColumns(sqlArgs,operator=" OR ",create=True)
+    present = tp.getByColumns(sqlArgs,operator=" AND ",create=True)
     if present:
         return True
     else: return False
@@ -57,7 +58,7 @@ def detectDuplicate(tp,**kwargs):
     sqlArgs = {}
     for req in tp.__comparisonPositives__:
         sqlArgs[req] = kwargs[req]
-    present = tp.getByColumns(sqlArgs,operator=" OR ",create=True)
+    present = tp.getByColumns(sqlArgs,operator=" AND ",create=True)
     if present:
         if len(present) == 1:
             return present[0]
@@ -174,9 +175,14 @@ def newTag(name):
     result.insert()
     pubsub.publish('tag.created',result)
     return result
+ 
+def newStockInfo(**kwargs):
+    item = StockInfo(**kwargs)
+    item.insert()
+    return item
   
-def newStock(price=0.0, change=0.0, currency='', type=0, name='', isin='', date=datetime.datetime.now(), exchange=None, yahoo_symbol='',insert=True, sector=None):
-    result = Stock(id=None, price=price, currency=currency, type=type, name=name, isin=isin, change=change, date=date, exchange=exchange, yahoo_symbol=yahoo_symbol, sector=sector)
+def newStock(price=0.0, stockinfo=None, change=0.0, currency='', date=datetime.datetime.now(), exchange=None, yahoo_symbol='',insert=True):
+    result = Stock(id=None, price=price, currency=currency, change=change, date=date, exchange=exchange, yahoo_symbol=yahoo_symbol, stockinfo=stockinfo)
     if insert:
         result.insert()
     return result
@@ -270,10 +276,13 @@ def deleteAllPortfolioTransaction(portfolio):
         trans.delete() 
 
 def getStockForSearchstring(searchstring):
-    sqlArgs = {}
-    for req in ['name', 'yahoo_symbol', 'isin']:
-        sqlArgs[req] = searchstring+'%'
-    return Stock.getByColumns(sqlArgs,operator=" OR ",operator2=' LIKE ', create=True)
+    searchstring = "%"+searchstring+"%"
+    query = """SELECT stock.*
+FROM stockinfo, stock 
+WHERE stock.stockinfo = stockinfo.id 
+AND (stockinfo.isin LIKE ? OR stock.yahoo_symbol LIKE ? OR stockinfo.name LIKE ?)"""
+    res = model.store.select(query, (searchstring,searchstring,searchstring))
+    return Stock.create_objects(res)
 
 def getQuotationsFromStock(stock, start):
     erg = Quotation.getAllFromOneColumn('stock', stock.getPrimaryKey())

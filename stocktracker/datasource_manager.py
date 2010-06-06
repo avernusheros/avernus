@@ -2,7 +2,7 @@
 
 from stocktracker.objects import controller
 from stocktracker.objects.exchange import Exchange
-from stocktracker.objects.stock import Stock
+from stocktracker.objects.stock import Stock, StockInfo
 import datetime
 
 
@@ -24,22 +24,14 @@ class DatasourceManager():
                 source.search(searchstring, self._item_found_callback)
 
     def _item_found_callback(self, item, plugin):
-        #FIXME check duplicate
         exchange = controller.detectDuplicate(Exchange, name=item['exchange'])
-        if controller.is_duplicate(Stock,price=item['price'],\
-                            change=item['change'],\
-                            name=item['name'],\
-                            isin=item['isin'],\
-                            exchange=exchange,\
-                            type=item['type'],\
-                            yahoo_symbol=item['yahoo_symbol']):
+        stock_info = controller.detectDuplicate(StockInfo, isin=item['isin'], type=item['type'], name=item['name']) 
+        if controller.is_duplicate(Stock, exchange=exchange.id, stockinfo = stock_info.id):
             return
         stock = controller.newStock(price=item['price'],\
                             change=item['change'],\
-                            name=item['name'],\
-                            isin=item['isin'],\
                             exchange=exchange,\
-                            type=item['type'],\
+                            stockinfo = stock_info,\
                             yahoo_symbol=item['yahoo_symbol']
                             )
         #FIXME use icon of plugin or maybe some 'web' icon
