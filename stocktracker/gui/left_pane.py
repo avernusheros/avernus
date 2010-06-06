@@ -39,7 +39,7 @@ class MainTree(Tree):
 
         # Text Renderer
         renderer = gtk.CellRendererText()
-        column.pack_start(renderer, expand = True)
+        column.pack_start(renderer, expand = True)   
         column.add_attribute(renderer, "markup", 2)
         self.append_column(column)
         self.on_clear()
@@ -90,7 +90,8 @@ class MainTree(Tree):
         self.pf_iter = self.get_model().append(None, [Category('Portfolios'),'portfolios', _("<b>Portfolios</b>")])
         self.wl_iter = self.get_model().append(None, [Category('Watchlists'),'watchlists', _("<b>Watchlists</b>")])
         self.tag_iter = self.get_model().append(None, [Category('Tags'),'tags', _("<b>Tags</b>")])
-        self.index_iter = self.get_model().append(None, [Category('Indices'),'indices', _("<b>Indices</b>")])
+        #FIXME
+        #self.index_iter = self.get_model().append(None, [Category('Indices'),'indices', _("<b>Indices</b>")])
 
     def insert_watchlist(self, item):
         self.get_model().append(self.wl_iter, [item, 'watchlist', item.name])
@@ -166,7 +167,7 @@ class MainTreeToolbar(gtk.Toolbar):
         gtk.Toolbar.__init__(self)
         self.conditioned = []
         
-        button = gtk.ToolButton('gtk-add')
+        self.add_button = button = gtk.ToolButton('gtk-add')
         button.connect('clicked', self.on_add_clicked)
         button.set_tooltip_text('Add a new portfolio or watchlist') 
         self.insert(button,-1)
@@ -188,20 +189,26 @@ class MainTreeToolbar(gtk.Toolbar):
         self.on_unselect()
         pubsub.subscribe('maintree.unselect', self.on_unselect)
         pubsub.subscribe('maintree.select', self.on_select)
+        self.selected_type = None
          
     def on_unselect(self):
         for button in self.conditioned:
             button.set_sensitive(False)       
+        self.add_button.set_sensitive(False)
         
     def on_select(self, obj):
         if isinstance(obj, Category):
             self.on_unselect()
+            self.add_button.set_sensitive(True)
+            if obj.name == 'Portfolios':
+                self.selected_type = 'portfolio'
+            else: self.selected_type = 'watchlist'
         else:
             for button in self.conditioned:
                 button.set_sensitive(True)
              
     def on_add_clicked(self, widget):
-        NewContainerDialog()
+        NewContainerDialog(self.selected_type)
     
     def on_remove_clicked(self, widget):
         pubsub.publish('maintoolbar.remove')  
@@ -280,25 +287,17 @@ class EditPortfolio(gtk.Dialog):
 
 
 class NewContainerDialog(gtk.Dialog):
-    def __init__(self):
-        gtk.Dialog.__init__(self, _("Create..."), None
+    def __init__(self, type='portfolio'):
+        gtk.Dialog.__init__(self, _("Create new "+type), None
                             , gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
                      (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
                       gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
+        self.container_type = type
         vbox = self.get_content_area()
                
         hbox = gtk.HBox()
         vbox.pack_start(hbox)
-        self.radiobutton = button = gtk.RadioButton(None, _("Portfolio"))
-        hbox.pack_start(button, True, True, 0)
-        
-        button = gtk.RadioButton(button, _("Watchlist"))
-        hbox.pack_start(button, True, True, 0)
-               
-        #name entry
-        hbox = gtk.HBox()
-        vbox.pack_start(hbox)
-        label = gtk.Label(_('Name:'))
+        label = gtk.Label(type+_(' name:'))
         hbox.pack_start(label)
         self.name_entry = gtk.Entry()
         self.name_entry.set_text('unknown')
@@ -317,10 +316,10 @@ class NewContainerDialog(gtk.Dialog):
         if response == gtk.RESPONSE_ACCEPT:
             #grab the name
             name = self.name_entry.get_text()
-            if self.radiobutton.get_active():
+            if self.container_type == 'portfolio':
                 pf = controller.newPortfolio(name, cash=0.0)
                 pubsub.publish('portfolio.created', pf)
-            else:
+            elif self.container_type == 'watchlist':
                 wl = controller.newWatchlist(name)
                 pubsub.publish('watchlist.created', wl)
         self.destroy()

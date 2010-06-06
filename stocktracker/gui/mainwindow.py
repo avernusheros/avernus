@@ -57,8 +57,8 @@ class MenuBar(gtk.MenuBar):
                            (_("Preferences"),gtk.STOCK_PREFERENCES,self.on_pref),
                            )
         tools_menu_items = ((_('Update all stocks') , gtk.STOCK_REFRESH, self.on_update),
-                            (_('Reload stocks from yahoo'), gtk.STOCK_REFRESH, lambda x: stocktracker.objects.controller.load_stocks()), 
-                            (_('Add a stock'), gtk.STOCK_ADD, self.on_add),
+                            #FIXME maybe some plugin to load indices, remove old code
+                            #(_('Reload stocks from yahoo'), gtk.STOCK_REFRESH, lambda x: stocktracker.objects.controller.load_stocks()), 
                             (_('Plugin Manager'), None, parent.on_plugin_manager)
                             #FIXME
                             #(_("Merge two positions"), gtk.STOCK_CONVERT, self.on_merge),
@@ -117,9 +117,6 @@ class MenuBar(gtk.MenuBar):
     
     def on_update(self, widget):
         stocktracker.objects.controller.update_all()
-        
-    def on_add(self,widget):
-        dialogs.AddStockDialog()
         
     def on_pref(self, widget):
         dialogs.PrefDialog()
