@@ -66,7 +66,7 @@ class OnvistaPlugin():
             # return the result with the kag price
             yield ({'name':name,'isin':isin,'exchange':'KAG','price':kagKurs,
                       'date':kagDate,'time':kagTime,'currency':kagKursCurrency,
-                      'type':TYPE,'change':kagChange,'yahoo_symbol':'FURZ'}
+                      'type':TYPE,'change':kagChange}
                 ,self)
             #for the prices on the different stock exchanges, there is a detail page
             kurslink = ssoup.find(attrs={'href':re.compile('http://fonds\\.onvista\\.de/kurse\\.html')})['href']
@@ -100,7 +100,7 @@ class OnvistaPlugin():
                         yield ({'name':name,'isin':isin,'exchange':exchange,
                                   'currency':currency,'price':buyPrice,'sell':sellPrice,
                                   'date':day,'time':timeOfDay,'volume':volume,
-                                  'type':TYPE,'change':change,'yahoo_symbol':'FURZ'}
+                                  'type':TYPE,'change':change}
                             ,self)
         
 if __name__ == "__main__":

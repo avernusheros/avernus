@@ -31,16 +31,12 @@ class DatasourceManager():
                 task.start(searchstring)
 
     def _item_found_callback(self, item, plugin):
-        exchange = controller.detectDuplicate(Exchange, name=item['exchange'])
+        #mandatory: exchange, isin, type, name
+        item['exchange'] = controller.detectDuplicate(Exchange, name=item['exchange'])
         stock_info = controller.detectDuplicate(StockInfo, isin=item['isin'], type=item['type'], name=item['name']) 
-        if controller.is_duplicate(Stock, exchange=exchange.id, stockinfo = stock_info.id):
+        if controller.is_duplicate(Stock, exchange=item['exchange'].id, stockinfo = stock_info.id):
             return
-        stock = controller.newStock(price=item['price'],\
-                            change=item['change'],\
-                            exchange=exchange,\
-                            stockinfo = stock_info,\
-                            yahoo_symbol=item['yahoo_symbol']
-                            )
+        stock = controller.newStock(stockinfo = stock_info, **item)
         #FIXME use icon of plugin or maybe some 'web' icon
         self.search_callback(stock, 'gtk-add')
 

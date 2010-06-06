@@ -181,7 +181,7 @@ def newStockInfo(**kwargs):
     item.insert()
     return item
   
-def newStock(price=0.0, stockinfo=None, change=0.0, currency='', date=datetime.datetime.now(), exchange=None, yahoo_symbol='',insert=True):
+def newStock(price=0.0, stockinfo=None, change=0.0, currency='', date=datetime.datetime.now(), exchange=None, yahoo_symbol='',insert=True, **kwargs):
     result = Stock(id=None, price=price, currency=currency, change=change, date=date, exchange=exchange, yahoo_symbol=yahoo_symbol, stockinfo=stockinfo)
     if insert:
         result.insert()
