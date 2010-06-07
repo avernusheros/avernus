@@ -27,7 +27,6 @@ class OnvistaPlugin():
         
     def curlURL(self, url):
         url = "'" + url.replace("'", "'\\''") + "'"
-        #print url
         import os, tempfile
         #make a temp file to store the data in
         fd, tempname = tempfile.mkstemp(prefix='scrape')
@@ -40,7 +39,6 @@ class OnvistaPlugin():
         return reply
         
     def search(self, searchstring):
-        print "searching using ", self.name
         #blacklist to filter table rows that do not contain a price
         exchangeBlacklist = ['KAG-Kurs','Summe:','Realtime-Kurse','Neartime-Kurse', 'Leider stehen zu diesem Fonds keine Informationen zur Verfügung.']
         search_URL ='http://www.onvista.de/suche.html?TARGET=snapshot&ID_TOOL=FUN&SEARCH_VALUE='+searchstring

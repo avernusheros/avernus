@@ -18,8 +18,7 @@ class YahooCSV():
             
     def __request(self, symbol, stat):
         url = 'http://finance.yahoo.com/d/quotes.csv?s=%s&f=%s' % (symbol, stat)
-        #FIXME plugins should have access to logger through our api
-        #logger.info(url)
+        self.api.logger.info(url)
         return urlopen(url)
         
     def __get_symbols_from_stocks(self, stocks):
@@ -37,14 +36,12 @@ class YahooCSV():
                 try:
                     stocks[s].price = float(row[0])
                 except Exception as e:
-                    #FIXME
-                    #logger.info(e)
+                    self.api.logger.info(e)
                     stocks[s].price = 0.0
                 try:
                     date = datetime.strptime(row[1] + ' ' + row[2], '%m/%d/%Y %H:%M%p')
                 except Exception as e:
-                    #FIXME
-                    #logger.info(e)
+                    self.api.logger.info(e)
                     date = datetime.strptime(row[1], '%m/%d/%Y')
                 date = pytz.timezone('US/Eastern').localize(date)
                 stocks[s].date = date.astimezone(pytz.utc)
@@ -68,7 +65,7 @@ class YahooCSV():
         Update historical prices for the given stock.
         """
         symbol = stock.yahoo_symbol
-        #print "fetch data", start_date, end_date
+        self.api.logger.debug("fetch data"+ start_date+ end_date)
         url = 'http://ichart.yahoo.com/table.csv?s=%s&' % symbol + \
               'd=%s&' % str(start_date.month-1) + \
               'e=%s&' % str(start_date.day) + \
@@ -78,7 +75,6 @@ class YahooCSV():
               'b=%s&' % str(end_date.day) + \
               'c=%s&' % str(end_date.year) + \
               'ignore=.csv'
-        #print url
         days = urlopen(url).readlines()
         data = []
         

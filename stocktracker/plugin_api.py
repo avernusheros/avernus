@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import os
 import pickle
-from stocktracker import config
+from stocktracker import config, logger
 
 
 class PluginAPI():
@@ -9,6 +9,7 @@ class PluginAPI():
     def __init__(self, main_window, datasource_manager):
         self.main_window = main_window
         self.datasource_manager = datasource_manager
+        self.logger = logger.logger
         
     def add_menu_item(self, item, menu_name):
         menu = self.main_window.main_menu

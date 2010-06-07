@@ -3,8 +3,8 @@
 import imp
 import os
 import types
-
 from configobj import ConfigObj
+
 from stocktracker import config, logger
 
 logger = logger.logger

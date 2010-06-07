@@ -16,11 +16,17 @@ class YahooSearch():
         self.api.deregister_datasource(self, self.name)
         
     def __request(self, searchstring):
-        url = 'http://de.finsearch.yahoo.com/de/index.php?nm='+searchstring+'&tp=*&r=*&sub=Suchen'
-        return urlopen(url)
+        try:
+            url = 'http://de.finsearch.yahoo.com/de/index.php?nm='+searchstring+'&tp=*&r=*&sub=Suchen'
+            self.api.logger.info(url)
+            return urlopen(url)
+        except:
+            return None
             
     def search(self, searchstring):
         doc = self.__request(searchstring)
+        if doc is None:
+            return
         #1. beatifull soup does not like this part of the html file
         #2. remove newlines
         my_massage = [(re.compile('OPTION VALUE=>---------------------<'), ''), \
