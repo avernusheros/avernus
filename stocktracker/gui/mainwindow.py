@@ -48,79 +48,55 @@ class AboutDialog(gtk.AboutDialog):
 
 
 class MenuBar(gtk.MenuBar):
-    def __init__(self, parent=None):
+    def __init__(self, parent, actiongroup, accelgroup):
+        self.actiongroup = actiongroup
+        self.accelgroup =accelgroup
         gtk.MenuBar.__init__(self)
-        file_menu_items  = (
-                            (_("Quit"), gtk.STOCK_QUIT, parent.on_destroy),
-                           )                   
-        edit_menu_items = (
-                           (_("Preferences"),gtk.STOCK_PREFERENCES,self.on_pref),
-                           )
-        tools_menu_items = ((_('Update all stocks') , gtk.STOCK_REFRESH, self.on_update),
-                            #FIXME maybe some plugin to load indices, remove old code
-                            #(_('Reload stocks from yahoo'), gtk.STOCK_REFRESH, lambda x: stocktracker.objects.controller.load_stocks()), 
-                            (_('Plugin Manager'), None, parent.on_plugin_manager)
-                            #FIXME
-                            #(_("Merge two positions"), gtk.STOCK_CONVERT, self.on_merge),
-                           )                   
-        help_menu_items  = (#("Help"  , gtk.STOCK_HELP, None),
-                            (_("Website"), None, lambda x:web("https://launchpad.net/stocktracker")),
-                            (_("Request a Feature"), None, lambda x:web("https://blueprints.launchpad.net/stocktracker")),
-                            (_("Report a Bug"), None, lambda x:web("https://bugs.launchpad.net/stocktracker")),
-                            ('----', None, None),
-                            (_("About"), gtk.STOCK_ABOUT , AboutDialog),
-                           )
-
-        filemenu = gtk.MenuItem(_("Stocktracker"))
-        filemenu.mname = "Stocktracker"
-        filemenu.set_submenu(self.build_menu(file_menu_items))
         
-        editmenu = gtk.MenuItem(_('Edit'))
-        editmenu.mname = "Edit"
-        editmenu.set_submenu(self.build_menu(edit_menu_items))
+        # Create actions
+        #item: name, stockid, label, accel, tooltip, callback
+        actiongroup.add_actions(
+            [('Stocktracker'  , None                 , '_Stocktracker'),
+             ('Tools'         , None                 , '_Tools'),
+             ('Help'          , None                 , '_Help'),
+             ('quit'          , gtk.STOCK_QUIT       , '_Quit'              , '<Control>q', None, parent.on_destroy),
+             ('prefs'         , gtk.STOCK_PREFERENCES, '_Preferences'       , None        , None, dialogs.PrefDialog),
+             ('update'        , gtk.STOCK_REFRESH    , '_Update all stocks' , 'F5'        , None, lambda x: stocktracker.objects.controller.update_all()),
+             #FIXME maybe some plugin to load indices, remove old code
+             #(_('Reload stocks from yahoo'), gtk.STOCK_REFRESH, lambda x: stocktracker.objects.controller.load_stocks()), 
+             ('plugin_manager', None                 , '_Plugin Manager'    , None        , None, parent.on_plugin_manager),
+             #FIXME
+             #('merge', _("Merge two positions"), gtk.STOCK_CONVERT, dialogs.MergeDialog),
+             ('help'          , gtk.STOCK_HELP       , '_Help'              , 'F1'        , None, lambda x:web("https://answers.launchpad.net/stocktracker")),
+             ('website'       , None                 , '_Website'           , None        , None, lambda x:web("https://launchpad.net/stocktracker")),
+             ('feature'       , None                 , 'Request a _Feature' , None        , None, lambda x:web("https://blueprints.launchpad.net/stocktracker")),
+             ('bug'           , None                 , 'Report a _Bug'      , None        , None, lambda x:web("https://bugs.launchpad.net/stocktracker")),
+             ('about'         , gtk.STOCK_ABOUT      , '_About'             , None        , None, AboutDialog),
+             ])
         
-        toolsmenu = gtk.MenuItem(_('Tools'))
-        toolsmenu.mname = "Tools"
-        toolsmenu.set_submenu(self.build_menu(tools_menu_items))
-
-        helpmenu = gtk.MenuItem(_("Help"))
-        helpmenu.mname = "Help"
-        helpmenu.set_submenu(self.build_menu(help_menu_items))
-
-        self.append(filemenu)
-        #self.append(editmenu)
-        self.append(toolsmenu)
-        self.append(helpmenu)
+        for action in actiongroup.list_actions():
+            action.set_accel_group(accelgroup)
+            
+        file_menu_items  = ['quit']                  
+        edit_menu_items = ['prefs']
+        tools_menu_items = ['update', 'plugin_manager']
+        help_menu_items  = ['help', 'website', 'feature', 'bug', '---', 'about']
         
-    def build_menu(self, menu_items):
+        self._create_menu('Stocktracker', file_menu_items)
+        self._create_menu('Tools', tools_menu_items)
+        self._create_menu('Help', help_menu_items)
+
+    def _create_menu(self, action, items):
+        menu_item = self.actiongroup.get_action(action).create_menu_item()
+        menu_item.mname = action #used in plugin api
+        self.append(menu_item)
         menu = gtk.Menu()
-        
-        for label, icon, func in menu_items:
-            if label == '----':
-                s = gtk.SeparatorMenuItem()
-                s.show()
-                menu.add(s)
+        menu_item.set_submenu(menu)
+        for item in items:
+            if item == '---':
+                menu.append(gtk.SeparatorMenuItem())
             else:
-                if icon is not None:
-                    item = gtk.ImageMenuItem(icon)
-                    item.get_children()[0].set_label(label)
-                else:
-                    item = gtk.MenuItem(label) 
-                if func is not None:
-                    item.connect("activate", func)
-                item.show()
-                menu.add(item)
-        return menu
-
-    def on_merge(self, widget):
-        dialogs.MergeDialog()
-    
-    def on_update(self, widget):
-        stocktracker.objects.controller.update_all()
-        
-    def on_pref(self, widget):
-        dialogs.PrefDialog()
-      
+                menu.append(self.actiongroup.get_action(item).create_menu_item())
         
 
 class MainWindow(gtk.Window):
@@ -135,11 +111,18 @@ class MainWindow(gtk.Window):
         width = int(monitor.width * 0.8)
         height = int(monitor.height * 0.66)
         self.set_default_size(width, height)
-
+    
         vbox = gtk.VBox()
         self.add(vbox)
         
-        self.main_menu = MenuBar(parent = self)
+        # Create an accelerator group
+        accelgroup = gtk.AccelGroup()
+        # Add the accelerator group to the toplevel window
+        self.add_accel_group(accelgroup)
+        # Create an ActionGroup
+        actiongroup = gtk.ActionGroup('stocktracker')
+
+        self.main_menu = MenuBar(self, actiongroup, accelgroup)
         vbox.pack_start(self.main_menu, expand=False, fill=False)
         
         hpaned = gtk.HPaned()
@@ -152,8 +135,6 @@ class MainWindow(gtk.Window):
         hpaned.pack2(self.notebook)
         
         self.notebook.connect('switch-page', self.on_notebook_selection)
-        self.connect('key-press-event', self.on_key_press_event)
-        #subscribe
         self.connect("destroy", self.on_destroy)
         pubsub.subscribe('maintree.select', self.on_maintree_select)
         pubsub.subscribe('maintree.unselect', self.on_maintree_unselect)
@@ -169,17 +150,9 @@ class MainWindow(gtk.Window):
         self.tabs['Index']     = [(IndexPositionsTab, 'Positions')]
         self.tabs['Category']  = [(ContainerOverviewTab, 'Overview')]    
         
-        #display everything    
+        #display everything
         self.show_all()
         
-    def on_key_press_event(self, widget, event):
-        if event.keyval == gtk.gdk.keyval_from_name('F5'):
-             stocktracker.objects.controller.update_all()
-             return True
-        if event.keyval == gtk.gdk.keyval_from_name('q'):
-            self.on_destroy(widget) 
-        return False
-
     def on_destroy(self, widget, data=None):
         """on_destroy - called when the StocktrackerWindow is close. """
         #clean up code for saving application state should be added here
