@@ -7,30 +7,49 @@ from stocktracker.gui.gui_utils import ContextMenu, Tree
 from stocktracker.objects import controller
 from stocktracker.gui import progress_manager
 
+
 class Category(object):
     __name__ = 'Category'
     def __init__(self, name):
         self.name = name
 
+
 class MainTreeBox(gtk.VBox):
     def __init__(self):
         gtk.VBox.__init__(self)
-
-        main_tree = MainTree()
+        actiongroup = gtk.ActionGroup('left_pane')
+        
+        main_tree = MainTree(actiongroup)
         self.pack_start(main_tree)
-        main_tree_toolbar = MainTreeToolbar()
+        
+        actiongroup.add_actions([
+                ('add',    gtk.STOCK_ADD,    'new container',    None, _('Add new portfolio or watchlist'),         main_tree.on_add),      
+                ('edit' ,  gtk.STOCK_EDIT,   'edit container',   None, _('Edit selected portfolio or watchlist'),   main_tree.on_edit),
+                ('remove', gtk.STOCK_DELETE, 'remove container', None, _('Delete selected portfolio or watchlist'), main_tree.on_remove)
+                                ])
+                
+        main_tree_toolbar = gtk.Toolbar()
+        self.conditioned = ['remove', 'edit']
+        
+        for action in ['add', 'remove', 'edit']:
+            button = actiongroup.get_action(action).create_tool_item()
+            main_tree_toolbar.insert(button, -1)
         self.pack_start(main_tree_toolbar, expand=False, fill=False)
+
         vbox = gtk.VBox()
         self.pack_start(vbox, expand=False, fill=False)
         progress_manager.box = vbox 
+        
 
 class MainTree(Tree):
-    def __init__(self):
+    def __init__(self, actiongroup):
         Tree.__init__(self)
+        self.actiongroup = actiongroup
+        
         #object, icon, name
         self.set_model(gtk.TreeStore(object,str, str))
         self.set_headers_visible(False)
-             
+  
         column = gtk.TreeViewColumn()
         # Icon Renderer
         renderer = gtk.CellRendererPixbuf()
@@ -54,10 +73,6 @@ class MainTree(Tree):
                     ("container.edited", self.on_updated),
                     ("tag.created", self.insert_tag),
                     ("tag.updated", self.on_updated),
-                    ("maintoolbar.remove", self.on_remove),
-                    ("maincontextmenu.remove", self.on_remove),
-                    ('maintoolbar.edit', self.on_edit),
-                    ('maincontextmenu.edit', self.on_edit),
                     ('clear!', self.on_clear),
                     ('overview.item.selected', self.on_item_selected),
                 )
@@ -84,7 +99,7 @@ class MainTree(Tree):
             if self.selected_item is not None:
                 obj, iter = self.selected_item
                 if not isinstance(obj, Category):
-                    ContainerContextMenu(obj).show(event)
+                    ContainerContextMenu(obj,self.actiongroup).show(event)
 
     def insert_categories(self):
         self.pf_iter = self.get_model().append(None, [Category('Portfolios'),'portfolios', _("<b>Portfolios</b>")])
@@ -105,7 +120,7 @@ class MainTree(Tree):
     def insert_index(self, item):
         self.get_model().append(self.index_iter, [item, 'index', item.name])
          
-    def on_remove(self):
+    def on_remove(self, widget=None):
         if self.selected_item is None:
             return
         obj, iter = self.selected_item
@@ -146,11 +161,28 @@ class MainTree(Tree):
             obj = treestore.get_value(selection_iter, 0)
             if self.selected_item is None or self.selected_item[0] != obj:
                 self.selected_item = obj, selection_iter
-                pubsub.publish('maintree.select', obj)  
+                self.on_select(obj)  
+                pubsub.publish('maintree.select', obj)
             return 
         self.selected_item = None
         pubsub.publish('maintree.unselect')
+        self.on_unselect()
+  
+    def on_unselect(self):
+        for action in ['remove', 'edit', 'add']:
+            self.actiongroup.get_action(action).set_sensitive(False)       
         
+    def on_select(self, obj):
+        if isinstance(obj, Category):
+            self.on_unselect()
+            self.actiongroup.get_action('add').set_sensitive(True) 
+            if obj.name == 'Portfolios':
+                self.selected_type = 'portfolio'
+            else: self.selected_type = 'watchlist'
+        else:
+            for action in ['remove', 'edit']:
+                self.actiongroup.get_action(action).set_sensitive(True)
+    
     def on_edit(self, treeview=None, iter=None, path=None):
         if self.selected_item is None:
             return
@@ -159,62 +191,9 @@ class MainTree(Tree):
             EditPortfolio(obj)
         elif obj.__name__ == 'Watchlist':# or obj.type == 'tag':
             EditWatchlist(obj)
-
-
-
-class MainTreeToolbar(gtk.Toolbar):
-    def __init__(self):
-        gtk.Toolbar.__init__(self)
-        self.conditioned = []
-        
-        self.add_button = button = gtk.ToolButton('gtk-add')
-        button.connect('clicked', self.on_add_clicked)
-        button.set_tooltip_text('Add a new portfolio or watchlist') 
-        self.insert(button,-1)
-        
-        button = gtk.ToolButton('gtk-delete')
-        #button.set_label('Remove tag'
-        button.connect('clicked', self.on_remove_clicked)
-        button.set_tooltip_text('Delete selected portfolio or watchlist')
-        self.conditioned.append(button) 
-        self.insert(button,-1)
-        
-        button = gtk.ToolButton('gtk-edit')
-        #button.set_label('Remove tag'
-        button.connect('clicked', self.on_edit_clicked)
-        button.set_tooltip_text('Edit Selected portfolio or watchlist')
-        self.conditioned.append(button) 
-        self.insert(button,-1)
-        
-        self.on_unselect()
-        pubsub.subscribe('maintree.unselect', self.on_unselect)
-        pubsub.subscribe('maintree.select', self.on_select)
-        self.selected_type = None
-         
-    def on_unselect(self):
-        for button in self.conditioned:
-            button.set_sensitive(False)       
-        self.add_button.set_sensitive(False)
-        
-    def on_select(self, obj):
-        if isinstance(obj, Category):
-            self.on_unselect()
-            self.add_button.set_sensitive(True)
-            if obj.name == 'Portfolios':
-                self.selected_type = 'portfolio'
-            else: self.selected_type = 'watchlist'
-        else:
-            for button in self.conditioned:
-                button.set_sensitive(True)
-             
-    def on_add_clicked(self, widget):
-        NewContainerDialog(self.selected_type)
     
-    def on_remove_clicked(self, widget):
-        pubsub.publish('maintoolbar.remove')  
-           
-    def on_edit_clicked(self, widget):
-        pubsub.publish('maintoolbar.edit')
+    def on_add(self, widget=None):
+        NewContainerDialog(self.selected_type)        
 
 
 class EditWatchlist(gtk.Dialog):
@@ -326,31 +305,19 @@ class NewContainerDialog(gtk.Dialog):
 
 
 class ContainerContextMenu(ContextMenu):
-    def __init__(self, container):
+    def __init__(self, container, actiongroup):
         ContextMenu.__init__(self)
-        self.container = container
         
-        self.add_item(_('Remove '),  self.__remove_container, 'gtk-remove')
-        self.add_item(_('Edit '),  self.__edit_container, 'gtk-edit')
-        self.add_item('----')
+        for action in ['edit', 'remove']:
+            self.add(actiongroup.get_action(action).create_menu_item())
+
+        self.add(gtk.SeparatorMenuItem())
         
         if container.__name__ == 'Portfolio':
-            self.add_item(_('Deposit cash'),  self.__deposit_cash, 'gtk-add')
-            self.add_item(_('Withdraw cash'),  self.__withdraw_cash, 'gtk-remove')
-
-    def __remove_container(self, *arg):
-        pubsub.publish('maincontextmenu.remove')
+            self.add_item(_('Deposit cash'),  lambda x: CashDialog(container, 0) , 'gtk-add')
+            self.add_item(_('Withdraw cash'),  lambda x: CashDialog(container, 1) , 'gtk-remove')
         
-    def __edit_container(self, *arg):
-        pubsub.publish('maincontextmenu.edit')
-        
-    def __deposit_cash(self, *arg):
-        CashDialog(self.container, 0)
-        
-    def __withdraw_cash(self, *arg):
-        CashDialog(self.container, 1)        
-
-
+               
 class CashDialog(gtk.Dialog):
     def __init__(self, pf, type = 0):  #0 deposit, 1 withdraw
         self.action_type = type

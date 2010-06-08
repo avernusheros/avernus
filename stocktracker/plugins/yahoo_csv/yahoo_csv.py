@@ -65,7 +65,7 @@ class YahooCSV():
         Update historical prices for the given stock.
         """
         symbol = stock.yahoo_symbol
-        self.api.logger.debug("fetch data"+ start_date+ end_date)
+        self.api.logger.debug("fetch data"+ str(start_date)+ str(end_date))
         url = 'http://ichart.yahoo.com/table.csv?s=%s&' % symbol + \
               'd=%s&' % str(start_date.month-1) + \
               'e=%s&' % str(start_date.day) + \

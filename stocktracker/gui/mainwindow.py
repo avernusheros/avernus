@@ -50,7 +50,6 @@ class AboutDialog(gtk.AboutDialog):
 class MenuBar(gtk.MenuBar):
     def __init__(self, parent, actiongroup, accelgroup):
         self.actiongroup = actiongroup
-        self.accelgroup =accelgroup
         gtk.MenuBar.__init__(self)
         
         # Create actions
@@ -120,7 +119,7 @@ class MainWindow(gtk.Window):
         # Add the accelerator group to the toplevel window
         self.add_accel_group(accelgroup)
         # Create an ActionGroup
-        actiongroup = gtk.ActionGroup('stocktracker')
+        actiongroup = gtk.ActionGroup('main_window')
 
         self.main_menu = MenuBar(self, actiongroup, accelgroup)
         vbox.pack_start(self.main_menu, expand=False, fill=False)
