@@ -12,7 +12,7 @@ if __name__ == '__main__':
 
 
 import gtk,os #, gobject
-from stocktracker import pubsub, logger, plugin_api
+from stocktracker import pubsub, logger, config
 from stocktracker.gui import dialogs, chart_tab
 from stocktracker.gui.positions_tab import PositionsTab
 from stocktracker.gui.overview_tab import OverviewTab
@@ -101,16 +101,16 @@ class MenuBar(gtk.MenuBar):
 class MainWindow(gtk.Window):
     def __init__(self):
         gtk.Window.__init__(self)
-        
+        self.config = config.StocktrackerConfig()
         #self.set_title(__appname__)
-
-        # Use two thirds of the screen by default
+        
+        #set min size
         screen = self.get_screen()
         monitor = screen.get_monitor_geometry(0)
-        width = int(monitor.width * 0.8)
+        width = int(monitor.width * 0.66)
         height = int(monitor.height * 0.66)
-        self.set_default_size(width, height)
-    
+        self.set_size_request(width, height)
+
         vbox = gtk.VBox()
         self.add(vbox)
         
@@ -135,6 +135,7 @@ class MainWindow(gtk.Window):
         
         self.notebook.connect('switch-page', self.on_notebook_selection)
         self.connect("destroy", self.on_destroy)
+        self.connect('size_allocate', self.on_size_allocate)
         pubsub.subscribe('maintree.select', self.on_maintree_select)
         pubsub.subscribe('maintree.unselect', self.on_maintree_unselect)
         
@@ -148,12 +149,19 @@ class MainWindow(gtk.Window):
                                   (chart_tab.ChartTab, 'Charts')]
         self.tabs['Index']     = [(IndexPositionsTab, 'Positions')]
         self.tabs['Category']  = [(ContainerOverviewTab, 'Overview')]    
-        
+
+
+        size = eval(self.config.get_option('size', section='Gui'))
+        if size is not None:
+            self.resize(size[0], size[1])        
         #display everything
         self.show_all()
+    
+    def on_size_allocate(self, widget = None, data = None):
+        self.width, self.height = self.get_size()
         
     def on_destroy(self, widget, data=None):
-        """on_destroy - called when the StocktrackerWindow is close. """
+        """on_destroy - called when the StocktrackerWindow is closed. """
         #clean up code for saving application state should be added here
         #save db on quit
         model.store.close()

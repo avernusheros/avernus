@@ -115,25 +115,9 @@ class PluginEngine():
             self.plugins[p.module_name] = p
     
     @property 
-    def active_plugins(self):
-        plugins = filter(lambda (name,p): p.active, self.plugins.iteritems())
-        return dict(plugins)
-    
-    @property 
-    def inactive_plugins(self):
-        plugins = filter(lambda (name,p): not p.active,
-          self.plugins.iteritems())
-        return dict(plugins)
-    
-    @property 
     def enabled_plugins(self):
         plugins = filter(lambda (name,p): p.enabled, self.plugins.iteritems())
         return dict(plugins)
-    
-    @property 
-    def disabled_plugins(self):
-        return dict(filter(lambda (name,p): not p.enabled,
-          self.plugins.iteritems()))
     
     def activate_plugins(self, plugins, save=True):
         for plugin in plugins:
@@ -151,11 +135,11 @@ class PluginEngine():
             self.save_to_config()
     
     def save_to_config(self):
-        self.config.set_option('enabled', self.enabled_plugins, section = 'Plugins')
+        self.config.set_option('enabled', self.enabled_plugins.keys(), section = 'Plugins')
 
     def enable_from_config(self):
         if len(self.plugins) > 0:
-            enabled = self.config.get_option('enabled', section='Plugins')
+            enabled = eval(self.config.get_option('enabled', section='Plugins'))
             if enabled:
                 for name, plugin in self.plugins.iteritems():
                     if name in enabled and not plugin.error:

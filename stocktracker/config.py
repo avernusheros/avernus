@@ -34,14 +34,6 @@ config_path = os.path.join( os.getenv('HOME'), '.config/stocktracker')
 plugins_path = [os.path.join(os.getcwd(), 'stocktracker/plugins'), os.path.join(config_path,'plugins') ]
 #media_path = os.path.join(getdatapath(), 'media')
 
-timezone = 'CET'
-currency = '€'
-
-config_template = \
-"""
-[General]
-database=stocktracker.db 
-"""
 
 
 class StocktrackerConfig():
@@ -60,6 +52,8 @@ class StocktrackerConfig():
             self.parser.add_section('General')
         if not self.parser.has_section('Plugins'):
             self.parser.add_section('Plugins')
+        if not self.parser.has_section('Gui'):
+            self.parser.add_section('Gui')    
         self.set_option('database file', os.path.join(config_path, 'stocktracker.db'))
         self.write()
 
