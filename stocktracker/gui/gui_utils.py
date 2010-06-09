@@ -8,12 +8,14 @@ class Tree(gtk.TreeView):
         gtk.TreeView.__init__(self)
         pubsub.subscribe('clear!', self.clear)
     
-    def create_column(self, name, attribute):
+    def create_column(self, name, attribute, func=None):
         column = gtk.TreeViewColumn(name)
         self.append_column(column)
         cell = gtk.CellRendererText()
         column.pack_start(cell, expand = True)
         column.add_attribute(cell, "markup", attribute)
+        if func is not None:
+            column.set_cell_data_func(cell, func, attribute)
         column.set_sort_column_id(attribute)
         return column, cell
 
@@ -24,7 +26,21 @@ class Tree(gtk.TreeView):
         column.pack_start(cell, expand = True)
         column.set_attributes(cell, icon_name=attribute)
         return column, cell
-    
+        
+    def create_icon_text_column(self, name, attribute1, attribute2, func1=None, func2=None):
+        column = gtk.TreeViewColumn(name)
+        self.append_column(column)
+        cell1 = gtk.CellRendererPixbuf()
+        cell2 = gtk.CellRendererText()
+        column.pack_start(cell1, expand = False)
+        column.pack_start(cell2, expand = True)     
+        column.set_attributes(cell1, icon_name=attribute1)
+        column.add_attribute(cell2, "markup", attribute2)
+        if func1 is not None:
+            column.set_cell_data_func(cell1, func1, attribute1)
+        if func2 is not None:
+            column.set_cell_data_func(cell2, func2, attribute2)
+        
     def find_item(self, id, type = None):
         def search(rows):
             if not rows: return None
@@ -64,7 +80,6 @@ class ContextMenu(gtk.Menu):
             self.add(item)
 
 
-
 def float_to_red_green_string(column, cell, model, iter, user_data):
     num = round(model.get_value(iter, user_data), 2)
     if num < 0:
@@ -87,13 +102,11 @@ def get_price_string(item):
     return str(round(item.price,2)) +'\n' +'<small>'+get_datetime_string(item.date)+'</small>'
 
 
-
 def to_local_time(date):
     if date is not None:
         date = date.replace(tzinfo = pytz.utc)
         date = date.astimezone(pytz.timezone(config.timezone))
         return date.replace(tzinfo = None)
-
 
     
 def get_name_string(stock):

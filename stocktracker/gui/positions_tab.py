@@ -4,7 +4,7 @@ import gtk,sys
 from stocktracker import pubsub
 from stocktracker.gui.plot import ChartWindow
 from stocktracker.gui.dialogs import SellDialog, NewWatchlistPositionDialog, SplitDialog, BuyDialog, EditPositionDialog
-from stocktracker.gui.gui_utils import Tree, ContextMenu, float_to_red_green_string, float_to_string, get_price_string, get_name_string, datetime_format
+from stocktracker.gui.gui_utils import Tree, ContextMenu, float_to_red_green_string, float_to_string, get_name_string, datetime_format, get_datetime_string
 
 gain_thresholds = {
                    (-sys.maxint,-0.5):'arrow_down',
@@ -18,6 +18,16 @@ def get_arrow_icon(perc):
     for (min,max),name in gain_thresholds.items():
         if min<=perc and max>=perc:
             return name
+
+def start_price_markup(column, cell, model, iter, user_data):
+    pos = model.get_value(iter, 0)
+    markup = str(round(model.get_value(iter, user_data),2)) +'\n' +'<small>'+get_datetime_string(pos.date)+'</small>'
+    cell.set_property('markup', markup)
+
+def current_price_markup(column, cell, model, iter, user_data):
+    stock = model.get_value(iter, 0).stock
+    markup = str(round(model.get_value(iter, user_data),2)) +'\n' +'<small>'+get_datetime_string(stock.date)+'</small>'
+    cell.set_property('markup', markup)
 
 
 class PositionContextMenu(ContextMenu):
@@ -51,67 +61,33 @@ class PositionsTree(Tree):
                      'pf_percent': 15
                       }
         
-        self.set_model(gtk.TreeStore(object,str, str, str,float, float, int, float, float, str, float, float,str, float, str, float))
+        self.set_model(gtk.ListStore(object,str, float, float,float, float, int, float, float, str, float, float,str, float, str, float))
         
         self.watchlist = False
         if container.__name__ == 'Watchlist':
             self.watchlist = True
+
         if not self.watchlist:
             self.create_column('#', self.cols['shares'])
-        col, cell = self.create_column(_('Name'), self.cols['name'])
-        #col.get_widget().set_tooltip_text('foo') 
+        self.create_column(_('Name'), self.cols['name'])
         self.create_icon_column(_('Type'), self.cols['type'])
         if not self.watchlist:
-            col, cell = self.create_column(_('Pf %'), self.cols['pf_percent'])
-            col.set_cell_data_func(cell, float_to_string, self.cols['pf_percent'])
-        self.create_column(_('Start'), self.cols['start'])
+            self.create_column(_('Pf %'), self.cols['pf_percent'], func=float_to_string)
+        self.create_column(_('Start'), self.cols['start'], func=start_price_markup)
         if not self.watchlist:
-            col, cell = self.create_column(_('Buy value'), self.cols['buy_value'])
-            col.set_cell_data_func(cell, float_to_string, self.cols['buy_value'])
-        self.create_column(_('Last price'), self.cols['last_price'])
-        col, cell = self.create_column(_('Change'), self.cols['change'])
-        col.set_cell_data_func(cell, float_to_red_green_string, self.cols['change'])
-        col, cell = self.create_column('%', self.cols['change_percent'])
-        col.set_cell_data_func(cell, float_to_red_green_string, self.cols['change_percent'])
+            self.create_column(_('Buy value'), self.cols['buy_value'], func=float_to_string)
+        self.create_column(_('Last price'), self.cols['last_price'], func=current_price_markup)
+        self.create_column(_('Change'), self.cols['change'], func=float_to_red_green_string)
+        self.create_column('%', self.cols['change_percent'], func=float_to_red_green_string)
         if not self.watchlist:
-            col, cell = self.create_column(_('Mkt value'), self.cols['mkt_value'])
-            col.set_cell_data_func(cell, float_to_string, self.cols['mkt_value'])
-        col, cell = self.create_column(_('Gain'), self.cols['gain'])
-        col.set_cell_data_func(cell, float_to_red_green_string, self.cols['gain'])
-        rendererP = gtk.CellRendererPixbuf()
-        column = gtk.TreeViewColumn('%')
-        column.pack_start(rendererP, expand = False)
-        column.set_attributes(rendererP, icon_name=self.cols['gain_icon'])
-        # Text Renderer
-        rendererT = gtk.CellRendererText()
-        column.pack_start(rendererT, expand = True)
-        column.add_attribute(rendererT, "markup", self.cols['gain_percent'])
-        self.append_column(column)
-        column.set_cell_data_func(rendererT, float_to_red_green_string, self.cols['gain_percent'])
-        
+            self.create_column(_('Mkt value'), self.cols['mkt_value'], float_to_string)
+        self.create_column(_('Gain'), self.cols['gain'], float_to_red_green_string)
+        self.create_icon_text_column('%', self.cols['gain_icon'], self.cols['gain_percent'], func2=float_to_red_green_string)
         if not self.watchlist:
-            col, cell = self.create_column(_('Today'), self.cols['days_gain'])
-            col.set_cell_data_func(cell, float_to_red_green_string, self.cols['days_gain'])
+            self.create_column(_('Today'), self.cols['days_gain'], float_to_red_green_string)
         col, cell = self.create_column(_('Tags'), self.cols['tags'])
         cell.set_property('editable', True)
         cell.connect('edited', self.on_tag_edited)
-        
-        def sort_start_price(model, iter1, iter2):
-            item1 = model.get_value(iter1, self.cols['obj'])
-            item2 = model.get_value(iter2, self.cols['obj'])
-            if item1.price == item2.price: return 0
-            elif item1.price < item2.price: return -1
-            else: return 1
-        
-        def sort_current_price(model, iter1, iter2):
-            item1 = model.get_value(iter1, self.cols['obj'])
-            item2 = model.get_value(iter2, self.cols['obj'])
-            if item1.current_price == item2.current_price: return 0
-            elif item1.current_price < item2.current_price: return -1
-            else: return 1
-        
-        self.get_model().set_sort_func(self.cols['start'], sort_start_price)
-        self.get_model().set_sort_func(self.cols['last_price'], sort_current_price)
 
         self.set_rules_hint(True)
         self.load_positions()
@@ -184,7 +160,7 @@ class PositionsTree(Tree):
             for row in self.get_model():
                 item = row[0]
                 gain, gain_percent = item.gain
-                row[self.cols['last_price']] = get_price_string(item.stock)
+                row[self.cols['last_price']] = item.stock.price
                 row[self.cols['change']] = item.current_change[0]
                 row[self.cols['change_percent']] = item.current_change[1]
                 row[self.cols['gain']] = gain
@@ -267,8 +243,8 @@ class PositionsTree(Tree):
             change = 100 * position.cvalue / self.container.cvalue
         return [position, 
                get_name_string(stock), 
-               get_price_string(position), 
-               get_price_string(stock), 
+               position.price, 
+               stock.price, 
                c_change[0],
                gain[0],
                position.quantity,
@@ -284,7 +260,7 @@ class PositionsTree(Tree):
             
     def insert_position(self, position):
         if position.quantity != 0:
-            self.get_model().append(None, self._get_row(position))
+            self.get_model().append(self._get_row(position))
 
     def find_position(self, pid):
         def search(rows):

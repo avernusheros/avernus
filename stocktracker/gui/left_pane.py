@@ -49,19 +49,10 @@ class MainTree(Tree):
         #object, icon, name
         self.set_model(gtk.TreeStore(object,str, str))
         self.set_headers_visible(False)
-  
-        column = gtk.TreeViewColumn()
-        # Icon Renderer
-        renderer = gtk.CellRendererPixbuf()
-        column.pack_start(renderer, expand = False)
-        column.set_attributes(renderer, icon_name=1)
-
-        # Text Renderer
-        renderer = gtk.CellRendererText()
-        column.pack_start(renderer, expand = True)   
-        column.add_attribute(renderer, "markup", 2)
-        self.append_column(column)
-        self.on_clear()
+        self.create_icon_text_column('', 1,2)
+        
+        self.insert_categories()
+        self.selected_item = None
         
         self.connect('button-press-event', self.on_button_press_event)
         self.connect('cursor_changed', self.on_cursor_changed)
@@ -73,7 +64,6 @@ class MainTree(Tree):
                     ("container.edited", self.on_updated),
                     ("tag.created", self.insert_tag),
                     ("tag.updated", self.on_updated),
-                    ('clear!', self.on_clear),
                     ('overview.item.selected', self.on_item_selected),
                 )
         for topic, callback in self.subscriptions:
@@ -90,10 +80,6 @@ class MainTree(Tree):
             self.insert_index(index)
         self.expand_all()
         
-    def on_clear(self):
-        self.insert_categories()
-        self.selected_item = None
-
     def on_button_press_event(self, widget, event):
         if event.button == 3:
             if self.selected_item is not None:
