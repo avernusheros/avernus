@@ -139,8 +139,9 @@ class PluginEngine():
 
     def enable_from_config(self):
         if len(self.plugins) > 0:
-            enabled = eval(self.config.get_option('enabled', section='Plugins'))
-            if enabled:
+            enabled = self.config.get_option('enabled', section='Plugins')
+            if enabled is not None:
+                enabled = eval(enabled)
                 for name, plugin in self.plugins.iteritems():
                     if name in enabled and not plugin.error:
                         plugin.enabled = True

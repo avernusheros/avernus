@@ -151,8 +151,9 @@ class MainWindow(gtk.Window):
         self.tabs['Category']  = [(ContainerOverviewTab, 'Overview')]    
 
 
-        size = eval(self.config.get_option('size', section='Gui'))
+        size = self.config.get_option('size', section='Gui')
         if size is not None:
+            size = eval(size)
             self.resize(size[0], size[1])        
         #display everything
         self.show_all()
