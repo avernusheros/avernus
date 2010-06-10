@@ -21,6 +21,7 @@ from stocktracker.gui.dividends_tab import DividendsTab
 from stocktracker.gui.transactions_tab import TransactionsTab
 from stocktracker.gui.indexpositions_tab import IndexPositionsTab
 from stocktracker.gui.container_overview_tab import ContainerOverviewTab
+from stocktracker.gui.preferences import PrefDialog
 from webbrowser import open as web
 import stocktracker
 from stocktracker.objects import model
@@ -184,4 +185,4 @@ class MainWindow(gtk.Window):
         self.clear_notebook()
 
     def on_prefs(self, *args):
-        dialogs.PrefDialog(self.pengine)
+        PrefDialog(self.pengine)

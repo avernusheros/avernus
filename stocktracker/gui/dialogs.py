@@ -6,7 +6,7 @@ from datetime import datetime
 from stocktracker.objects import controller
 from stocktracker.objects.exchange import Exchange
 from stocktracker.gui import gui_utils
-from stocktracker.gui.plugin_manager import PluginManager
+
 
 class EditPositionDialog(gtk.Dialog):
     def __init__(self, position):
@@ -251,26 +251,7 @@ class SellDialog(gtk.Dialog):
             pubsub.publish('transaction.added', ta)
             self.pf.cash += shares*price - ta_costs
             
-            
-class PrefDialog(gtk.Dialog):
-    
-    def __init__(self, pengine):
-        gtk.Dialog.__init__(self, "Preferences", None,
-                            gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
-                            (gtk.STOCK_OK, gtk.RESPONSE_ACCEPT),
-                            )
-        logger.logger.debug("PrefDialog started")
-        self.conf = config.StocktrackerConfig()
-        vbox = self.get_content_area()
-        notebook = gtk.Notebook()
-        vbox.pack_start(notebook)
-        notebook.append_page(PluginManager(pengine), gtk.Label('Plugins'))
-        self.show_all()
-        self.run()  
-        self.destroy()
-        logger.logger.debug("PrefDialog destroyed")
-        
-
+ 
 class BuyDialog(gtk.Dialog):
     #FIXME user should not be able to select a date in the future
     def __init__(self, pf):
