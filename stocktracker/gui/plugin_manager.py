@@ -3,18 +3,13 @@ import sys
 import gtk
 from stocktracker.gui import gui_utils
 
-class PluginManager(gtk.Dialog):
+class PluginManager(gtk.VBox):
     
-    def __init__(self, main_window, pengine):
-        gtk.Dialog.__init__(self, _("Plugin Manager"), None
-                            , gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
-                     (gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
+    def __init__(self, pengine):
+        gtk.VBox.__init__(self)
         
         self.pengine = pengine
         self.plugins = pengine.plugins
-        self.main_window = main_window
-        
-        vbox = self.get_content_area()
         
         self.tree = gui_utils.Tree()
         self.tree.set_model(gtk.TreeStore(object, bool, str, str, bool))
@@ -40,12 +35,12 @@ class PluginManager(gtk.Dialog):
         
         self.tree.set_headers_visible(False)
         self.tree.connect('cursor-changed', self.on_cursor_changed)
-        vbox.pack_start(self.tree, expand = False)
+        self.pack_start(self.tree, expand = False)
         self._insert_plugins()
         
         buttonbox = gtk.HButtonBox()
         buttonbox.set_layout(gtk.BUTTONBOX_END)
-        vbox.pack_start(buttonbox) 
+        self.pack_start(buttonbox) 
         button = gtk.Button('About')
         button.connect('clicked', self.on_about_clicked)
         buttonbox.add(button)
@@ -58,10 +53,6 @@ class PluginManager(gtk.Dialog):
         self.selected_obj = self.tree.get_model()[path][0]
         self.on_selection(self.selected_obj)        
 
-        self.show_all()
-        self.run()
-        self.destroy()
-    
     def _plugin_markup(self, column, cell, store, iter):
         cell.set_property('sensitive', store.get_value(iter,4))        
         

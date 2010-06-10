@@ -21,7 +21,6 @@ from stocktracker.gui.dividends_tab import DividendsTab
 from stocktracker.gui.transactions_tab import TransactionsTab
 from stocktracker.gui.indexpositions_tab import IndexPositionsTab
 from stocktracker.gui.container_overview_tab import ContainerOverviewTab
-from stocktracker.gui.plugin_manager import PluginManager
 from webbrowser import open as web
 import stocktracker
 from stocktracker.objects import model
@@ -56,14 +55,14 @@ class MenuBar(gtk.MenuBar):
         #item: name, stockid, label, accel, tooltip, callback
         actiongroup.add_actions(
             [('Stocktracker'  , None                 , '_Stocktracker'),
+             ('Edit'          , None                 , '_Edit'),
              ('Tools'         , None                 , '_Tools'),
              ('Help'          , None                 , '_Help'),
              ('quit'          , gtk.STOCK_QUIT       , '_Quit'              , '<Control>q', None, parent.on_destroy),
-             ('prefs'         , gtk.STOCK_PREFERENCES, '_Preferences'       , None        , None, dialogs.PrefDialog),
+             ('prefs'         , gtk.STOCK_PREFERENCES, '_Preferences'       , None        , None, parent.on_prefs),
              ('update'        , gtk.STOCK_REFRESH    , '_Update all stocks' , 'F5'        , None, lambda x: stocktracker.objects.controller.update_all()),
              #FIXME maybe some plugin to load indices, remove old code
              #(_('Reload stocks from yahoo'), gtk.STOCK_REFRESH, lambda x: stocktracker.objects.controller.load_stocks()), 
-             ('plugin_manager', None                 , '_Plugin Manager'    , None        , None, parent.on_plugin_manager),
              #FIXME
              #('merge', _("Merge two positions"), gtk.STOCK_CONVERT, dialogs.MergeDialog),
              ('help'          , gtk.STOCK_HELP       , '_Help'              , 'F1'        , None, lambda x:web("https://answers.launchpad.net/stocktracker")),
@@ -78,10 +77,11 @@ class MenuBar(gtk.MenuBar):
             
         file_menu_items  = ['quit']                  
         edit_menu_items = ['prefs']
-        tools_menu_items = ['update', 'plugin_manager']
+        tools_menu_items = ['update']
         help_menu_items  = ['help', 'website', 'feature', 'bug', '---', 'about']
         
         self._create_menu('Stocktracker', file_menu_items)
+        self._create_menu('Edit', edit_menu_items)
         self._create_menu('Tools', tools_menu_items)
         self._create_menu('Help', help_menu_items)
 
@@ -150,7 +150,6 @@ class MainWindow(gtk.Window):
         self.tabs['Index']     = [(IndexPositionsTab, 'Positions')]
         self.tabs['Category']  = [(ContainerOverviewTab, 'Overview')]    
 
-
         size = self.config.get_option('size', section='Gui')
         if size is not None:
             size = eval(size)
@@ -183,6 +182,6 @@ class MainWindow(gtk.Window):
 
     def on_maintree_unselect(self):
         self.clear_notebook()
-    
-    def on_plugin_manager(self, *args):
-        PluginManager(self, self.pengine)
+
+    def on_prefs(self, *args):
+        dialogs.PrefDialog(self.pengine)

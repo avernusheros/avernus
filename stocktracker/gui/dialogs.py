@@ -6,6 +6,7 @@ from datetime import datetime
 from stocktracker.objects import controller
 from stocktracker.objects.exchange import Exchange
 from stocktracker.gui import gui_utils
+from stocktracker.gui.plugin_manager import PluginManager
 
 class EditPositionDialog(gtk.Dialog):
     def __init__(self, position):
@@ -250,54 +251,25 @@ class SellDialog(gtk.Dialog):
             pubsub.publish('transaction.added', ta)
             self.pf.cash += shares*price - ta_costs
             
+            
 class PrefDialog(gtk.Dialog):
     
-    def __init__(self):
+    def __init__(self, pengine):
         gtk.Dialog.__init__(self, "Preferences", None,
                             gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
-                            (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
-                             gtk.STOCK_OK, gtk.RESPONSE_ACCEPT),
+                            (gtk.STOCK_OK, gtk.RESPONSE_ACCEPT),
                             )
         logger.logger.debug("PrefDialog started")
         self.conf = config.StocktrackerConfig()
-        self.newName = None
         vbox = self.get_content_area()
-        hbox = gtk.HBox()
-        vbox.pack_start(hbox)
-        label = gtk.Label("Database Location: ")
-        hbox.pack_start(label)
-        dialogButton = gtk.ToolButton(gtk.STOCK_OPEN)
-        hbox.pack_start(dialogButton)
-        dialogButton.connect('clicked',self.launchDiag)
-        self.currLabel = gtk.Label(self.conf.get_option('database file'))
-        vbox.pack_start(self.currLabel)
+        notebook = gtk.Notebook()
+        vbox.pack_start(notebook)
+        notebook.append_page(PluginManager(pengine), gtk.Label('Plugins'))
         self.show_all()
-        response = self.run()  
-        self.process_result(response)
+        self.run()  
         self.destroy()
         logger.logger.debug("PrefDialog destroyed")
         
-    def launchDiag(self, widget):
-        dialog = gtk.FileChooserDialog("Select a Database Location",
-                               None,
-                               gtk.FILE_CHOOSER_ACTION_SAVE,
-                               (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL,
-                                gtk.STOCK_OPEN, gtk.RESPONSE_OK))
-        dialog.set_default_response(gtk.RESPONSE_OK)
-        response = dialog.run()
-        if response == gtk.RESPONSE_OK:
-            self.newName = dialog.get_filename()
-            self.currLabel.set_text(self.newName)
-        dialog.destroy()
-
-    def process_result(self, response):
-        #print "Processing the response"
-        if response == gtk.RESPONSE_ACCEPT:
-            if self.newName:
-                self.conf.set_option('database file', self.newName)
-                self.conf.write()
-                logging.logger.info("Wrote new database file: " + self.newName)
-
 
 class BuyDialog(gtk.Dialog):
     #FIXME user should not be able to select a date in the future
