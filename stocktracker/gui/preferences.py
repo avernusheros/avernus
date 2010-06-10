@@ -18,11 +18,31 @@ class PrefDialog(gtk.Dialog):
         notebook = gtk.Notebook()
         vbox.pack_start(notebook)
         notebook.append_page(PluginManager(pengine), gtk.Label('Plugins'))
+        notebook.append_page(DataSourcePriorities(pengine), gtk.Label('Sources'))
         self.show_all()
         self.run()  
         self.destroy()
         logger.logger.debug("PrefDialog destroyed")
+      
         
+class DataSourcePriorities(gtk.VBox):
+    
+    def __init__(self, pengine):
+        gtk.VBox.__init__(self)
+        
+        label = gtk.Label('Define priorities by reordering the sources')
+        self.pack_start(label)
+        
+        self.tree = gui_utils.Tree()
+        model = gtk.ListStore(str, str)
+        self.tree.set_model(model)
+        self.tree.create_column('Source', 0)
+        self.tree.create_column('Info', 1)
+        self.tree.set_reorderable(True)
+        self.pack_start(self.tree)
+        for name, pl in pengine.plugins.items():
+            model.append([name, 'some info what the plugin can do'])
+
 
 class PluginManager(gtk.VBox):
     
@@ -33,7 +53,7 @@ class PluginManager(gtk.VBox):
         self.plugins = pengine.plugins
         
         self.tree = gui_utils.Tree()
-        self.tree.set_model(gtk.TreeStore(object, bool, str, str, bool))
+        self.tree.set_model(gtk.ListStore(object, bool, str, str, bool))
         self.tree.set_rules_hint(True)
         
         cell = gtk.CellRendererToggle()
@@ -42,17 +62,7 @@ class PluginManager(gtk.VBox):
         column.add_attribute(cell, "active", 1)
         self.tree.append_column(column)
         
-        column = gtk.TreeViewColumn()
-        cell = gtk.CellRendererPixbuf()
-        column.pack_start(cell, expand = False)
-        column.set_attributes(cell, icon_name=2)
-        column.set_cell_data_func(cell, self._plugin_markup)
-
-        cell = gtk.CellRendererText()
-        column.pack_start(cell, expand = True)
-        column.add_attribute(cell, "markup", 3)
-        column.set_cell_data_func(cell, self._plugin_markup)
-        self.tree.append_column(column)
+        self.tree.create_icon_text_column('', 2,3, self._plugin_markup, self._plugin_markup)
         
         self.tree.set_headers_visible(False)
         self.tree.connect('cursor-changed', self.on_cursor_changed)
@@ -74,7 +84,7 @@ class PluginManager(gtk.VBox):
         self.selected_obj = self.tree.get_model()[path][0]
         self.on_selection(self.selected_obj)        
 
-    def _plugin_markup(self, column, cell, store, iter):
+    def _plugin_markup(self, column, cell, store, iter, user_data):
         cell.set_property('sensitive', store.get_value(iter,4))        
         
     def _insert_plugins(self):
@@ -85,7 +95,7 @@ class PluginManager(gtk.VBox):
             if plugin.error:
                 text+='\nMissing dependencies: ' +\
                 "<small><b>%s</b></small>" % ', '.join(plugin.missing_modules)
-            iter = m.append(None, [plugin, plugin.enabled, plugin.icon, text, not plugin.error])   
+            iter = m.append([plugin, plugin.enabled, plugin.icon, text, not plugin.error])   
     
     def on_prefs_clicked(self, *args, **kwargs):
         self.selected_obj.instance.configure()            
