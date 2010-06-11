@@ -100,8 +100,9 @@ class MenuBar(gtk.MenuBar):
         
 
 class MainWindow(gtk.Window):
-    def __init__(self):
+    def __init__(self, dsm):
         gtk.Window.__init__(self)
+        self.dsm = dsm
         self.config = config.StocktrackerConfig()
         #self.set_title(__appname__)
         
@@ -185,4 +186,4 @@ class MainWindow(gtk.Window):
         self.clear_notebook()
 
     def on_prefs(self, *args):
-        PrefDialog(self.pengine)
+        PrefDialog(self.pengine, self.dsm)

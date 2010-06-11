@@ -2,34 +2,35 @@
 import sys
 import gtk
 from stocktracker.gui import gui_utils
-from stocktracker import logger, config
+from stocktracker import logger
 
            
 class PrefDialog(gtk.Dialog):
     
-    def __init__(self, pengine):
+    def __init__(self, pengine, dsm):
         gtk.Dialog.__init__(self, "Preferences", None,
                             gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
                             (gtk.STOCK_OK, gtk.RESPONSE_ACCEPT),
                             )
         logger.logger.debug("PrefDialog started")
-        self.conf = config.StocktrackerConfig()
         vbox = self.get_content_area()
         notebook = gtk.Notebook()
         vbox.pack_start(notebook)
         notebook.append_page(PluginManager(pengine), gtk.Label('Plugins'))
-        notebook.append_page(DataSourcePriorities(pengine), gtk.Label('Sources'))
+        dsp = DataSourcePriorities(dsm)
+        notebook.append_page(dsp, gtk.Label('Sources'))
         self.show_all()
-        self.run()  
+        self.run()
+        dsp.on_close()  
         self.destroy()
         logger.logger.debug("PrefDialog destroyed")
       
         
 class DataSourcePriorities(gtk.VBox):
     
-    def __init__(self, pengine):
+    def __init__(self, dsm):
         gtk.VBox.__init__(self)
-        
+        self.dsm = dsm
         label = gtk.Label('Define priorities by reordering the sources')
         self.pack_start(label)
         
@@ -40,9 +41,12 @@ class DataSourcePriorities(gtk.VBox):
         self.tree.create_column('Info', 1)
         self.tree.set_reorderable(True)
         self.pack_start(self.tree)
-        for name, pl in pengine.plugins.items():
-            model.append([name, 'some info what the plugin can do'])
+        for name in self.dsm.queue:
+            model.append([name, dsm.sources[name].info])
 
+    def on_close(self):
+        model = self.tree.get_model()
+        self.dsm.queue = [item[0] for item in model]
 
 class PluginManager(gtk.VBox):
     

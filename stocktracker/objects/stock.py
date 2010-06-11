@@ -45,6 +45,7 @@ class Stock(SQLiteEntity):
                          'date':datetime.datetime.now(),
                          'change':0.0,
                          }
+    updated = False
                          
     #needed for some treeviews, e.g. news_tab
     @property

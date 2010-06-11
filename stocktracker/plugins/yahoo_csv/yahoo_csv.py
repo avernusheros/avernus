@@ -9,6 +9,7 @@ class YahooCSV():
     
     def __init__(self):
         self.name = 'yahoo'
+        self.info = 'quotations from finance.yahoo.de'
 
     def activate(self):
         self.api.register_datasource(self, self.name)
@@ -47,6 +48,7 @@ class YahooCSV():
                 stocks[s].date = date.astimezone(pytz.utc)
                 stocks[s].date = stocks[s].date.replace(tzinfo = None)
                 stocks[s].change = float(row[3])
+                stocks[s].updated = True
                 s+=1
                          
     def get_info(self, symbol):
