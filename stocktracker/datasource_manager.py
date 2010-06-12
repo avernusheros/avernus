@@ -41,9 +41,9 @@ class DatasourceManager(object):
     def search(self, searchstring, callback):
         for search in self.current_searches:
             search.stop()
-        self.current_searches = []
+        self.current_searches = [] 
         self.search_callback = callback
-        for name in self.sources.iteritems():
+        for name, source in self.sources.iteritems():
             #check whether search function exists
             func = getattr(source, "search", None)
             if func:
