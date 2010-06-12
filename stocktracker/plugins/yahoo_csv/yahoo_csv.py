@@ -9,7 +9,6 @@ class YahooCSV():
     
     def __init__(self):
         self.name = 'yahoo'
-        self.info = 'quotations from finance.yahoo.de'
 
     def activate(self):
         self.api.register_datasource(self, self.name)

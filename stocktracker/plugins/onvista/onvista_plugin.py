@@ -15,7 +15,6 @@ def to_datetime(date, time):
 
 class OnvistaPlugin():
     configurable = False
-    info = 'funds from onvista.de'
     
     def __init__(self):
         self.name = 'onvista.de'

@@ -8,7 +8,6 @@ TYPES = ['Fonds', 'Aktie']
 class YahooSearch():
     configurable = False
     name = "yahoo search"
-    info = 'search only on finance.yahoo.de' 
     
     def activate(self):
         self.api.register_datasource(self, self.name)
