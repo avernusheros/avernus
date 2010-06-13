@@ -86,12 +86,17 @@ class OnvistaPlugin():
     def search(self, searchstring, isIsin = False):
         #blacklist to filter table rows that do not contain a price
         search_URL ='http://www.onvista.de/suche.html?TARGET=snapshot&ID_TOOL=FUN&SEARCH_VALUE='+searchstring
-        soup = BeautifulSoup(curlURL(search_URL))
-        #all the tags that lead to a snapshot page on the search result page
-        linkTags = soup.findAll(attrs={'href' : re.compile('http://fonds\\.onvista\\.de/snapshot\\.html\?ID_INSTRUMENT=\d+')})
-        links = [tag['href'] for tag in linkTags]
-        #print "Found ", len(links)
-        #print "Calling FileGetter Queue to download"
+        links = []
+        print "alive"
+        if isIsin:
+            links = [search_URL]
+        else:
+            soup = BeautifulSoup(curlURL(search_URL))
+            #all the tags that lead to a snapshot page on the search result page
+            linkTags = soup.findAll(attrs={'href' : re.compile('http://fonds\\.onvista\\.de/snapshot\\.html\?ID_INSTRUMENT=\d+')})
+            links = [tag['href'] for tag in linkTags]
+            #print "Found ", len(links)
+            #print "Calling FileGetter Queue to download"
         content = get_files(links)
         kursLinks = []
         for cont in content:
@@ -160,18 +165,26 @@ class OnvistaPlugin():
                             ,self)
                         
     def update_stocks(self, stocks):
-        #jeder stock hat einen ekchange und der kurs von DIESER exchange soll auch geliegert werden
-        pass
-        #snapshot_url
+        print "inUpdate"
+        isins = [stock.isin for stock in stocks]
+        for isin in isins:
+            print "lol"
+            self.search(isin, True)
+        
+        
         
 if __name__ == "__main__":
+    
+    print "GO"
     
     class Stock():
         def __init__(self, isin):
             self.isin = isin
     
+    print "noch da"
+    plugin = OnvistaPlugin()
+    plugin.update_stocks([Stock('LU0136412771'), Stock('LU0103598305')])
     
-    #plugin = OnvistaPlugin()
     #searchstring = "emerging"
     #for item in plugin.search(searchstring):
     #    print item
