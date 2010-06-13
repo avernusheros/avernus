@@ -51,7 +51,8 @@ def get_files(files):
             thread = FileGetter(file)
             thread.start()
             q.put(thread, True)
- 
+    
+    print "Getting ", len(files), " Files."
     finished = []
     
     def consumer(q, total_files):
@@ -82,16 +83,17 @@ class OnvistaPlugin():
     def deactivate(self):
         self.api.deregister_datasource(self, self.name)
         
-    def search(self, searchstring):
+    def search(self, searchstring, isIsin = False):
         #blacklist to filter table rows that do not contain a price
         search_URL ='http://www.onvista.de/suche.html?TARGET=snapshot&ID_TOOL=FUN&SEARCH_VALUE='+searchstring
         soup = BeautifulSoup(curlURL(search_URL))
         #all the tags that lead to a snapshot page on the search result page
         linkTags = soup.findAll(attrs={'href' : re.compile('http://fonds\\.onvista\\.de/snapshot\\.html\?ID_INSTRUMENT=\d+')})
         links = [tag['href'] for tag in linkTags]
-        print "Found ", len(links)
-        print "Calling FileGetter Queue to download"
+        #print "Found ", len(links)
+        #print "Calling FileGetter Queue to download"
         content = get_files(links)
+        kursLinks = []
         for cont in content:
             #print "Fetching ", links.index(link)+1, "/", len(links)
             #snapshot = self.curlURL(link)
@@ -122,7 +124,10 @@ class OnvistaPlugin():
                 ,self)
             #for the prices on the different stock exchanges, there is a detail page
             kurslink = ssoup.find(attrs={'href':re.compile('http://fonds\\.onvista\\.de/kurse\\.html')})['href']
-            kursPage = curlURL(kurslink)
+            kursLinks.append(kurslink)
+        kursPages = get_files(kursLinks)
+        for kursPage in kursPages:
+            #kursPage = curlURL(kurslink)
             kursSoup = BeautifulSoup(kursPage)
             tableRows = kursSoup.find('table','weiss abst').findAll('tr')
             for row in tableRows:
@@ -153,10 +158,21 @@ class OnvistaPlugin():
                                   'date':date,'volume':volume,
                                   'type':TYPE,'change':change}
                             ,self)
+                        
+    def update_stocks(self, stocks):
+        #jeder stock hat einen ekchange und der kurs von DIESER exchange soll auch geliegert werden
+        pass
+        #snapshot_url
         
 if __name__ == "__main__":
-    plugin = OnvistaPlugin()
-    searchstring = "emerging"
-    for item in plugin.search(searchstring):
-        print item
-        break
+    
+    class Stock():
+        def __init__(self, isin):
+            self.isin = isin
+    
+    
+    #plugin = OnvistaPlugin()
+    #searchstring = "emerging"
+    #for item in plugin.search(searchstring):
+    #    print item
+    #    break
