@@ -13,7 +13,7 @@ def to_float(s):
     return float(s.replace('.','').replace(',','.'))
 
 def to_datetime(date, time):
-    return datetime.strptime(date+time, "%d.%m.%H:%M:%S")
+    return datetime.strptime(date+time, "%d.%m.%y%H:%M:%S")
 
 
 opener = urllib2.build_opener()
@@ -67,7 +67,7 @@ class OnvistaPlugin():
     
     def __init__(self):
         self.name = 'onvista.de'
-        self.exchangeBlacklist = ['KAG-Kurs','Summe:','Realtime-Kurse','Neartime-Kurse', 'Leider stehen zu diesem Fonds keine Informationen zur Verfügung.']
+        self.exchangeBlacklist = ['Summe:','Realtime-Kurse','Neartime-Kurse', 'Leider stehen zu diesem Fonds keine Informationen zur Verfügung.']
 
     def activate(self):
         self.api.register_datasource(self, self.name)
@@ -83,22 +83,18 @@ class OnvistaPlugin():
         #all the tags that lead to a snapshot page on the search result page
         linkTags = soup.findAll(attrs={'href' : re.compile('http://fonds\\.onvista\\.de/kurse\\.html\?ID_INSTRUMENT=\d+')})
         links = [tag['href'] for tag in linkTags]
-        
         for kursPage in get_files(links):
-            for item in self._parse_kurs_html(kursPage):
-                yield item
+            for item in self._parse_kurse_html(kursPage):
+                yield (item, self)
         
-    def _parse_kurs_html(self, kursPage):
+    def _parse_kurse_html(self, kursPage):
         soup = BeautifulSoup(kursPage)
         base = soup.html.body.find('div', {'id':'ONVISTA'}).find('table','RAHMEN').tr.find('td','WEBSEITE').find('div','content')
         name = base.h2.contents[0]
-        print "NAME", name
         isin = base.find('table','hgrau1').tr.td.find('table','weiss').findAll('tr','hgrau2')[1].findAll('td')[1].contents[0].replace('&nbsp;','')
-        print "ISIN", isin
         for row in soup.find('table','weiss abst').findAll('tr'):
             tds = row.findAll('td')
-            print len(tds)
-            if len(tds)>0:
+            if len(tds)>1:
                 exchangeTag = tds[0]
                 if not exchangeTag.contents[0] in self.exchangeBlacklist:
                     exchange = ""
@@ -110,7 +106,8 @@ class OnvistaPlugin():
                     currency = tds[1].contents[0]
                     price = to_float(tds[11].contents[0])
                     #sellPrice = tds[6].contents[0]
-                    date = to_datetime(tds[8].contents[0], tds[9].contents[0])
+                    #FIXME fetch year from html
+                    date = to_datetime(tds[8].contents[0]+'10', tds[9].contents[0])
                     volume = tds[12].contents[0]
                     change = tds[14]
                     if change.span:
@@ -121,24 +118,36 @@ class OnvistaPlugin():
                       'type':TYPE,'change':change}
                         
     def update_stocks(self, stocks):
-        for isin in [stock.isin for stock in stocks]:
-            url = 'http://fonds.onvista.de/kurse.html?ISIN='+isin
-            res = self._parse_kurs_html(get_files([url])[0])
-            print res
-               
+        for stock in stocks:
+            file = opener.open("http://fonds.onvista.de/kurse.html", urllib.urlencode({"ISIN": stock.isin}))
+            for item in self._parse_kurse_html(file):
+                if item['exchange'] == stock.exchange.name and \
+                        item['currency'] == stock.currency:
+                    stock.price = item['price']
+                    stock.date = item['date']
+                    stock.change = item['change']
+                    stock.volume = item['volume']
+                    stock.updated = True
+                    break
+
         
 if __name__ == "__main__":
     
+    class Exchange():
+        name = 'KAG-Kurs'
+    
     class Stock():
-        def __init__(self, isin):
+        def __init__(self, isin, ex):
             self.isin = isin
+            self.exchange = ex
+            self.currency = 'EUR'
     
     plugin = OnvistaPlugin()
-    for res in  plugin.search('multi'):
+    for res in  plugin.search('emerging'):
         print res
-    #plugin.update_stocks([Stock('LU0136412771'), Stock('LU0103598305')])
-    
-    #searchstring = "emerging"
-    #for item in plugin.search(searchstring):
-    #    print item
-    #    break
+        break
+    ex = Exchange()
+    s1 = Stock('LU0136412771', ex)
+    s2 = Stock('LU0103598305', ex)
+    plugin.update_stocks([s1, s2])
+    print s1.price, s1.change, s1.date
