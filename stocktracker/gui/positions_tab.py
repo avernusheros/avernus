@@ -236,7 +236,8 @@ class PositionsTree(Tree):
         gain = position.gain
         gain_icon = get_arrow_icon(gain[1])
         c_change = position.current_change
-        icons = ['F', 'A']
+        #FIXME etf need an icon
+        icons = ['F', 'A', 'F']
         if self.container.cvalue == 0:
             change = 0
         else:

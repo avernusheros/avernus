@@ -190,7 +190,8 @@ class StockSelector(gtk.Table):
         controller.datasource_manager.search(searchstring, self.insert_item)
         
     def insert_item(self, stock, icon='gtk-harddisk'):
-        icons = ['F', 'A']
+        #FIXME ETFs need an icon
+        icons = ['F', 'A', 'F']
         self.result_tree.get_model().append(None, [
                                        stock, 
                                        icon,
