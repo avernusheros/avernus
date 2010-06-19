@@ -13,8 +13,11 @@ TYPE_ETF  = 2
 def to_float(s):
     return float(s.replace('.','').replace(',','.'))
 
-def to_datetime(date, time):
+def to_datetime(date, time=''):
+    if time == '':
+        return datetime.strptime(date+time, "%d.%m.%y")
     return datetime.strptime(date+time, "%d.%m.%y%H:%M:%S")
+    
 
 def to_int(s):
     try:
@@ -170,6 +173,20 @@ class OnvistaPlugin():
                     stock.updated = True
                     break
                 
+    def search_kurse(self, stock):
+        file = opener.open('http://fonds.onvista.de/kurshistorie.html',urllib.urlencode({'ISIN':stock.isin, 'RANGE':'60M'}))
+        soup = BeautifulSoup(file)
+        lines = soup.html.body.findAll('table',{'width':'100%'})[2].findAll('tr',{'align':'right'})
+        erg = []
+        for line in lines:
+            tds = line.findAll('td')
+            day = to_datetime(tds[0].contents[0])
+            kurs = to_float(tds[1].contents[0])
+            erg.append((day, kurs))
+        return erg
+        
+
+        
 if __name__ == "__main__":
     
     class Exchange():
@@ -205,10 +222,9 @@ if __name__ == "__main__":
             print item
         
     plugin = OnvistaPlugin()
+    ex = Exchange()
+    s1 = Stock('LU0136412771', ex, TYPE_FUND)
+    s2 = Stock('LU0103598305', ex, TYPE_FUND)
+    print plugin.search_kurse(s1)
     #test_parse_kurse()
-    test_update()
-    
-    
-
-
-
+    #test_update()
