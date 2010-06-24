@@ -2,7 +2,7 @@
 
 from stocktracker.objects import controller
 from stocktracker.objects.stock import Stock
-from stocktracker import config
+from stocktracker import config, pubsub
 import datetime
 
 
@@ -17,7 +17,8 @@ class DatasourceManager(object):
         else:
             self._queue = eval(q)
         self.current_searches = []
-    
+        pubsub.subscribe('network', self.on_network_change)
+        
     @property
     def queue(self):
         return self._queue
@@ -27,6 +28,9 @@ class DatasourceManager(object):
         self._queue = value
         self.cfg.set_option('priority', self._queue, 'Plugins')
     
+    def on_network_change(self, state):
+        self.b_online = state
+
     def register(self, item, name):
         self.sources[name] = item
         if not name in self.queue:
@@ -41,6 +45,8 @@ class DatasourceManager(object):
             search.stop()
         self.current_searches = [] 
         self.search_callback = callback
+        if not self.b_online:
+            return
         for name, source in self.sources.iteritems():
             #check whether search function exists
             func = getattr(source, "search", None)
@@ -58,7 +64,7 @@ class DatasourceManager(object):
         self.search_callback(stock, 'gtk-add')
 
     def update_stocks(self, stocks):
-        if len(stocks) == 0:
+        if len(stocks) == 0 or not self.b_online:
             return
         for stock in stocks:
             stock.updated = False
@@ -77,6 +83,8 @@ class DatasourceManager(object):
         """
         Update historical prices for the stock.
         """
+        if not self.b_online:
+            yield 1
         today = datetime.date.today() - datetime.timedelta(days=1)
         newest = controller.getNewestQuotation(stock)
         if newest == None:

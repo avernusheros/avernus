@@ -97,6 +97,9 @@ def start():
     api = PluginAPI(window, dsm)
     window.pengine = init_plugin_engine(api)
     controller.datasource_manager = dsm
+    
+    from stocktracker.network_manager import DBusNetwork
+    DBusNetwork()
     gtk.main()
 
 
