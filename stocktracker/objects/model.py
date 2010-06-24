@@ -119,22 +119,23 @@ class SQLiteEntity(object):
         """
         self.__composite_retrieved__ = False
         for arg, val in kwargs.items():
-            #process the keyword args
-            #does the colum the arg refers to denote a one2one?
-            if isclass(self.__columns__[arg]):
-                #yes it does
-                #did we receive a key or an object
-                if isinstance(val, SQLiteEntity):#an object
+            if arg in self.__columns__:
+                #process the keyword args
+                #does the colum the arg refers to denote a one2one?
+                if isclass(self.__columns__[arg]):
+                    #yes it does
+                    #did we receive a key or an object
+                    if isinstance(val, SQLiteEntity):#an object
+                        self.__setattr__(arg, val, True)
+                    else:#a key
+                        #retrieve the object to reference
+                        self.__setattr__(
+                                         arg, 
+                                         self.__columns__[arg].getByPrimaryKey(val),
+                                         True
+                                         )
+                else:#a non-complex value
                     self.__setattr__(arg, val, True)
-                else:#a key
-                    #retrieve the object to reference
-                    self.__setattr__(
-                                     arg, 
-                                     self.__columns__[arg].getByPrimaryKey(val),
-                                     True
-                                     )
-            else:#a non-complex value
-                self.__setattr__(arg, val, True)
         #set anything that was not given to default
         for attr in self.__columns__:
             #if it has not been set

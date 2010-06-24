@@ -1,6 +1,0 @@
-[stocktracker Plugin]
-Module=yahoo_csv
-Name=Yahoo CSV
-Description=A Search Engine Plugin that uses yahoo's csv api
-Authors=Wolfgang
-Version=0.0.3

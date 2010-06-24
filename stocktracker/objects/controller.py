@@ -5,8 +5,7 @@ from stocktracker.objects.model import SQLiteEntity, Meta
 from stocktracker.objects.container import Portfolio, Watchlist, Index, Tag
 from stocktracker.objects.transaction import Transaction
 from stocktracker.objects.position import PortfolioPosition, WatchlistPosition
-from stocktracker.objects.stock import Stock, StockInfo
-from stocktracker.objects.exchange import Exchange
+from stocktracker.objects.stock import Stock
 from stocktracker.objects.dividend import Dividend
 from stocktracker.objects.quotation import Quotation
 from stocktracker.objects.sector import Sector
@@ -19,15 +18,14 @@ import time
 
 
 modelClasses = [Portfolio, Transaction, Tag, Watchlist, Index, Dividend,
-                PortfolioPosition, WatchlistPosition, Exchange,
-                Quotation, Stock, StockInfo, Meta, Sector]
+                PortfolioPosition, WatchlistPosition,
+                Quotation, Stock, Meta, Sector]
 
 #these classes will be loaded with one single call and will also load composite
 #relations. therefore it is important that the list is complete in the sense
 #that there are no classes holding composite keys to classes outside the list
 initialLoadingClasses = [Portfolio,Transaction,Tag,Watchlist,Index,Dividend,Sector,
-                         PortfolioPosition, WatchlistPosition, Exchange,
-                         StockInfo, Meta, Stock]
+                         PortfolioPosition, WatchlistPosition,                          Meta, Stock]
 
 version = 1
 datasource_manager = None
@@ -128,7 +126,7 @@ def newTransaction(date=datetime.datetime.now(),\
     return result
     
 
-def newIndex(name='', isin='', currency='', date=datetime.datetime.now(), exchange=None, yahoo_symbol=''):
+def newIndex(name='', isin='', currency='', date=datetime.datetime.now(), exchange='', yahoo_symbol=''):
     result = Index(id=None, name=name, currency=currency, isin=isin, date=date, exchange=exchange, yahoo_symbol=yahoo_symbol, price=0, change=0)
     result.insert()
     return result
@@ -176,13 +174,8 @@ def newTag(name):
     pubsub.publish('tag.created',result)
     return result
  
-def newStockInfo(**kwargs):
-    item = StockInfo(**kwargs)
-    item.insert()
-    return item
-  
-def newStock(price=0.0, stockinfo=None, change=0.0, currency='', date=datetime.datetime.now(), exchange=None, yahoo_symbol='',insert=True, **kwargs):
-    result = Stock(id=None, price=price, currency=currency, change=change, date=date, exchange=exchange, yahoo_symbol=yahoo_symbol, stockinfo=stockinfo)
+def newStock(insert=True, **kwargs):
+    result = Stock(**kwargs)
     if insert:
         result.insert()
     return result
@@ -276,13 +269,10 @@ def deleteAllPortfolioTransaction(portfolio):
         trans.delete() 
 
 def getStockForSearchstring(searchstring):
-    searchstring = "%"+searchstring+"%"
-    query = """SELECT stock.*
-FROM stockinfo, stock 
-WHERE stock.stockinfo = stockinfo.id 
-AND (stockinfo.isin LIKE ? OR stock.yahoo_symbol LIKE ? OR stockinfo.name LIKE ?)"""
-    res = model.store.select(query, (searchstring,searchstring,searchstring))
-    return Stock.create_objects(res)
+    sqlArgs = {}
+    for req in ['name', 'isin']:
+        sqlArgs[req] = '%'+searchstring+'%'
+    return Stock.getByColumns(sqlArgs,operator=" OR ",operator2=' LIKE ', create=True)
 
 def getQuotationsFromStock(stock, start):
     erg = Quotation.getAllFromOneColumn('stock', stock.getPrimaryKey())

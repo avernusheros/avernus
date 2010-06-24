@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: latin-1 -*-
 
+from __future__ import with_statement
 import os
 __stocktracker_data_directory__ = '../data/'
 import ConfigParser
@@ -33,7 +34,7 @@ def getdatapath():
 config_path = os.path.join( os.getenv('HOME'), '.config/stocktracker')
 plugins_path = [os.path.join(os.getcwd(), 'stocktracker/plugins'), os.path.join(config_path,'plugins') ]
 #media_path = os.path.join(getdatapath(), 'media')
-
+timezone = 'CET'
 
 
 class StocktrackerConfig():
@@ -58,8 +59,9 @@ class StocktrackerConfig():
         self.write()
 
     def write(self):
-        fd = open(self.filename, 'w')
-        self.parser.write(fd)
+        #print self
+        with open(self.filename, 'wb') as configfile:
+            self.parser.write(configfile)
     
     def get_option(self, name, section = 'General'):
         if self.parser.has_option(section, name):
@@ -70,3 +72,13 @@ class StocktrackerConfig():
             self.parser.add_section(section)
         self.parser.set(section, name, value)
         self.write()
+
+    def __repr__(self):
+        txt = ''
+        for section in self.parser.sections():
+            txt+=section
+            txt+='\n-----------'
+            for option in self.parser.options(section):
+                txt+='\n'+option
+            txt+='\n\n'
+        return txt

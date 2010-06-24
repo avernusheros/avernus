@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import with_statement
 import os
 import pickle
 from stocktracker import config, logger
@@ -39,18 +40,18 @@ class PluginAPI():
     def deregister_datasource(self, item, name):
         self.datasource_manager.deregister(item, name)
 
-    def save_configuration(self, plugin_name, item):
-        path = os.path.join(config.config_path, plugin_name)
-        file = open(path, 'wb')
-        pickle.dump(item, file)
-        
-    def load_configuration(self, plugin_name):
-        path = os.path.join(config.config_path, plugin_name)
+    def load_configuration(self, plugin_name, filename):
+        path = os.path.join(config.config_path, plugin_name, filename)        
         if os.path.isfile(path):
-            try:
-                file = open(path, 'r');
-                item = pickle.load(file)
-            except:
-                return None
-            return item    
+            with open(path, 'r') as file:
+                return pickle.load(file)
         return None
+
+    def save_configuration(self, plugin_name, filename, item):
+        path = os.path.join(config.config_path, plugin_name)
+        if not os.path.isdir(path):
+            os.makedirs(path)
+        path = os.path.join(path, filename)
+        with open(path, 'wb') as file:
+             pickle.dump(item, file)
+

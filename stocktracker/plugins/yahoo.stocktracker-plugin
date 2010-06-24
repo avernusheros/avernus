@@ -1,0 +1,6 @@
+[stocktracker Plugin]
+Module=yahoo
+Name=Yahoo
+Description=yahoo finance backend
+Authors=Wolfgang
+Version=0.4

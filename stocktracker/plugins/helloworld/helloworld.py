@@ -25,7 +25,7 @@ class helloWorldPlugin():
         d.destroy()
 
     def load_preferences(self):
-        data = self.api.load_configuration(self.name)
+        data = self.api.load_configuration(self.name, 'prefs')
         if not data is None and type(data) == type (dict()):
             self.prefs = data
     
@@ -46,4 +46,4 @@ class helloWorldPlugin():
         if response == gtk.RESPONSE_ACCEPT:
             buffer = self.entry.get_buffer()
             self.prefs['text'] = buffer.get_text(buffer.get_start_iter(), buffer.get_end_iter())            
-            self.api.save_configuration(self.name, self.prefs)
+            self.api.save_configuration(self.name, 'prefs', self.prefs)

@@ -4,7 +4,6 @@ import gtk
 from stocktracker import pubsub, config, logger
 from datetime import datetime
 from stocktracker.objects import controller
-from stocktracker.objects.exchange import Exchange
 from stocktracker.gui import gui_utils
 
 
@@ -168,11 +167,11 @@ class StockSelector(gtk.Table):
         sw.set_property('hscrollbar-policy', gtk.POLICY_NEVER)
         sw.set_property('vscrollbar-policy', gtk.POLICY_AUTOMATIC)
         self.result_tree = gui_utils.Tree()
-        self.result_tree.set_model(gtk.TreeStore(object,str, str, str,str,str))
+        self.result_tree.set_model(gtk.TreeStore(object, str, str,str,str,str))
         self.result_tree.create_icon_column(None, 1)
         self.result_tree.create_column(_('Name'), 2)
         self.result_tree.create_column('ISIN', 3)
-        self.result_tree.create_column(_('Exchange'), 4)
+        self.result_tree.create_column(_('Currency'), 4)
         self.result_tree.create_icon_column(_('Type'), 5)
         self.result_tree.set_size_request(300,300)
         sw.add(self.result_tree)
@@ -197,7 +196,7 @@ class StockSelector(gtk.Table):
                                        icon,
                                        stock.name,
                                        stock.isin,
-                                       stock.exchange.name,
+                                       stock.currency,
                                        icons[stock.type]
                                        ])
 

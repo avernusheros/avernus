@@ -1,5 +1,4 @@
 from stocktracker.objects.model import SQLiteEntity
-from stocktracker.objects.exchange import Exchange
 from stocktracker.objects.stock import Stock
 #FIXME why does the following import give an error
 #from stocktracker.objects import controller
@@ -171,7 +170,7 @@ class Index(SQLiteEntity):
                    'change': 'FLOAT',
                    'price': 'FLOAT',
                    'date': 'TIMESTAMP',
-                   'exchange': Exchange,
+                   'exchange': "VARCHAR",
                    'yahoo_symbol': 'VARCHAR',
                    'currency': 'VARCHAR'
                   }

@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 
 from stocktracker.objects import controller
-from stocktracker.objects.exchange import Exchange
-from stocktracker.objects.stock import Stock, StockInfo
+from stocktracker.objects.stock import Stock
 from stocktracker import config
 import datetime
 
@@ -17,7 +16,6 @@ class DatasourceManager(object):
             self._queue = []
         else:
             self._queue = eval(q)
-        print self.queue
         self.current_searches = []
     
     @property
@@ -32,11 +30,11 @@ class DatasourceManager(object):
     def register(self, item, name):
         self.sources[name] = item
         if not name in self.queue:
-            self._queue.append(name)
+            self.queue.append(name)
     
     def deregister(self, item, name):
         del self.sources[name]
-        self._queue.remove(name)
+        self.queue.remove(name)
         
     def search(self, searchstring, callback):
         for search in self.current_searches:
@@ -52,12 +50,10 @@ class DatasourceManager(object):
                 task.start(searchstring)
 
     def _item_found_callback(self, item, plugin):
-        #mandatory: exchange, isin, type, name
-        item['exchange'] = controller.detectDuplicate(Exchange, name=item['exchange'])
-        stock_info = controller.detectDuplicate(StockInfo, isin=item['isin'], type=item['type'], name=item['name']) 
-        if controller.is_duplicate(Stock, exchange=item['exchange'].id, stockinfo = stock_info.id):
+        #mandatory: isin, type, name
+        if controller.is_duplicate(Stock, **item):
             return
-        stock = controller.newStock(stockinfo = stock_info, **item)
+        stock = controller.newStock(**item)
         #FIXME use icon of plugin or maybe some 'web' icon
         self.search_callback(stock, 'gtk-add')
 
@@ -71,7 +67,7 @@ class DatasourceManager(object):
             source += 1
             func = getattr(self.queue[source], "update_stocks", None)
             if func:
-                self.sources[self.queue[source]].update_stocks(stocks)
+                func(stocks)
                 stocks = filter(stocks, lambda s: s.updated)
         
     def update_stock(self, stock):
@@ -87,8 +83,8 @@ class DatasourceManager(object):
             newest = datetime.date(today.year -20, today.month, today.day)
         if newest <= today:
             #FIXME
-            data = self.sources['yahoo'].update_historical_prices(stock, today, newest)
-            for qt in data:
+            func = getattr(self.sources[self.queue[0]], "update_historical_prices", None)
+            for qt in func(stock, today, newest):
                 #qt : (stock, date, open, high, low, close, vol)
                 controller.newQuotation(stock=qt[0], date=qt[1],\
                                         open=qt[2], high=qt[3],\

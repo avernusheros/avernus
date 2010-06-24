@@ -1,49 +1,34 @@
 from stocktracker.objects.model import SQLiteEntity
-from stocktracker.objects.exchange import Exchange
 from stocktracker.objects.sector import Sector
 
 import datetime
-
-class StockInfo(SQLiteEntity):
-
-    __primaryKey__ = 'id'
-    __tableName__ = "stockinfo"
-    __columns__ = {
-                   'id': 'INTEGER',
-                   'isin': 'VARCHAR',
-                   'type': 'INTEGER',
-                   'name': 'VARCHAR',
-                   'sector': Sector
-                  }
-    __comparisonPositives__ = ['isin']
-    __defaultValues__ = {
-                         'isin':'',
-                         'type':1,
-                         'name':'',
-                         'sector':None,
-                         }
-
 
 class Stock(SQLiteEntity):
     __primaryKey__ = 'id'
     __tableName__ = "stock"
     __columns__ = {
                    'id': 'INTEGER',
-                   'stockinfo': StockInfo,
-                   'exchange': Exchange,
+                   'isin': 'VARCHAR',
+                   'type': 'INTEGER',
+                   'name': 'VARCHAR',
+                   'sector': Sector,
+                   'exchange': 'VARCHAR',
                    'currency': 'VARCHAR',
-                   'yahoo_symbol': 'VARCHAR',
                    'price': 'FLOAT',
                    'date': 'TIMESTAMP',
                    'change': 'FLOAT',
                   }
-    __comparisonPositives__ = ['stockinfo', 'exchange']
+    __comparisonPositives__ = ['isin', 'currency']
     __defaultValues__ = {
                          'exchange':None,
                          'currency':'',
                          'price':0.0,
                          'date':datetime.datetime.now(),
                          'change':0.0,
+                         'type':1,
+                         'name':'',
+                         'sector':None,
+                         'isin':''
                          }
     updated = False
                          
@@ -51,22 +36,6 @@ class Stock(SQLiteEntity):
     @property
     def stock(self):
         return self
-    
-    @property
-    def name(self):
-        return self.stockinfo.name
-    
-    @property
-    def isin(self):
-        return self.stockinfo.isin
-        
-    @property
-    def type(self):
-        return self.stockinfo.type    
-    
-    @property
-    def sector(self):
-        return self.stockinfo.sector
     
     @property
     def country(self):
@@ -82,12 +51,7 @@ class Stock(SQLiteEntity):
             return 0
     
     def __str__(self):
-        erg = self.name +' | '+self.isin+' | '
-        if self.exchange:
-            erg += self.exchange.name
-        else:
-            erg += 'no Exchange'
-        return  erg
+        return self.name +' | '+self.isin+' | '+self.exchange
     
     def update_price(self):
         #FIXME should not import controller here

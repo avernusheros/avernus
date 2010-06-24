@@ -35,8 +35,8 @@ class DataSourcePriorities(gtk.VBox):
         self.pack_start(label)
         
         self.tree = gui_utils.Tree()
-        model = gtk.ListStore(str, str, str, str)
-        self.tree.set_model(model)
+        self.model = gtk.ListStore(str, str, str, str)
+        self.tree.set_model(self.model)
         col, cell = self.tree.create_column('Source', 0)
         col.set_reorderable(False)
         self.tree.create_icon_column('Search', 1)
@@ -44,16 +44,20 @@ class DataSourcePriorities(gtk.VBox):
         self.tree.create_icon_column('Historical data', 3)
         self.tree.set_reorderable(True)
         self.pack_start(self.tree)
+        self.connect('expose-event', self.show)
+    
+    def _get_icon_name(self, ):
+        if store.get_value(iter, user_data):
+            return 'gtk-apply'
+        return 'gtk-cancel'
+    
+    def show(self, *args):
         icons = {True:'gtk-apply', False:'gtk-cancel'}
+        self.tree.clear()
         for name in self.dsm.queue:
-            model.append([name, icons[getattr(dsm.sources[name], 'search', None) is not None]\
-            				  , icons[getattr(dsm.sources[name], 'update_stocks', None) is not None]\
-            				  , icons[getattr(dsm.sources[name], 'update_historical_prices', None) is not None]])
-
-	def _get_icon_name(self, ):
-		if store.get_value(iter, user_data):
-			return 'gtk-apply'
-		return 'gtk-cancel'
+            self.model.append([name, icons[getattr(self.dsm.sources[name], 'search', None) is not None]\
+                              , icons[getattr(self.dsm.sources[name], 'update_stocks', None) is not None]\
+                              , icons[getattr(self.dsm.sources[name], 'update_historical_prices', None) is not None]])
 
     def on_close(self):
         model = self.tree.get_model()
