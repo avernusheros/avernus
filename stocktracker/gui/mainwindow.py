@@ -22,6 +22,7 @@ from stocktracker.gui.transactions_tab import TransactionsTab
 from stocktracker.gui.indexpositions_tab import IndexPositionsTab
 from stocktracker.gui.container_overview_tab import ContainerOverviewTab
 from stocktracker.gui.preferences import PrefDialog
+from stocktracker.gui.account_transactions_tab import AccountTransactionTab
 from webbrowser import open as web
 import stocktracker
 from stocktracker.objects import model
@@ -151,6 +152,8 @@ class MainWindow(gtk.Window):
                                   (chart_tab.ChartTab, 'Charts')]
         self.tabs['Index']     = [(IndexPositionsTab, 'Positions')]
         self.tabs['Category']  = [(ContainerOverviewTab, 'Overview')]    
+        self.tabs['Account']   = [(AccountTransactionTab, 'Transactions')]
+    
 
         size = self.config.get_option('size', section='Gui')
         if size is not None:

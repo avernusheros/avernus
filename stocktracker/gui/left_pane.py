@@ -60,6 +60,7 @@ class MainTree(Tree):
         self.subscriptions = (
                     ("watchlist.created", self.insert_watchlist),
                     ("portfolio.created", self.insert_portfolio),
+                    ("account.created", self.insert_account),
                     ('index.created', self.insert_index),
                     ("container.edited", self.on_updated),
                     ("tag.created", self.insert_tag),
@@ -78,6 +79,8 @@ class MainTree(Tree):
             self.insert_tag(tag)
         for index in controller.getAllIndex():
             self.insert_index(index)
+        for account in controller.getAllAccount():
+            self.insert_account(account)
         self.expand_all()
         
     def on_button_press_event(self, widget, event):
@@ -91,11 +94,15 @@ class MainTree(Tree):
         self.pf_iter = self.get_model().append(None, [Category('Portfolios'),'portfolios', _("<b>Portfolios</b>")])
         self.wl_iter = self.get_model().append(None, [Category('Watchlists'),'watchlists', _("<b>Watchlists</b>")])
         self.tag_iter = self.get_model().append(None, [Category('Tags'),'tags', _("<b>Tags</b>")])
+        self.accounts_iter = self.get_model().append(None, [Category('Accounts'),'account', _("<b>Accounts</b>")])
         #FIXME
         #self.index_iter = self.get_model().append(None, [Category('Indices'),'indices', _("<b>Indices</b>")])
 
     def insert_watchlist(self, item):
         self.get_model().append(self.wl_iter, [item, 'watchlist', item.name])
+    
+    def insert_account(self, item):
+        self.get_model().append(self.accounts_iter, [item, 'account', item.name])
     
     def insert_portfolio(self, item):
         self.get_model().append(self.pf_iter, [item, 'portfolio', item.name])
@@ -164,6 +171,8 @@ class MainTree(Tree):
             self.actiongroup.get_action('add').set_sensitive(True) 
             if obj.name == 'Portfolios':
                 self.selected_type = 'portfolio'
+            elif obj.name == 'Accounts':
+                self.selected_type = 'account'
             else: self.selected_type = 'watchlist'
         else:
             for action in ['remove', 'edit']:
@@ -179,7 +188,10 @@ class MainTree(Tree):
             EditWatchlist(obj)
     
     def on_add(self, widget=None):
-        NewContainerDialog(self.selected_type)        
+        if not self.selected_type == 'account':
+            NewContainerDialog(self.selected_type)        
+        else:
+            NewAccountDialog()
 
 
 class EditWatchlist(gtk.Dialog):
@@ -250,6 +262,37 @@ class EditPortfolio(gtk.Dialog):
             pubsub.publish("container.edited", self.pf)       
         self.destroy()
 
+
+class NewAccountDialog(gtk.Dialog):
+    def __init__(self):
+        gtk.Dialog.__init__(self, _("Create new account"), None
+                            , gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
+                     (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
+                      gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
+        vbox = self.get_content_area()
+        hbox = gtk.HBox()
+        vbox.pack_start(hbox)
+        label = gtk.Label("Name:")
+        hbox.pack_start(label)
+        self.name_entry = gtk.Entry()
+        self.name_entry.set_text('unknown')
+        self.name_entry.connect("activate", self.callback)
+         
+        hbox.pack_start(self.name_entry)
+
+        self.show_all()
+        response = self.run()  
+        self.process_result(response)
+        
+    def callback(self, widget):
+        self.process_result(gtk.RESPONSE_ACCEPT)
+
+    def process_result(self, response):
+        if response == gtk.RESPONSE_ACCEPT:
+            name = self.name_entry.get_text()
+            acc = controller.newAccount(name)
+            pubsub.publish('account.created', acc)
+        self.destroy()
 
 class NewContainerDialog(gtk.Dialog):
     def __init__(self, type='portfolio'):

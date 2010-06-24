@@ -9,6 +9,7 @@ from stocktracker.objects.stock import Stock
 from stocktracker.objects.dividend import Dividend
 from stocktracker.objects.quotation import Quotation
 from stocktracker.objects.sector import Sector
+from stocktracker.objects.account import Account, AccountTransaction, AccountCategory
 from stocktracker import pubsub, logger
 
 import datetime
@@ -18,14 +19,14 @@ import time
 
 
 modelClasses = [Portfolio, Transaction, Tag, Watchlist, Index, Dividend,
-                PortfolioPosition, WatchlistPosition,
-                Quotation, Stock, Meta, Sector]
+                PortfolioPosition, WatchlistPosition, AccountCategory,
+                Quotation, Stock, Meta, Sector, Account, AccountTransaction]
 
 #these classes will be loaded with one single call and will also load composite
 #relations. therefore it is important that the list is complete in the sense
 #that there are no classes holding composite keys to classes outside the list
 initialLoadingClasses = [Portfolio,Transaction,Tag,Watchlist,Index,Dividend,Sector,
-                         PortfolioPosition, WatchlistPosition,                          Meta, Stock]
+                         PortfolioPosition, WatchlistPosition,Account,  Meta, Stock, AccountTransaction, AccountCategory]
 
 version = 1
 datasource_manager = None
@@ -104,6 +105,17 @@ def newPortfolio(name, id=None, last_update = datetime.datetime.now(), comment="
     
 def newWatchlist(name, id=None, last_update = datetime.datetime.now(), comment=""):
     result = Watchlist(id=id, name=name,last_update=last_update,comment=comment)
+    result.insert()
+    return result
+
+def newAccount(name, id=None, amount=0, type=1):
+    result = Account(id=id, name=name, amount=amount, type=type)
+    result.insert()
+    return result
+
+def newAccountTransaction(id=None, description='', amount=0.0, type=1, account=None):
+    result = AccountTransaction(id=id, description=description, \
+                    amount=amount, type=type, account=account)
     result.insert()
     return result
 
@@ -213,6 +225,12 @@ def getAllWatchlist():
 def getAllIndex():
     return Index.getAll()
 
+def getAllAccount():
+    return Account.getAll()
+
+def getAllAccountCategories():
+    return AccountCategory.getAll()
+
 def getAllSector():
     return Sector.getAll()
 
@@ -263,6 +281,10 @@ def getTransactionForPortfolio(portfolio):
     key = portfolio.getPrimaryKey()
     erg = Transaction.getAllFromOneColumn("portfolio",key)
     return erg
+
+def getTransactionsForAccount(account):
+    key = account.getPrimaryKey()
+    return AccountTransaction.getAllFromOneColumn("account",key)
 
 def deleteAllPortfolioTransaction(portfolio):
     for trans in getTransactionForPortfolio(portfolio):
