@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 from BeautifulSoup import BeautifulSoup, NavigableString
-from datetime import datetime 
+from datetime import datetime
 import threading, re
 from Queue import Queue
 import urllib
 import urllib2
 
-    
+
 TYPE_FUND = 0
 TYPE_ETF  = 2
 
@@ -17,7 +17,7 @@ def to_datetime(date, time=''):
     if time == '':
         return datetime.strptime(date+time, "%d.%m.%y")
     return datetime.strptime(date+time, "%d.%m.%y%H:%M:%S")
-    
+
 
 def to_int(s):
     try:
@@ -34,33 +34,33 @@ class FileGetter(threading.Thread):
         self.url = url
         self.result = None
         threading.Thread.__init__(self)
- 
+
     def get_result(self):
         return self.result
- 
+
     def run(self):
         try:
             self.result = opener.open(self.url)
             print "Downloaded ", self.url
         except IOError:
             print "Could not open document: %s" % self.url
-            
+
 def get_files(files):
     def producer(q, files):
         for file in files:
             thread = FileGetter(file)
             thread.start()
             q.put(thread, True)
-    
+
     print "Getting ", len(files), " Files."
     finished = []
-    
+
     def consumer(q, total_files):
         while len(finished) < total_files:
             thread = q.get(True)
             thread.join()
             finished.append(thread.get_result())
-            
+
     q = Queue(3)
     prod_thread = threading.Thread(target=producer, args=(q, files))
     cons_thread = threading.Thread(target=consumer, args=(q, len(files)))
@@ -73,7 +73,7 @@ def get_files(files):
 
 class OnvistaPlugin():
     configurable = False
-    
+
     def __init__(self):
         self.name = 'onvista.de'
         self.exchangeBlacklist = ['Summe:','Realtime-Kurse','Neartime-Kurse',\
@@ -81,10 +81,10 @@ class OnvistaPlugin():
 
     def activate(self):
         self.api.register_datasource(self, self.name)
-                        
+
     def deactivate(self):
         self.api.deregister_datasource(self, self.name)
-    
+
     def search(self, searchstring):
         page = opener.open("http://www.onvista.de/suche.html", urllib.urlencode({"TARGET": "kurse", "SEARCH_VALUE": searchstring,'ID_TOOL':'FUN' }))
         soup = BeautifulSoup(page.read())
@@ -96,7 +96,7 @@ class OnvistaPlugin():
         for kursPage in get_files([tag['href'] for tag in linkTagsETF]):
             for item in self._parse_kurse_html_etf(kursPage):
                 yield (item, self)
-        
+
     def _parse_kurse_html_fonds(self, kursPage):
         base = BeautifulSoup(kursPage).find('div', 'content')
         name = base.h2.contents[0]
@@ -125,7 +125,7 @@ class OnvistaPlugin():
                     yield {'name':name,'isin':isin,'exchange':exchange,'price':price,
                       'date':date,'currency':currency,'volume':volume,
                       'type':TYPE_FUND,'change':change}
-    
+
     def _parse_kurse_html_etf(self, kursPage):
         base = BeautifulSoup(kursPage).find('div', 'content')
         name = base.h2.contents[0]
@@ -152,7 +152,7 @@ class OnvistaPlugin():
                     yield {'name':name,'isin':isin,'exchange':exchange,'price':price,
                       'date':date,'currency':currency,'volume':volume,
                       'type':TYPE_ETF,'change':change}
-    
+
     def update_stocks(self, stocks):
         for stock in stocks:
             if stock.type == TYPE_FUND:
@@ -162,7 +162,7 @@ class OnvistaPlugin():
                 file = opener.open("http://etf.onvista.de/kurse.html", urllib.urlencode({"ISIN": stock.isin}))
                 generator = self._parse_kurse_html_etf(file)
             else:
-                break
+                print "Unknown stock type in onvistaplugin.update_stocks"
             for item in generator:
                 if item['exchange'] == stock.exchange.name and \
                         item['currency'] == stock.currency:
@@ -172,33 +172,44 @@ class OnvistaPlugin():
                     stock.volume = item['volume']
                     stock.updated = True
                     break
-                
+
     def search_kurse(self, stock):
-        file = opener.open('http://fonds.onvista.de/kurshistorie.html',urllib.urlencode({'ISIN':stock.isin, 'RANGE':'60M'}))
+        url = ''
+        width = ''
+        if stock.type == TYPE_FUND:
+            url = 'http://fonds.onvista.de/kurshistorie.html'
+            width = '100%'
+        elif stock.type == TYPE_ETF:
+            url = 'http://etf.onvista.de/kurshistorie.html'
+            width = '640'
+        else:
+            print "Uknown stock type in onvistaplugin.search_kurse"
+        file = opener.open(url,urllib.urlencode({'ISIN':stock.isin, 'RANGE':'60M'}))
         soup = BeautifulSoup(file)
-        lines = soup.html.body.findAll('table',{'width':'100%'})[2].findAll('tr',{'align':'right'})
+        table = soup.html.body.findAll('table',{'width':width})[2]
+        lines = table.findAll('tr',{'align':'right'})
         erg = []
         for line in lines:
             tds = line.findAll('td')
-            day = to_datetime(tds[0].contents[0])
-            kurs = to_float(tds[1].contents[0])
+            day = to_datetime(tds[0].contents[0].replace('&nbsp;',''))
+            kurs = to_float(tds[1].contents[0].replace('&nbsp;',''))
             erg.append((day, kurs))
         return erg
-        
 
-        
+
+
 if __name__ == "__main__":
-    
+
     class Exchange():
         name = 'KAG-Kurs'
-    
+
     class Stock():
         def __init__(self, isin, ex, type):
             self.isin = isin
             self.type = type
             self.exchange = ex
             self.currency = 'EUR'
-    
+
     def test_update():
         ex = Exchange()
         s1 = Stock('DE0008474248', ex, TYPE_FUND)
@@ -206,12 +217,12 @@ if __name__ == "__main__":
         plugin.update_stocks([s1, s2])
         print s1.price, s1.change, s1.date
         print s2.price, s2.change, s2.date
-    
+
     def test_search():
         for res in  plugin.search('easyetf'):
             print res
             #break
-    
+
     def test_parse_kurse():
         page = opener.open('http://fonds.onvista.de/kurse.html?ID_INSTRUMENT=83602')
         for item in plugin._parse_kurse_html_fonds(page):
@@ -220,11 +231,13 @@ if __name__ == "__main__":
         page = opener.open('http://etf.onvista.de/kurse.html?ID_INSTRUMENT=21384252')
         for item in plugin._parse_kurse_html_etf(page):
             print item
-        
+
     plugin = OnvistaPlugin()
     ex = Exchange()
     s1 = Stock('LU0136412771', ex, TYPE_FUND)
     s2 = Stock('LU0103598305', ex, TYPE_FUND)
+    s3 = Stock('LU0382362290', ex, TYPE_ETF)
     print plugin.search_kurse(s1)
+    print plugin.search_kurse(s3)
     #test_parse_kurse()
     #test_update()
