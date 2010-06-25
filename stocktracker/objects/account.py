@@ -11,6 +11,7 @@ class Account(SQLiteEntity):
                    'amount': 'FLOAT'                   
                   }
 
+
 class AccountCategory(SQLiteEntity):
     __primaryKey__ = 'id'
     __tableName__ = "accountcategory"
@@ -32,7 +33,3 @@ class AccountTransaction(SQLiteEntity):
                    'account': Account,
                    'category': AccountCategory                   
                   }
-                  
-                  
-
-

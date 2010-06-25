@@ -118,6 +118,11 @@ def newAccountTransaction(id=None, description='', amount=0.0, type=1, account=N
                     amount=amount, type=type, account=account)
     result.insert()
     return result
+    
+def newAccountCategory(name='', id=None):
+    result = AccountCategory(id=id, name=name)
+    result.insert()
+    return result
 
 def newTransaction(date=datetime.datetime.now(),\
                    portfolio=None,\
