@@ -18,52 +18,9 @@
 #    You should have received a copy of the GNU General Public License
 #    along with wxBanker.  If not, see <http://www.gnu.org/licenses/>.
 
-from datetime import date, datetime
-#from wx.lib.pubsub import Publisher
-import codecs, csv, os, re
+from datetime import datetime
+import codecs, csv, re
 from cStringIO import StringIO
-
-#from wxbanker.bankobjects.transaction import Transaction
-#from wxbanker import fileservice, debug
-
-try:
-    import simplejson as json
-except:
-    json = None
-    
-shippedProfiles = {
-    "mint": {
-        "amountColumn": 4,
-        "dateColumn": 1,
-        "dateFormat": "%m/%d/%Y",
-        "decimalSeparator": ".",
-        "delimiter": ",",
-        "descriptionColumns": "2",
-        "encoding": "utf-8",
-        "linesToSkip": 1
-    },
-    "Sparkasse": {
-        "amountColumn": 9,
-        "dateColumn": 2,
-        "dateFormat": "%d.%m.%y",
-        "decimalSeparator": ",",
-        "delimiter": ";",
-        "descriptionColumns": "6, 5 , 4",
-        "encoding": "utf-8",
-        "linesToSkip": 1
-     },
-     "comdirect": {
-        "amountColumn": 5,
-        "dateColumn": 1,
-        "dateFormat": "%d.%m.%Y",
-        "decimalSeparator": ",",
-        "delimiter": ";",
-        "descriptionColumns": "4 (3)",
-        "encoding": "iso8859-1",
-        "linesToSkip": 24
-     }
-}
-
 
 class CsvImporter:
     """
@@ -91,18 +48,23 @@ class CsvImporter:
             # If we find a blank line, assume we've hit the end of the transactions.
             if not row:
                 break
-
             # convert to python unicode strings
             row = [unicode(s, "utf-8") for s in row]
             amount = self.parseAmount(row[settings['amountColumn']], settings['decimalSeparator'])
-                
-            desc = row[settings['descriptionColumn']]
+            if 'saldoIndicator' in settings:
+                indicator = row[settings['saldoIndicator']]
+                if indicator == settings['negativeSaldo']:
+                    amount *= -1
+            desc = self.parseDesc(row[settings['descriptionColumn']])
             tdate = datetime.strptime(row[settings['dateColumn']],
                 settings['dateFormat']).strftime('%Y-%m-%d')
             transactions.append((amount, desc, tdate))
             
         return transactions
-
+    
+    def parseDesc(self, desc):
+        return re.sub('[\s]+',' ',desc)
+       
     def parseAmount(self, val, decimalSeparator):
         amountStr = ""
         for char in val:
@@ -118,25 +80,30 @@ class UTF8Recoder:
     see http://docs.python.org/library/csv.html
     """
     def __init__(self, f, encoding):
+        self.encoding = encoding
         self.reader = codecs.getreader(encoding)(f)
 
     def __iter__(self):
         return self
 
     def next(self):
-        return self.reader.next().encode("utf-8")
+        return self.reader.next().encode('utf-8')
     
 if __name__ == "__main__":
     fileName = '../data/csv/psd.csv'
     importer = CsvImporter()
-    print importer.getTransactionsFromFile(fileName,
+    trans = importer.getTransactionsFromFile(fileName,
                                            {
                                             'linesToSkip':13, 
-                                            'encoding':'iso-8859-1',
+                                            'encoding':'iso-8859-15',
                                             'delimiter':';',
                                             'amountColumn':8,
                                             'decimalSeparator':',',
                                             'descriptionColumn':6,
                                             'dateColumn':1,
-                                            'dateFormat':'%d.%m.%Y'
+                                            'dateFormat':'%d.%m.%Y',
+                                            'saldoIndicator':9,
+                                            'negativeSaldo':'S'
                                             })
+    for t in trans:
+        print t[0], t[1], t[2]
