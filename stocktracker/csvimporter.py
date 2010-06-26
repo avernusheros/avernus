@@ -55,10 +55,20 @@ class CsvImporter:
                 indicator = row[settings['saldoIndicator']]
                 if indicator == settings['negativeSaldo']:
                     amount *= -1
+            sender = receiver = None
+            if 'sender' in settings:
+                sender = row[settings['sender']]
+            if 'receiver' in settings:
+                receiver = row[settings['receiver']]
             desc = self.parseDesc(row[settings['descriptionColumn']])
             tdate = datetime.strptime(row[settings['dateColumn']],
                 settings['dateFormat']).strftime('%Y-%m-%d')
-            transactions.append((amount, desc, tdate))
+            erg = [tdate, desc, amount]
+            if sender is not None:
+                erg.append(sender)
+            if receiver is not None:
+                erg.append(receiver)
+            transactions.append(erg)
             
         return transactions
     
@@ -103,7 +113,9 @@ if __name__ == "__main__":
                                             'dateColumn':1,
                                             'dateFormat':'%d.%m.%Y',
                                             'saldoIndicator':9,
-                                            'negativeSaldo':'S'
+                                            'negativeSaldo':'S',
+                                            'receiver':3,
+                                            'sender':2,
                                             })
     for t in trans:
-        print t[0], t[1], t[2]
+        print t
