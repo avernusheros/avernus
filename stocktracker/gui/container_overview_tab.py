@@ -82,6 +82,7 @@ class ContainerOverviewTree(Tree):
             pubsub.unsubscribe(topic, callback)
 
     def load_items(self):
+        items = []
         if self.container.name == 'Tags':
             items = controller.getAllTag()
         elif self.container.name == 'Watchlists':
