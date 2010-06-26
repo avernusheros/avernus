@@ -77,10 +77,10 @@ class EditStockTable(gtk.Table):
         self.type_cb.set_active(self.stock.type)
         self.attach(self.type_cb, 1,2,2,3)
 
-        self.attach(gtk.Label(_('yahoo symbol')),0,1,3,4)
-        self.yahoo_entry = gtk.Entry()
-        self.yahoo_entry.set_text(stock.yahoo_symbol)
-        self.attach(self.yahoo_entry,1,2,3,4)
+        #self.attach(gtk.Label(_('yahoo symbol')),0,1,3,4)
+        #self.yahoo_entry = gtk.Entry()
+        #self.yahoo_entry.set_text(stock.yahoo_symbol)
+        #self.attach(self.yahoo_entry,1,2,3,4)
 
         self.attach(gtk.Label(_('Sector')),0,1,4,5)
         self.sector_cb = gtk.combo_box_new_text()
