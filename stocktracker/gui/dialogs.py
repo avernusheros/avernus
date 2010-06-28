@@ -77,12 +77,7 @@ class EditStockTable(gtk.Table):
         self.type_cb.set_active(self.stock.type)
         self.attach(self.type_cb, 1,2,2,3)
 
-        #self.attach(gtk.Label(_('yahoo symbol')),0,1,3,4)
-        #self.yahoo_entry = gtk.Entry()
-        #self.yahoo_entry.set_text(stock.yahoo_symbol)
-        #self.attach(self.yahoo_entry,1,2,3,4)
-
-        self.attach(gtk.Label(_('Sector')),0,1,4,5)
+        self.attach(gtk.Label(_('Sector')),0,1,3,4)
         self.sector_cb = gtk.combo_box_new_text()
         self.sectors = {}
         current = 0
@@ -95,14 +90,13 @@ class EditStockTable(gtk.Table):
                 current = count
             count+=1
         self.sector_cb.set_active(current)
-        self.attach(self.sector_cb, 1,2,4,5)
+        self.attach(self.sector_cb, 1,2,3,4)
 
     def process_result(self, widget=None, response = gtk.RESPONSE_ACCEPT):
         if response == gtk.RESPONSE_ACCEPT:
             self.stock.name = self.name_entry.get_text()
             self.stock.isin = self.isin_entry.get_text()
             self.stock.type = self.types[self.type_cb.get_active_text()]
-            self.stock.yahoo_symbol = self.yahoo_entry.get_text()
             if self.sector_cb.get_active() != 0:   
                 self.stock.sector = self.sectors[self.sector_cb.get_active()]
             else:
