@@ -23,6 +23,7 @@ from stocktracker.gui.indexpositions_tab import IndexPositionsTab
 from stocktracker.gui.container_overview_tab import ContainerOverviewTab
 from stocktracker.gui.preferences import PrefDialog
 from stocktracker.gui.account_transactions_tab import AccountTransactionTab
+from stocktracker.gui.csv_import_dialog import CSVImportDialog
 from webbrowser import open as web
 import stocktracker
 from stocktracker.objects import model
@@ -60,6 +61,7 @@ class MenuBar(gtk.MenuBar):
              ('Edit'          , None                 , '_Edit'),
              ('Tools'         , None                 , '_Tools'),
              ('Help'          , None                 , '_Help'),
+             ('import'        , None                 , '_Import CSV'        , None        , None, CSVImportDialog),
              ('quit'          , gtk.STOCK_QUIT       , '_Quit'              , '<Control>q', None, parent.on_destroy),
              ('prefs'         , gtk.STOCK_PREFERENCES, '_Preferences'       , None        , None, parent.on_prefs),
              ('update'        , gtk.STOCK_REFRESH    , '_Update all stocks' , 'F5'        , None, lambda x: stocktracker.objects.controller.update_all()),
@@ -77,7 +79,7 @@ class MenuBar(gtk.MenuBar):
         for action in actiongroup.list_actions():
             action.set_accel_group(accelgroup)
             
-        file_menu_items  = ['quit']                  
+        file_menu_items  = ['import','---','quit']                  
         edit_menu_items = ['prefs']
         tools_menu_items = ['update']
         help_menu_items  = ['help', 'website', 'feature', 'bug', '---', 'about']
