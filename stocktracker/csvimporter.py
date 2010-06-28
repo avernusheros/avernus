@@ -31,6 +31,12 @@ class CsvImporter:
         contents = open(filename, 'rb').read()
         return self.getTransactionsFromCSV(contents, settings)
 
+    def getRowsFromCSV(self, filename, profile):
+        csvfile = open(filename)
+        dialect = csv.Sniffer().sniff(csvfile.read(1024))
+        csvfile.seek(0)
+        return [row for row in csv.reader(csvfile, dialect)][profile['linesToSkip']:]
+
     def getTransactionsFromCSV(self, csvdata, settings):
         csvdata = StringIO(csvdata)
         csvReader = csv.reader(

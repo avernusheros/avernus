@@ -4,20 +4,6 @@ import gtk
 from stocktracker.gui.gui_utils import Tree
 from stocktracker import csvimporter
 
-PROFILE =  {
-            'linesToSkip':13, 
-            'encoding':'iso-8859-15',
-            'delimiter':';',
-            'amountColumn':8,
-            'decimalSeparator':',',
-            'descriptionColumn':6,
-            'dateColumn':1,
-            'dateFormat':'%d.%m.%Y',
-            'saldoIndicator':9,
-            'negativeSaldo':'S',
-            'receiver':3,
-            'sender':2,
-            }
 
 class CSVImportDialog(gtk.Dialog):
     
@@ -29,6 +15,7 @@ class CSVImportDialog(gtk.Dialog):
         
         self._init_widgets()
         self.importer = csvimporter.CsvImporter()
+        self.profile = {}
         
         response = self.run()  
         self.process_result(response = response)
@@ -38,18 +25,23 @@ class CSVImportDialog(gtk.Dialog):
         table = gtk.Table()
         vbox.pack_start(table)
         
-        table.attach(gtk.Label('File to import'),0,1,0,1)
+        table.attach(gtk.Label('File to import'),0,1,0,1, xoptions=gtk.FILL, yoptions=gtk.FILL)
         fcbutton = gtk.FileChooserButton('File to import')
         self.file = None
         fcbutton.connect('file-set', self._on_file_set)
-        table.attach(fcbutton, 1,2,0,1)
+        table.attach(fcbutton, 1,2,0,1, xoptions=gtk.FILL, yoptions=gtk.FILL)
         
-        table.attach(gtk.HSeparator(), 0,2,1,2)
-        button = gtk.Button(stock='refresh')
-        button.connect('clicked', self._on_refresh)
-        table.attach(button, 0,1,2,3)
-        self.sw = gtk.ScrolledWindow()
-        table.attach(self.sw, 0,2,3,4)
+        table.attach(gtk.Label('Lines to skip'),0,1,1,2, xoptions=gtk.FILL, yoptions=gtk.FILL)
+        self.lines_to_skip = gtk.SpinButton(gtk.Adjustment(lower=0, upper=100,step_incr=1, value = 1), digits=0)
+        self.lines_to_skip.connect("value-changed", self._on_refresh)
+        table.attach(self.lines_to_skip, 1,2,1,2)
+        
+        table.attach(gtk.HSeparator(), 0,2,2,3, xoptions=gtk.FILL, yoptions=gtk.FILL)
+        table.attach(gtk.Label('Preview'), 0,1,3,4, xoptions=gtk.FILL, yoptions=gtk.FILL)
+        sw = gtk.ScrolledWindow()
+        self.tree = PreviewTree()
+        sw.add(self.tree)
+        table.attach(sw, 0,2,4,5)
         self.show_all()
 
     def process_result(self, widget=None, response = gtk.RESPONSE_ACCEPT):
@@ -58,44 +50,45 @@ class CSVImportDialog(gtk.Dialog):
         self.destroy()  
 
     def _on_refresh(self, *args):
-        transactions = self.importer.getTransactionsFromFile(self.file, PROFILE)
-        print transactions
-        self.sw.add(PreviewTree(transactions))
+        self.profile['linesToSkip'] = int(self.lines_to_skip.get_value())
+        transactions = self.importer.getRowsFromCSV(self.file, self.profile)
+        self.tree.reload(transactions)
 
     def _on_file_set(self, button):
         self.file = button.get_filename()
+        self._on_refresh()
         
 
 class PreviewTree(Tree):
     
-    def __init__(self, transactions):
+    def __init__(self):
         Tree.__init__(self)
-        cols = len(max(transactions, key=len))
-        
-        temp = [str]*cols
+        self.set_rules_hint(True)
+        self.cols = 20  
+        temp = [str]*self.cols
         model = gtk.ListStore(*temp)
         self.set_model(model)
         
-        for i in range(cols):
+        for i in range(self.cols):
             column = gtk.TreeViewColumn()
             column.set_widget(self._get_combobox())
             self.append_column(column)
             cell = gtk.CellRendererText()
             column.pack_start(cell, expand = True)
             column.add_attribute(cell, "text", i)
-            
-        for t in transactions:
-            item = [str(c) for c in t]
-            while len(item) < cols:
+    
+    def reload(self, rows):
+        self.clear()
+        model = self.get_model()
+        for row in rows:
+            item = [str(c) for c in row]
+            while len(item) < self.cols:
                 item.append('')
             model.append(item)
         
-        self.show_all()
-
     def _get_combobox(self):
         cb = gtk.combo_box_new_text()
         for str in ['date', 'description', 'amount', 'ignore', 'category']:
             cb.append_text(str)
             cb.show()
         return cb
-
