@@ -21,6 +21,7 @@
 from datetime import datetime
 import codecs, csv, re
 from cStringIO import StringIO
+import chardet
 
 class CsvImporter:
     """
@@ -32,13 +33,16 @@ class CsvImporter:
         return self.getTransactionsFromCSV(contents, settings)
 
     def getRowsFromCSV(self, filename, profile):
-        csvfile = open(filename)
-        dialect = csv.Sniffer().sniff(csvfile.read(1024))
-        csvfile.seek(0)
+        #TODO sniff dialect and encoding only once
+        csvdata = StringIO(open(filename, 'rb').read())
+        dialect = csv.Sniffer().sniff(csvdata.read(2048))
+        csvdata.seek(0)
+        encoding = chardet.detect(csvdata.read(2048))['encoding']
+        csvdata.seek(0)
         
         linesSkipped = 0
         result = []
-        for row in csv.reader(csvfile, dialect):
+        for row in UnicodeReader(csvdata, dialect, encoding):
             # Unfortunately csvReader is not subscriptable so we must count ourselves.
             if profile['linesToSkip']>linesSkipped:
                 linesSkipped+=1
@@ -102,6 +106,26 @@ class CsvImporter:
 
         amountStr = amountStr.replace(decimalSeparator, '.')
         return float(amountStr)
+
+
+class UnicodeReader:
+    """
+    A CSV reader which will iterate over lines in the CSV file "f",
+    which is encoded in the given encoding.
+    """
+
+    def __init__(self, f, dialect=csv.excel, encoding="utf-8", **kwds):
+        f = UTF8Recoder(f, encoding)
+        self.reader = csv.reader(f, dialect=dialect, **kwds)
+
+    def next(self):
+        row = self.reader.next()
+        return [unicode(s, "utf-8") for s in row]
+
+    def __iter__(self):
+        return self
+
+
 
 class UTF8Recoder:
     """

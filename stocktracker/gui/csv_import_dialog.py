@@ -34,11 +34,12 @@ class CSVImportDialog(gtk.Dialog):
         table.attach(gtk.Label('Lines to skip'),0,1,1,2, xoptions=0, yoptions=0)
         self.lines_to_skip = gtk.SpinButton(gtk.Adjustment(lower=0, upper=100,step_incr=1, value = 1), digits=0)
         self.lines_to_skip.connect("value-changed", self._on_refresh)
-        table.attach(self.lines_to_skip, 1,2,1,2)
+        table.attach(self.lines_to_skip, 1,2,1,2, xoptions=0, yoptions=0)
         
         table.attach(gtk.HSeparator(), 0,3,2,3)
         frame = gtk.Frame('Preview')
         sw = gtk.ScrolledWindow()
+        sw.set_policy(gtk.POLICY_AUTOMATIC,gtk.POLICY_AUTOMATIC)
         frame.add(sw)
         self.tree = PreviewTree()
         sw.add(self.tree)
