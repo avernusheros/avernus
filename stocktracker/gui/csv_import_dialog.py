@@ -66,6 +66,7 @@ class PreviewTree(Tree):
     def __init__(self):
         Tree.__init__(self)
         self.set_rules_hint(True)
+        
         self.set_size_request(700,400)
         self.cols = 20  
         temp = [str]*self.cols
@@ -74,8 +75,15 @@ class PreviewTree(Tree):
         
         for i in range(self.cols):
             column = gtk.TreeViewColumn()
-            column.set_widget(self._get_combobox())
+            column.set_clickable(True)
+            column.set_resizable(True)
+            cb = self._get_combobox()
+            column.set_widget(cb)
             self.append_column(column)
+            #hack to make the comboboxes work
+            button = cb.get_parent().get_parent().get_parent()
+            button.connect('pressed', self.on_button_press_event, cb)
+            
             cell = gtk.CellRendererText()
             column.pack_start(cell, expand = True)
             column.add_attribute(cell, "text", i)
@@ -88,10 +96,14 @@ class PreviewTree(Tree):
             while len(item) < self.cols:
                 item.append('')
             model.append(item)
+    
+    def on_button_press_event(self, button, cb):
+        cb.popup()
         
     def _get_combobox(self):
         cb = gtk.combo_box_new_text()
-        for str in ['date', 'description', 'amount', 'ignore', 'category']:
+        for str in ['ignore','date', 'description', 'amount',  'category']:
             cb.append_text(str)
-            cb.show()
+        cb.set_active(0)
+        cb.show()
         return cb
