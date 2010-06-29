@@ -35,7 +35,20 @@ class CsvImporter:
         csvfile = open(filename)
         dialect = csv.Sniffer().sniff(csvfile.read(1024))
         csvfile.seek(0)
-        return [row for row in csv.reader(csvfile, dialect)][profile['linesToSkip']:]
+        
+        linesSkipped = 0
+        result = []
+        for row in csv.reader(csvfile, dialect):
+            # Unfortunately csvReader is not subscriptable so we must count ourselves.
+            if profile['linesToSkip']>linesSkipped:
+                linesSkipped+=1
+                continue
+            result.append(row) 
+            
+            # If we find a blank line, assume we've hit the end of the transactions.
+            #if not row:
+                #break
+        return result
 
     def getTransactionsFromCSV(self, csvdata, settings):
         csvdata = StringIO(csvdata)

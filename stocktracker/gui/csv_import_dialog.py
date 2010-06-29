@@ -25,23 +25,24 @@ class CSVImportDialog(gtk.Dialog):
         table = gtk.Table()
         vbox.pack_start(table)
         
-        table.attach(gtk.Label('File to import'),0,1,0,1, xoptions=gtk.FILL, yoptions=gtk.FILL)
+        table.attach(gtk.Label('File to import'),0,1,0,1, xoptions=0, yoptions=0)
         fcbutton = gtk.FileChooserButton('File to import')
         self.file = None
         fcbutton.connect('file-set', self._on_file_set)
-        table.attach(fcbutton, 1,2,0,1, xoptions=gtk.FILL, yoptions=gtk.FILL)
+        table.attach(fcbutton, 1,2,0,1, xoptions=0, yoptions=0)
         
-        table.attach(gtk.Label('Lines to skip'),0,1,1,2, xoptions=gtk.FILL, yoptions=gtk.FILL)
+        table.attach(gtk.Label('Lines to skip'),0,1,1,2, xoptions=0, yoptions=0)
         self.lines_to_skip = gtk.SpinButton(gtk.Adjustment(lower=0, upper=100,step_incr=1, value = 1), digits=0)
         self.lines_to_skip.connect("value-changed", self._on_refresh)
         table.attach(self.lines_to_skip, 1,2,1,2)
         
-        table.attach(gtk.HSeparator(), 0,2,2,3, xoptions=gtk.FILL, yoptions=gtk.FILL)
-        table.attach(gtk.Label('Preview'), 0,1,3,4, xoptions=gtk.FILL, yoptions=gtk.FILL)
+        table.attach(gtk.HSeparator(), 0,3,2,3)
+        frame = gtk.Frame('Preview')
         sw = gtk.ScrolledWindow()
+        frame.add(sw)
         self.tree = PreviewTree()
         sw.add(self.tree)
-        table.attach(sw, 0,2,4,5)
+        table.attach(frame, 0,3,4,5)
         self.show_all()
 
     def process_result(self, widget=None, response = gtk.RESPONSE_ACCEPT):
@@ -64,6 +65,7 @@ class PreviewTree(Tree):
     def __init__(self):
         Tree.__init__(self)
         self.set_rules_hint(True)
+        self.set_size_request(700,400)
         self.cols = 20  
         temp = [str]*self.cols
         model = gtk.ListStore(*temp)
