@@ -71,7 +71,9 @@ class CsvImporter:
                 writer.writerow(row)
         return temp_file
 
-    def get_rows_from_csv(self, filename, profile):
+    def get_rows_from_csv(self, filename, profile=None):
+        if profile is None:
+            profile = self._sniff_csv(filename)
         csvdata = StringIO(open(filename, 'rb').read())
         result = []
         first_line_skipped = False
