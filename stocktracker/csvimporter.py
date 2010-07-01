@@ -7,20 +7,31 @@ from cStringIO import StringIO
 import tempfile
 import chardet
 
-{
-    'linesToSkip':13, 
-    'encoding':'iso-8859-15',
-    'delimiter':';',
-    'amountColumn':8,
-    'decimalSeparator':',',
-    'descriptionColumn':6,
-    'dateColumn':1,
-    'dateFormat':'%d.%m.%Y',
-    'saldoIndicator':9,
-    'negativeSaldo':'S',
-    'receiver':3,
-    'sender':2,
-    }
+profiles = {
+     "comdirect": {
+         "amountColumn": 5,
+         "dateColumn": 1,
+         "dateFormat": "%d.%m.%Y",
+         "decimalSeparator": ",",
+         "descriptionColumns": "4 (3)",
+         "row length": 5,
+         "header": True
+         },
+    "psd": {
+        'linesToSkip':13, 
+        'encoding':'iso-8859-15',
+        'delimiter':';',
+        'amountColumn':8,
+        'decimalSeparator':',',
+        'descriptionColumn':6,
+        'dateColumn':1,
+        'dateFormat':'%d.%m.%Y',
+        'saldoIndicator':9,
+        'negativeSaldo':'S',
+        'receiver':3,
+        'sender':2,
+        }
+}
 
 
 class CsvImporter:
@@ -59,6 +70,30 @@ class CsvImporter:
         temp_csvdata = StringIO(temp_file.read())
         temp_csvdata.seek(0)
         profile['header'] = csv.Sniffer().has_header(temp_csvdata.read(2048))
+        
+        #columns
+        csvdata.seek(0)
+        first_line_skipped = False
+        for row in UnicodeReader(csvdata, profile['dialect'], profile['encoding']):            
+            if len(row) == profile['row length']:
+                profile['description column'] = []
+                if not first_line_skipped and profile['header']:
+                    first_line_skipped = True
+                    continue
+                col_count = 0
+                for col in row:
+                    if re.match('[0-9]+[\.\-]*[0-9]*[\.\-][0-9]+', col ) is not None:
+                        profile['date column'] = col_count
+                    elif re.match('-?[0-9]+[\.\,]*[0-9]*[\.\,]+[0-9]*', col) is not None:
+                        profile['amount column'] = col_count
+                    elif re.match('[sShHdDcC]$', col) is not None:
+                        profile['saldo indicator'] = col_count
+                    else:
+                        profile['description column'].append(col_count)
+                    col_count+=1
+                break
+        for key, val in profile.iteritems():
+            print key,": ", val
         return profile
 
     def _create_temp_csv(self, csvdata, profile):
@@ -189,7 +224,7 @@ class UTF8Recoder:
     
     
 if __name__ == "__main__":
-    filename = '../data/csv/psd.csv'
+    filename = '../data/csv/comdirect.csv'
     importer = CsvImporter()
     profile = importer._sniff_csv(filename)
     print profile
