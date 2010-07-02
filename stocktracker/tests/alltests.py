@@ -11,7 +11,6 @@ sys.path.append(os.path.join(here, "../../"))
 
 def main():
     runner = unittest.TextTestRunner()
-
     suite = unittest.TestLoader().loadTestsFromNames(modules)
     runner.run(suite)
 

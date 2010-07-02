@@ -72,6 +72,7 @@ class CsvImporter:
         profile['header'] = csv.Sniffer().has_header(temp_csvdata.read(2048))
         
         #columns
+        profile['saldo indicator'] = None
         csvdata.seek(0)
         first_line_skipped = False
         for row in UnicodeReader(csvdata, profile['dialect'], profile['encoding']):            
@@ -86,6 +87,13 @@ class CsvImporter:
                         profile['date column'] = col_count
                     elif re.match('-?[0-9]+[\.\,]*[0-9]*[\.\,]+[0-9]*', col) is not None:
                         profile['amount column'] = col_count
+                        for s in reversed(col):
+                            if s == '.':
+                                profile['decimal separator'] = '.'
+                                break
+                            elif s == ',':
+                                profile['decimal separator'] = ','
+                                break
                     elif re.match('[sShHdDcC]$', col) is not None:
                         profile['saldo indicator'] = col_count
                     else:
@@ -118,6 +126,37 @@ class CsvImporter:
                     first_line_skipped = True
                     continue
                 result.append(row)
+            #If we find a blank line, assume we've hit the end of the transactions.
+            if not row and not len(result)==0:
+                break
+        return result
+        
+    def _parse_amount(self, amount_string, decimal_separator, saldo_indicator=None):
+        if decimal_separator == '.':
+            amount_string = amount_string.replace(',','')
+        elif decimal_separator == ',':
+            amount_string = amount_string.replace('.','').replace(',','.')
+        amount = float(amount_string)
+        if saldo_indicator in ['s','S','c','C']:
+            amount = -amount
+        return amount
+
+    def get_transactions_from_csv(self, csvdata, profile):
+        if profile is None:
+            profile = self._sniff_csv(filename)
+        csvdata = StringIO(open(filename, 'rb').read())
+        result = []
+        first_line_skipped = False
+        for row in UnicodeReader(csvdata, profile['dialect'], profile['encoding']):            
+            if len(row) == profile['row length']:
+                if not first_line_skipped and profile['header']:
+                    first_line_skipped = True
+                    continue
+                tran = [row[profile['date column']], 
+                        ' - '.join([row[d] for d in profile['description column']]),
+                        self._parse_amount(row[profile['amount column']], profile['decimal separator'], profile['saldo indicator'])
+                        ]    
+                result.append(tran)
             #If we find a blank line, assume we've hit the end of the transactions.
             if not row and not len(result)==0:
                 break
@@ -228,7 +267,7 @@ if __name__ == "__main__":
     importer = CsvImporter()
     profile = importer._sniff_csv(filename)
     print profile
-    trans = importer.get_rows_from_csv(filename, profile)
+    trans = importer.get_transactions_from_csv(filename, profile)
     count = 1
     for t in trans:
         print count 
