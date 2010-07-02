@@ -141,7 +141,7 @@ class CsvImporter:
             amount = -amount
         return amount
 
-    def get_transactions_from_csv(self, csvdata, profile):
+    def get_transactions_from_csv(self, filename, profile=None):
         if profile is None:
             profile = self._sniff_csv(filename)
         csvdata = StringIO(open(filename, 'rb').read())
@@ -206,15 +206,6 @@ class CsvImporter:
     def parseDesc(self, desc):
         return re.sub('[\s]+',' ',desc)
        
-    def parseAmount(self, val, decimalSeparator):
-        amountStr = ""
-        for char in val:
-            if char in "-1234567890"+decimalSeparator:
-                amountStr += char
-
-        amountStr = amountStr.replace(decimalSeparator, '.')
-        return float(amountStr)
-
 
 class UnicodeReader:
     """

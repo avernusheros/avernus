@@ -35,7 +35,7 @@ class CSVImportDialog(gtk.Dialog):
         sw = gtk.ScrolledWindow()
         sw.set_policy(gtk.POLICY_AUTOMATIC,gtk.POLICY_AUTOMATIC)
         frame.add(sw)
-        self.tree = PreviewTree()
+        self.tree = PreviewTree2()
         sw.add(self.tree)
         table.attach(frame, 0,3,1,2)
         self.show_all()
@@ -46,13 +46,34 @@ class CSVImportDialog(gtk.Dialog):
         self.destroy()  
 
     def _on_refresh(self, *args):
-        transactions = self.importer.get_rows_from_csv(self.file)
+        transactions = self.importer.get_transactions_from_csv(self.file)
         self.tree.reload(transactions)
 
     def _on_file_set(self, button):
         self.file = button.get_filename()
         self._on_refresh()
         
+
+class PreviewTree2(Tree):
+    
+    def __init__(self):
+        Tree.__init__(self)
+        self.set_rules_hint(True)
+        
+        self.set_size_request(700,400)
+        model = gtk.ListStore(str, str, float)
+        self.set_model(model)
+        
+        self.create_column('date', 0)
+        self.create_column('description', 1)
+        self.create_column('amount', 2)
+    
+    def reload(self, transactions):
+        self.clear()
+        model = self.get_model()
+        for trans in transactions:
+            model.append(trans)
+    
 
 class PreviewTree(Tree):
     
