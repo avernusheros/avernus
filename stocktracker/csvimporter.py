@@ -1,11 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from datetime import datetime
+from datetime import datetime, date
 import codecs, csv, re
 from cStringIO import StringIO
 import tempfile
 import chardet
+
+from stocktracker.objects import controller
 
 profiles = {
      "comdirect": {
@@ -35,6 +37,9 @@ profiles = {
 
 
 class CsvImporter:
+    
+    def __init__(self):
+        self.results = []
     
     def getTransactionsFromFile(self, filename, settings):
         contents = open(filename, 'rb').read()
@@ -114,23 +119,6 @@ class CsvImporter:
                 writer.writerow(row)
         return temp_file
 
-    def get_rows_from_csv(self, filename, profile=None):
-        if profile is None:
-            profile = self._sniff_csv(filename)
-        csvdata = StringIO(open(filename, 'rb').read())
-        result = []
-        first_line_skipped = False
-        for row in UnicodeReader(csvdata, profile['dialect'], profile['encoding']):            
-            if len(row) == profile['row length']:
-                if not first_line_skipped and profile['header']:
-                    first_line_skipped = True
-                    continue
-                result.append(row)
-            #If we find a blank line, assume we've hit the end of the transactions.
-            if not row and not len(result)==0:
-                break
-        return result
-        
     def _parse_amount(self, amount_string, decimal_separator, saldo_indicator=None):
         if decimal_separator == '.':
             amount_string = amount_string.replace(',','')
@@ -160,14 +148,21 @@ class CsvImporter:
             #If we find a blank line, assume we've hit the end of the transactions.
             if not row and not len(result)==0:
                 break
+        self.results = result
         return result
 
+    def create_transactions(self, account):
+        #FIXME detect duplicates
+        for result in self.results:
+            #FIXME date
+            #controller.newAccountTransaction(date=result[0], description=result[1], amount=result[2], account=account)
+            controller.newAccountTransaction(date=date.today(), description=result[1], amount=result[2], account=account)
+                        
     def getTransactionsFromCSV(self, csvdata, settings):
         csvdata = StringIO(csvdata)
         csvReader = csv.reader(
             UTF8Recoder(csvdata, settings['encoding']),
             delimiter=settings['delimiter'])
-
         transactions = []
         linesSkipped = 0
         for row in csvReader:

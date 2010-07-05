@@ -113,9 +113,9 @@ def newAccount(name, id=None, amount=0, type=1):
     result.insert()
     return result
 
-def newAccountTransaction(id=None, description='', amount=0.0, type=1, account=None):
+def newAccountTransaction(id=None, description='', amount=0.0, type=1, account=None, category=None, date=datetime.date.today()):
     result = AccountTransaction(id=id, description=description, \
-                    amount=amount, type=type, account=account)
+                    amount=amount, date=date, type=type, account=account, category=None)
     result.insert()
     return result
     

@@ -55,7 +55,7 @@ class TransactionsTree(Tree):
         self.account = account
         Tree.__init__(self)
         #object, name, price, change
-        self.set_model(gtk.TreeStore(object,str, int, str,str))
+        self.set_model(gtk.ListStore(object,str, int, str,str))
         
         self.create_column(_('Description'), 1)
         self.create_column(_('Amount'), 2)
@@ -69,7 +69,12 @@ class TransactionsTree(Tree):
             self.insert_transaction(ta)
     
     def insert_transaction(self, ta):
-        self.get_model().append(None, [ta, ta.description, ta.category.name, get_datetime_string(ta.date)])
+        print "INSERT", ta
+        print ta.date
+        if ta.category:
+            self.get_model().append([ta, ta.description, ta.amount, ta.category.name, str(ta.date)])
+        else:    
+            self.get_model().append([ta, ta.description, ta.amount, '', str(ta.date)])
 
 
 class CategoriesTree(Tree):

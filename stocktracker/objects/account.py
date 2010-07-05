@@ -29,7 +29,7 @@ class AccountTransaction(SQLiteEntity):
                    'description': 'VARCHAR',
                    'type': 'INTEGER',
                    'amount': 'FLOAT',
-                   'date' :'TIMESTAMP',
+                   'date' :'DATE',
                    'account': Account,
                    'category': AccountCategory                   
                   }

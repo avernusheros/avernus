@@ -33,9 +33,14 @@ class CSVImportDialog(gtk.Dialog):
         table.attach(fcbutton, 1,2,0,1, xoptions=0, yoptions=0)
         
         table.attach(gtk.Label('Target account'),0,1,1,2, xoptions=0, yoptions=0)
-        self.account_cb = gtk.combo_box_new_text()
+        model = gtk.ListStore(object, str)
         for account in controller.getAllAccount():
-            self.account_cb.append_text(account.name)
+            model.append([account, account.name])
+        self.account_cb = gtk.ComboBox(model)
+        cell = gtk.CellRendererText()
+        self.account_cb.pack_start(cell, True)
+        self.account_cb.add_attribute(cell, 'text', 1)
+     
         table.attach(self.account_cb, 1,2,1,2, xoptions=0, yoptions=0)
         
         frame = gtk.Frame('Preview')
@@ -49,7 +54,10 @@ class CSVImportDialog(gtk.Dialog):
 
     def process_result(self, widget=None, response = gtk.RESPONSE_ACCEPT):
         if response == gtk.RESPONSE_ACCEPT:
-            print "do import to account", self.account_cb.get_active_text()
+            model = self.account_cb.get_model()
+            print "do import to account", model[self.account_cb.get_active()][1]
+            account = model[self.account_cb.get_active()][0]
+            self.importer.create_transactions(account)
         self.destroy()  
 
     def _on_refresh(self, *args):
