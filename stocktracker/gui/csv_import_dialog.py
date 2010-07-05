@@ -3,6 +3,7 @@
 import gtk
 from stocktracker.gui.gui_utils import Tree
 from stocktracker import csvimporter
+from stocktracker.objects import controller
 
 
 class CSVImportDialog(gtk.Dialog):
@@ -31,18 +32,24 @@ class CSVImportDialog(gtk.Dialog):
         fcbutton.connect('file-set', self._on_file_set)
         table.attach(fcbutton, 1,2,0,1, xoptions=0, yoptions=0)
         
+        table.attach(gtk.Label('Target account'),0,1,1,2, xoptions=0, yoptions=0)
+        self.account_cb = gtk.combo_box_new_text()
+        for account in controller.getAllAccount():
+            self.account_cb.append_text(account.name)
+        table.attach(self.account_cb, 1,2,1,2, xoptions=0, yoptions=0)
+        
         frame = gtk.Frame('Preview')
         sw = gtk.ScrolledWindow()
         sw.set_policy(gtk.POLICY_AUTOMATIC,gtk.POLICY_AUTOMATIC)
         frame.add(sw)
         self.tree = PreviewTree2()
         sw.add(self.tree)
-        table.attach(frame, 0,3,1,2)
+        table.attach(frame, 0,3,2,3)
         self.show_all()
 
     def process_result(self, widget=None, response = gtk.RESPONSE_ACCEPT):
         if response == gtk.RESPONSE_ACCEPT:
-            print "do import"
+            print "do import to account", self.account_cb.get_active_text()
         self.destroy()  
 
     def _on_refresh(self, *args):
