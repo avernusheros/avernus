@@ -40,7 +40,9 @@ class AccountTransactionTab(gtk.HPaned):
             button = actiongroup.get_action(action).create_tool_item()
             toolbar.insert(button, -1)
         vbox.pack_start(toolbar, expand=False, fill=False)
-                
+
+        #FIXME use something like 75% of available space
+        self.set_position(400)
         self.show_all()
     
     def show(self):
@@ -62,19 +64,39 @@ class TransactionsTree(Tree):
         self.create_column(_('Category'), 3)
         self.create_column(_('Date'), 4)
         
+        self.get_selection().set_mode(gtk.SELECTION_MULTIPLE)
+        
+        self.enable_model_drag_source(gtk.gdk.BUTTON1_MASK, 
+                                      [ ( 'text/plain', 0, 80 )],
+                                      gtk.gdk.ACTION_COPY)
+        self.connect("drag-data-get", self.on_drag_data_get)
+        self.connect('drag-end', self.on_drag_end)
         #pubsub.subscribe('transaction.added', self.on_transaction_created)
+        
+    def on_drag_data_get(self, treeview, context, selection, info, timestamp):
+        treeselection = treeview.get_selection()
+        model, iter = treeselection.get_selected()
+        id = model.get_value(iter, 0).id
+        selection.set('text/plain', 8, str(id))
+    
+    def on_drag_end(self,widget, drag_context):
+        treeselection = self.get_selection()
+        model, iter = treeselection.get_selected()
+        trans = model.get_value(iter, 0)
+        model[iter] = self.get_item_to_insert(trans) 
+        
+    def get_item_to_insert(self, ta):
+        if ta.category:
+            return [ta, ta.description, ta.amount, ta.category.name, str(ta.date)]
+        else:    
+            return [ta, ta.description, ta.amount, '', str(ta.date)]
         
     def load_transactions(self):
         for ta in controller.getTransactionsForAccount(self.account):
             self.insert_transaction(ta)
     
     def insert_transaction(self, ta):
-        print "INSERT", ta
-        print ta.date
-        if ta.category:
-            self.get_model().append([ta, ta.description, ta.amount, ta.category.name, str(ta.date)])
-        else:    
-            self.get_model().append([ta, ta.description, ta.amount, '', str(ta.date)])
+        self.get_model().append(self.get_item_to_insert(ta))
 
 
 class CategoriesTree(Tree):
@@ -84,7 +106,12 @@ class CategoriesTree(Tree):
         self.set_model(gtk.TreeStore(object, str))
         self.set_reorderable(True)
         self.create_column(_('Name'), 1)
-                
+        
+        self.enable_model_drag_dest([ ( 'text/plain', 0, 80 )],
+                                    gtk.gdk.ACTION_COPY)
+        self.connect("drag_data_received", self.on_drag_data_received)
+        
+        
     def load_categories(self):
         for cat in controller.getAllAccountCategories():
             self.insert_item(cat)
@@ -126,6 +153,18 @@ class CategoriesTree(Tree):
     def on_select(self, obj):
         for action in ['remove', 'edit']:
             self.actiongroup.get_action(action).set_sensitive(True)
+
+    def on_drag_data_received(self, widget, context, x, y, selection, target_type, time):
+        drop_info = self.get_dest_row_at_pos(x, y)
+        if drop_info is None:
+            print "NO CATEGORY"
+            return
+        else:
+            model = self.get_model()
+            path, position = drop_info
+            cat = self.get_model()[path[0]][0]
+            transaction = controller.AccountTransaction.getByPrimaryKey(int(selection.data))
+            transaction.category = cat
 
 
 class NewCategoryDialog(gtk.Dialog):
