@@ -58,6 +58,7 @@ class TransactionsTree(Tree):
         Tree.__init__(self)
         #object, name, price, change
         self.set_model(gtk.ListStore(object,str, int, str,str))
+        self.defer_select = False
         
         self.create_column(_('Description'), 1)
         self.create_column(_('Amount'), 2)
@@ -65,25 +66,35 @@ class TransactionsTree(Tree):
         self.create_column(_('Date'), 4)
         
         self.get_selection().set_mode(gtk.SELECTION_MULTIPLE)
+        #allows selecting multiple rows by dragging. does not work in 
+        #combination with drag and drop
+        #self.set_rubber_banding(True)
         
         self.enable_model_drag_source(gtk.gdk.BUTTON1_MASK, 
                                       [ ( 'text/plain', 0, 80 )],
-                                      gtk.gdk.ACTION_COPY)
+                                      gtk.gdk.ACTION_DEFAULT | gtk.gdk.ACTION_MOVE)
         self.connect("drag-data-get", self.on_drag_data_get)
         self.connect('drag-end', self.on_drag_end)
+        self.connect('button_press_event', self.on_button_press)
+        self.connect('button_release_event', self.on_button_release)
+
         #pubsub.subscribe('transaction.added', self.on_transaction_created)
         
     def on_drag_data_get(self, treeview, context, selection, info, timestamp):
         treeselection = treeview.get_selection()
-        model, iter = treeselection.get_selected()
-        id = model.get_value(iter, 0).id
-        selection.set('text/plain', 8, str(id))
+        model, paths = treeselection.get_selected_rows()
+        iters = [model.get_iter(path) for path in paths]
+        text = '\n'.join([str(model.get_value(iter, 0).id) for iter in iters])
+        selection.set('text/plain', 8, text)
+        return
     
     def on_drag_end(self,widget, drag_context):
         treeselection = self.get_selection()
-        model, iter = treeselection.get_selected()
-        trans = model.get_value(iter, 0)
-        model[iter] = self.get_item_to_insert(trans) 
+        model, paths = treeselection.get_selected_rows()
+        iters = [model.get_iter(path) for path in paths]
+        for iter in iters:
+            trans = model.get_value(iter, 0)
+            model[iter] = self.get_item_to_insert(trans) 
         
     def get_item_to_insert(self, ta):
         if ta.category:
@@ -98,6 +109,28 @@ class TransactionsTree(Tree):
     def insert_transaction(self, ta):
         self.get_model().append(self.get_item_to_insert(ta))
 
+    def on_button_press(self, widget, event):
+        # Here we intercept mouse clicks on selected items so that we can
+        # drag multiple items without the click selecting only one
+        target = self.get_path_at_pos(int(event.x), int(event.y))
+        if (target 
+           and event.type == gtk.gdk.BUTTON_PRESS
+           and not (event.state & (gtk.gdk.CONTROL_MASK|gtk.gdk.SHIFT_MASK))
+           and self.get_selection().path_is_selected(target[0])):
+               # disable selection
+               self.get_selection().set_select_function(lambda *ignore: False)
+               self.defer_select = target[0]
+            
+    def on_button_release(self, widget, event):
+        # re-enable selection
+        self.get_selection().set_select_function(lambda *ignore: True)        
+        target = self.get_path_at_pos(int(event.x), int(event.y))   
+        if (self.defer_select and target 
+           and self.defer_select == target[0]
+           and not (event.x==0 and event.y==0)): # certain drag and drop
+               self.set_cursor(target[0], target[1], False)
+        self.defer_select=False
+
 
 class CategoriesTree(Tree):
     def __init__(self):
@@ -108,7 +141,7 @@ class CategoriesTree(Tree):
         self.create_column(_('Name'), 1)
         
         self.enable_model_drag_dest([ ( 'text/plain', 0, 80 )],
-                                    gtk.gdk.ACTION_COPY)
+                                    gtk.gdk.ACTION_DEFAULT | gtk.gdk.ACTION_MOVE)
         self.connect("drag_data_received", self.on_drag_data_received)
         
         
@@ -163,8 +196,9 @@ class CategoriesTree(Tree):
             model = self.get_model()
             path, position = drop_info
             cat = self.get_model()[path[0]][0]
-            transaction = controller.AccountTransaction.getByPrimaryKey(int(selection.data))
-            transaction.category = cat
+            for id in selection.data.split():
+                transaction = controller.AccountTransaction.getByPrimaryKey(int(id))
+                transaction.category = cat
 
 
 class NewCategoryDialog(gtk.Dialog):
