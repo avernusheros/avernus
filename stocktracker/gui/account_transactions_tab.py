@@ -60,7 +60,10 @@ class TransactionsTree(Tree):
         self.set_model(gtk.ListStore(object,str, int, str,str))
         self.defer_select = False
         
-        self.create_column(_('Description'), 1)
+        col, cell = self.create_column(_('Description'), 1)
+        cell.set_property('editable', True)
+        cell.connect('edited', self.on_description_edited)
+        
         self.create_column(_('Amount'), 2)
         self.create_column(_('Category'), 3)
         self.create_column(_('Date'), 4)
@@ -78,8 +81,6 @@ class TransactionsTree(Tree):
         self.connect('button_press_event', self.on_button_press)
         self.connect('button_release_event', self.on_button_release)
 
-        #pubsub.subscribe('transaction.added', self.on_transaction_created)
-        
     def on_drag_data_get(self, treeview, context, selection, info, timestamp):
         treeselection = treeview.get_selection()
         model, paths = treeselection.get_selected_rows()
@@ -95,6 +96,11 @@ class TransactionsTree(Tree):
         for iter in iters:
             trans = model.get_value(iter, 0)
             model[iter] = self.get_item_to_insert(trans) 
+        
+    def on_description_edited(self, renderer, path, new_text):
+        row = self.get_model()[path]
+        row[0].description = new_text
+        row[1] = new_text        
         
     def get_item_to_insert(self, ta):
         if ta.category:
@@ -124,12 +130,6 @@ class TransactionsTree(Tree):
     def on_button_release(self, widget, event):
         # re-enable selection
         self.get_selection().set_select_function(lambda *ignore: True)        
-        target = self.get_path_at_pos(int(event.x), int(event.y))   
-        if (self.defer_select and target 
-           and self.defer_select == target[0]
-           and not (event.x==0 and event.y==0)): # certain drag and drop
-               self.set_cursor(target[0], target[1], False)
-        self.defer_select=False
 
 
 class CategoriesTree(Tree):
