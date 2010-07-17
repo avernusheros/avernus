@@ -47,7 +47,7 @@ class CSVImportDialog(gtk.Dialog):
         frame.add(sw)
         self.tree = PreviewTree2()
         sw.add(self.tree)
-        vbox.pack_start(frame)
+        vbox.pack_start(frame, expand=False)
         #table.attach(frame, 0,3,2,3)
         self.show_all()
 
@@ -79,7 +79,11 @@ class PreviewTree2(Tree):
         self.set_model(model)
         
         self.create_column('date', 0)
-        self.create_column('description', 1)
+        column, cell = self.create_column('description', 1)
+        column.set_sizing(gtk.TREE_VIEW_COLUMN_FIXED)
+        column.set_fixed_width(550)
+        cell.props.wrap_width = 550
+        cell.props.wrap_mode = gtk.WRAP_WORD
         self.create_column('amount', 2, func=float_to_string)
     
     def reload(self, transactions):
