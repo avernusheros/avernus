@@ -44,7 +44,7 @@ class CSVImportDialog(gtk.Dialog):
         frame = gtk.Frame('Preview')
         sw = gtk.ScrolledWindow()
         sw.set_policy(gtk.POLICY_AUTOMATIC,gtk.POLICY_AUTOMATIC)
-        self.tree = PreviewTree2()
+        self.tree = PreviewTree()
         sw.connect_after('size-allocate', 
                          resize_wrap, 
                          self.tree, 
@@ -74,7 +74,7 @@ class CSVImportDialog(gtk.Dialog):
         self._on_refresh()
         
 
-class PreviewTree2(Tree):
+class PreviewTree(Tree):
     
     def __init__(self):
         Tree.__init__(self)
@@ -96,51 +96,4 @@ class PreviewTree2(Tree):
         model = self.get_model()
         for trans in transactions:
             model.append(trans)
-    
 
-class PreviewTree(Tree):
-    
-    def __init__(self):
-        Tree.__init__(self)
-        self.set_rules_hint(True)
-        
-        self.set_size_request(700,400)
-        self.cols = 20  
-        temp = [str]*self.cols
-        model = gtk.ListStore(*temp)
-        self.set_model(model)
-        
-        for i in range(self.cols):
-            column = gtk.TreeViewColumn()
-            column.set_clickable(True)
-            column.set_resizable(True)
-            cb = self._get_combobox()
-            column.set_widget(cb)
-            self.append_column(column)
-            #hack to make the comboboxes work
-            button = cb.get_parent().get_parent().get_parent()
-            button.connect('pressed', self.on_button_press_event, cb)
-            
-            cell = gtk.CellRendererText()
-            column.pack_start(cell, expand = True)
-            column.add_attribute(cell, "text", i)
-    
-    def reload(self, rows):
-        self.clear()
-        model = self.get_model()
-        for row in rows:
-            item = [str(c) for c in row]
-            while len(item) < self.cols:
-                item.append('')
-            model.append(item)
-    
-    def on_button_press_event(self, button, cb):
-        cb.popup()
-        
-    def _get_combobox(self):
-        cb = gtk.combo_box_new_text()
-        for str in ['ignore','date', 'description', 'amount',  'category']:
-            cb.append_text(str)
-        cb.set_active(0)
-        cb.show()
-        return cb
