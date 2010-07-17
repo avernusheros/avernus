@@ -1,5 +1,6 @@
 from stocktracker.objects.model import SQLiteEntity
 
+
 class Account(SQLiteEntity):
 
     __primaryKey__ = 'id'
@@ -10,6 +11,9 @@ class Account(SQLiteEntity):
                    'type': 'INTEGER',
                    'amount': 'FLOAT'                   
                   }
+
+    def __iter__(self):
+        return controller.getTransactionsForAccount(self).__iter__()
 
 
 class AccountCategory(SQLiteEntity):
