@@ -4,6 +4,7 @@ from stocktracker.cairoplot.gtkcairoplot \
     import gtk_pie_plot, gtk_vertical_bar_plot, gtk_dot_line_plot
 import gtk
 from stocktracker.objects import controller
+import datetime
 no_data_string = '\nNo Data!\nAdd transactions first.\n\n'
 
 
@@ -37,23 +38,36 @@ class AccountChartTab(gtk.ScrolledWindow):
             if isinstance(child, gtk.DrawingArea):
                 self.remove(child)
 
-    def _get_legend_weekly(self, date1, date2):
-        timedelta = datetime.timedelta(days=7)
+    def _get_legend_daily(self, bigger, smaller):
+        erg = []
+        delta = bigger - smaller
+        while delta > datetime.timedelta(days =1):
+            erg.append(smaller + delta)
+            delta -= datetime.timedelta(days =1)
+        return erg
 
     def earningsvsspendings_chart(self):
+        """
         if self.current_zoom in ['1m']:
             earnings = self.account.get_weekly_earnings(date1, date2)
             spendings = self.account.get_weekly_spendings(date1, date2)
             legend = self._get_legend_weekly(date1, date2)
         elif self.current_zoom in ['3m', '6m', 'YTD', '1y']:
-            earnings = self.account.get_monthly_earnings(date1, date2)
+            earnings = self.account.get_monthly_earnings(None, None)
             spendings = self.account.get_monthly_spendings(date1, date2)
             legend = self._get_legend_monthly(date1, date2)
         elif self.current_zoom in ['2y','5y','10y', '20y']:
             earnings = self.account.get_yearly_earnings(date1, date2)
             spendings = self.account.get_yearly_spendings(date1, date2)
             legend = self._get_legend_yearly(date1, date2)
-            
+        """
+        today = datetime.date.today()
+        if self.current_zoom in ['1m']:
+            earnings = self.account.get_monthly_earnings(today)
+            spendings = self.account.get_monthly_spendings(today)
+            legend = self._get_legend_daily(today, today - datetime.timedelta(days=30))
+        else:
+            earnings = spendings = legend = []
         data = [earnings, spendings]
 
         chart = gtk_dot_line_plot()

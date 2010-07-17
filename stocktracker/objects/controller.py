@@ -291,6 +291,17 @@ def getTransactionsForAccount(account):
     key = account.getPrimaryKey()
     return AccountTransaction.getAllFromOneColumn("account",key)
 
+def getPeriodTransactionsForAccount(account, fromDate, toDate , earnings=True):
+    erg = []
+    for trans in account:
+        if earnings and trans.isEarning() or \
+            not earnings and not trans.isEarning():
+            if trans.date >= fromDate:
+                if trans.date <= toDate:
+                    erg.append(trans)
+    print erg
+    return erg
+
 def deleteAllPortfolioTransaction(portfolio):
     for trans in getTransactionForPortfolio(portfolio):
         trans.delete() 
