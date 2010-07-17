@@ -64,7 +64,6 @@ class TransactionsTree(Tree):
         Tree.__init__(self)
         #object, name, price, change
         self.set_model(gtk.ListStore(object,str, int, str,str))
-        self.defer_select = False
         
         col, cell = self.create_column(_('Description'), 1)
         cell.set_property('editable', True)
@@ -134,7 +133,6 @@ class TransactionsTree(Tree):
            and self.get_selection().path_is_selected(target[0])):
                # disable selection
                self.get_selection().set_select_function(lambda *ignore: False)
-               self.defer_select = target[0]
             
     def on_button_release(self, widget, event):
         # re-enable selection

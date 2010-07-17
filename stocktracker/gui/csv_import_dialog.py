@@ -11,17 +11,20 @@ class CSVImportDialog(gtk.Dialog):
     def __init__(self, *args):
         gtk.Dialog.__init__(self, _("Import CSV"), None
                             , gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
-                     (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
-                      gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
+                     (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,))
         
         self._init_widgets()
         self.importer = csvimporter.CsvImporter()
         self.profile = {}
+        self.b_file = False
+        self.b_account = False
         
         response = self.run()  
         self.process_result(response = response)
 
     def _init_widgets(self):
+        self.import_button = self.add_button('Import', gtk.RESPONSE_ACCEPT)
+        self.import_button.set_sensitive(False)
         vbox = self.get_content_area()
         fileBox = gtk.HBox()
         vbox.pack_start(fileBox, fill=False, expand=False)
@@ -40,6 +43,7 @@ class CSVImportDialog(gtk.Dialog):
         cell = gtk.CellRendererText()
         self.account_cb.pack_start(cell, True)
         self.account_cb.add_attribute(cell, 'text', 1)
+        self.account_cb.connect('changed', self._on_account_changed)
         accBox.pack_start(self.account_cb, fill=False, expand=False)
         frame = gtk.Frame('Preview')
         sw = gtk.ScrolledWindow()
@@ -70,8 +74,17 @@ class CSVImportDialog(gtk.Dialog):
         self.tree.reload(transactions)
 
     def _on_file_set(self, button):
+        self.b_file = True
+        if self.b_account:
+            self.import_button.set_sensitive(True)
         self.file = button.get_filename()
         self._on_refresh()
+    
+    def _on_account_changed(self, *args):
+        self.b_account = True
+        if self.b_file:
+            self.import_button.set_sensitive(True)
+            
         
 
 class PreviewTree(Tree):
