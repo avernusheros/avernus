@@ -63,6 +63,8 @@ class TransactionsTree(Tree):
         col, cell = self.create_column(_('Description'), 1)
         cell.set_property('editable', True)
         cell.connect('edited', self.on_description_edited)
+        cell.props.wrap_width = 550
+        cell.props.wrap_mode = gtk.WRAP_WORD
         
         self.create_column(_('Amount'), 2)
         self.create_column(_('Category'), 3)

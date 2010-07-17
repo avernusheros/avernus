@@ -80,8 +80,6 @@ class PreviewTree2(Tree):
         
         self.create_column('date', 0)
         column, cell = self.create_column('description', 1)
-        column.set_sizing(gtk.TREE_VIEW_COLUMN_FIXED)
-        column.set_fixed_width(550)
         cell.props.wrap_width = 550
         cell.props.wrap_mode = gtk.WRAP_WORD
         self.create_column('amount', 2, func=float_to_string)
