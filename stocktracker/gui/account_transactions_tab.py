@@ -5,6 +5,7 @@ from stocktracker import pubsub
 from stocktracker.gui.gui_utils import Tree, get_datetime_string
 import stocktracker.objects
 from stocktracker.objects import controller
+from stocktracker.gui.gui_utils import resize_wrap
 
 
 class AccountTransactionTab(gtk.HPaned):
@@ -16,6 +17,11 @@ class AccountTransactionTab(gtk.HPaned):
         sw.set_property('vscrollbar-policy', gtk.POLICY_AUTOMATIC)
         self.transactions_tree = TransactionsTree(item)
         sw.add(self.transactions_tree)
+        sw.connect_after('size-allocate', 
+                         resize_wrap, 
+                         self.transactions_tree, 
+                         self.transactions_tree.dynamicWrapColumn, 
+                         self.transactions_tree.dynamicWrapCell)
         self.pack1(sw)
         
         vbox = gtk.VBox()
@@ -63,7 +69,8 @@ class TransactionsTree(Tree):
         col, cell = self.create_column(_('Description'), 1)
         cell.set_property('editable', True)
         cell.connect('edited', self.on_description_edited)
-        cell.props.wrap_width = 550
+        self.dynamicWrapColumn = col
+        self.dynamicWrapCell = cell
         cell.props.wrap_mode = gtk.WRAP_WORD
         
         self.create_column(_('Amount'), 2)

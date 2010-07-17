@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import gtk
-from stocktracker.gui.gui_utils import Tree, float_to_string
+from stocktracker.gui.gui_utils import Tree, float_to_string, resize_wrap
 from stocktracker import csvimporter
 from stocktracker.objects import controller
 
@@ -44,10 +44,16 @@ class CSVImportDialog(gtk.Dialog):
         frame = gtk.Frame('Preview')
         sw = gtk.ScrolledWindow()
         sw.set_policy(gtk.POLICY_AUTOMATIC,gtk.POLICY_AUTOMATIC)
-        frame.add(sw)
         self.tree = PreviewTree2()
+        sw.connect_after('size-allocate', 
+                         resize_wrap, 
+                         self.tree, 
+                         self.tree.dynamicWrapColumn, 
+                         self.tree.dynamicWrapCell)
+        frame.add(sw)
+        
         sw.add(self.tree)
-        vbox.pack_start(frame, expand=False)
+        vbox.pack_start(frame)
         #table.attach(frame, 0,3,2,3)
         self.show_all()
 
@@ -80,7 +86,8 @@ class PreviewTree2(Tree):
         
         self.create_column('date', 0)
         column, cell = self.create_column('description', 1)
-        cell.props.wrap_width = 550
+        self.dynamicWrapColumn = column
+        self.dynamicWrapCell = cell
         cell.props.wrap_mode = gtk.WRAP_WORD
         self.create_column('amount', 2, func=float_to_string)
     
