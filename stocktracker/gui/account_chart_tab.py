@@ -7,6 +7,15 @@ from stocktracker.objects import controller
 import datetime
 no_data_string = '\nNo Data!\nAdd transactions first.\n\n'
 
+MONTHS = {
+                        '1m':1,
+                        '3m':3,
+                        '6m':6,
+                        '1y':12,
+                        '2y':24,
+                        '5y':60,
+}
+
 
 class AccountChartTab(gtk.ScrolledWindow):
 
@@ -17,7 +26,7 @@ class AccountChartTab(gtk.ScrolledWindow):
         self.set_property('vscrollbar-policy', gtk.POLICY_AUTOMATIC)
         self.table = gtk.Table()
         self.add_with_viewport(self.table)
-        self.zooms = ['1m', '3m', '6m', 'YTD', '1y','2y','5y','10y', '20y']
+        self.zooms = ['1m', '3m', '6m', 'YTD', '1y','2y','5y']
         combobox = gtk.combo_box_new_text()
         for ch in self.zooms:
             combobox.append_text(ch)
@@ -32,51 +41,44 @@ class AccountChartTab(gtk.ScrolledWindow):
         self.table.attach(gtk.Label(_('Earnings vs. Spendings')), 0,2,1,2)
         self.table.attach(self.earningsvsspendings_chart(),0,2,2,3)
         self.show_all()
-        
+
     def clear(self):
         for child in self.get_children():
             if isinstance(child, gtk.DrawingArea):
                 self.remove(child)
 
-    def _get_legend_daily(self, bigger, smaller):
+    def _get_legend(self, bigger, smaller, step=1):
         erg = []
         delta = bigger - smaller
-        while delta > datetime.timedelta(days =1):
+        while delta > datetime.timedelta(days =step):
             erg.append(smaller + delta)
-            delta -= datetime.timedelta(days =1)
+            delta -= datetime.timedelta(days =step)
         return erg
 
     def earningsvsspendings_chart(self):
-        """
-        if self.current_zoom in ['1m']:
-            earnings = self.account.get_weekly_earnings(date1, date2)
-            spendings = self.account.get_weekly_spendings(date1, date2)
-            legend = self._get_legend_weekly(date1, date2)
-        elif self.current_zoom in ['3m', '6m', 'YTD', '1y']:
-            earnings = self.account.get_monthly_earnings(None, None)
-            spendings = self.account.get_monthly_spendings(date1, date2)
-            legend = self._get_legend_monthly(date1, date2)
-        elif self.current_zoom in ['2y','5y','10y', '20y']:
-            earnings = self.account.get_yearly_earnings(date1, date2)
-            spendings = self.account.get_yearly_spendings(date1, date2)
-            legend = self._get_legend_yearly(date1, date2)
-        """
         today = datetime.date.today()
-        if self.current_zoom in ['1m']:
-            earnings = self.account.get_monthly_earnings(today)
-            spendings = self.account.get_monthly_spendings(today)
-            legend = self._get_legend_daily(today, today - datetime.timedelta(days=30))
+        month = 0
+        if self.current_zoom in MONTHS:
+            month = MONTHS[self.current_zoom]
+        if month > 0:
+            earnings = self.account.get_monthly_earnings(today, month=month)
+            spendings = self.account.get_monthly_spendings(today, month=month)
+            legend = self._get_legend(today, today - datetime.timedelta(days=30*month))
+        elif  self.current_zoom == 'YTD':
+            earnings = self.account.get_all_earnings()
+            spendings = self.account.get_all_spendings()
+            legend = self._get_legend(today, self.account.birthday())
         else:
             earnings = spendings = legend = []
         data = [earnings, spendings]
 
         chart = gtk_dot_line_plot()
-        chart.set_args({'data':data, 
-                     'x_labels':legend, 
+        chart.set_args({'data':data,
+                     'x_labels':legend,
                      'y_title': 'Amount',
                      'series_colors': ['blue','green'],
                      'grid': True,
-                     'width':600, 
+                     'width':600,
                      'height':300,
                      })
         return chart
