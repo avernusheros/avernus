@@ -23,16 +23,16 @@ class CSVImportDialog(gtk.Dialog):
 
     def _init_widgets(self):
         vbox = self.get_content_area()
-        table = gtk.Table()
-        vbox.pack_start(table)
-        
-        table.attach(gtk.Label('File to import'),0,1,0,1, xoptions=0, yoptions=0)
+        fileBox = gtk.HBox()
+        vbox.pack_start(fileBox, fill=False, expand=False)
+        fileBox.pack_start(gtk.Label('File to import'), fill=False, expand=False)
         fcbutton = gtk.FileChooserButton('File to import')
         self.file = None
         fcbutton.connect('file-set', self._on_file_set)
-        table.attach(fcbutton, 1,2,0,1, xoptions=0, yoptions=0)
-        
-        table.attach(gtk.Label('Target account'),0,1,1,2, xoptions=0, yoptions=0)
+        fileBox.pack_start(fcbutton, fill=True)
+        accBox = gtk.HBox()
+        vbox.pack_start(accBox, fill=False, expand=False)
+        accBox.pack_start(gtk.Label('Target account'), fill=False, expand=False)
         model = gtk.ListStore(object, str)
         for account in controller.getAllAccount():
             model.append([account, account.name])
@@ -40,16 +40,15 @@ class CSVImportDialog(gtk.Dialog):
         cell = gtk.CellRendererText()
         self.account_cb.pack_start(cell, True)
         self.account_cb.add_attribute(cell, 'text', 1)
-     
-        table.attach(self.account_cb, 1,2,1,2, xoptions=0, yoptions=0)
-        
+        accBox.pack_start(self.account_cb, fill=False, expand=False)
         frame = gtk.Frame('Preview')
         sw = gtk.ScrolledWindow()
         sw.set_policy(gtk.POLICY_AUTOMATIC,gtk.POLICY_AUTOMATIC)
         frame.add(sw)
         self.tree = PreviewTree2()
         sw.add(self.tree)
-        table.attach(frame, 0,3,2,3)
+        vbox.pack_start(frame)
+        #table.attach(frame, 0,3,2,3)
         self.show_all()
 
     def process_result(self, widget=None, response = gtk.RESPONSE_ACCEPT):
