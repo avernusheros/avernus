@@ -83,7 +83,6 @@ class Portfolio(SQLiteEntity, Container):
                    "cash": "FLOAT",
                    }
     
-    
     def __iter__(self):
         return controller.getPositionForPortfolio(self).__iter__()
     

@@ -144,7 +144,6 @@ class CategoriesTree(Tree):
                                     gtk.gdk.ACTION_DEFAULT | gtk.gdk.ACTION_MOVE)
         self.connect("drag_data_received", self.on_drag_data_received)
         
-        
     def load_categories(self):
         for cat in controller.getAllAccountCategories():
             self.insert_item(cat)
