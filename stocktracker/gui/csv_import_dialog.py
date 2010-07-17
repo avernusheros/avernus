@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import gtk
-from stocktracker.gui.gui_utils import Tree
+from stocktracker.gui.gui_utils import Tree, float_to_string
 from stocktracker import csvimporter
 from stocktracker.objects import controller
 
@@ -80,7 +80,7 @@ class PreviewTree2(Tree):
         
         self.create_column('date', 0)
         self.create_column('description', 1)
-        self.create_column('amount', 2)
+        self.create_column('amount', 2, func=float_to_string)
     
     def reload(self, transactions):
         self.clear()

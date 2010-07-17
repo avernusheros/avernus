@@ -142,7 +142,9 @@ class CsvImporter:
                     continue
                 tran = [row[profile['date column']], 
                         ' - '.join([row[d] for d in profile['description column']]),
-                        self._parse_amount(row[profile['amount column']], profile['decimal separator'], profile['saldo indicator'])
+                        self._parse_amount(row[profile['amount column']], 
+                                           profile['decimal separator'], 
+                                           profile['saldo indicator'])
                         ]    
                 result.append(tran)
             #If we find a blank line, assume we've hit the end of the transactions.
