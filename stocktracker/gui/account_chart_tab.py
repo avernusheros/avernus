@@ -26,14 +26,22 @@ class AccountChartTab(gtk.ScrolledWindow):
         self.set_property('vscrollbar-policy', gtk.POLICY_AUTOMATIC)
         self.table = gtk.Table()
         self.add_with_viewport(self.table)
-        self.zooms = ['1m', '3m', '6m', 'YTD', '1y','2y','5y']
+        self.zooms = ['ACT','1m', '3m', '6m', 'YTD', '1y','2y','5y', 'TTD']
         combobox = gtk.combo_box_new_text()
         for ch in self.zooms:
             combobox.append_text(ch)
-        combobox.set_active(3)
+        combobox.set_active(4)
         self.current_zoom = 'YTD'
         combobox.connect('changed', self.on_zoom_change)
         self.table.attach(combobox, 0,1,0,1)
+        self.steps = ['day','week','month','year']
+        combobox = gtk.combo_box_new_text()
+        for st in self.steps:
+            combobox.append_text(st)
+        combobox.set_active(0)
+        self.current_step = 'day'
+        combobox.connect('changed', self.on_step_change)
+        self.table.attach(combobox,1,2,0,1)
         self.show_all()
 
     def show(self):
@@ -47,12 +55,25 @@ class AccountChartTab(gtk.ScrolledWindow):
             if isinstance(child, gtk.DrawingArea):
                 self.remove(child)
 
-    def _get_legend(self, bigger, smaller, step=1):
+    def _get_legend(self, bigger, smaller):
         erg = []
         delta = bigger - smaller
+        if self.current_step in ['day','week']:
+            if self.current_step == 'day':
+                step = 1
+            else:
+                step = 7
+            step_func = lambda delta: delta - datetime.timedelta(days=step)
+        elif self.current_step == 'year':
+            step = 1
+            step_func = lambda delta: datetime.date(delta.day, delta.month, delta.year-1)
+        else:
+            return [0,8,15]
+        #month... no idea. maybe calendar or other specialities
+        #TODO
         while delta > datetime.timedelta(days =step):
-            erg.append(smaller + delta)
-            delta -= datetime.timedelta(days =step)
+                erg.append(smaller + delta)
+                delta = step_func(delta)
         return erg
 
     def earningsvsspendings_chart(self):
@@ -64,10 +85,18 @@ class AccountChartTab(gtk.ScrolledWindow):
             earnings = self.account.get_monthly_earnings(today, month=month)
             spendings = self.account.get_monthly_spendings(today, month=month)
             legend = self._get_legend(today, today - datetime.timedelta(days=30*month))
-        elif  self.current_zoom == 'YTD':
+        elif  self.current_zoom == 'TTD':
             earnings = self.account.get_all_earnings()
             spendings = self.account.get_all_spendings()
             legend = self._get_legend(today, self.account.birthday())
+        elif self.current_zoom == 'YTD':
+            earnings = self.account.get_ytd_earnings()
+            spendings = self.account.get_ytd_spendings()
+            legend = self._get_legend(today, controller.get_ytd_first())
+        elif self.current_zoom == 'ACT':
+            earnings = self.account.get_act_earnings()
+            spendings = self.account.get_act_spendings()
+            legend = self._get_legend(today, controller.get_act_first())
         else:
             earnings = spendings = legend = []
         data = [earnings, spendings]
@@ -87,4 +116,10 @@ class AccountChartTab(gtk.ScrolledWindow):
         zoom = self.zooms[cb.get_active()]
         if zoom != self.current_zoom:
             self.current_zoom = zoom
+            self.show()
+
+    def on_step_change(self, cb):
+        step = self.steps[cb.get_active()]
+        if step != self.current_step:
+            self.current_step = step
             self.show()

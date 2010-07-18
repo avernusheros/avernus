@@ -51,7 +51,7 @@ def is_duplicate(tp, **kwargs):
     if present:
         return True
     else: return False
-            
+
 def detectDuplicate(tp,**kwargs):
     #print tp, kwargs
     sqlArgs = {}
@@ -102,7 +102,7 @@ def newPortfolio(name, id=None, last_update = datetime.datetime.now(), comment="
     result = Portfolio(id=id, name=name,last_update=last_update,comment=comment,cash=cash)
     result.insert()
     return result
-    
+
 def newWatchlist(name, id=None, last_update = datetime.datetime.now(), comment=""):
     result = Watchlist(id=id, name=name,last_update=last_update,comment=comment)
     result.insert()
@@ -118,7 +118,7 @@ def newAccountTransaction(id=None, description='', amount=0.0, type=1, account=N
                     amount=amount, date=date, type=type, account=account, category=None)
     result.insert()
     return result
-    
+
 def newAccountCategory(name='', id=None):
     result = AccountCategory(id=id, name=name)
     result.insert()
@@ -141,7 +141,7 @@ def newTransaction(date=datetime.datetime.now(),\
                          costs=costs)
     result.insert()
     return result
-    
+
 
 def newIndex(name='', isin='', currency='', date=datetime.datetime.now(), exchange='', yahoo_symbol=''):
     result = Index(id=None, name=name, currency=currency, isin=isin, date=date, exchange=exchange, yahoo_symbol=yahoo_symbol, price=0, change=0)
@@ -164,7 +164,7 @@ def newPortfolioPosition(price=0,\
                                comment=comment\
                                )
     result.insert()
-    return result   
+    return result
 
 
 def newWatchlistPosition(price=0,\
@@ -182,7 +182,7 @@ def newWatchlistPosition(price=0,\
                                comment=comment\
                                )
     result.insert()
-    return result 
+    return result
 
 
 def newTag(name):
@@ -190,7 +190,7 @@ def newTag(name):
     result.insert()
     pubsub.publish('tag.created',result)
     return result
- 
+
 def newStock(insert=True, **kwargs):
     result = Stock(**kwargs)
     if insert:
@@ -241,7 +241,7 @@ def getAllSector():
 
 def getAllTag():
     return Tag.getAll()
-    
+
 def getAllStock():
     return Stock.getAll()
 
@@ -255,7 +255,7 @@ def deleteAllPortfolioPosition(portfolio):
     for pos in getPositionForPortfolio(portfolio):
         #print "deleting ",pos
         pos.delete()
-        
+
 def getTransactionForPosition(position):
     key = position.getPrimaryKey()
     erg = Transaction.getAllFromOneColumn("position", key)
@@ -264,7 +264,7 @@ def getTransactionForPosition(position):
 def deleteAllPositionTransaction(position):
     for trans in getTransactionForPosition(position):
         trans.delete()
-    
+
 def getPositionForWatchlist(watchlist):
     key = watchlist.getPrimaryKey()
     return WatchlistPosition.getAllFromOneColumn("watchlist",key)
@@ -302,9 +302,17 @@ def getPeriodTransactionsForAccount(account, fromDate, toDate , earnings=True):
     print erg
     return erg
 
+def get_ytd_first():
+    year = datetime.date.today().year
+    return datetime.date(day=1, month=1, year=year)
+
+def get_act_first():
+    td = datetime.date.today()
+    return datetime.date(day=1, month=td.month, year=td.year)
+
 def deleteAllPortfolioTransaction(portfolio):
     for trans in getTransactionForPortfolio(portfolio):
-        trans.delete() 
+        trans.delete()
 
 def getStockForSearchstring(searchstring):
     sqlArgs = {}
@@ -325,13 +333,13 @@ def getNewestQuotation(stock):
         return None
     else:
         return erg[0].date
-    
+
 def getBuyTransaction(portfolio_position):
     key = portfolio_position.getPrimaryKey()
     for ta in Transaction.getAllFromOneColumn('position', key):
         if ta.type == 1:
-            return ta    
-    
+            return ta
+
 def onPositionNewTag(position=None,tagText=None):
     if not position or not tagText:
         logger.logger.error("Malformed onPositionNewTag Call (position,tagText)" + str((position,tagText)))
@@ -348,13 +356,13 @@ pubsub.subscribe('position.newTag', onPositionNewTag)
 class GeneratorTask(object):
     """
     http://unpythonic.blogspot.com/2007/08/using-threads-in-pygtk.html
-    Thanks!    
+    Thanks!
     """
     def __init__(self, generator, loop_callback, complete_callback=None):
         self.generator = generator
         self.loop_callback = loop_callback
         self.complete_callback = complete_callback
-        
+
     def _start(self, *args, **kwargs):
         self._stopped = False
         for ret in self.generator(*args, **kwargs):

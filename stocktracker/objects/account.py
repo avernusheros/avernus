@@ -34,6 +34,18 @@ class Account(SQLiteEntity):
     def get_all_spendings(self):
         return [t for t in self if t.isSpending()]
 
+    def get_ytd_earnings(self):
+        return self.get_transactions(controller.get_ytd_first(), datetime.date.today())
+
+    def get_ytd_spendings(self):
+        return self.get_transactions(controller.get_ytd_first(), datetime.date.today(), earnings=False)
+
+    def get_act_earnings(self):
+        return self.get_transactions(controller.get_act_first(), datetime.date.today())
+
+    def get_act_spendings(self):
+        return self.get_transactions(controller.get_act_first(), datetime.date.today(), earnings=False)
+
     def birthday(self):
         if not 'birthday_cache' in dir(self):
             self.birthday_cache = None
