@@ -299,17 +299,26 @@ def getPeriodTransactionsForAccount(account, fromDate, toDate , earnings=True):
             if trans.date >= fromDate:
                 if trans.date <= toDate:
                     erg.append(trans)
-    print erg
     return erg
 
-def get_ytd_first():
-    year = datetime.date.today().year
-    return datetime.date(day=1, month=1, year=year)
-
-def get_act_first():
-    td = datetime.date.today()
-    return datetime.date(day=1, month=td.month, year=td.year)
-
+def getEarningsOrSpendingsSummedInPeriod(account, end_date, start_date, earnings=True):
+    if earnings: operator = '>'
+    else: operator = '<'
+    query = """
+    SELECT abs(sum(trans.amount))
+    FROM accounttransaction as trans, account
+    WHERE account.id == ? 
+    AND account.id == trans.account
+    AND trans.amount"""+operator+"""0.0
+    AND trans.date <= ?
+    AND trans.date >= ?
+    """
+    #ugly, but [0] does not work
+    for row in model.store.select(query, (account.id, end_date, start_date)):
+        if row[0] == None:
+            return 0.0
+        return row[0]
+    
 def deleteAllPortfolioTransaction(portfolio):
     for trans in getTransactionForPortfolio(portfolio):
         trans.delete()

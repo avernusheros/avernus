@@ -1,6 +1,7 @@
 from stocktracker.objects.model import SQLiteEntity
 import controller
 import datetime
+from dateutil.relativedelta import relativedelta
 
 class Account(SQLiteEntity):
 
@@ -19,20 +20,34 @@ class Account(SQLiteEntity):
     def get_transactions(self, fromDate, toDate, earnings=True):
         return controller.getPeriodTransactionsForAccount(self, fromDate, toDate, earnings)
 
-    def get_earnings(self, date, month=1):
-        return self.get_transactions(date - datetime.timedelta(days=30*month),
-                                date)
+    def get_earnings(self, end_date, start_date, period='month'):
+        return self._get_earnings_or_spendings(end_date, start_date, period, earnings=True)
+    
+    def get_spendings(self, end_date, start_date, period='month'):
+        return self._get_earnings_or_spendings(end_date, start_date, period, earnings=False)
 
-    def get_spendings(self, date, month=1):
-        return self.get_transactions(date - datetime.timedelta(days=30*month),
-                                 date,
-                                 earnings=False)
+    def _get_earnings_or_spendings(self, end_date, start_date, period='month', earnings=True):
+        if period == 'month':
+            delta = relativedelta(months=+1)
+        elif period == 'year':
+            delta = relativedelta(years=+1)
+        elif period == 'day':
+            delta = relativedelta(days=+1)
+        elif period == 'week':
+            delta = relativedelta(weeks=+1)
+        ret = []
+        while start_date < end_date:
+            temp = start_date+delta
+            ret.append(controller.getEarningsOrSpendingsSummedInPeriod(self, temp, start_date, earnings=earnings))
+            start_date += delta
+        print ret
+        return ret
+                
+    def get_all_earnings(self, period):
+        return controller.getEarningsOrSpendingsSummed(self, period, earnings = True)
 
-    def get_all_earnings(self):
-        return [t for t in self if t.isEarning()]
-
-    def get_all_spendings(self):
-        return [t for t in self if t.isSpending()]
+    def get_all_spendings(self, period):
+        return controller.getEarningsOrSpendingsSummed(self, period, earnings = False)
 
     def get_ytd_earnings(self):
         return self.get_transactions(controller.get_ytd_first(), datetime.date.today())
@@ -52,7 +67,7 @@ class Account(SQLiteEntity):
         if self.birthday_cache:
             return self.birthday_cache
         else:
-            birthday = datetime.today()
+            birthday = datetime.date.today()
             for t in self:
                 birthday = min(t.date, birthday)
             self.birthday_cache = birthday
