@@ -17,13 +17,22 @@ class Account(SQLiteEntity):
     def __iter__(self):
         return controller.getTransactionsForAccount(self).__iter__()
 
-    def get_transactions_in_period(self, fromDate, toDate):
+    def get_transactions_in_period(self, start_date, end_date):
         res = []
         for trans in self:
-            if trans.date >= fromDate:
-                if trans.date <= toDate:
-                    res.append(trans)
+            if trans.date >= start_date and trans.date <= end_date:
+                res.append(trans)
         return res
+
+    def yield_earnings_in_period(self, start_date, end_date):
+        for trans in self:
+            if trans.date >= start_date and trans.date <= end_date and trans.amount >= 0.0:
+                yield trans
+    
+    def yield_spendings_in_period(self, start_date, end_date):
+        for trans in self:
+            if trans.date >= start_date and trans.date <= end_date and trans.amount < 0.0:
+                yield trans
 
     def get_balance_over_time(self, start_date):
         today = datetime.date.today()
@@ -37,13 +46,13 @@ class Account(SQLiteEntity):
         res.reverse()
         return res
 
-    def get_earnings(self, end_date, start_date, period='month'):
-        return self._get_earnings_or_spendings(start_date, end_date, period, earnings=True)
+    def get_earnings_summed(self, end_date, start_date, period='month'):
+        return self._get_earnings_or_spendings_summed(start_date, end_date, period, earnings=True)
     
-    def get_spendings(self, end_date, start_date, period='month'):
-        return self._get_earnings_or_spendings(start_date, end_date, period, earnings=False)
+    def get_spendings_summed(self, end_date, start_date, period='month'):
+        return self._get_earnings_or_spendings_summed(start_date, end_date, period, earnings=False)
 
-    def _get_earnings_or_spendings(self, start_date, end_date, period='month', earnings=True):
+    def _get_earnings_or_spendings_summed(self, start_date, end_date, period='month', earnings=True):
         if period == 'month':
             delta = relativedelta(months=+1)
         elif period == 'year':
@@ -59,24 +68,6 @@ class Account(SQLiteEntity):
             start_date += delta
         print ret
         return ret
-                
-    def get_all_earnings(self, period):
-        return controller.getEarningsOrSpendingsSummed(self, period, earnings = True)
-
-    def get_all_spendings(self, period):
-        return controller.getEarningsOrSpendingsSummed(self, period, earnings = False)
-
-    def get_ytd_earnings(self):
-        return self.get_transactions(controller.get_ytd_first(), datetime.date.today())
-
-    def get_ytd_spendings(self):
-        return self.get_transactions(controller.get_ytd_first(), datetime.date.today(), earnings=False)
-
-    def get_act_earnings(self):
-        return self.get_transactions(controller.get_act_first(), datetime.date.today())
-
-    def get_act_spendings(self):
-        return self.get_transactions(controller.get_act_first(), datetime.date.today(), earnings=False)
 
     def birthday(self):
         if not 'birthday_cache' in dir(self):

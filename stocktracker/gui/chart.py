@@ -58,8 +58,8 @@ class AccountChart:
         end_date = datetime.date.today()
         start_date = _get_start_date(end_date, zoom)
 
-        earnings = chart.account.get_earnings(end_date, start_date, step)
-        spendings = chart.account.get_spendings(end_date, start_date, step)
+        earnings = chart.account.get_earnings_summed(end_date, start_date, step)
+        spendings = chart.account.get_earnings_summed(end_date, start_date, step)
         legend = _get_legend(end_date, start_date, step)
         chart.chart.set_args({'data':[earnings, spendings],
                      'x_labels':legend,
@@ -92,4 +92,24 @@ class AccountChart:
                      'width':600,
                      'height':300,
                      })
+        return chart.chart
+
+    @classmethod
+    def get_category_pie(self, account, zoom, earnings=True):
+        chart = self(account)
+        end_date = datetime.date.today()
+        start_date = _get_start_date(end_date, zoom)
+        if earnings:
+            trans = account.yield_earnings_in_period(start_date, end_date)
+        else:
+            trans = account.yield_spendings_in_period(start_date, end_date)
+        buckets =  {}
+        for t in trans:
+            if t.category.name in buckets: 
+                buckets[t.category.name] += t.amount
+            else:
+                buckets[t.category.name] = t.amount
+        chart.chart = gtk_pie_plot()
+        print buckets   
+        chart.chart.set_args({'data':buckets, 'width':300, 'height':300, 'gradient':True, 'shadow':False})
         return chart.chart

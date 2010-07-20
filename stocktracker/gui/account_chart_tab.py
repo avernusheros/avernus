@@ -9,8 +9,6 @@ import chart
 no_data_string = '\nNo Data!\nAdd transactions first.\n\n'
 
 
-
-
 class AccountChartTab(gtk.ScrolledWindow):
 
     def __init__(self, account):
@@ -43,11 +41,15 @@ class AccountChartTab(gtk.ScrolledWindow):
         label.set_markup(markup)
         self.table.attach(label, 0,2,1,2)
         self.table.attach(gtk.Label('Balace over time'), 0,2,3,4)
+        self.table.attach(gtk.Label('Spendings'), 0,1,5,6)
+        self.table.attach(gtk.Label('Earnings'), 1,2,5,6)
         self.show_all()
 
     def show(self):
         self.table.attach(chart.AccountChart.getEarningsSpendingsChart(self.account, self.current_zoom, self.current_step),0,2,2,3)
         self.table.attach(chart.AccountChart.get_balance_chart(self.account, self.current_zoom),0,2,4,5)
+        self.table.attach(chart.AccountChart.get_category_pie(self.account, self.current_zoom, earnings=False),0,1,6,7)
+        self.table.attach(chart.AccountChart.get_category_pie(self.account, self.current_zoom, earnings=True),1,2,6,7)
         self.show_all()
     
     def on_zoom_change(self, cb):
