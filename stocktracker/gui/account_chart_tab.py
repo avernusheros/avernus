@@ -37,6 +37,8 @@ class AccountChartTab(gtk.ScrolledWindow):
         self.current_zoom = 'YTD'
         combobox.connect('changed', self.on_zoom_change)
         self.table.attach(combobox, 0,1,0,1)
+        #FIXME macht das step einstellen wirklich sinn? alternative ist automatische einstellung 
+        #oder manuelle einstellung erlauben, aber sachen vorgeben, zb 1y und month
         self.steps = ['day','week','month','year']
         combobox = gtk.combo_box_new_text()
         for st in self.steps:
@@ -49,17 +51,13 @@ class AccountChartTab(gtk.ScrolledWindow):
         label = gtk.Label()
         label.set_markup(markup)
         self.table.attach(label, 0,2,1,2)
+        self.table.attach(gtk.Label('Balace over time'), 0,2,3,4)
         self.show_all()
 
     def show(self):
-        #self.clear()
         self.table.attach(self.earningsvsspendings_chart(),0,2,2,3)
+        self.table.attach(self.balance_chart(),0,2,4,5)
         self.show_all()
-
-    def clear(self):
-        for child in self.get_children():
-            if isinstance(child, gtk.DrawingArea):
-                self.remove(child)
 
     def _get_legend(self, bigger, smaller):
         erg = []
@@ -82,7 +80,6 @@ class AccountChartTab(gtk.ScrolledWindow):
         return erg
     
     def _get_start_date(self, end_date):
-        #fixme i think 3m should display this month and the last two etc
         if self.current_zoom in MONTHS:
             return end_date - relativedelta(months=MONTHS[self.current_zoom])
         elif self.current_zoom == 'ACT':
@@ -99,8 +96,29 @@ class AccountChartTab(gtk.ScrolledWindow):
         earnings = self.account.get_earnings(end_date, start_date, self.current_step)
         spendings = self.account.get_spendings(end_date, start_date, self.current_step)
         legend = self._get_legend(end_date, start_date)
+        #FIXME earnings, spendings, legend do not always have the same length
         chart = gtk_dot_line_plot()
         chart.set_args({'data':[earnings, spendings],
+                     'x_labels':legend,
+                     'y_title': 'Amount',
+                     'series_colors': ['blue','green'],
+                     'grid': True,
+                     'dots': True,
+                     'width':600,
+                     'height':300,
+                     })
+        return chart
+    
+    def balance_chart(self):
+        end_date = datetime.date.today()
+        start_date = self._get_start_date(end_date)
+        balance = self.account.get_balance_over_time(start_date)
+        #ugly line of code
+        #selects every 20. date for the legend
+        legend = [str(balance[int(len(balance)/20 *i)][0]) for i in range(20)]
+        
+        chart = gtk_dot_line_plot()
+        chart.set_args({'data': [item[1] for item in balance],
                      'x_labels':legend,
                      'y_title': 'Amount',
                      'series_colors': ['blue','green'],

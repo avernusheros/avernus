@@ -291,17 +291,21 @@ def getTransactionsForAccount(account):
     key = account.getPrimaryKey()
     return AccountTransaction.getAllFromOneColumn("account",key)
 
-def getPeriodTransactionsForAccount(account, fromDate, toDate , earnings=True):
-    erg = []
-    for trans in account:
-        if earnings and trans.isEarning() or \
-            not earnings and not trans.isEarning():
-            if trans.date >= fromDate:
-                if trans.date <= toDate:
-                    erg.append(trans)
-    return erg
+def getAccountChangeInPeriodPerDay(account, start_date, end_date):
+    query = """
+    SELECT sum(trans.amount), trans.date
+    FROM accounttransaction as trans, account
+    WHERE account.id == ? 
+    AND account.id == trans.account
+    AND trans.date <= ?
+    AND trans.date >= ?
+    GROUP BY trans.date
+    ORDER BY trans.date DESC
+    """
+    for change, date in model.store.select(query, (account.id, end_date, start_date)):
+        yield change, date
 
-def getEarningsOrSpendingsSummedInPeriod(account, end_date, start_date, earnings=True):
+def getEarningsOrSpendingsSummedInPeriod(account, start_date, end_date, earnings=True):
     if earnings: operator = '>'
     else: operator = '<'
     query = """

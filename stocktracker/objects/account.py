@@ -17,16 +17,33 @@ class Account(SQLiteEntity):
     def __iter__(self):
         return controller.getTransactionsForAccount(self).__iter__()
 
-    def get_transactions(self, fromDate, toDate, earnings=True):
-        return controller.getPeriodTransactionsForAccount(self, fromDate, toDate, earnings)
+    def get_transactions_in_period(self, fromDate, toDate):
+        res = []
+        for trans in self:
+            if trans.date >= fromDate:
+                if trans.date <= toDate:
+                    res.append(trans)
+        return res
+
+    def get_balance_over_time(self, start_date):
+        today = datetime.date.today()
+        one_day = datetime.timedelta(days=1)
+        amount = self.amount
+        res = [(today, amount)]
+        for change, date in controller.getAccountChangeInPeriodPerDay(self, start_date, today):
+            print date, change
+            res.append((date, amount)) 
+            amount -= change
+        res.reverse()
+        return res
 
     def get_earnings(self, end_date, start_date, period='month'):
-        return self._get_earnings_or_spendings(end_date, start_date, period, earnings=True)
+        return self._get_earnings_or_spendings(start_date, end_date, period, earnings=True)
     
     def get_spendings(self, end_date, start_date, period='month'):
-        return self._get_earnings_or_spendings(end_date, start_date, period, earnings=False)
+        return self._get_earnings_or_spendings(start_date, end_date, period, earnings=False)
 
-    def _get_earnings_or_spendings(self, end_date, start_date, period='month', earnings=True):
+    def _get_earnings_or_spendings(self, start_date, end_date, period='month', earnings=True):
         if period == 'month':
             delta = relativedelta(months=+1)
         elif period == 'year':
@@ -38,7 +55,7 @@ class Account(SQLiteEntity):
         ret = []
         while start_date < end_date:
             temp = start_date+delta
-            ret.append(controller.getEarningsOrSpendingsSummedInPeriod(self, temp, start_date, earnings=earnings))
+            ret.append(controller.getEarningsOrSpendingsSummedInPeriod(self, start_date, temp, earnings=earnings))
             start_date += delta
         print ret
         return ret
