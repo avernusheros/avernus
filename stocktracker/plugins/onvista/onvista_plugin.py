@@ -99,9 +99,11 @@ class OnvistaPlugin():
 
     def _parse_kurse_html_fonds(self, kursPage):
         base = BeautifulSoup(kursPage).find('div', 'content')
-        name = base.h2.contents[0]
+        name = base.h1.contents[0]
+        #print name
         isin = base.findAll('tr','hgrau2')[1].findAll('td')[1].contents[0].replace('&nbsp;','')
-        for row in base.find('div','t', style=None).find('table'):
+        #print isin
+        for row in base.findAll('div','t')[1].find('table'):
             tds = row.findAll('td')
             if len(tds)>3:
                 exchangeTag = tds[0]
@@ -128,9 +130,10 @@ class OnvistaPlugin():
 
     def _parse_kurse_html_etf(self, kursPage):
         base = BeautifulSoup(kursPage).find('div', 'content')
-        name = base.h2.contents[0]
+        name = base.h1.contents[0]
         isin = base.findAll('tr','hgrau2')[1].findAll('td')[1].contents[0].replace('&nbsp;','')
-        for row in base.find('div','t', style=None).find('table'):
+        #print base.findAll('div','t')[2]
+        for row in base.findAll('div','t')[2].find('table'):
             tds = row.findAll('td')
             if len(tds)>3:
                 exchangeTag = tds[0]
@@ -140,12 +143,13 @@ class OnvistaPlugin():
                         exchange = exchangeTag.a.contents[0]
                     else:
                         exchange = exchangeTag.contents[0]
-                    currency = tds[4].contents[0]
-                    price = to_float(tds[15].contents[0])
+                    #print exchange
+                    currency = tds[5].contents[0]
+                    price = to_float(tds[12].contents[0])
                     #FIXME fetch year from html
-                    date = to_datetime(tds[5].contents[0]+'10', tds[6].contents[0])
-                    volume = to_int(tds[14].contents[0])
-                    change = tds[7]
+                    date = to_datetime(tds[6].contents[0]+'10', tds[7].contents[0])
+                    volume = to_int(tds[11].contents[0])
+                    change = tds[3]
                     if change.span:
                         change = change.span
                     change = to_float(change.contents[0])
@@ -220,7 +224,7 @@ if __name__ == "__main__":
         print s2.price, s2.change, s2.date
 
     def test_search():
-        for res in  plugin.search('easyetf'):
+        for res in  plugin.search('etflab'):
             print res
             #break
 
@@ -238,7 +242,8 @@ if __name__ == "__main__":
     s1 = Stock('LU0136412771', ex, TYPE_FUND)
     s2 = Stock('LU0103598305', ex, TYPE_FUND)
     s3 = Stock('LU0382362290', ex, TYPE_ETF)
-    print plugin.search_kurse(s1)
-    print plugin.search_kurse(s3)
+    print test_search()
+    #print plugin.search_kurse(s1)
+    #print plugin.search_kurse(s3)
     #test_parse_kurse()
     #test_update()
