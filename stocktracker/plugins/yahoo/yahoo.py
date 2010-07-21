@@ -48,7 +48,7 @@ class Yahoo():
     def update_stocks(self, stocks):
         ids = self.__get_yahoo_ids(stocks)
         s = 0
-        res = self.__request_csv(ids, 'l1d1d3c1')
+        res = self.__request_csv(ids, 'l1d1d3c1x')
         for row in csv.reader(res):
             if len(row) > 1:
                 if row[1] == 'N/A':
@@ -58,18 +58,17 @@ class Yahoo():
                     stocks[s].price = float(row[0])
                 except Exception as e:
                     self.api.logger.info(e)
-                    stocks[s].price = 0.0
+                    continue
                 try:
                     date = datetime.strptime(row[1] + ' ' + row[2], '%m/%d/%Y %H:%M%p')
                 except Exception as e:
                     self.api.logger.info(e)
                     date = datetime.strptime(row[1], '%m/%d/%Y')
                 date = pytz.timezone('US/Eastern').localize(date)
-                stocks[s].date = date.astimezone(pytz.utc)
-                stocks[s].date = stocks[s].date.replace(tzinfo = None)
+                date = date.astimezone(pytz.utc)
+                stocks[s].date = date.replace(tzinfo = None)
                 stocks[s].change = float(row[3])
-                #FIXME
-                stocks[s].exchange = "N/A"
+                stocks[s].exchange = row[4]
                 stocks[s].updated = True
                 s+=1
                          
@@ -85,9 +84,6 @@ class Yahoo():
             print row
     
     def update_historical_prices(self, stock, start_date, end_date):
-        """
-        Update historical prices for the given stock.
-        """
         id = self.__get_yahoo_ids([stock])
         self.api.logger.debug("fetch data"+ str(start_date)+ str(end_date))
         url = 'http://ichart.yahoo.com/table.csv?s=%s&' % id + \

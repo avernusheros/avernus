@@ -174,6 +174,7 @@ class OnvistaPlugin():
                     break
 
     def search_kurse(self, stock):
+        #FIXME never used
         url = ''
         width = ''
         if stock.type == TYPE_FUND:
