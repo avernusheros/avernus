@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from BeautifulSoup import BeautifulSoup, NavigableString
-from datetime import datetime
+from datetime import datetime, date
+from dateutil.relativedelta import relativedelta
 import threading, re
 from Queue import Queue
 import urllib
@@ -177,8 +178,10 @@ class OnvistaPlugin():
                     stock.updated = True
                     break
 
-    def search_kurse(self, stock):
-        #FIXME never used
+    def update_historical_prices(self, stock, start_date, end_date):
+        delta = relativedelta(start_date, end_date)
+        #print delta
+        months = min(60,abs(delta.years)*12 + abs(delta.months))
         url = ''
         width = ''
         if stock.type == TYPE_FUND:
@@ -188,19 +191,26 @@ class OnvistaPlugin():
             url = 'http://etf.onvista.de/kurshistorie.html'
             width = '640'
         else:
-            print "Uknown stock type in onvistaplugin.search_kurse"
-        file = opener.open(url,urllib.urlencode({'ISIN':stock.isin, 'RANGE':'60M'}))
+            self.api.logger.error("Uknown stock type in onvistaplugin.search_kurse")
+        #url += "?ISIN="+str(stock.isin) + "&RANGE=" + str(months) +"M"
+        #get = FileGetter(url)
+        #get.start()
+        #get.join()
+        #file = get.get_result()
+        file = opener.open(url,urllib.urlencode({'ISIN':stock.isin, 'RANGE':str(months)+'M'}))
         soup = BeautifulSoup(file)
-        table = soup.html.body.findAll('table',{'width':width})[2]
+        #print soup
+        tables = soup.html.body.findAll('table',{'width':width})
+        table = tables[2]
+        #for t in tables:
+        #    print t
         lines = table.findAll('tr',{'align':'right'})
-        erg = []
         for line in lines:
             tds = line.findAll('td')
             day = to_datetime(tds[0].contents[0].replace('&nbsp;',''))
             kurs = to_float(tds[1].contents[0].replace('&nbsp;',''))
-            erg.append((day, kurs))
-        return erg
-
+            yield (stock,day,kurs,kurs,kurs,kurs,0)
+        
 
 
 if __name__ == "__main__":
@@ -214,11 +224,13 @@ if __name__ == "__main__":
             self.type = type
             self.exchange = ex
             self.currency = 'EUR'
-
+    
+    ex = Exchange()
+    s1 = Stock('DE0008474248', ex, TYPE_FUND)
+    s2 = Stock('LU0382362290', ex, TYPE_ETF)
+    
     def test_update():
-        ex = Exchange()
-        s1 = Stock('DE0008474248', ex, TYPE_FUND)
-        s2 = Stock('LU0382362290', ex, TYPE_ETF)
+        
         plugin.update_stocks([s1, s2])
         print s1.price, s1.change, s1.date
         print s2.price, s2.change, s2.date
@@ -227,6 +239,15 @@ if __name__ == "__main__":
         for res in  plugin.search('etflab'):
             print res
             #break
+            
+    def test_historicals():
+        print "los"
+        for quot in plugin.update_historical_prices(s1, date(1920,1,1), date.today()):
+            print quot
+        for quot in plugin.update_historical_prices(s2, date(1920,1,1), date.today()):
+            print quot
+        print "fertsch"
+        
 
     def test_parse_kurse():
         page = opener.open('http://fonds.onvista.de/kurse.html?ID_INSTRUMENT=83602')
@@ -242,8 +263,9 @@ if __name__ == "__main__":
     s1 = Stock('LU0136412771', ex, TYPE_FUND)
     s2 = Stock('LU0103598305', ex, TYPE_FUND)
     s3 = Stock('LU0382362290', ex, TYPE_ETF)
-    print test_search()
+    #print test_search()
     #print plugin.search_kurse(s1)
     #print plugin.search_kurse(s3)
     #test_parse_kurse()
     #test_update()
+    test_historicals()
