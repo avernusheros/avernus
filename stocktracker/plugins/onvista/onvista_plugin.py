@@ -7,6 +7,9 @@ from Queue import Queue
 import urllib
 import urllib2
 
+QUEUE_THRESHOLD = 3
+QUEUE_DIVIDEND = 10
+QUEUE_MAX = 10
 
 TYPE_FUND = 0
 TYPE_ETF  = 2
@@ -30,7 +33,7 @@ opener = urllib2.build_opener()
 opener.addheaders = [('User-agent', 'Mozilla/5.0')]
 
 
-class FileGetter(threading.Thread):
+class URLGetter(threading.Thread):
     def __init__(self, url):
         self.url = url
         self.result = None
@@ -46,30 +49,43 @@ class FileGetter(threading.Thread):
         except IOError:
             print "Could not open document: %s" % self.url
 
-def get_files(files):
-    def producer(q, files):
-        for file in files:
-            thread = FileGetter(file)
+class FileDownloadParalyzer():
+    
+    def __init__(self, files, logger):
+        self.files = files
+        self.logger = logger
+        
+    def producer(self):
+        for file in self.files:
+            thread = URLGetter(file)
             thread.start()
-            q.put(thread, True)
-
-    print "Getting ", len(files), " Files."
-    finished = []
-
-    def consumer(q, total_files):
-        while len(finished) < total_files:
-            thread = q.get(True)
+            self.q.put(thread, True)
+            
+    def consumer(self):
+        while len(self.finished) < len(self.files):
+            thread = self.q.get(True)
             thread.join()
-            finished.append(thread.get_result())
+            self.finished.append(thread.get_result())
 
-    q = Queue(3)
-    prod_thread = threading.Thread(target=producer, args=(q, files))
-    cons_thread = threading.Thread(target=consumer, args=(q, len(files)))
-    prod_thread.start()
-    cons_thread.start()
-    prod_thread.join()
-    cons_thread.join()
-    return finished
+    def get_files(self):
+        files = self.files
+        self.logger.debug('get_files #' + str(len(files)))
+        self.finished = []
+        queueSize = min(QUEUE_THRESHOLD, len(files))
+        calcSize = len(files)/QUEUE_DIVIDEND
+        size = max(queueSize,calcSize)
+        size = min(size, QUEUE_MAX)
+        self.logger.debug("ThreadQueue Size: " + str(size))
+        self.q = Queue(size)
+        prod_thread = threading.Thread(target=self.producer, args=())
+        cons_thread = threading.Thread(target=self.consumer, args=())
+        prod_thread.start()
+        cons_thread.start()
+        prod_thread.join()
+        self.logger.debug('Producer Thread joined')
+        cons_thread.join()
+        self.logger.debug('Consumer Thread joined')
+        return self.finished
 
 
 class OnvistaPlugin():
@@ -91,10 +107,12 @@ class OnvistaPlugin():
         soup = BeautifulSoup(page.read())
         linkTagsFonds = soup.findAll(attrs={'href' : re.compile('http://fonds\\.onvista\\.de/kurse\\.html\?ID_INSTRUMENT=\d+')})
         linkTagsETF = soup.findAll(attrs={'href' : re.compile('http://etf\\.onvista\\.de/kurse\\.html\?ID_INSTRUMENT=\d+')})
-        for kursPage in get_files([tag['href'] for tag in linkTagsFonds]):
+        filePara = FileDownloadParalyzer([tag['href'] for tag in linkTagsFonds],logger=self.api.logger)
+        for kursPage in filePara.get_files():
             for item in self._parse_kurse_html_fonds(kursPage):
                 yield (item, self)
-        for kursPage in get_files([tag['href'] for tag in linkTagsETF]):
+        filePara.files = [tag['href'] for tag in linkTagsETF]
+        for kursPage in filePara.get_files():
             for item in self._parse_kurse_html_etf(kursPage):
                 yield (item, self)
 
@@ -207,7 +225,7 @@ class OnvistaPlugin():
         lines = table.findAll('tr',{'align':'right'})
         for line in lines:
             tds = line.findAll('td')
-            day = to_datetime(tds[0].contents[0].replace('&nbsp;',''))
+            day = to_datetime(tds[0].contents[0].replace('&nbsp;','')).date()
             kurs = to_float(tds[1].contents[0].replace('&nbsp;',''))
             yield (stock,day,kurs,kurs,kurs,kurs,0)
         
