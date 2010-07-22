@@ -48,12 +48,41 @@ class URLGetter(threading.Thread):
             print "Downloaded ", self.url
         except IOError:
             print "Could not open document: %s" % self.url
+            
+            
+            
+class Paralyzer:
+    
+    def __init__(self, logger):
+        self.logger = logger
+        self.producerArgs = self.consumerArgs = ()
+        
+    def perform(self):
+        self.logger.debug('Performing Tasks #' + str(self.taskSize))
+        self.finished = []
+        queueSize = min(QUEUE_THRESHOLD, self.taskSize)
+        calcSize = self.taskSize/QUEUE_DIVIDEND
+        size = max(queueSize,calcSize)
+        size = min(size, QUEUE_MAX)
+        self.logger.debug("ThreadQueue Size: " + str(size))
+        self.q = Queue(size)
+        prod_thread = threading.Thread(target=self.producer, args=self.producerArgs)
+        cons_thread = threading.Thread(target=self.consumer, args=self.consumerArgs)
+        prod_thread.start()
+        cons_thread.start()
+        prod_thread.join()
+        self.logger.debug('Producer Thread joined')
+        cons_thread.join()
+        self.logger.debug('Consumer Thread joined')
+        return self.finished
+        
 
-class FileDownloadParalyzer():
+class FileDownloadParalyzer(Paralyzer):
     
     def __init__(self, files, logger):
+        Paralyzer.__init__(self, logger)
         self.files = files
-        self.logger = logger
+        self.taskSize = len(files)
         
     def producer(self):
         for file in self.files:
@@ -66,26 +95,6 @@ class FileDownloadParalyzer():
             thread = self.q.get(True)
             thread.join()
             self.finished.append(thread.get_result())
-
-    def get_files(self):
-        files = self.files
-        self.logger.debug('get_files #' + str(len(files)))
-        self.finished = []
-        queueSize = min(QUEUE_THRESHOLD, len(files))
-        calcSize = len(files)/QUEUE_DIVIDEND
-        size = max(queueSize,calcSize)
-        size = min(size, QUEUE_MAX)
-        self.logger.debug("ThreadQueue Size: " + str(size))
-        self.q = Queue(size)
-        prod_thread = threading.Thread(target=self.producer, args=())
-        cons_thread = threading.Thread(target=self.consumer, args=())
-        prod_thread.start()
-        cons_thread.start()
-        prod_thread.join()
-        self.logger.debug('Producer Thread joined')
-        cons_thread.join()
-        self.logger.debug('Consumer Thread joined')
-        return self.finished
 
 
 class OnvistaPlugin():
@@ -108,11 +117,11 @@ class OnvistaPlugin():
         linkTagsFonds = soup.findAll(attrs={'href' : re.compile('http://fonds\\.onvista\\.de/kurse\\.html\?ID_INSTRUMENT=\d+')})
         linkTagsETF = soup.findAll(attrs={'href' : re.compile('http://etf\\.onvista\\.de/kurse\\.html\?ID_INSTRUMENT=\d+')})
         filePara = FileDownloadParalyzer([tag['href'] for tag in linkTagsFonds],logger=self.api.logger)
-        for kursPage in filePara.get_files():
+        for kursPage in filePara.perform():
             for item in self._parse_kurse_html_fonds(kursPage):
                 yield (item, self)
         filePara.files = [tag['href'] for tag in linkTagsETF]
-        for kursPage in filePara.get_files():
+        for kursPage in filePara.perform():
             for item in self._parse_kurse_html_etf(kursPage):
                 yield (item, self)
 
