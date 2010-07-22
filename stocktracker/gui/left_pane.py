@@ -49,22 +49,20 @@ class MainTree(Tree):
         #object, icon, name
         self.set_model(gtk.TreeStore(object,str, str))
         self.set_headers_visible(False)
-        self.create_icon_text_column('', 1,2)
+        col, cell = self.create_icon_text_column('', 1,2)
+        cell.set_property('editable', True)
+        cell.connect('edited', self.on_cell_edited)
         
         self.insert_categories()
         self.selected_item = None
         
         self.connect('button-press-event', self.on_button_press_event)
         self.connect('cursor_changed', self.on_cursor_changed)
-        self.connect('row-activated', self.on_edit)
         self.subscriptions = (
-                    ("watchlist.created", self.insert_watchlist),
-                    ("portfolio.created", self.insert_portfolio),
                     ('index.created', self.insert_index),
                     ("container.edited", self.on_updated),
                     ("tag.created", self.insert_tag),
                     ("tag.updated", self.on_updated),
-                    ('overview.item.selected', self.on_item_selected),
                 )
         for topic, callback in self.subscriptions:
             pubsub.subscribe(topic, callback)
@@ -81,12 +79,15 @@ class MainTree(Tree):
         self.expand_all()
         
     def on_button_press_event(self, widget, event):
-        if event.button == 3:
-            if self.selected_item is not None:
-                obj, iter = self.selected_item
-                if not isinstance(obj, Category):
-                    ContainerContextMenu(obj,self.actiongroup).show(event)
-
+        target = self.get_path_at_pos(int(event.x), int(event.y))
+        if target and event.type == gtk.gdk.BUTTON_PRESS: 
+            obj = self.get_model()[target[0]][0]
+            if event.button == 3 and not isinstance(obj, Category):
+                ContainerContextMenu(obj, self.actiongroup).show(event)
+            elif self.get_selection().path_is_selected(target[0]) and isinstance(obj, Category):
+                #disable editing of categories
+                return True
+                    
     def insert_categories(self):
         self.pf_iter = self.get_model().append(None, [Category('Portfolios'),'portfolios', _("<b>Portfolios</b>")])
         self.wl_iter = self.get_model().append(None, [Category('Watchlists'),'watchlists', _("<b>Watchlists</b>")])
@@ -129,14 +130,6 @@ class MainTree(Tree):
             #row[1] = item
             row[2] = item.name
 
-    def on_item_selected(self, item):
-        #FIXME
-        return 
-        #activate the correct row
-        #self.row_activated(path, column)
-
-        #show notebook    
-
     def on_cursor_changed(self, widget):
         #Get the current selection in the gtk.TreeView
         selection = widget.get_selection()
@@ -175,11 +168,27 @@ class MainTree(Tree):
         obj, row = self.selected_item
         if obj.__name__ == 'Portfolio':
             EditPortfolio(obj)
-        elif obj.__name__ == 'Watchlist':# or obj.type == 'tag':
+        elif obj.__name__ == 'Watchlist':
             EditWatchlist(obj)
+
+    def on_cell_edited(self,  cellrenderertext, path, new_text):
+        m = self.get_model()
+        m[path][0].name = m[path][2] = new_text
     
     def on_add(self, widget=None):
-        NewContainerDialog(self.selected_type)        
+        obj, row = self.selected_item
+        model = self.get_model()
+        if obj.name == 'Portfolios':
+            type = 'portfolio'
+            iter = self.pf_iter
+            item = controller.newPortfolio('new '+type)
+        elif obj.name == 'Watchlists':
+            type = 'watchlist'
+            iter = self.wl_iter
+            item = controller.newWatchlist('new '+type)
+        self.expand_row( model.get_path(iter), True)
+        iter = model.append(iter, [item, type, item.name]) 
+        self.set_cursor(model.get_path(iter), focus_column = self.get_column(0), start_editing=True)            
 
 
 class EditWatchlist(gtk.Dialog):
@@ -248,45 +257,6 @@ class EditPortfolio(gtk.Dialog):
             self.pf.name = self.name_entry.get_text()
             self.pf.cash = self.cash_entry.get_value()
             pubsub.publish("container.edited", self.pf)       
-        self.destroy()
-
-
-class NewContainerDialog(gtk.Dialog):
-    def __init__(self, type='portfolio'):
-        gtk.Dialog.__init__(self, _("Create new "+type), None
-                            , gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
-                     (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
-                      gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
-        self.container_type = type
-        vbox = self.get_content_area()
-               
-        hbox = gtk.HBox()
-        vbox.pack_start(hbox)
-        label = gtk.Label(type+_(' name:'))
-        hbox.pack_start(label)
-        self.name_entry = gtk.Entry()
-        self.name_entry.set_text('unknown')
-        self.name_entry.connect("activate", self.callback)
-         
-        hbox.pack_start(self.name_entry)
-
-        self.show_all()
-        response = self.run()  
-        self.process_result(response)
-        
-    def callback(self, widget):
-        self.process_result(gtk.RESPONSE_ACCEPT)
-
-    def process_result(self, response):
-        if response == gtk.RESPONSE_ACCEPT:
-            #grab the name
-            name = self.name_entry.get_text()
-            if self.container_type == 'portfolio':
-                pf = controller.newPortfolio(name, cash=0.0)
-                pubsub.publish('portfolio.created', pf)
-            elif self.container_type == 'watchlist':
-                wl = controller.newWatchlist(name)
-                pubsub.publish('watchlist.created', wl)
         self.destroy()
 
 

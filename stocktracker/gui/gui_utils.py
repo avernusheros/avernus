@@ -40,6 +40,7 @@ class Tree(gtk.TreeView):
             column.set_cell_data_func(cell1, func1, attribute1)
         if func2 is not None:
             column.set_cell_data_func(cell2, func2, attribute2)
+        return column, cell2
         
     def find_item(self, id, type = None):
         def search(rows):
