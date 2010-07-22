@@ -180,14 +180,14 @@ class MainTree(Tree):
         model = self.get_model()
         if obj.name == 'Portfolios':
             type = 'portfolio'
-            iter = self.pf_iter
+            parent_iter = self.pf_iter
             item = controller.newPortfolio('new '+type)
         elif obj.name == 'Watchlists':
             type = 'watchlist'
-            iter = self.wl_iter
+            parent_iter = self.wl_iter
             item = controller.newWatchlist('new '+type)
-        self.expand_row( model.get_path(iter), True)
-        iter = model.append(iter, [item, type, item.name]) 
+        iter = model.append(parent_iter, [item, type, item.name]) 
+        self.expand_row( model.get_path(parent_iter), True)
         self.set_cursor(model.get_path(iter), focus_column = self.get_column(0), start_editing=True)            
 
 
