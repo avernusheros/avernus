@@ -76,7 +76,7 @@ class ChartTab(gtk.ScrolledWindow):
         return pie
    
     def types_chart(self, chart_type):
-        sum = {0:0.0, 1:0.0}
+        sum = {0:0.0, 1:0.0, 2:0.0}
         for pos in self.pf:
             sum[pos.stock.type] += pos.cvalue
         data = {'fund':sum[0], 'stock':sum[1]}
