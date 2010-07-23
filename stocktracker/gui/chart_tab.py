@@ -117,15 +117,16 @@ class ChartTab(gtk.ScrolledWindow):
         return pie
     
     def sector_pie(self):       
-        data = {}
-        data['None'] = 0.0
-        for s in controller.getAllSector():
-            data[s.name] = 0.0
+        data = {'None':0.0}
         for pos in self.pf:
             if pos.stock.sector is None:
                 data['None'] += pos.cvalue
             else:
-                data[pos.stock.sector.name] += pos.cvalue
+                sector = pos.stock.sector.name
+                if sector in data:
+                    data[sector] += pos.cvalue
+                else:
+                    data[sector] = pos.cvalue
         if sum(data.values()) == 0:
             return gtk.Label(no_data_string)         
         pie = gtk_pie_plot()        
