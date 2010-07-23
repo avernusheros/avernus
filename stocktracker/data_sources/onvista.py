@@ -6,6 +6,9 @@ import threading, re
 from Queue import Queue
 import urllib
 import urllib2
+from stocktracker import logger
+
+logger = logger.logger
 
 QUEUE_THRESHOLD = 3
 QUEUE_DIVIDEND = 10
@@ -67,27 +70,26 @@ class FunctionThread(threading.Thread):
             
 class Paralyzer:
     
-    def __init__(self, logger):
-        self.logger = logger
+    def __init__(self):
         self.producerArgs = self.consumerArgs = ()
         
     def perform(self):
-        self.logger.debug('Performing Tasks #' + str(self.taskSize))
+        logger.debug('Performing Tasks #' + str(self.taskSize))
         self.finished = []
         queueSize = min(QUEUE_THRESHOLD, self.taskSize)
         calcSize = self.taskSize/QUEUE_DIVIDEND
         size = max(queueSize,calcSize)
         size = min(size, QUEUE_MAX)
-        self.logger.debug("ThreadQueue Size: " + str(size))
+        logger.debug("ThreadQueue Size: " + str(size))
         self.q = Queue(size)
         prod_thread = threading.Thread(target=self.producer, args=self.producerArgs)
         cons_thread = threading.Thread(target=self.consumer, args=self.consumerArgs)
         prod_thread.start()
         cons_thread.start()
         prod_thread.join()
-        self.logger.debug('Producer Thread joined')
+        logger.debug('Producer Thread joined')
         cons_thread.join()
-        self.logger.debug('Consumer Thread joined')
+        logger.debug('Consumer Thread joined')
         return self.finished
     
     def consumer(self):
@@ -99,8 +101,8 @@ class Paralyzer:
 
 class FileDownloadParalyzer(Paralyzer):
     
-    def __init__(self, files, logger):
-        Paralyzer.__init__(self, logger)
+    def __init__(self, files):
+        Paralyzer.__init__(self)
         self.files = files
         self.taskSize = len(files)
         
@@ -114,8 +116,8 @@ class FileDownloadParalyzer(Paralyzer):
             
 class KursParseParalyzer(Paralyzer):
     
-    def __init__(self, pages, func, logger):
-        Paralyzer.__init__(self, logger)
+    def __init__(self, pages, fun):
+        Paralyzer.__init__(self)
         self.pages = pages
         self.func = func
         self.taskSize = len(pages)
@@ -141,9 +143,9 @@ class Onvista():
         soup = BeautifulSoup(page.read())
         linkTagsFonds = soup.findAll(attrs={'href' : re.compile('http://fonds\\.onvista\\.de/kurse\\.html\?ID_INSTRUMENT=\d+')})
         linkTagsETF = soup.findAll(attrs={'href' : re.compile('http://etf\\.onvista\\.de/kurse\\.html\?ID_INSTRUMENT=\d+')})
-        filePara = FileDownloadParalyzer([tag['href'] for tag in linkTagsFonds],logger=self.api.logger)
+        filePara = FileDownloadParalyzer([tag['href'] for tag in linkTagsFonds])
         pages = filePara.perform()
-        #kursPara = KursParseParalyzer(pages, self._parse_kurse_html_fonds, self.api.logger)
+        #kursPara = KursParseParalyzer(pages, self._parse_kurse_html_fonds)
         #for kurse in kursPara.perform():
         #    for kurs in kurse:
         #        yield (kurs, self)
@@ -253,7 +255,7 @@ class Onvista():
             url = 'http://etf.onvista.de/kurshistorie.html'
             width = '640'
         else:
-            self.api.logger.error("Uknown stock type in onvistaplugin.search_kurse")
+            logger.error("Uknown stock type in onvistaplugin.search_kurse")
         #url += "?ISIN="+str(stock.isin) + "&RANGE=" + str(months) +"M"
         #get = FileGetter(url)
         #get.start()
