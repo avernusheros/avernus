@@ -49,7 +49,21 @@ class URLGetter(threading.Thread):
         except IOError:
             print "Could not open document: %s" % self.url
             
-            
+class FunctionThread(threading.Thread):
+    
+    def __init__(self, func, *args, **kwargs):
+        self.func = func
+        self.args = args
+        self.kwargs = kwargs
+        self.result = None
+        threading.Thread.__init__(self)
+        
+    def get_result(self):
+        return self.result
+    
+    def run(self):
+        print "Executing ", self.func.__name__, self.args, self.kwargs
+        self.result = self.func(*self.args, **self.kwargs)
             
 class Paralyzer:
     
@@ -75,6 +89,12 @@ class Paralyzer:
         cons_thread.join()
         self.logger.debug('Consumer Thread joined')
         return self.finished
+    
+    def consumer(self):
+        while len(self.finished) < self.taskSize:
+            thread = self.q.get(True)
+            thread.join()
+            self.finished.append(thread.get_result())
         
 
 class FileDownloadParalyzer(Paralyzer):
@@ -90,11 +110,22 @@ class FileDownloadParalyzer(Paralyzer):
             thread.start()
             self.q.put(thread, True)
             
-    def consumer(self):
-        while len(self.finished) < len(self.files):
-            thread = self.q.get(True)
-            thread.join()
-            self.finished.append(thread.get_result())
+    
+            
+class KursParseParalyzer(Paralyzer):
+    
+    def __init__(self, pages, func, logger):
+        Paralyzer.__init__(self, logger)
+        self.pages = pages
+        self.func = func
+        self.taskSize = len(pages)
+        
+    def producer(self):
+        for page in self.pages:
+            thread = FunctionThread(self.func, page)
+            thread.start()
+            self.q.put(thread,True)
+            
 
 
 class OnvistaPlugin():
@@ -117,7 +148,12 @@ class OnvistaPlugin():
         linkTagsFonds = soup.findAll(attrs={'href' : re.compile('http://fonds\\.onvista\\.de/kurse\\.html\?ID_INSTRUMENT=\d+')})
         linkTagsETF = soup.findAll(attrs={'href' : re.compile('http://etf\\.onvista\\.de/kurse\\.html\?ID_INSTRUMENT=\d+')})
         filePara = FileDownloadParalyzer([tag['href'] for tag in linkTagsFonds],logger=self.api.logger)
-        for kursPage in filePara.perform():
+        pages = filePara.perform()
+        #kursPara = KursParseParalyzer(pages, self._parse_kurse_html_fonds, self.api.logger)
+        #for kurse in kursPara.perform():
+        #    for kurs in kurse:
+        #        yield (kurs, self)
+        for kursPage in pages:
             for item in self._parse_kurse_html_fonds(kursPage):
                 yield (item, self)
         filePara.files = [tag['href'] for tag in linkTagsETF]
@@ -126,6 +162,7 @@ class OnvistaPlugin():
                 yield (item, self)
 
     def _parse_kurse_html_fonds(self, kursPage):
+        erg = []
         base = BeautifulSoup(kursPage).find('div', 'content')
         name = base.h1.contents[0]
         #print name
@@ -152,9 +189,13 @@ class OnvistaPlugin():
                     if change.span:
                         change = change.span
                     change = to_float(change.contents[0])
-                    yield {'name':name,'isin':isin,'exchange':exchange,'price':price,
-                      'date':date,'currency':currency,'volume':volume,
-                      'type':TYPE_FUND,'change':change}
+                    erg.append({'name':name,'isin':isin,'exchange':exchange,'price':price,
+                                'date':date,'currency':currency,'volume':volume,
+                                'type':TYPE_FUND,'change':change})
+        return erg
+                    #yield {'name':name,'isin':isin,'exchange':exchange,'price':price,
+                    #  'date':date,'currency':currency,'volume':volume,
+                    #  'type':TYPE_FUND,'change':change}
 
     def _parse_kurse_html_etf(self, kursPage):
         base = BeautifulSoup(kursPage).find('div', 'content')
