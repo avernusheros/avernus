@@ -99,16 +99,25 @@ class Chart(gtk.VBox):
         label.set_markup(str(date2)+' - '+str(date1)+'     '+change_str)
         vbox.add(label)
         vbox.add(p1)
-        vbox.add(gtk.Label(_('Volume (mil/1d)')))
+        vbox.add(gtk.Label(_('Trade Volume')))
         
         p2 = gtk_vertical_bar_plot()
         vols = [d.volume for d in data]
+        volLegend = []
+        maxVol = max(vols)
+        if maxVol > 0:
+            split = 3
+            slice = maxVol / (split+1)
+            volLegend.append('0')
+            for i in range(split):
+                volLegend.append(str((i+1)*slice))
+        #[str(max(vols)), str(min(vols))]
         p2.set_args({'data':vols, 
                      #'x_labels':legend, 
                      'grid': True,
                      'width':600, 
                      'height':100,
-                     #'y_labels':[str(max(vols)), str(min(vols))],
+                     'y_labels': volLegend,
                      'colors':['blue' for i in range(len(vols))]})
                      
         vbox.add(p2)
