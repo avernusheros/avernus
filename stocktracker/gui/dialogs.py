@@ -247,7 +247,7 @@ class SellDialog(gtk.Dialog):
             
  
 class BuyDialog(gtk.Dialog):
-    #FIXME user should not be able to select a date in the future
+
     def __init__(self, pf):
         gtk.Dialog.__init__(self, _("Buy a position"), None
                             , gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
@@ -257,12 +257,13 @@ class BuyDialog(gtk.Dialog):
         
         vbox = self.get_content_area()
         table = gtk.Table()
-        vbox.pack_start(table)
+        vbox.pack_end(table)
         #stock entry
         self.stock_selector = StockSelector()
         table.attach(self.stock_selector,0,2,0,1)
         self.stock_selector.result_tree.connect('cursor-changed', self.on_stock_selection)
         self.stock_selector.result_tree.get_model().connect('row-deleted', self.on_stock_deselection)
+        self.stock_ok = False
 
         #shares entry
         table.attach(gtk.Label(_('Shares')),0,1,1,2)
@@ -289,24 +290,56 @@ class BuyDialog(gtk.Dialog):
         
         #date 
         self.calendar = gtk.Calendar()
+        self.calendar.connect('day-selected', self.on_calendar_day_selected)
         table.attach(self.calendar,0,2,5,6)
+        self.date_ok = True
+        
+        self.infobar = gtk.InfoBar()
+        self.infobar.set_message_type(gtk.MESSAGE_WARNING)
+        
+        content = self.infobar.get_content_area()
+        label = gtk.Label('Date cannot be in the future!')
+        image = gtk.Image()
+        image.set_from_stock(gtk.STOCK_DIALOG_WARNING, gtk.ICON_SIZE_DIALOG)
+        content.pack_start(image)
+        content.pack_start(label)
+        vbox.pack_start(self.infobar)
         
         self.set_response_sensitive(gtk.RESPONSE_ACCEPT, False)
-        self.show_all()
+        table.show_all()
         response = self.run()  
         self.process_result(response)
         self.destroy()
+    
+    def on_calendar_day_selected(self, calendar):
+        year, month, day = self.calendar.get_date()
+        date = datetime(year, month+1, day)
+        if date > datetime.today():
+            self.infobar.show_all()
+            self.date_ok = False
+        else:
+            self.infobar.hide_all()
+            self.date_ok = True
+        self.set_response_sensitivity()
 
     def on_change(self, widget):
         total = self.shares_entry.get_value() * self.price_entry.get_value() + self.tacosts_entry.get_value()
         self.total.set_text(str(total))
 
     def on_stock_selection(self, *args):
-        self.set_response_sensitive(gtk.RESPONSE_ACCEPT, True)
+        self.stock_ok = True
+        self.set_response_sensitivity()
     
     def on_stock_deselection(self, *args):
-        self.set_response_sensitive(gtk.RESPONSE_ACCEPT, False)   
+        self.stock_ok = False
+        self.set_response_sensitivity()
         
+    def set_response_sensitivity(self):
+        if self.stock_ok and self.date_ok:
+            self.set_response_sensitive(gtk.RESPONSE_ACCEPT, True)
+        else:
+            self.set_response_sensitive(gtk.RESPONSE_ACCEPT, False)  
+
     def process_result(self, response):
         if response == gtk.RESPONSE_ACCEPT:
             stock = self.stock_selector.get_stock()
