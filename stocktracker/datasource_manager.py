@@ -91,7 +91,10 @@ class DatasourceManager(object):
             newest = datetime.date(today.year -20, today.month, today.day)
         if newest <= today:
             #FIXME
-            func = getattr(self.sources[self.queue[0]], "update_historical_prices", None)
+            print self.sources
+            #source = self.sources[self.queue[0]]
+            source = self.sources.values()[0]
+            func = getattr(source, "update_historical_prices", None)
             for qt in func(stock, today, newest):
                 #qt : (stock, date, open, high, low, close, vol)
                 controller.newQuotation(stock=qt[0], date=qt[1],\

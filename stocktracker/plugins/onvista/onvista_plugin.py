@@ -7,6 +7,9 @@ from Queue import Queue
 import urllib
 import urllib2
 
+QUEUE_THRESHOLD = 3
+QUEUE_DIVIDEND = 10
+QUEUE_MAX = 10
 
 TYPE_FUND = 0
 TYPE_ETF  = 2
@@ -30,7 +33,7 @@ opener = urllib2.build_opener()
 opener.addheaders = [('User-agent', 'Mozilla/5.0')]
 
 
-class FileGetter(threading.Thread):
+class URLGetter(threading.Thread):
     def __init__(self, url):
         self.url = url
         self.result = None
@@ -45,31 +48,84 @@ class FileGetter(threading.Thread):
             print "Downloaded ", self.url
         except IOError:
             print "Could not open document: %s" % self.url
-
-def get_files(files):
-    def producer(q, files):
-        for file in files:
-            thread = FileGetter(file)
-            thread.start()
-            q.put(thread, True)
-
-    print "Getting ", len(files), " Files."
-    finished = []
-
-    def consumer(q, total_files):
-        while len(finished) < total_files:
-            thread = q.get(True)
+            
+class FunctionThread(threading.Thread):
+    
+    def __init__(self, func, *args, **kwargs):
+        self.func = func
+        self.args = args
+        self.kwargs = kwargs
+        self.result = None
+        threading.Thread.__init__(self)
+        
+    def get_result(self):
+        return self.result
+    
+    def run(self):
+        print "Executing ", self.func.__name__, self.args, self.kwargs
+        self.result = self.func(*self.args, **self.kwargs)
+            
+class Paralyzer:
+    
+    def __init__(self, logger):
+        self.logger = logger
+        self.producerArgs = self.consumerArgs = ()
+        
+    def perform(self):
+        self.logger.debug('Performing Tasks #' + str(self.taskSize))
+        self.finished = []
+        queueSize = min(QUEUE_THRESHOLD, self.taskSize)
+        calcSize = self.taskSize/QUEUE_DIVIDEND
+        size = max(queueSize,calcSize)
+        size = min(size, QUEUE_MAX)
+        self.logger.debug("ThreadQueue Size: " + str(size))
+        self.q = Queue(size)
+        prod_thread = threading.Thread(target=self.producer, args=self.producerArgs)
+        cons_thread = threading.Thread(target=self.consumer, args=self.consumerArgs)
+        prod_thread.start()
+        cons_thread.start()
+        prod_thread.join()
+        self.logger.debug('Producer Thread joined')
+        cons_thread.join()
+        self.logger.debug('Consumer Thread joined')
+        return self.finished
+    
+    def consumer(self):
+        while len(self.finished) < self.taskSize:
+            thread = self.q.get(True)
             thread.join()
-            finished.append(thread.get_result())
+            self.finished.append(thread.get_result())
+        
 
-    q = Queue(3)
-    prod_thread = threading.Thread(target=producer, args=(q, files))
-    cons_thread = threading.Thread(target=consumer, args=(q, len(files)))
-    prod_thread.start()
-    cons_thread.start()
-    prod_thread.join()
-    cons_thread.join()
-    return finished
+class FileDownloadParalyzer(Paralyzer):
+    
+    def __init__(self, files, logger):
+        Paralyzer.__init__(self, logger)
+        self.files = files
+        self.taskSize = len(files)
+        
+    def producer(self):
+        for file in self.files:
+            thread = URLGetter(file)
+            thread.start()
+            self.q.put(thread, True)
+            
+    
+            
+class KursParseParalyzer(Paralyzer):
+    
+    def __init__(self, pages, func, logger):
+        Paralyzer.__init__(self, logger)
+        self.pages = pages
+        self.func = func
+        self.taskSize = len(pages)
+        
+    def producer(self):
+        for page in self.pages:
+            thread = FunctionThread(self.func, page)
+            thread.start()
+            self.q.put(thread,True)
+            
 
 
 class OnvistaPlugin():
@@ -91,14 +147,22 @@ class OnvistaPlugin():
         soup = BeautifulSoup(page.read())
         linkTagsFonds = soup.findAll(attrs={'href' : re.compile('http://fonds\\.onvista\\.de/kurse\\.html\?ID_INSTRUMENT=\d+')})
         linkTagsETF = soup.findAll(attrs={'href' : re.compile('http://etf\\.onvista\\.de/kurse\\.html\?ID_INSTRUMENT=\d+')})
-        for kursPage in get_files([tag['href'] for tag in linkTagsFonds]):
+        filePara = FileDownloadParalyzer([tag['href'] for tag in linkTagsFonds],logger=self.api.logger)
+        pages = filePara.perform()
+        #kursPara = KursParseParalyzer(pages, self._parse_kurse_html_fonds, self.api.logger)
+        #for kurse in kursPara.perform():
+        #    for kurs in kurse:
+        #        yield (kurs, self)
+        for kursPage in pages:
             for item in self._parse_kurse_html_fonds(kursPage):
                 yield (item, self)
-        for kursPage in get_files([tag['href'] for tag in linkTagsETF]):
+        filePara.files = [tag['href'] for tag in linkTagsETF]
+        for kursPage in filePara.perform():
             for item in self._parse_kurse_html_etf(kursPage):
                 yield (item, self)
 
     def _parse_kurse_html_fonds(self, kursPage):
+        erg = []
         base = BeautifulSoup(kursPage).find('div', 'content')
         name = base.h1.contents[0]
         #print name
@@ -125,9 +189,13 @@ class OnvistaPlugin():
                     if change.span:
                         change = change.span
                     change = to_float(change.contents[0])
-                    yield {'name':name,'isin':isin,'exchange':exchange,'price':price,
-                      'date':date,'currency':currency,'volume':volume,
-                      'type':TYPE_FUND,'change':change}
+                    erg.append({'name':name,'isin':isin,'exchange':exchange,'price':price,
+                                'date':date,'currency':currency,'volume':volume,
+                                'type':TYPE_FUND,'change':change})
+        return erg
+                    #yield {'name':name,'isin':isin,'exchange':exchange,'price':price,
+                    #  'date':date,'currency':currency,'volume':volume,
+                    #  'type':TYPE_FUND,'change':change}
 
     def _parse_kurse_html_etf(self, kursPage):
         base = BeautifulSoup(kursPage).find('div', 'content')
@@ -207,7 +275,7 @@ class OnvistaPlugin():
         lines = table.findAll('tr',{'align':'right'})
         for line in lines:
             tds = line.findAll('td')
-            day = to_datetime(tds[0].contents[0].replace('&nbsp;',''))
+            day = to_datetime(tds[0].contents[0].replace('&nbsp;','')).date()
             kurs = to_float(tds[1].contents[0].replace('&nbsp;',''))
             yield (stock,day,kurs,kurs,kurs,kurs,0)
         
