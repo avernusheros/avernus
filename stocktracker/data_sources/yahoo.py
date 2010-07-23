@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 from BeautifulSoup import BeautifulSoup
 from urllib import urlopen
-import csv, pytz, re
+import csv, pytz, re, os, pickle
 from datetime import datetime
-from stocktracker import logger
+from stocktracker import logger, config
 
 logger = logger.logger
 
@@ -11,6 +11,9 @@ TYPES = ['Fonds', 'Aktie']
 
 class Yahoo():
     name = "yahoo"
+
+    def __init__(self):
+        self.__load_yahoo_ids()
     
     def __request(self, searchstring):
         try:
@@ -169,7 +172,7 @@ class Yahoo():
             self.yahoo_ids = {}
 
     def __save_yahoo_ids(self):
-        file = os.path.join(config.config_path, 'yahoo_ids')
+        path = os.path.join(config.config_path, 'yahoo_ids')
         with open(path, 'wb') as file:
              pickle.dump(self.yahoo_ids, file)
 

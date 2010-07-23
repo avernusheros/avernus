@@ -52,7 +52,7 @@ class DatasourceManager(object):
         for stock in stocks:
             stock.updated = False
         source = -1
-        for name, source in sources:
+        for name, source in sources.iteritems():
             temp = filter(stocks, lambda s: s.source == name)
             source.update_stocks(temp)
         
@@ -67,7 +67,7 @@ class DatasourceManager(object):
         if newest == None:
             newest = datetime.date(today.year -20, today.month, today.day)
         if newest <= today:
-            for qt in sources[stock.source].update_historical_prices(stock):
+            for qt in sources[stock.source].update_historical_prices(stock, newest, today):
                 #qt : (stock, date, open, high, low, close, vol)
                 controller.newQuotation(stock=qt[0], date=qt[1],\
                                         open=qt[2], high=qt[3],\
