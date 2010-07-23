@@ -8,16 +8,8 @@ from datetime import datetime
 TYPES = ['Fonds', 'Aktie']
 
 class Yahoo():
-    configurable = False
     name = "yahoo"
     
-    def activate(self):
-        self.api.register_datasource(self, self.name)
-        self.__load_yahoo_ids()
-                
-    def deactivate(self):
-        self.api.deregister_datasource(self, self.name)
-        
     def __request(self, searchstring):
         try:
             url = 'http://de.finsearch.yahoo.com/de/index.php?nm='+searchstring+'&tp=*&r=*&sub=Suchen'
@@ -104,6 +96,7 @@ class Yahoo():
                         float(row[3]),float(row[6]), int(row[5]))
             
     def search(self, searchstring):
+        print "SEARCH"
         doc = self.__request(searchstring)
         if doc is None:
             return

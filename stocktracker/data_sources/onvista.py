@@ -128,19 +128,13 @@ class KursParseParalyzer(Paralyzer):
             
 
 
-class OnvistaPlugin():
+class Onvista():
     configurable = False
 
     def __init__(self):
         self.name = 'onvista.de'
         self.exchangeBlacklist = ['Summe:','Realtime-Kurse','Neartime-Kurse',\
                                  'Leider stehen zu diesem Fonds keine Informationen zur Verfügung.']
-
-    def activate(self):
-        self.api.register_datasource(self, self.name)
-
-    def deactivate(self):
-        self.api.deregister_datasource(self, self.name)
 
     def search(self, searchstring):
         page = opener.open("http://www.onvista.de/suche.html", urllib.urlencode({"TARGET": "kurse", "SEARCH_VALUE": searchstring,'ID_TOOL':'FUN' }))

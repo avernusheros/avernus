@@ -17,7 +17,7 @@ class PrefDialog(gtk.Dialog):
         notebook = gtk.Notebook()
         vbox.pack_start(notebook)
         notebook.append_page(PluginManager(pengine), gtk.Label('Plugins'))
-        dsp = DataSourcePriorities(dsm)
+        #dsp = DataSourcePriorities(dsm)
         notebook.append_page(dsp, gtk.Label('Sources'))
         self.show_all()
         self.run()
