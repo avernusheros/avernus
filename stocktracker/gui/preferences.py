@@ -18,10 +18,10 @@ class PrefDialog(gtk.Dialog):
         vbox.pack_start(notebook)
         notebook.append_page(PluginManager(pengine), gtk.Label('Plugins'))
         #dsp = DataSourcePriorities(dsm)
-        notebook.append_page(dsp, gtk.Label('Sources'))
+        #notebook.append_page(dsp, gtk.Label('Sources'))
         self.show_all()
         self.run()
-        dsp.on_close()  
+        #dsp.on_close()  
         self.destroy()
         logger.logger.debug("PrefDialog destroyed")
 
