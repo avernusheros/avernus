@@ -7,7 +7,7 @@ from stocktracker.data_sources import yahoo, onvista
 import datetime
 
 
-sources = {'onvista': onvista.Onvista(),
+sources = {'onvista.de': onvista.Onvista(),
            'yahoo': yahoo.Yahoo()
             }
 
@@ -47,13 +47,14 @@ class DatasourceManager(object):
         self.search_callback(stock, 'gtk-add')
 
     def update_stocks(self, stocks):
+        #print stocks
         if len(stocks) == 0 or not self.b_online:
             return
         for stock in stocks:
             stock.updated = False
         source = -1
         for name, source in sources.iteritems():
-            temp = filter(stocks, lambda s: s.source == name)
+            temp = filter(lambda s: s.source == name, stocks)
             source.update_stocks(temp)
         
     def update_stock(self, stock):

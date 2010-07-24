@@ -6,9 +6,9 @@ import threading, re
 from Queue import Queue
 import urllib
 import urllib2
-from stocktracker import logger
+#import logger
 
-logger = logger.logger
+#logger = logger.logger
 
 QUEUE_THRESHOLD = 3
 QUEUE_DIVIDEND = 10
@@ -74,22 +74,22 @@ class Paralyzer:
         self.producerArgs = self.consumerArgs = ()
         
     def perform(self):
-        logger.debug('Performing Tasks #' + str(self.taskSize))
+        #logger.debug('Performing Tasks #' + str(self.taskSize))
         self.finished = []
         queueSize = min(QUEUE_THRESHOLD, self.taskSize)
         calcSize = self.taskSize/QUEUE_DIVIDEND
         size = max(queueSize,calcSize)
         size = min(size, QUEUE_MAX)
-        logger.debug("ThreadQueue Size: " + str(size))
+        #logger.debug("ThreadQueue Size: " + str(size))
         self.q = Queue(size)
         prod_thread = threading.Thread(target=self.producer, args=self.producerArgs)
         cons_thread = threading.Thread(target=self.consumer, args=self.consumerArgs)
         prod_thread.start()
         cons_thread.start()
         prod_thread.join()
-        logger.debug('Producer Thread joined')
+        #logger.debug('Producer Thread joined')
         cons_thread.join()
-        logger.debug('Consumer Thread joined')
+        #logger.debug('Consumer Thread joined')
         return self.finished
     
     def consumer(self):
@@ -119,7 +119,7 @@ class KursParseParalyzer(Paralyzer):
     def __init__(self, pages, fun):
         Paralyzer.__init__(self)
         self.pages = pages
-        self.func = func
+        self.func = fun
         self.taskSize = len(pages)
         
     def producer(self):
@@ -145,10 +145,6 @@ class Onvista():
         linkTagsETF = soup.findAll(attrs={'href' : re.compile('http://etf\\.onvista\\.de/kurse\\.html\?ID_INSTRUMENT=\d+')})
         filePara = FileDownloadParalyzer([tag['href'] for tag in linkTagsFonds])
         pages = filePara.perform()
-        #kursPara = KursParseParalyzer(pages, self._parse_kurse_html_fonds)
-        #for kurse in kursPara.perform():
-        #    for kurs in kurse:
-        #        yield (kurs, self)
         for kursPage in pages:
             for item in self._parse_kurse_html_fonds(kursPage):
                 yield (item, self)
@@ -160,6 +156,8 @@ class Onvista():
     def _parse_kurse_html_fonds(self, kursPage):
         erg = []
         base = BeautifulSoup(kursPage).find('div', 'content')
+        year = base.find('div','tt_hl').findNextSibling('table','weiss abst').find('tr','hgrau2').td.string
+        year = year.split(".")[2]
         name = base.h1.contents[0]
         #print name
         isin = base.findAll('tr','hgrau2')[1].findAll('td')[1].contents[0].replace('&nbsp;','')
@@ -178,8 +176,7 @@ class Onvista():
                     currency = tds[1].contents[0]
                     price = to_float(tds[11].contents[0])
                     #sellPrice = tds[6].contents[0]
-                    #FIXME fetch year from html
-                    date = to_datetime(tds[8].contents[0]+'10', tds[9].contents[0])
+                    date = to_datetime(tds[8].contents[0]+year, tds[9].contents[0])
                     volume = to_int(tds[12].contents[0])
                     change = tds[14]
                     if change.span:
@@ -196,6 +193,8 @@ class Onvista():
     def _parse_kurse_html_etf(self, kursPage):
         base = BeautifulSoup(kursPage).find('div', 'content')
         name = base.h1.contents[0]
+        year = base.find('div','tt_hl').findNextSibling('table','weiss abst').find('tr','hgrau2').td.string
+        year = year.split(".")[2]
         isin = base.findAll('tr','hgrau2')[1].findAll('td')[1].contents[0].replace('&nbsp;','')
         #print base.findAll('div','t')[2]
         for row in base.findAll('div','t')[2].find('table'):
@@ -322,7 +321,7 @@ if __name__ == "__main__":
         for item in plugin._parse_kurse_html_etf(page):
             print item
 
-    plugin = OnvistaPlugin()
+    plugin = Onvista()
     ex = Exchange()
     s1 = Stock('LU0136412771', ex, TYPE_FUND)
     s2 = Stock('LU0103598305', ex, TYPE_FUND)
@@ -330,6 +329,6 @@ if __name__ == "__main__":
     #print test_search()
     #print plugin.search_kurse(s1)
     #print plugin.search_kurse(s3)
-    #test_parse_kurse()
+    test_parse_kurse()
     #test_update()
-    test_historicals()
+    #test_historicals()
