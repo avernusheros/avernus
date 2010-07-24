@@ -1,27 +1,24 @@
 # -*- coding: utf-8 -*-
 from BeautifulSoup import BeautifulSoup
 from urllib import urlopen
-import csv, pytz, re
+import csv, pytz, re, os, pickle
 from datetime import datetime
+from stocktracker import logger, config
 
+logger = logger.logger
 
 TYPES = ['Fonds', 'Aktie']
 
 class Yahoo():
-    configurable = False
     name = "yahoo"
-    
-    def activate(self):
-        self.api.register_datasource(self, self.name)
+
+    def __init__(self):
         self.__load_yahoo_ids()
-                
-    def deactivate(self):
-        self.api.deregister_datasource(self, self.name)
-        
+    
     def __request(self, searchstring):
         try:
             url = 'http://de.finsearch.yahoo.com/de/index.php?nm='+searchstring+'&tp=*&r=*&sub=Suchen'
-            self.api.logger.info(url)
+            logger.info(url)
             return urlopen(url)
         except:
             return None
@@ -29,7 +26,7 @@ class Yahoo():
     def __request_csv(self, symbol, stat):
         try:
             url = 'http://finance.yahoo.com/d/quotes.csv?s=%s&f=%s' % (symbol, stat)
-            self.api.logger.info(url)
+            logger.info(url)
             return urlopen(url)
         except:
             return None
@@ -57,12 +54,12 @@ class Yahoo():
                 try:
                     stocks[s].price = float(row[0])
                 except Exception as e:
-                    self.api.logger.info(e)
+                    logger.info(e)
                     continue
                 try:
                     date = datetime.strptime(row[1] + ' ' + row[2], '%m/%d/%Y %H:%M%p')
                 except Exception as e:
-                    self.api.logger.info(e)
+                    logger.info(e)
                     date = datetime.strptime(row[1], '%m/%d/%Y')
                 date = pytz.timezone('US/Eastern').localize(date)
                 date = date.astimezone(pytz.utc)
@@ -85,7 +82,7 @@ class Yahoo():
     
     def update_historical_prices(self, stock, start_date, end_date):
         id = self.__get_yahoo_ids([stock])
-        self.api.logger.debug("fetch data"+ str(start_date)+ str(end_date))
+        logger.debug("fetch data"+ str(start_date)+ str(end_date))
         url = 'http://ichart.yahoo.com/table.csv?s=%s&' % id + \
               'd=%s&' % str(start_date.month-1) + \
               'e=%s&' % str(start_date.day) + \
@@ -129,7 +126,7 @@ class Yahoo():
                             else:
                                 self.yahoo_ids[(item['isin'],item['currency'])] = [item['yahoo_id']]
                             yield (item, self)
-        self.api.save_configuration(self.name, 'yahoo_ids', self.yahoo_ids)
+        self.__save_yahoo_ids()
     
     def __parse_price(self, pricestring):
         if pricestring[-1] == '$':
@@ -160,12 +157,25 @@ class Yahoo():
         res['volume']                 = int(item[9].replace(",", ""))
         return res
     
+    
+    #FIXME since yahoo.py is now part of the main program, we should store
+    #the ids in the db. or not?
+    
     def __load_yahoo_ids(self):
-        data = self.api.load_configuration(self.name, 'yahoo_ids')
-        if not data is None and type(data) == type (dict()):
-            self.yahoo_ids = data
+        path = os.path.join(config.config_path, 'yahoo_ids')
+        if os.path.isfile(path):
+            with open(path, 'r') as file:
+                data = pickle.load(file)
+                if type(data) == type(dict()):
+                    self.yahoo_ids = data
         else:
             self.yahoo_ids = {}
+
+    def __save_yahoo_ids(self):
+        path = os.path.join(config.config_path, 'yahoo_ids')
+        with open(path, 'wb') as file:
+             pickle.dump(self.yahoo_ids, file)
+
 
 if __name__ == '__main__':
     y = Yahoo()

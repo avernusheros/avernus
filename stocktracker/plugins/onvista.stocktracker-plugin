@@ -1,7 +1,0 @@
-[stocktracker Plugin]
-Module=onvista
-Name=Onvista
-Description=A Search Engine Plugin that uses beautifulsoup to search onvista.de for fonds
-Authors=simpsus (bastian.kennel@gmail.com)
-Version=0.3.0
-Dependencies=python-beautifulsoup
