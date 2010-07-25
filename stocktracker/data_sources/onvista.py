@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from BeautifulSoup import BeautifulSoup, NavigableString
 from datetime import datetime, date
+import pytz
 from dateutil.relativedelta import relativedelta
 import threading, re
 from Queue import Queue
@@ -20,10 +21,14 @@ TYPE_ETF  = 2
 def to_float(s):
     return float(s.replace('.','').replace(',','.'))
 
-def to_datetime(date, time=''):
+def to_datetime(date, time='', toUTC=True):
     if time == '':
-        return datetime.strptime(date+time, "%d.%m.%y")
-    return datetime.strptime(date+time, "%d.%m.%y%H:%M:%S")
+        date = datetime.strptime(date+time, "%d.%m.%y")
+    else:
+        date = datetime.strptime(date+time, "%d.%m.%y%H:%M:%S")
+    #if toUTC:
+    #    date = date.astimezone(pytz.utc)
+    return date
 
 
 def to_int(s):
@@ -51,28 +56,28 @@ class URLGetter(threading.Thread):
             print "Downloaded ", self.url
         except IOError:
             print "Could not open document: %s" % self.url
-            
+
 class FunctionThread(threading.Thread):
-    
+
     def __init__(self, func, *args, **kwargs):
         self.func = func
         self.args = args
         self.kwargs = kwargs
         self.result = None
         threading.Thread.__init__(self)
-        
+
     def get_result(self):
         return self.result
-    
+
     def run(self):
         print "Executing ", self.func.__name__, self.args, self.kwargs
         self.result = self.func(*self.args, **self.kwargs)
-            
+
 class Paralyzer:
-    
+
     def __init__(self):
         self.producerArgs = self.consumerArgs = ()
-        
+
     def perform(self):
         #logger.debug('Performing Tasks #' + str(self.taskSize))
         self.finished = []
@@ -91,43 +96,43 @@ class Paralyzer:
         cons_thread.join()
         #logger.debug('Consumer Thread joined')
         return self.finished
-    
+
     def consumer(self):
         while len(self.finished) < self.taskSize:
             thread = self.q.get(True)
             thread.join()
             self.finished.append(thread.get_result())
-        
+
 
 class FileDownloadParalyzer(Paralyzer):
-    
+
     def __init__(self, files):
         Paralyzer.__init__(self)
         self.files = files
         self.taskSize = len(files)
-        
+
     def producer(self):
         for file in self.files:
             thread = URLGetter(file)
             thread.start()
             self.q.put(thread, True)
-            
-    
-            
+
+
+
 class KursParseParalyzer(Paralyzer):
-    
+
     def __init__(self, pages, fun):
         Paralyzer.__init__(self)
         self.pages = pages
         self.func = fun
         self.taskSize = len(pages)
-        
+
     def producer(self):
         for page in self.pages:
             thread = FunctionThread(self.func, page)
             thread.start()
             self.q.put(thread,True)
-            
+
 
 
 class Onvista():
@@ -273,7 +278,7 @@ class Onvista():
             day = to_datetime(tds[0].contents[0].replace('&nbsp;','')).date()
             kurs = to_float(tds[1].contents[0].replace('&nbsp;',''))
             yield (stock,day,kurs,kurs,kurs,kurs,0)
-        
+
 
 
 if __name__ == "__main__":
@@ -287,13 +292,13 @@ if __name__ == "__main__":
             self.type = type
             self.exchange = ex
             self.currency = 'EUR'
-    
+
     ex = Exchange()
     s1 = Stock('DE0008474248', ex, TYPE_FUND)
     s2 = Stock('LU0382362290', ex, TYPE_ETF)
-    
+
     def test_update():
-        
+
         plugin.update_stocks([s1, s2])
         print s1.price, s1.change, s1.date
         print s2.price, s2.change, s2.date
@@ -302,7 +307,7 @@ if __name__ == "__main__":
         for res in  plugin.search('etflab'):
             print res
             #break
-            
+
     def test_historicals():
         print "los"
         for quot in plugin.update_historical_prices(s1, date(1920,1,1), date.today()):
@@ -310,7 +315,7 @@ if __name__ == "__main__":
         for quot in plugin.update_historical_prices(s2, date(1920,1,1), date.today()):
             print quot
         print "fertsch"
-        
+
 
     def test_parse_kurse():
         page = opener.open('http://fonds.onvista.de/kurse.html?ID_INSTRUMENT=83602')
