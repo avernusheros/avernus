@@ -33,8 +33,6 @@ class IndexPositionsTab(gtk.VBox):
         self.pack_start(hbox, expand=False, fill=False)
         self.pack_start(sw)
         
-        #pubsub.subscribe('container.updated', self.on_container_update)
-                
         self.show_all()
         
     
