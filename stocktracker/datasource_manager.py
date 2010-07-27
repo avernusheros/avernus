@@ -2,7 +2,7 @@
 
 from stocktracker.objects import controller
 from stocktracker.objects.stock import Stock
-from stocktracker import config, pubsub
+from stocktracker import pubsub
 from stocktracker.data_sources import yahoo, onvista
 import datetime
 
@@ -14,7 +14,6 @@ sources = {'onvista.de': onvista.Onvista(),
 class DatasourceManager(object):
     
     def __init__(self):
-        self.cfg = config.StocktrackerConfig()
         self.current_searches = []
         pubsub.subscribe('network', self.on_network_change)
         
@@ -22,9 +21,7 @@ class DatasourceManager(object):
         self.b_online = state
 
     def search(self, searchstring, callback):
-        for search in self.current_searches:
-            search.stop()
-        self.current_searches = [] 
+        self.stop_search()
         self.search_callback = callback
         if not self.b_online:
             print "OFFLINE"
@@ -37,6 +34,11 @@ class DatasourceManager(object):
                 self.current_searches.append(task)
                 task.start(searchstring)
 
+    def stop_search(self):
+        for search in self.current_searches:
+            search.stop()
+        self.current_searches = [] 
+
     def _item_found_callback(self, item, source):
         #mandatory: isin, type, name
         if controller.is_duplicate(Stock, **item):
@@ -47,12 +49,10 @@ class DatasourceManager(object):
         self.search_callback(stock, 'gtk-add')
 
     def update_stocks(self, stocks):
-        #print stocks
         if len(stocks) == 0 or not self.b_online:
             return
         for stock in stocks:
             stock.updated = False
-        source = -1
         for name, source in sources.iteritems():
             temp = filter(lambda s: s.source == name, stocks)
             source.update_stocks(temp)

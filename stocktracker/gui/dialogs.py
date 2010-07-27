@@ -178,6 +178,9 @@ class StockSelector(gtk.VBox):
         for item in controller.getStockForSearchstring(searchstring):
             self.insert_item(item)    
         controller.datasource_manager.search(searchstring, self.insert_item)
+    
+    def stop_search(self):
+        controller.datasource_manager.stop_search()
         
     def insert_item(self, stock, icon='gtk-harddisk'):
         #FIXME ETFs need an icon
@@ -340,6 +343,7 @@ class BuyDialog(gtk.Dialog):
             self.set_response_sensitive(gtk.RESPONSE_ACCEPT, False)  
 
     def process_result(self, response):
+        self.stock_selector.stop_search()
         if response == gtk.RESPONSE_ACCEPT:
             stock = self.stock_selector.get_stock()
             shares = self.shares_entry.get_value()
@@ -382,6 +386,7 @@ class NewWatchlistPositionDialog(gtk.Dialog):
         self.set_response_sensitive(gtk.RESPONSE_ACCEPT, False)   
         
     def process_result(self, response):
+        self.stock_selector.stop_search()
         if response == gtk.RESPONSE_ACCEPT:
             stock = self.stock_selector.get_stock()
             stock.update_price()
