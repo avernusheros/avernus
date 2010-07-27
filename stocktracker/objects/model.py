@@ -505,6 +505,9 @@ class SQLiteEntity(object):
             store.execute(query,vals)
             self.__setattr__(name,SQList(self))
             
+    def select(self, request, arguments=None):
+        yield store.select(request, arguments)
+            
     def __repr__(self):
         erg = self.__class__.__name__ +"@"+str(id(self))+ "["
         erg += self.__primaryKey__+":"+str(self.getPrimaryKey())
