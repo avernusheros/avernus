@@ -320,21 +320,21 @@ class GeneratorTask(object):
     def _start(self, *args, **kwargs):
         self._stopped = False
         for ret in self.generator(*args, **kwargs):
-           if self._stopped:
-               thread.exit()
-           gobject.idle_add(self._loop, ret)
+            if self._stopped:
+                thread.exit()
+            gobject.idle_add(self._loop, ret)
         if self.complete_callback is not None:
-           gobject.idle_add(self.complete_callback)
+            gobject.idle_add(self.complete_callback)
 
     def _loop(self, ret):
-       if ret is None:
-           ret = ()
-       if not isinstance(ret, tuple):
-           ret = (ret,)
-       self.loop_callback(*ret)
+        if ret is None:
+            ret = ()
+        if not isinstance(ret, tuple):
+            ret = (ret,)
+        self.loop_callback(*ret)
 
     def start(self, *args, **kwargs):
         threading.Thread(target=self._start, args=args, kwargs=kwargs).start()
 
     def stop(self):
-       self._stopped = True
+        self._stopped = True
