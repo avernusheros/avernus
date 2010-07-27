@@ -26,8 +26,11 @@ def to_datetime(date, time='', toUTC=True):
         date = datetime.strptime(date+time, "%d.%m.%y")
     else:
         date = datetime.strptime(date+time, "%d.%m.%y%H:%M:%S")
-    #if toUTC:
-    #    date = date.astimezone(pytz.utc)
+    date = pytz.timezone('Europe/Berlin').localize(date)
+    if toUTC:
+        date = date.astimezone(pytz.utc)
+        date = date.replace(tzinfo = None)
+    #print date
     return date
 
 
@@ -159,7 +162,6 @@ class Onvista():
                 yield (item, self)
 
     def _parse_kurse_html_fonds(self, kursPage):
-        erg = []
         base = BeautifulSoup(kursPage).find('div', 'content')
         year = base.find('div','tt_hl').findNextSibling('table','weiss abst').find('tr','hgrau2').td.string
         year = year.split(".")[2]
@@ -187,13 +189,9 @@ class Onvista():
                     if change.span:
                         change = change.span
                     change = to_float(change.contents[0])
-                    erg.append({'name':name,'isin':isin,'exchange':exchange,'price':price,
-                                'date':date,'currency':currency,'volume':volume,
-                                'type':TYPE_FUND,'change':change})
-        return erg
-                    #yield {'name':name,'isin':isin,'exchange':exchange,'price':price,
-                    #  'date':date,'currency':currency,'volume':volume,
-                    #  'type':TYPE_FUND,'change':change}
+                    yield {'name':name,'isin':isin,'exchange':exchange,'price':price,
+                      'date':date,'currency':currency,'volume':volume,
+                      'type':TYPE_FUND,'change':change}
 
     def _parse_kurse_html_etf(self, kursPage):
         base = BeautifulSoup(kursPage).find('div', 'content')
@@ -237,7 +235,7 @@ class Onvista():
             else:
                 print "Unknown stock type in onvistaplugin.update_stocks"
             for item in generator:
-                if item['exchange'] == stock.exchange.name and \
+                if item['exchange'] == stock.exchange and \
                         item['currency'] == stock.currency:
                     stock.price = item['price']
                     stock.date = item['date']
