@@ -31,23 +31,23 @@ class Stock(SQLiteEntity):
                          'sector':None,
                          'isin':''
                          }
-                         
+
     #needed for some treeviews, e.g. news_tab
     @property
     def stock(self):
         return self
-                      
-    @property      
+
+    @property
     def percent(self):
-        try: 
+        try:
             return round(self.change * 100 / (self.price - self.change),2)
         except:
             return 0
-    
+
     def __str__(self):
         return self.name +' | '+self.isin+' | '+self.exchange
-    
-    def update_stock(self):
+
+    def update_price(self):
         #FIXME should not import controller here
         from stocktracker.objects import controller
-        #controller.datasource_manager.update_stock(self)    
+        controller.datasource_manager.update_stock(self)
