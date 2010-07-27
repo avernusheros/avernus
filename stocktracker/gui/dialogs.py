@@ -351,7 +351,6 @@ class BuyDialog(gtk.Dialog):
             date = datetime(year, month+1, day)
             ta_costs = self.tacosts_entry.get_value()
             pos = controller.newPortfolioPosition(price=price, date=date, quantity=shares, portfolio=self.pf, stock = stock)
-            pos.update_stock()
             ta = controller.newTransaction(type=1, date=date,quantity=shares,price=price,costs=ta_costs, position=pos, portfolio=self.pf)
             pubsub.publish('container.position.added', self.pf, pos)
             pubsub.publish('transaction.added', ta)
