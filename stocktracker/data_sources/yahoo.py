@@ -137,7 +137,7 @@ class Yahoo():
             cur = 'GBPp'
         else:
             price, cur = pricestring.strip(';').split('&')
-            if cur == 'euro':
+            if cur == 'euro' or cur == 'nbsp':
                 cur = 'EUR'
         return float(price), cur
     
