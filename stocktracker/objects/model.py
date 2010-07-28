@@ -163,10 +163,12 @@ class SQLiteEntity(object):
             if not attr in dir(other):
                 #print "not equals because has not attribute", attr, other
                 return False
-            if self.__getattribute__(attr) == other.__getattribute__(attr):
-                return True
-        #print "not equals because non of the primary attributes matched"
-        return False
+            if self.__getattribute__(attr) != other.__getattribute__(attr):
+                return False 
+        # still alive, did we have something to compare?
+        if len(self.__comparisonPositives__) == 0:
+            print "model.equals call with no comparisonPositives, fallback to true"
+        return True
     
     def __setattr__(self, name, val, insert = False):
         object.__setattr__(self, name, val)

@@ -18,7 +18,10 @@ class Position(object):
         else:
             return 0,0
         absolute = stock * self.quantity
-        percent = round(absolute * 100 / (self.price*self.quantity),2)
+        if self.price * self.quantity == 0:
+            percent = 0
+        else:
+            percent = round(absolute * 100 / (self.price*self.quantity),2)
         return absolute, percent
 
     @property

@@ -145,18 +145,15 @@ class EditPositionTable(gtk.Table):
             self.pos.comment = buffer.get_text(buffer.get_start_iter(), buffer.get_end_iter())            
 
 
-class StockSelector(gtk.Table):
+class StockSelector(gtk.VBox):
     def __init__(self):
-        gtk.Table.__init__(self)
-        
+        gtk.VBox.__init__(self)
         self.search_field = gtk.Entry()
-        self.search_field.connect('activate', self.on_search)
         self.search_field.set_icon_from_stock(1, gtk.STOCK_FIND)
-        self.attach(self.search_field,0,1,0,1,xoptions=gtk.FILL, yoptions=gtk.FILL)
-        
-        button = gtk.Button(label='search', stock='gtk-find')
-        self.attach(button,1,2,0,1, xoptions=gtk.FILL, yoptions=gtk.FILL)
-        button.connect('clicked', self.on_search)
+        self.search_field.set_icon_activatable(0, True)
+        self.search_field.connect('activate', self.on_search)
+        self.search_field.connect('icon-press', self.on_search)
+        self.pack_start(self.search_field)
         
         sw = gtk.ScrolledWindow()
         sw.set_property('hscrollbar-policy', gtk.POLICY_AUTOMATIC)
@@ -176,7 +173,7 @@ class StockSelector(gtk.Table):
                          cell)
         
         sw.add(self.result_tree)
-        self.attach(sw, 0,2,1,2)
+        self.pack_start(sw)
 
     def get_stock(self):
         path, col = self.result_tree.get_cursor()
@@ -188,6 +185,9 @@ class StockSelector(gtk.Table):
         for item in controller.getStockForSearchstring(searchstring):
             self.insert_item(item)    
         controller.datasource_manager.search(searchstring, self.insert_item)
+    
+    def stop_search(self):
+        controller.datasource_manager.stop_search()
         
     def insert_item(self, stock, icon='gtk-harddisk'):
         #FIXME ETFs need an icon
@@ -264,41 +264,43 @@ class BuyDialog(gtk.Dialog):
         
         vbox = self.get_content_area()
         table = gtk.Table()
+        table.set_row_spacings(4)
+        table.set_col_spacings(4)
         vbox.pack_end(table)
         #stock entry
         self.stock_selector = StockSelector()
-        table.attach(self.stock_selector,0,2,0,1)
+        table.attach(self.stock_selector,0,3,0,1)
         self.stock_selector.result_tree.connect('cursor-changed', self.on_stock_selection)
         self.stock_selector.result_tree.get_model().connect('row-deleted', self.on_stock_deselection)
         self.stock_ok = False
 
         #shares entry
-        table.attach(gtk.Label(_('Shares')),0,1,1,2)
+        table.attach(gtk.Label(_('Shares')),1,2,1,2)
         self.shares_entry = gtk.SpinButton(gtk.Adjustment(lower=0, upper=100000,step_incr=1.0, value = 0), digits=2)
         self.shares_entry.connect("value-changed", self.on_change)
-        table.attach(self.shares_entry,1,2,1,2)
+        table.attach(self.shares_entry,2,3,1,2)
         
         #price entry
-        table.attach(gtk.Label(_('Price')),0,1,2,3)
+        table.attach(gtk.Label(_('Price')),1,2,2,3)
         self.price_entry = gtk.SpinButton(gtk.Adjustment(lower=0, upper=100000,step_incr=0.1, value = 1.0), digits=2)
         self.price_entry.connect("value-changed", self.on_change)
-        table.attach(self.price_entry,1,2,2,3)
+        table.attach(self.price_entry,2,3,2,3)
         
         #ta_costs entry
-        table.attach(gtk.Label(_('Transaction Costs')),0,1,3,4)
+        table.attach(gtk.Label(_('Transaction Costs')),1,2,3,4)
         self.tacosts_entry = gtk.SpinButton(gtk.Adjustment(lower=0, upper=100000,step_incr=0.1, value = 0.0), digits=2)
         self.tacosts_entry.connect("value-changed", self.on_change)
-        table.attach(self.tacosts_entry,1,2,3,4)
+        table.attach(self.tacosts_entry,2,3,3,4)
         
         #total
-        table.attach(gtk.Label(_('Total')),0,1,4,5)
+        table.attach(gtk.Label(_('Total')),1,2,4,5)
         self.total = gtk.Label('0.0')
-        table.attach(self.total,1,2,4,5)
+        table.attach(self.total,2,3,4,5)
         
         #date 
         self.calendar = gtk.Calendar()
         self.calendar.connect('day-selected', self.on_calendar_day_selected)
-        table.attach(self.calendar,0,2,5,6)
+        table.attach(self.calendar,0,1,1,5)
         self.date_ok = True
         
         self.infobar = gtk.InfoBar()
@@ -348,6 +350,7 @@ class BuyDialog(gtk.Dialog):
             self.set_response_sensitive(gtk.RESPONSE_ACCEPT, False)  
 
     def process_result(self, response):
+        self.stock_selector.stop_search()
         if response == gtk.RESPONSE_ACCEPT:
             stock = self.stock_selector.get_stock()
             shares = self.shares_entry.get_value()
@@ -390,6 +393,7 @@ class NewWatchlistPositionDialog(gtk.Dialog):
         self.set_response_sensitive(gtk.RESPONSE_ACCEPT, False)   
         
     def process_result(self, response):
+        self.stock_selector.stop_search()
         if response == gtk.RESPONSE_ACCEPT:
             stock = self.stock_selector.get_stock()
             stock.update_price()
