@@ -135,7 +135,7 @@ def datetime_format(date, nl = True):
 def get_datetime_string(date):
     if date is not None:
         if date.hour == 0 and date.minute == 0 and date.second == 0:
-            return datetime_format(to_local_time(date).date())
+            return date.strftime("%d.%m.%Y")
         else:
             return datetime_format(to_local_time(date))
     return ''
@@ -149,8 +149,8 @@ def resize_wrap(scroll, allocation, treeview, column, cell):
     if newWidth < 300:
             newWidth = 300
     cell.props.wrap_width = newWidth
-    column.set_property('min-width', newWidth + 10)
-    column.set_property('max-width', newWidth + 10)
+    column.set_property('min-width', newWidth )
+    column.set_property('max-width', newWidth )
     store = treeview.get_model()
     iter = store.get_iter_first()
     while iter and store.iter_is_valid(iter):
