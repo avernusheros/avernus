@@ -132,6 +132,9 @@ class Yahoo():
         if pricestring[-1] == '$':
             price = pricestring[:-1]
             cur = '$'
+        elif pricestring[-1] == 'p':
+            price = pricestring[:-1]
+            cur = 'GBPp'
         else:
             price, cur = pricestring.strip(';').split('&')
             if cur == 'euro':
