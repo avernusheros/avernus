@@ -16,12 +16,4 @@ class Quotation(SQLiteEntity):
                    'volume': 'INTEGER',
                    
                   }
-    
-    @classmethod
-    def isPresent(cls, stock, date):
-        request = "\
-        select id from {table} where stock =? and date =?\
-        "
-        if cls.select(request, [stock.id, date]):
-            return True
-        return False
+    __comparisonPositives__ = ['stock','date']

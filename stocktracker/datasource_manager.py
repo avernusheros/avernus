@@ -19,7 +19,7 @@ class DatasourceManager(object):
         
     def on_network_change(self, state):
         self.b_online = state
-
+ 
     def search(self, searchstring, callback):
         self.stop_search()
         self.search_callback = callback
@@ -73,6 +73,6 @@ class DatasourceManager(object):
                 controller.newQuotation(stock=qt[0], date=qt[1],\
                                         open=qt[2], high=qt[3],\
                                         low=qt[4], close=qt[5],\
-                                        vol=qt[6])
+                                        vol=qt[6], detectDuplicates=True)
         #needed to run as generator thread
         yield 1

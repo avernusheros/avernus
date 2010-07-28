@@ -59,11 +59,13 @@ def detectDuplicate(tp,**kwargs):
     present = tp.getByColumns(sqlArgs,operator=" AND ",create=True)
     if present:
         if len(present) == 1:
+            #print "PRESENT!"
             return present[0]
         else:
             #print tp, kwargs
             #print present
             raise Exception("Multiple results for duplicate detection")
+    #print "not Present!"
     new = tp(**kwargs)
     new.insert()
     return new
@@ -186,17 +188,29 @@ def newQuotation(date=datetime.date.today(),\
                  high=0,\
                  low=0,\
                  close=0,\
-                 vol=0):
-    result = Quotation(id=None,\
-                       date=date,\
-                       open=open,\
-                       high=high,\
-                       low=low,\
-                       close=close,\
-                       stock=stock,\
-                       volume=vol)
-    result.insert()
-    return result
+                 vol=0,\
+                 detectDuplicates = True):
+    if detectDuplicates:
+        return detectDuplicate(Quotation,\
+                               date=date,\
+                               open=open,\
+                               high=high,\
+                               low=low,\
+                               close=close,\
+                               stock=stock.id,\
+                               volume=vol)
+    else:
+        result = Quotation(id=None,\
+                           date=date,\
+                           open=open,\
+                           high=high,\
+                           low=low,\
+                           close=close,\
+                           stock=stock,\
+                           volume=vol)
+        result.insert()
+        return result
+        
 
 def getAllPortfolio():
     return Portfolio.getAll()
