@@ -160,11 +160,17 @@ class Onvista():
         for kursPage in filePara.perform():
             for item in self._parse_kurse_html_etf(kursPage):
                 yield (item, self)
+        print "fertig"
 
     def _parse_kurse_html_fonds(self, kursPage):
         base = BeautifulSoup(kursPage).find('div', 'content')
-        year = base.find('div','tt_hl').findNextSibling('table','weiss abst').find('tr','hgrau2').td.string
-        year = year.split(".")[2]
+        yearTable = base.find('div','tt_hl').findNextSibling('table','weiss abst').find('tr','hgrau2')
+        # is there any entry?
+        if yearTable:
+            year = yearTable.td.string.split(".")[2]
+        else:
+            #fallback to the hardcoded current year
+            year = '10'
         name = base.h1.contents[0]
         #print name
         isin = base.findAll('tr','hgrau2')[1].findAll('td')[1].contents[0].replace('&nbsp;','')
