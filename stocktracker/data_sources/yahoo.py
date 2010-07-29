@@ -80,17 +80,18 @@ class Yahoo():
         for row in csv.reader(self.__request_csv(symbol, 'nxc4n0n1n2n3n4')):
             print row
     
+
+
     def update_historical_prices(self, stock, start_date, end_date):
-        id = self.__get_yahoo_ids([stock])
-        logger.debug("fetch data"+ str(start_date)+ str(end_date))
-        url = 'http://ichart.yahoo.com/table.csv?s=%s&' % id + \
-              'd=%s&' % str(start_date.month-1) + \
-              'e=%s&' % str(start_date.day) + \
-              'f=%s&' % str(start_date.year) + \
+        yid = self.__get_yahoo_ids([stock])
+        url = 'http://ichart.yahoo.com/table.csv?s=%s&' % yid + \
+              'a=%s&' % str(start_date.month-1) + \
+              'b=%s&' % str(start_date.day) + \
+              'c=%s&' % str(start_date.year) + \
               'g=d&' + \
-              'a=%s&' % str(end_date.month-1) + \
-              'b=%s&' % str(end_date.day) + \
-              'c=%s&' % str(end_date.year) + \
+              'd=%s&' % str(end_date.month-1) + \
+              'e=%s&' % str(end_date.day) + \
+              'f=%s&' % str(end_date.year) + \
               'ignore=.csv'
         days = urlopen(url).readlines()
         data = []
