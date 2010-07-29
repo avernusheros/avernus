@@ -156,15 +156,22 @@ class Onvista():
         for kursPage in pages:
             for item in self._parse_kurse_html_fonds(kursPage):
                 yield (item, self)
-        filePara.files = [tag['href'] for tag in linkTagsETF]
-        for kursPage in filePara.perform():
+        #print "finished fonds"
+        filePara = FileDownloadParalyzer([tag['href'] for tag in linkTagsETF])
+        pages = filePara.perform()
+        #print "got Pages: ", pages
+        for kursPage in pages:
             for item in self._parse_kurse_html_etf(kursPage):
                 yield (item, self)
-        print "fertig"
+        #print "fertig ganz"
 
     def _parse_kurse_html_fonds(self, kursPage):
         base = BeautifulSoup(kursPage).find('div', 'content')
-        yearTable = base.find('div','tt_hl').findNextSibling('table','weiss abst').find('tr','hgrau2')
+        try:
+            yearTable = base.find('div','tt_hl').findNextSibling('table','weiss abst').find('tr','hgrau2')
+        except:
+            print "Error getting year in ", kursPage
+            yearTable = None
         # is there any entry?
         if yearTable:
             year = yearTable.td.string.split(".")[2]
@@ -202,7 +209,17 @@ class Onvista():
     def _parse_kurse_html_etf(self, kursPage):
         base = BeautifulSoup(kursPage).find('div', 'content')
         name = base.h1.contents[0]
-        year = base.find('div','tt_hl').findNextSibling('table','weiss abst').find('tr','hgrau2').td.string
+        try:
+            yearTable = base.find('div','tt_hl').findNextSibling('table','weiss abst').find('tr','hgrau2')
+        except:
+            print "Error getting year in ", kursPage
+            yearTable = None
+        # is there any entry?
+        if yearTable:
+            year = yearTable.td.string.split(".")[2]
+        else:
+            #fallback to the hardcoded current year
+            year = '10'
         year = year.split(".")[2]
         isin = base.findAll('tr','hgrau2')[1].findAll('td')[1].contents[0].replace('&nbsp;','')
         #print base.findAll('div','t')[2]
