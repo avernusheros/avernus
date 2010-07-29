@@ -22,7 +22,7 @@ class Chart(gtk.VBox):
         hbox = gtk.HBox()
         self.add(hbox)
         label = gtk.Label()
-        label.set_markup('<b>'+stock.name+'</b>')
+        label.set_markup('<b>'+stock.name+'</b>\n'+stock.exchange)
         hbox.add(label)
         hbox.add(gtk.VSeparator())
         hbox.add(gtk.Label('Zoom:'))

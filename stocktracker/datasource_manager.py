@@ -19,8 +19,11 @@ class DatasourceManager(object):
         
     def on_network_change(self, state):
         self.b_online = state
+    
+    def get_source_count(self):
+        return len(sources.items())
  
-    def search(self, searchstring, callback):
+    def search(self, searchstring, callback, complete_cb):
         self.stop_search()
         self.search_callback = callback
         if not self.b_online:
@@ -30,7 +33,7 @@ class DatasourceManager(object):
             #check whether search function exists
             func = getattr(source, "search", None)
             if func:
-                task = controller.GeneratorTask(func, self._item_found_callback)
+                task = controller.GeneratorTask(func, self._item_found_callback, complete_cb)
                 self.current_searches.append(task)
                 task.start(searchstring)
 
