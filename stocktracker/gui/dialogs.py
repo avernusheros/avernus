@@ -353,6 +353,7 @@ class BuyDialog(gtk.Dialog):
         self.stock_selector.stop_search()
         if response == gtk.RESPONSE_ACCEPT:
             stock = self.stock_selector.get_stock()
+            stock.update_price()
             shares = self.shares_entry.get_value()
             if shares == 0.0:
                 return
