@@ -7,7 +7,6 @@ from stocktracker.objects import controller
 from stocktracker.gui import gui_utils
 from stocktracker.gui.gui_utils import resize_wrap
 
-
 class EditPositionDialog(gtk.Dialog):
     def __init__(self, position):
         gtk.Dialog.__init__(self, _("Edit position"), None
@@ -155,6 +154,9 @@ class StockSelector(gtk.VBox):
         self.search_field.connect('icon-press', self.on_search)
         self.pack_start(self.search_field)
         
+        self.spinner = gtk.Spinner()
+        self.pack_start(self.spinner)
+        
         sw = gtk.ScrolledWindow()
         sw.set_property('hscrollbar-policy', gtk.POLICY_AUTOMATIC)
         sw.set_property('vscrollbar-policy', gtk.POLICY_AUTOMATIC)
@@ -182,11 +184,22 @@ class StockSelector(gtk.VBox):
     def on_search(self, *args):
         self.result_tree.clear()
         searchstring = self.search_field.get_text()
+        self.spinner.start()
+        self.spinner.show()
         for item in controller.getStockForSearchstring(searchstring):
-            self.insert_item(item)    
-        controller.datasource_manager.search(searchstring, self.insert_item)
+            self.insert_item(item)
+        self.search_source_count = controller.datasource_manager.get_source_count()
+        controller.datasource_manager.search(searchstring, self.insert_item, self.search_complete_callback)
+    
+    def search_complete_callback(self):
+        self.search_source_count -= 1
+        if self.search_source_count == 0:
+            self.spinner.stop()
+            self.spinner.hide()
     
     def stop_search(self):
+        self.spinner.stop()
+        self.spinner.hide()
         controller.datasource_manager.stop_search()
         
     def insert_item(self, stock, icon='gtk-harddisk'):
