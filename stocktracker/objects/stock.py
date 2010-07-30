@@ -3,6 +3,12 @@ from stocktracker.objects.sector import Sector
 
 import datetime
 
+FUND  = 0
+STOCK = 1
+ETF   = 2
+
+
+
 class Stock(SQLiteEntity):
     __primaryKey__ = 'id'
     __tableName__ = "stock"

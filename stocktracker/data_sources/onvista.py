@@ -7,6 +7,7 @@ import threading, re
 from Queue import Queue
 import urllib
 import urllib2
+from stocktracker.objects import stock
 #import logger
 
 #logger = logger.logger
@@ -15,8 +16,6 @@ QUEUE_THRESHOLD = 3
 QUEUE_DIVIDEND = 10
 QUEUE_MAX = 10
 
-TYPE_FUND = 0
-TYPE_ETF  = 2
 
 def to_float(s):
     return float(s.replace('.','').replace(',','.'))
@@ -203,7 +202,7 @@ class Onvista():
                     change = to_float(change.contents[0])
                     yield {'name':name,'isin':isin,'exchange':exchange,'price':price,
                       'date':temp_date,'currency':currency,'volume':volume,
-                      'type':TYPE_FUND,'change':change}
+                      'type':stocks.FUND,'change':change}
 
     def _parse_kurse_html_etf(self, kursPage):
         base = BeautifulSoup(kursPage).find('div', 'content')
@@ -243,14 +242,14 @@ class Onvista():
                     change = to_float(change.contents[0])
                     yield {'name':name,'isin':isin,'exchange':exchange,'price':price,
                       'date':temp_date,'currency':currency,'volume':volume,
-                      'type':TYPE_ETF,'change':change}
+                      'type':stocks.ETF,'change':change}
 
     def update_stocks(self, stocks):
         for stock in stocks:
-            if stock.type == TYPE_FUND:
+            if stock.type == stocks.FUND:
                 file = opener.open("http://fonds.onvista.de/kurse.html", urllib.urlencode({"ISIN": stock.isin}))
                 generator = self._parse_kurse_html_fonds(file)
-            elif stock.type == TYPE_ETF:
+            elif stock.type == stocks.ETF:
                 file = opener.open("http://etf.onvista.de/kurse.html", urllib.urlencode({"ISIN": stock.isin}))
                 generator = self._parse_kurse_html_etf(file)
             else:
@@ -271,10 +270,10 @@ class Onvista():
         months = min(60,abs(delta.years)*12 + abs(delta.months))
         url = ''
         width = ''
-        if stock.type == TYPE_FUND:
+        if stock.type == stocks.FUND:
             url = 'http://fonds.onvista.de/kurshistorie.html'
             width = '100%'
-        elif stock.type == TYPE_ETF:
+        elif stock.type == stocks.ETF:
             url = 'http://etf.onvista.de/kurshistorie.html'
             width = '640'
         else:
@@ -313,8 +312,8 @@ if __name__ == "__main__":
             self.currency = 'EUR'
 
     ex = Exchange()
-    s1 = Stock('DE0008474248', ex, TYPE_FUND)
-    s2 = Stock('LU0382362290', ex, TYPE_ETF)
+    s1 = Stock('DE0008474248', ex, stocks.FUND)
+    s2 = Stock('LU0382362290', ex, stocks.ETF)
 
     def test_update():
 
@@ -346,9 +345,9 @@ if __name__ == "__main__":
 
     plugin = Onvista()
     ex = Exchange()
-    s1 = Stock('LU0136412771', ex, TYPE_FUND)
-    s2 = Stock('LU0103598305', ex, TYPE_FUND)
-    s3 = Stock('LU0382362290', ex, TYPE_ETF)
+    s1 = Stock('LU0136412771', ex, stocks.FUND)
+    s2 = Stock('LU0103598305', ex, stocks.FUND)
+    s3 = Stock('LU0382362290', ex, stocks.ETF)
     print test_search()
     #print plugin.search_kurse(s1)
     #print plugin.search_kurse(s3)
