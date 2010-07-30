@@ -85,7 +85,13 @@ class PortfolioPosition(SQLiteEntity, Position):
     
     def hasTag(self, tag):
         return tag in self.tags
-      
+    
+    @property
+    def portfolio_fraction(self):
+        if self.portfolio.cvalue == 0:
+            return 0
+        else:
+            return 100 * self.cvalue / self.portfolio.cvalue  
 
     def get_value_over_time(self, start_day, end_day=datetime.today()):
         #transactions on same day!
