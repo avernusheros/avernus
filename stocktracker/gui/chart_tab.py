@@ -54,9 +54,11 @@ class ChartTab(gtk.ScrolledWindow):
     def current_pie(self):
         data = {}
         for pos in self.pf:
-            val = pos.cvalue
-            if val != 0:
-                data[pos.name] = val
+            if pos.cvalue != 0:
+                try:
+                    data[pos.name] += pos.cvalue
+                except:
+                    data[pos.name] = pos.cvalue
         if len(data) == 0:
             return gtk.Label(no_data_string)  
         pie = gtk_pie_plot()        

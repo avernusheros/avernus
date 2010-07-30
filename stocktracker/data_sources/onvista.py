@@ -21,17 +21,17 @@ TYPE_ETF  = 2
 def to_float(s):
     return float(s.replace('.','').replace(',','.'))
 
-def to_datetime(date, time='', toUTC=True):
+def to_datetime(datestring, time='', toUTC=True):
     if time == '':
-        date = datetime.strptime(date+time, "%d.%m.%y")
+        ret_date = datetime.strptime(datestring+time, "%d.%m.%y")
     else:
-        date = datetime.strptime(date+time, "%d.%m.%y%H:%M:%S")
-    date = pytz.timezone('Europe/Berlin').localize(date)
+        ret_date = datetime.strptime(datestring+time, "%d.%m.%y%H:%M:%S")
+    ret_date = pytz.timezone('Europe/Berlin').localize(ret_date)
     if toUTC:
-        date = date.astimezone(pytz.utc)
-        date = date.replace(tzinfo = None)
-    #print date
-    return date
+        ret_date = ret_date.astimezone(pytz.utc)
+        ret_date = ret_date.replace(tzinfo = None)
+    #print ret_date
+    return ret_date
 
 
 def to_int(s):
@@ -177,9 +177,8 @@ class Onvista():
             year = yearTable.td.string.split(".")[2]
         else:
             #fallback to the hardcoded current year
-            year = '10'
-        name = base.h1.contents[0]
-        #print name
+            year = date.today().year
+        name = str(base.h1.contents[0])
         isin = base.findAll('tr','hgrau2')[1].findAll('td')[1].contents[0].replace('&nbsp;','')
         #print isin
         for row in base.findAll('div','t')[1].find('table'):
@@ -196,19 +195,19 @@ class Onvista():
                     currency = tds[1].contents[0]
                     price = to_float(tds[11].contents[0])
                     #sellPrice = tds[6].contents[0]
-                    date = to_datetime(tds[8].contents[0]+year, tds[9].contents[0])
+                    temp_date = to_datetime(tds[8].contents[0]+year, tds[9].contents[0])
                     volume = to_int(tds[12].contents[0])
                     change = tds[14]
                     if change.span:
                         change = change.span
                     change = to_float(change.contents[0])
                     yield {'name':name,'isin':isin,'exchange':exchange,'price':price,
-                      'date':date,'currency':currency,'volume':volume,
+                      'date':temp_date,'currency':currency,'volume':volume,
                       'type':TYPE_FUND,'change':change}
 
     def _parse_kurse_html_etf(self, kursPage):
         base = BeautifulSoup(kursPage).find('div', 'content')
-        name = base.h1.contents[0]
+        name = str(base.h1.contents[0])
         try:
             yearTable = base.find('div','tt_hl').findNextSibling('table','weiss abst').find('tr','hgrau2')
         except:
@@ -219,7 +218,7 @@ class Onvista():
             year = yearTable.td.string.split(".")[2]
         else:
             #fallback to the hardcoded current year
-            year = '10'
+            year = date.today().year
         year = year.split(".")[2]
         isin = base.findAll('tr','hgrau2')[1].findAll('td')[1].contents[0].replace('&nbsp;','')
         #print base.findAll('div','t')[2]
@@ -236,15 +235,14 @@ class Onvista():
                     #print exchange
                     currency = tds[5].contents[0]
                     price = to_float(tds[12].contents[0])
-                    #FIXME fetch year from html
-                    date = to_datetime(tds[6].contents[0]+'10', tds[7].contents[0])
+                    temp_date = to_datetime(tds[6].contents[0]+year, tds[7].contents[0])
                     volume = to_int(tds[11].contents[0])
                     change = tds[3]
                     if change.span:
                         change = change.span
                     change = to_float(change.contents[0])
                     yield {'name':name,'isin':isin,'exchange':exchange,'price':price,
-                      'date':date,'currency':currency,'volume':volume,
+                      'date':temp_date,'currency':currency,'volume':volume,
                       'type':TYPE_ETF,'change':change}
 
     def update_stocks(self, stocks):
@@ -325,9 +323,8 @@ if __name__ == "__main__":
         print s2.price, s2.change, s2.date
 
     def test_search():
-        for res in  plugin.search('etflab'):
+        for res in  plugin.search('dws performance'):
             print res
-            #break
 
     def test_historicals():
         print "los"
@@ -352,9 +349,9 @@ if __name__ == "__main__":
     s1 = Stock('LU0136412771', ex, TYPE_FUND)
     s2 = Stock('LU0103598305', ex, TYPE_FUND)
     s3 = Stock('LU0382362290', ex, TYPE_ETF)
-    #print test_search()
+    print test_search()
     #print plugin.search_kurse(s1)
     #print plugin.search_kurse(s3)
-    test_parse_kurse()
+    #test_parse_kurse()
     #test_update()
     #test_historicals()
