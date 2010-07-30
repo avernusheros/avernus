@@ -4,7 +4,7 @@ import gtk,sys
 from stocktracker import pubsub
 from stocktracker.gui.plot import ChartWindow
 from stocktracker.gui.dialogs import SellDialog, NewWatchlistPositionDialog, SplitDialog, BuyDialog, EditPositionDialog
-from stocktracker.gui.gui_utils import Tree, ContextMenu, float_to_red_green_string, float_to_string, get_name_string, datetime_format, get_datetime_string
+from stocktracker.gui.gui_utils import Tree, ContextMenu, float_to_red_green_string, float_to_string, get_name_string, datetime_format, get_datetime_string, float_to_string_ignore_dot_zero
 
 gain_thresholds = {
                    (-sys.maxint,-0.5):'arrow_down',
@@ -61,14 +61,14 @@ class PositionsTree(Tree):
                      'pf_percent': 15
                       }
         
-        self.set_model(gtk.ListStore(object,str, float, float,float, float, int, float, float, str, float, float,str, float, str, float))
+        self.set_model(gtk.ListStore(object,str, float, float,float, float, float, float, float, str, float, float,str, float, str, float))
         
         self.watchlist = False
         if container.__name__ == 'Watchlist':
             self.watchlist = True
 
         if not self.watchlist:
-            self.create_column('#', self.cols['shares'])
+            self.create_column('#', self.cols['shares'], func=float_to_string_ignore_dot_zero)
         self.create_column(_('Name'), self.cols['name'])
         self.create_icon_column(_('Type'), self.cols['type'])
         if not self.watchlist:
