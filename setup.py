@@ -95,7 +95,7 @@ class InstallAndUpdateDataDirectory(DistUtilsExtra.auto.install_auto):
 
 DistUtilsExtra.auto.setup(
     name='stocktracker',
-    version='0.3',
+    version='0.4.0',
     license='GPL v3',
     author='wolfer',
     author_email='wsteitz@gmail.com',
