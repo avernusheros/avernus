@@ -3,9 +3,10 @@ from BeautifulSoup import BeautifulSoup
 from urllib import urlopen
 import csv, pytz, re, os, pickle
 from datetime import datetime
-from stocktracker import logger, config
+from stocktracker import config
 
-logger = logger.logger
+from stocktracker.logger import Log
+
 
 TYPES = ['Fonds', 'Aktie']
 
@@ -18,7 +19,7 @@ class Yahoo():
     def __request(self, searchstring):
         try:
             url = 'http://de.finsearch.yahoo.com/de/index.php?nm='+searchstring+'&tp=*&r=*&sub=Suchen'
-            logger.info(url)
+            Log.info(url)
             return urlopen(url)
         except:
             return None
@@ -26,7 +27,7 @@ class Yahoo():
     def __request_csv(self, symbol, stat):
         try:
             url = 'http://finance.yahoo.com/d/quotes.csv?s=%s&f=%s' % (symbol, stat)
-            logger.info(url)
+            Log.info(url)
             return urlopen(url)
         except:
             return None
@@ -54,12 +55,12 @@ class Yahoo():
                 try:
                     stocks[s].price = float(row[0])
                 except Exception as e:
-                    logger.info(e)
+                    Log.info(e)
                     continue
                 try:
                     date = datetime.strptime(row[1] + ' ' + row[2], '%m/%d/%Y %H:%M%p')
                 except Exception as e:
-                    logger.info(e)
+                    Log.info(e)
                     date = datetime.strptime(row[1], '%m/%d/%Y')
                 date = pytz.timezone('US/Eastern').localize(date)
                 date = date.astimezone(pytz.utc)
@@ -94,7 +95,6 @@ class Yahoo():
               'f=%s&' % str(end_date.year) + \
               'ignore=.csv'
         days = urlopen(url).readlines()
-        data = []
         for row in [day[:-2].split(',') for day in days[1:]]:
             dt = datetime.strptime(row[0], '%Y-%m-%d').date()
             #(stock, date, open, high, low, close, vol)
@@ -178,7 +178,7 @@ class Yahoo():
     def __save_yahoo_ids(self):
         path = os.path.join(config.config_path, 'yahoo_ids')
         with open(path, 'wb') as file:
-             pickle.dump(self.yahoo_ids, file)
+            pickle.dump(self.yahoo_ids, file)
 
 
 if __name__ == '__main__':

@@ -2,7 +2,7 @@
 import sys
 import gtk
 from stocktracker.gui import gui_utils
-from stocktracker import logger
+from stocktracker.logger import Log
 
            
 class PrefDialog(gtk.Dialog):
@@ -12,7 +12,7 @@ class PrefDialog(gtk.Dialog):
                             gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
                             (gtk.STOCK_OK, gtk.RESPONSE_ACCEPT),
                             )
-        logger.logger.debug("PrefDialog started")
+        Log.debug("PrefDialog started")
         vbox = self.get_content_area()
         notebook = gtk.Notebook()
         vbox.pack_start(notebook)
@@ -23,7 +23,7 @@ class PrefDialog(gtk.Dialog):
         self.run()
         #dsp.on_close()  
         self.destroy()
-        logger.logger.debug("PrefDialog destroyed")
+        Log.debug("PrefDialog destroyed")
 
       
 class DataSourcePriorities(gtk.VBox):
@@ -46,11 +46,6 @@ class DataSourcePriorities(gtk.VBox):
         self.pack_start(self.tree)
         self.connect('expose-event', self.show)
     
-    def _get_icon_name(self, ):
-        if store.get_value(iter, user_data):
-            return 'gtk-apply'
-        return 'gtk-cancel'
-    
     def show(self, *args):
         icons = {True:'gtk-apply', False:'gtk-cancel'}
         self.tree.clear()
@@ -62,7 +57,6 @@ class DataSourcePriorities(gtk.VBox):
     def on_close(self):
         model = self.tree.get_model()
         self.dsm.queue = [item[0] for item in model]
-
 
 class PluginManager(gtk.VBox):
     

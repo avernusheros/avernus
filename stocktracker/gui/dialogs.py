@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import gtk
-from stocktracker import pubsub, config, logger
+from stocktracker import pubsub, config
 from datetime import datetime
 from stocktracker.objects import controller
 from stocktracker.gui import gui_utils

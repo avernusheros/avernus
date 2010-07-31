@@ -116,6 +116,7 @@ if __name__ == "__main__":
     if options.verbose:
         print "please tell the guys to implement this"
     if options.debug or source_start:
+        #nothing is really happening here...
         import stocktracker.logger
     
     #gobject.threads_init()

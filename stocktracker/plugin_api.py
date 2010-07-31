@@ -2,14 +2,13 @@
 from __future__ import with_statement
 import os
 import pickle
-from stocktracker import config, logger
+from stocktracker import config
 
 
 class PluginAPI():
 
     def __init__(self, main_window, datasource_manager):
         self.main_window = main_window
-        self.logger = logger.logger
         
     def add_menu_item(self, item, menu_name):
         menu = self.main_window.main_menu
