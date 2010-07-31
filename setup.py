@@ -95,12 +95,12 @@ class InstallAndUpdateDataDirectory(DistUtilsExtra.auto.install_auto):
 
 DistUtilsExtra.auto.setup(
     name='stocktracker',
-    version='0.4.0',
+    version='0.4.0.1',
     license='GPL v3',
     author='wolfer',
     author_email='wsteitz@gmail.com',
     description='A lightweight program to easily track your investments.',
-    #long_description='Here a longer description',
+    long_description='portfolios, watchlists, tags...\nstocktracker utilizes online data sources for updating its quotations. You can view charts and other diagrams',
     url='https://launchpad.net/stocktracker',
     cmdclass={'install': InstallAndUpdateDataDirectory}
     )
