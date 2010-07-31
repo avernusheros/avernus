@@ -10,9 +10,8 @@ if __name__ == '__main__':
     import sys
     sys.path.append('..') 
 
-
 import gtk,os #, gobject
-from stocktracker import pubsub, logger, config
+from stocktracker import pubsub, config
 from stocktracker.gui import dialogs, chart_tab
 from stocktracker.gui.positions_tab import PositionsTab
 from stocktracker.gui.overview_tab import OverviewTab
@@ -25,10 +24,6 @@ from stocktracker.gui.preferences import PrefDialog
 from webbrowser import open as web
 import stocktracker
 from stocktracker.objects import model
-
-
-logger = logger.logger
-
 
 class AboutDialog(gtk.AboutDialog):
     def __init__(self, *arg, **args):

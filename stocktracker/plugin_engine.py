@@ -5,10 +5,8 @@ import os
 import types
 from configobj import ConfigObj
 
-from stocktracker import config, logger
-
-logger = logger.logger
-
+from stocktracker import config
+from stocktracker.logger import Log
 
 class Plugin(object):
     instance = None
@@ -79,7 +77,7 @@ class Plugin(object):
                     self.class_name = item.__dict__['__module__'].split('.')[1]
                     break
         except ImportError, e:
-            logger.debug(self.module_name+str(e))
+            Log.debug(self.module_name+str(e))
             # load_module() failed, probably because of a module dependency
             if len(self.module_depends) > 0:
                 self._check_module_depends()
@@ -89,7 +87,7 @@ class Plugin(object):
             self.error = True
         except Exception, e:
             # load_module() failed for some other reason
-            logger.debug(self.module_name+"load_module() failed for some other reason")
+            Log.debug(self.module_name+"load_module() failed for some other reason")
             self.error = True
 
 

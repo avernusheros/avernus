@@ -9,7 +9,8 @@ from stocktracker.objects.stock import Stock
 from stocktracker.objects.dividend import Dividend
 from stocktracker.objects.quotation import Quotation
 from stocktracker.objects.sector import Sector
-from stocktracker import pubsub, logger
+from stocktracker import pubsub
+from stocktracker.logger import Log
 
 import datetime
 import gobject
@@ -33,13 +34,13 @@ datasource_manager = None
 def initialLoading():
     #first load all the objects from the database so that they are cached
     for cl in initialLoadingClasses:
-        logger.logger.debug("Loading Objects of Class: " + cl.__name__)
+        Log.debug("Loading Objects of Class: " + cl.__name__)
         cl.getAll()
     #now load all of the composite
     for cl in initialLoadingClasses:
         #this will now be much faster as everything is in the cache
         for obj in cl.getAll():
-            logger.logger.debug("Loading Composites of Objekt: " + str(obj))
+            Log.debug("Loading Composites of Objekt: " + str(obj))
             obj.retrieveAllComposite()
 
 def is_duplicate(tp, **kwargs):
@@ -310,7 +311,7 @@ def getBuyTransaction(portfolio_position):
     
 def onPositionNewTag(position=None,tagText=None):
     if not position or not tagText:
-        logger.logger.error("Malformed onPositionNewTag Call (position,tagText)" + str((position,tagText)))
+        Log.error("Malformed onPositionNewTag Call (position,tagText)" + str((position,tagText)))
     tag = None
     if Tag.primaryKeyExists(tagText):
         tag = Tag.getByPrimaryKey(tagText)

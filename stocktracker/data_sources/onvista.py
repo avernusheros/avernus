@@ -7,9 +7,8 @@ import threading, re
 from Queue import Queue
 import urllib
 import urllib2
-#import logger
 
-#logger = logger.logger
+from stocktracker.logger import Log
 
 QUEUE_THRESHOLD = 3
 QUEUE_DIVIDEND = 10
@@ -82,22 +81,22 @@ class Paralyzer:
         self.producerArgs = self.consumerArgs = ()
 
     def perform(self):
-        #logger.debug('Performing Tasks #' + str(self.taskSize))
+        Log.debug('Performing Tasks #' + str(self.taskSize))
         self.finished = []
         queueSize = min(QUEUE_THRESHOLD, self.taskSize)
         calcSize = self.taskSize/QUEUE_DIVIDEND
         size = max(queueSize,calcSize)
         size = min(size, QUEUE_MAX)
-        #logger.debug("ThreadQueue Size: " + str(size))
+        Log.debug("ThreadQueue Size: " + str(size))
         self.q = Queue(size)
         prod_thread = threading.Thread(target=self.producer, args=self.producerArgs)
         cons_thread = threading.Thread(target=self.consumer, args=self.consumerArgs)
         prod_thread.start()
         cons_thread.start()
         prod_thread.join()
-        #logger.debug('Producer Thread joined')
+        Log.debug('Producer Thread joined')
         cons_thread.join()
-        #logger.debug('Consumer Thread joined')
+        Log.debug('Consumer Thread joined')
         return self.finished
 
     def consumer(self):
@@ -280,7 +279,7 @@ class Onvista():
             url = 'http://etf.onvista.de/kurshistorie.html'
             width = '640'
         else:
-            logger.error("Uknown stock type in onvistaplugin.search_kurse")
+            Log.error("Uknown stock type in onvistaplugin.search_kurse")
         #url += "?ISIN="+str(stock.isin) + "&RANGE=" + str(months) +"M"
         #get = FileGetter(url)
         #get.start()
