@@ -79,14 +79,14 @@ def init_plugin_engine(api):
     pengine.enable_from_config()
     return pengine
     
-def start():
+def start(db_file = None):
     init_translations()
     init_icons()
     
-    
-    from stocktracker import config
-    configs = config.StocktrackerConfig()
-    db_file = configs.get_option('database file')
+    if db_file == None:
+        from stocktracker import config
+        configs = config.StocktrackerConfig()
+        db_file = configs.get_option('database file')
     
     from stocktracker.objects import model, controller, store
     model.store = store.Store(db_file)
@@ -113,6 +113,7 @@ if __name__ == "__main__":
     parser = optparse.OptionParser(version="%prog "+stocktracker.__version__)
     parser.add_option("-v", "--verbose", action="store_true", dest="verbose", help="Show debug messages")
     parser.add_option("-d", "--debug", action="store_true", dest="debug", help="Enable debugging")
+    parser.add_option("-f", "--file",  dest="datafile", help="Set database file")
     (options, args) = parser.parse_args()
 
     #set the logging level to show debug messages
@@ -129,5 +130,4 @@ if __name__ == "__main__":
     #gobject.threads_init()
     gtk.gdk.threads_init()
     #run the application
-    start()
-
+    start(options.datafile)
