@@ -210,11 +210,13 @@ class Index(SQLiteEntity):
 
 class Tag(SQLiteEntity, Container):
 
-    __primaryKey__ = 'name'
+    __primaryKey__ = 'id'
     __tableName__ = "tag"
     __columns__ = {
+                   'id': 'INTEGER',
                    'name': 'VARCHAR',
                   }
+    __comparisonPositives__ = ['name']
 
     def __iter__(self):
         return stocktracker.objects.controller.getPositionForTag(self).__iter__()
