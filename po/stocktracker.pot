@@ -8,17 +8,17 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-07-29 18:59+0200\n"
+"POT-Creation-Date: 2010-08-03 20:17+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
 #: ../stocktracker/gui/container_overview_tab.py:43
-#: ../stocktracker/gui/dividends_tab.py:65 ../stocktracker/gui/dialogs.py:62
-#: ../stocktracker/gui/dialogs.py:166
+#: ../stocktracker/gui/dialogs.py:62 ../stocktracker/gui/dialogs.py:166
 #: ../stocktracker/gui/transactions_tab.py:31
 #: ../stocktracker/gui/indexpositions_tab.py:137
 #: ../stocktracker/gui/positions_tab.py:72
@@ -44,42 +44,54 @@ msgstr ""
 msgid "Change %"
 msgstr ""
 
-#: ../stocktracker/gui/dividends_tab.py:66
+#: ../stocktracker/gui/dividends_tab.py:16
+msgid "Add new dividend"
+msgstr ""
+
+#: ../stocktracker/gui/dividends_tab.py:17
+msgid "Delete selected dividend"
+msgstr ""
+
+#: ../stocktracker/gui/dividends_tab.py:44 ../stocktracker/gui/dialogs.py:21
+msgid "Position"
+msgstr ""
+
+#: ../stocktracker/gui/dividends_tab.py:45
 #: ../stocktracker/gui/transactions_tab.py:32
 msgid "Date"
 msgstr ""
 
-#: ../stocktracker/gui/dividends_tab.py:67
-msgid "Value"
+#: ../stocktracker/gui/dividends_tab.py:46
+msgid "Amount"
 msgstr ""
 
-#: ../stocktracker/gui/dividends_tab.py:68
-msgid "Percentage"
+#: ../stocktracker/gui/dividends_tab.py:47
+msgid "Transaction costs"
 msgstr ""
 
-#: ../stocktracker/gui/dividends_tab.py:109
+#: ../stocktracker/gui/dividends_tab.py:74
 msgid "Permanently delete dividend?"
 msgstr ""
 
-#: ../stocktracker/gui/dividends_tab.py:120
+#: ../stocktracker/gui/dividends_tab.py:85
 msgid "Add dividend"
 msgstr ""
 
-#: ../stocktracker/gui/dividends_tab.py:129
+#: ../stocktracker/gui/dividends_tab.py:95
 msgid "Position: "
 msgstr ""
 
-#: ../stocktracker/gui/dividends_tab.py:137
-msgid "Value: "
+#: ../stocktracker/gui/dividends_tab.py:103
+msgid "Amount: "
+msgstr ""
+
+#: ../stocktracker/gui/dividends_tab.py:107
+msgid "Transaction costs: "
 msgstr ""
 
 #: ../stocktracker/gui/dialogs.py:12
 #: ../stocktracker/gui/indexpositions_tab.py:110
 msgid "Edit position"
-msgstr ""
-
-#: ../stocktracker/gui/dialogs.py:21
-msgid "Position"
 msgstr ""
 
 #: ../stocktracker/gui/dialogs.py:22
@@ -200,6 +212,26 @@ msgstr ""
 msgid "Action"
 msgstr ""
 
+#. FIXME
+#. table.attach(gtk.Label(_('Cash over time')), 0,2,0,1)
+#. table.attach(self.cash_chart(),0,2,1,2)
+#: ../stocktracker/gui/chart_tab.py:27
+msgid "Market value"
+msgstr ""
+
+#: ../stocktracker/gui/chart_tab.py:30
+msgid "Investment types"
+msgstr ""
+
+#. table.attach(self.types_chart('vertical_bars'),1,2,3,4)
+#: ../stocktracker/gui/chart_tab.py:34 ../stocktracker/gui/positions_tab.py:88
+msgid "Tags"
+msgstr ""
+
+#: ../stocktracker/gui/chart_tab.py:37
+msgid "Sectors"
+msgstr ""
+
 #: ../stocktracker/gui/left_pane.py:26
 msgid "Add new portfolio or watchlist"
 msgstr ""
@@ -266,7 +298,7 @@ msgstr ""
 msgid "Start"
 msgstr ""
 
-#: ../stocktracker/gui/positions_tab.py:78 ../stocktracker/gui/chart_tab.py:30
+#: ../stocktracker/gui/positions_tab.py:78
 msgid "Buy value"
 msgstr ""
 
@@ -282,11 +314,6 @@ msgstr ""
 
 #: ../stocktracker/gui/positions_tab.py:87
 msgid "Today"
-msgstr ""
-
-#. table.attach(self.types_chart('vertical_bars'),1,2,3,4)
-#: ../stocktracker/gui/positions_tab.py:88 ../stocktracker/gui/chart_tab.py:37
-msgid "Tags"
 msgstr ""
 
 #: ../stocktracker/gui/positions_tab.py:110
@@ -314,7 +341,7 @@ msgstr ""
 msgid "Update positions"
 msgstr ""
 
-#: ../stocktracker/gui/positions_tab.py:181
+#: ../stocktracker/gui/positions_tab.py:185
 msgid "Are you sure?"
 msgstr ""
 
@@ -336,19 +363,4 @@ msgstr ""
 
 #: ../stocktracker/gui/overview_tab.py:65
 msgid "Loss"
-msgstr ""
-
-#. FIXME
-#. table.attach(gtk.Label(_('Cash over time')), 0,2,0,1)
-#. table.attach(self.cash_chart(),0,2,1,2)
-#: ../stocktracker/gui/chart_tab.py:27
-msgid "Market value"
-msgstr ""
-
-#: ../stocktracker/gui/chart_tab.py:33
-msgid "Investment types"
-msgstr ""
-
-#: ../stocktracker/gui/chart_tab.py:40
-msgid "Sectors"
 msgstr ""

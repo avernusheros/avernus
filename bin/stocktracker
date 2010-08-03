@@ -1,23 +1,32 @@
 #!/usr/bin/python
+# -*- coding: utf-8 -*-
+### BEGIN LICENSE
+# This file is in the public domain
+### END LICENSE
 
 import sys
 import os
 import gtk
-import logging
+import optparse
+    
 
-# Check if we are working in the source tree or from the installed 
-# package and mangle the python path accordingly
-source_start = False
-if os.path.dirname(sys.argv[0]) != ".":
-    # we run from the source
-    source_start = True
-    if sys.argv[0][0] == "/":
-        fullPath = os.path.dirname(sys.argv[0])
-    else:
-        fullPath = os.getcwd() + "/" + os.path.dirname(sys.argv[0])
-else:
-    fullPath = os.getcwd()
-sys.path.insert(0, os.path.dirname(fullPath))
+# optional Launchpad integration
+# this shouldn't crash if not found as it is simply used for bug reporting
+#TODO investigate usage of LaunchpadIntegration
+try:
+    import LaunchpadIntegration
+    launchpad_available = True
+except:
+    launchpad_available = False
+
+# Add project root directory (enable symlink, and trunk execution).
+PROJECT_ROOT_DIRECTORY = os.path.abspath(
+    os.path.dirname(os.path.dirname(os.path.realpath(sys.argv[0]))))
+
+if (os.path.exists(os.path.join(PROJECT_ROOT_DIRECTORY, 'stocktracker'))
+    and PROJECT_ROOT_DIRECTORY not in sys.path):
+    sys.path.insert(0, PROJECT_ROOT_DIRECTORY)
+    os.putenv('PYTHONPATH', PROJECT_ROOT_DIRECTORY) # for subprocesses
 
 from stocktracker import config
 from stocktracker.plugin_engine import PluginEngine
@@ -54,7 +63,6 @@ def init_translations():
                                       fallback=True)
     import __builtin__
     __builtin__._ = translation.gettext
-    
 
 def init_icons():
     from stocktracker.gui.icons import IconManager
@@ -78,9 +86,9 @@ def init_plugin_engine(api):
     pengine.load_plugins()
     pengine.enable_from_config()
     return pengine
-    
+
+
 def start(db_file = None):
-    init_translations()
     init_icons()
     
     if db_file == None:
@@ -105,28 +113,20 @@ def start(db_file = None):
     DBusNetwork()
     gtk.main()
 
-
 if __name__ == "__main__":
-    #support for command line options
-    import optparse
-    import stocktracker
-    parser = optparse.OptionParser(version="%prog "+stocktracker.__version__)
-    parser.add_option("-v", "--verbose", action="store_true", dest="verbose", help="Show debug messages")
-    parser.add_option("-d", "--debug", action="store_true", dest="debug", help="Enable debugging")
+    init_translations()
+    # Support for command line options.
+    parser = optparse.OptionParser(version="%prog %ver")
+    parser.add_option("-v", "--verbose", action="store_true", dest="verbose", help=_("Show debug messages"))
     parser.add_option("-f", "--file",  dest="datafile", help="Set database file")
     (options, args) = parser.parse_args()
 
     #set the logging level to show debug messages
     if options.verbose:
-        print "please tell the guys to implement this"
-    elif options.debug:
         Log.setLevel(logging.DEBUG)
         Log.debug("Debug output enabled.")
         Log.set_debugging_mode(True)
-    
-    if source_start:
-        pass
-    
+
     #gobject.threads_init()
     gtk.gdk.threads_init()
     #run the application
