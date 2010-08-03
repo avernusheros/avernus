@@ -426,10 +426,10 @@ class PosSelector(gtk.ComboBox):
         if pf is None:
             self.set_model()
             return
-        liststore = gtk.ListStore(int, str)
+        liststore = gtk.ListStore(object, str)
         liststore.append([-1, 'Select a position'])
         for pos in pf:
-            liststore.append([pos.id, str(pos.quantity) +' ' +pos.name])
+            liststore.append([pos, str(pos.quantity) +' ' +pos.name])
         self.set_model(liststore)
             
 

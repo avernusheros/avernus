@@ -107,6 +107,11 @@ def newWatchlist(name, id=None, last_update = datetime.datetime.now(), comment="
     result.insert()
     return result
 
+def newDividend(new_id=None, price=0, date=datetime.date.today(), costs=0, position=None, shares=0):
+    result = Dividend(id=new_id, price=price, date=date, costs=costs, position=position, shares=shares)
+    result.insert()
+    return result
+
 def newTransaction(date=datetime.datetime.now(),\
                    portfolio=None,\
                    position=None,\
@@ -258,6 +263,9 @@ def getPositionForTag(tag):
             pos.retrieveAllComposite()
     possible = filter(lambda pos: pos.hasTag(tag), possible)
     return possible
+
+def getDividendForPosition(pos):
+    return Dividend.getAllFromOneColumn("position", pos.getPrimaryKey())
 
 def getTransactionForPortfolio(portfolio):
     key = portfolio.getPrimaryKey()

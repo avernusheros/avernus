@@ -1,6 +1,7 @@
 from stocktracker.objects.model import SQLiteEntity
 from stocktracker.objects.container import Portfolio, Watchlist, Tag
 from stocktracker.objects.stock import Stock
+import stocktracker.objects.controller
 from datetime import datetime
 
  
@@ -66,12 +67,16 @@ class PortfolioPosition(SQLiteEntity, Position):
                     }
 
     def onDelete(self, **kwargs):
-        from stocktracker.objects import controller
-        controller.deleteAllPositionTransaction(self)
+        stocktracker.objects.controller.deleteAllPositionTransaction(self)
         
     __callbacks__ = {
                      'onDelete':onDelete
                      }
+
+    @property
+    def dividends(self):
+        for div in stocktracker.objects.controller.getDividendForPosition(self):
+            yield div
 
     @property
     def tagstring(self):
