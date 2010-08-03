@@ -8,10 +8,11 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-08-03 20:50+0200\n"
+"POT-Creation-Date: 2010-08-03 21:03+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -169,7 +170,7 @@ msgid "Transaction Costs"
 msgstr ""
 
 #. total
-#: ../stocktracker/gui/dialogs.py:309 ../stocktracker/gui/positions_tab.py:315
+#: ../stocktracker/gui/dialogs.py:309 ../stocktracker/gui/positions_tab.py:320
 msgid "Total"
 msgstr ""
 
@@ -310,7 +311,7 @@ msgid "Mkt value"
 msgstr ""
 
 #: ../stocktracker/gui/positions_tab.py:84
-#: ../stocktracker/gui/positions_tab.py:307
+#: ../stocktracker/gui/positions_tab.py:312
 #: ../stocktracker/gui/overview_tab.py:51
 msgid "Gain"
 msgstr ""
@@ -344,23 +345,23 @@ msgstr ""
 msgid "Update positions"
 msgstr ""
 
-#: ../stocktracker/gui/positions_tab.py:185
+#: ../stocktracker/gui/positions_tab.py:187
 msgid "Are you sure?"
 msgstr ""
 
-#: ../stocktracker/gui/positions_tab.py:305
+#: ../stocktracker/gui/positions_tab.py:310
 msgid "Day's gain"
 msgstr ""
 
-#: ../stocktracker/gui/positions_tab.py:311
+#: ../stocktracker/gui/positions_tab.py:316
 msgid "Investments"
 msgstr ""
 
-#: ../stocktracker/gui/positions_tab.py:312
+#: ../stocktracker/gui/positions_tab.py:317
 msgid "Cash"
 msgstr ""
 
-#: ../stocktracker/gui/positions_tab.py:319
+#: ../stocktracker/gui/positions_tab.py:324
 msgid "Last update"
 msgstr ""
 
