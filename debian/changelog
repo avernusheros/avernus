@@ -1,3 +1,9 @@
+stocktracker (0.4.1) lucid; urgency=low
+
+  * New release.
+
+ -- Bastian Kennel <bastian@simpsus.system.lan>  Tue, 03 Aug 2010 20:50:06 +0200
+
 stocktracker (0.4.1) maverick; urgency=low
 
   * New release.
