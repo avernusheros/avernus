@@ -11,7 +11,6 @@ class Dividend(SQLiteEntity):
                    'price'   : 'FLOAT',
                    'costs'   : 'FLOAT',
                    'shares'  : 'FLOAT',
-                   'position': PortfolioPosition
-                   
+                   'position': PortfolioPosition                   
                   }
     
