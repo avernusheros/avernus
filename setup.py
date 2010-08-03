@@ -86,7 +86,7 @@ DistUtilsExtra.auto.setup(
     author_email='xyz@gmail.com',
     description='A lightweight program to easily track your investments.',
     download_url='https://launchpad.net/stocktracker/+download',
-    long_description='portfolios, watchlists, tags...<br>stocktracker utilizes online data sources for updating its quotations. You can view charts and other diagrams',
+    long_description='portfolios, watchlists, tags... stocktracker utilizes online data sources for updating its quotations. You can view charts and other diagrams',
     url='https://launchpad.net/stocktracker',
     cmdclass={'install': InstallAndUpdateDataDirectory}
     )
