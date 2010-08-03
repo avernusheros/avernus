@@ -2,4 +2,4 @@
 
 import sys,os
 sys.path.insert(0,os.getcwd())
-from yahoo_newsfeed import Main
+#from stocktracker.plugins.yahoo_newsfeed.yahoo_newsfeed import Main
