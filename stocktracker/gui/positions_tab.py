@@ -4,7 +4,7 @@ import gtk,sys
 from stocktracker import pubsub
 from stocktracker.gui.plot import ChartWindow
 from stocktracker.gui.dialogs import SellDialog, NewWatchlistPositionDialog, SplitDialog, BuyDialog, EditPositionDialog
-from stocktracker.gui.gui_utils import Tree, ContextMenu, float_to_red_green_string, float_to_string, get_name_string, datetime_format, get_datetime_string
+from stocktracker.gui.gui_utils import Tree, ContextMenu, float_to_red_green_string, float_to_string, get_name_string, datetime_format, get_datetime_string, float_to_string_ignore_dot_zero
 
 gain_thresholds = {
                    (-sys.maxint,-0.5):'arrow_down',
@@ -61,14 +61,14 @@ class PositionsTree(Tree):
                      'pf_percent': 15
                       }
         
-        self.set_model(gtk.ListStore(object,str, float, float,float, float, int, float, float, str, float, float,str, float, str, float))
+        self.set_model(gtk.ListStore(object,str, float, float,float, float, float, float, float, str, float, float,str, float, str, float))
         
         self.watchlist = False
         if container.__name__ == 'Watchlist':
             self.watchlist = True
 
         if not self.watchlist:
-            self.create_column('#', self.cols['shares'])
+            self.create_column('#', self.cols['shares'], func=float_to_string_ignore_dot_zero)
         self.create_column(_('Name'), self.cols['name'])
         self.create_icon_column(_('Type'), self.cols['type'])
         if not self.watchlist:
@@ -168,10 +168,14 @@ class PositionsTree(Tree):
                 row[self.cols['gain_icon']] = get_arrow_icon(gain_percent)
                 row[self.cols['days_gain']] = item.days_gain
                 row[self.cols['mkt_value']] = round(item.cvalue,2)
+                row[self.cols['pf_percent']] = postion.portfolio_fraction
                 
     def on_position_added(self, container, item):
         if container.id == self.container.id:
             self.insert_position(item)
+            #update portfolio fractions
+            for row in self.get_model():
+                row[self.cols['pf_percent']] = row[self.cols['obj']].portfolio_fraction
      
     def on_remove(self, widget):
         position, iter = self.selected_item
@@ -238,10 +242,6 @@ class PositionsTree(Tree):
         c_change = position.current_change
         #FIXME etf need an icon
         icons = ['F', 'A', 'F']
-        if self.container.cvalue == 0:
-            change = 0
-        else:
-            change = 100 * position.cvalue / self.container.cvalue
         return [position, 
                get_name_string(stock), 
                position.price, 
@@ -257,7 +257,7 @@ class PositionsTree(Tree):
                gain_icon,
                c_change[1],
                icons[position.stock.type],
-               change]
+               position.portfolio_fraction]
             
     def insert_position(self, position):
         if position.quantity != 0:

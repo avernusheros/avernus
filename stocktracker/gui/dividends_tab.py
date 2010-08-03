@@ -2,126 +2,92 @@
 
 import gtk
 from datetime import datetime
-from stocktracker import pubsub
-from stocktracker.gui.gui_utils import Tree, get_datetime_string, get_name_string
+from stocktracker.gui.gui_utils import Tree, get_datetime_string, get_name_string,float_to_string
 from stocktracker.gui.dialogs import PosSelector
+from stocktracker.objects import controller
 
 
 class DividendsTab(gtk.VBox):
     def __init__(self, item):
         gtk.VBox.__init__(self)
-        dividends_tree = DividendsTree(item)
+        actiongroup = gtk.ActionGroup('dividend_tab')
+        tree = DividendsTree(item, actiongroup)
+        actiongroup.add_actions([
+                ('add',    gtk.STOCK_ADD,     'add',    None, _('Add new dividend'),         tree.on_add),      
+                ('remove', gtk.STOCK_DELETE,  'remove', None, _('Delete selected dividend'), tree.on_remove),
+                 ])
+        actiongroup.get_action('remove').set_sensitive(False)                       
         #self.set_property('hscrollbar-policy', gtk.POLICY_AUTOMATIC)
         #self.set_property('vscrollbar-policy', gtk.POLICY_AUTOMATIC)
-        self.pack_start(DividendsToolbar(item), expand = False, fill = False)
-        self.pack_start(dividends_tree)
+        tb = gtk.Toolbar()
+        for action in actiongroup.list_actions():
+            button = action.create_tool_item()
+            tb.insert(button, -1)         
+        
+        self.pack_start(tb, expand = False, fill = False)
+        self.pack_start(tree)
         self.show_all()
 
 
-class DividendsToolbar(gtk.Toolbar):
-    def __init__(self, container):
-        gtk.Toolbar.__init__(self)
-        self.container = container
-        self.conditioned = []
-        
-        button = gtk.ToolButton('gtk-add')
-        button.connect('clicked', self.on_add_clicked)
-        button.set_tooltip_text('Add dividend') 
-        self.insert(button,-1)
-        
-        button = gtk.ToolButton('gtk-delete')
-        #button.set_label('Remove tag'
-        button.connect('clicked', self.on_remove_clicked)
-        button.set_tooltip_text('Remove selected dividend') 
-        self.conditioned.append(button)
-        self.insert(button,-1)
-        
-        self.on_unselect()
-        pubsub.subscribe('dividendstree.unselect', self.on_unselect)
-        pubsub.subscribe('dividendstree.select', self.on_select)
-        
-    def on_unselect(self):
-        for button in self.conditioned:
-            button.set_sensitive(False)       
-        
-    def on_select(self, obj):
-        for button in self.conditioned:
-            button.set_sensitive(True)
-
-    def on_add_clicked(self, *args):
-        AddDividendDialog(self.container)
-    
-    def on_remove_clicked(self, *args):
-        pubsub.publish("dividendstoolbar.remove")
-       
-
 class DividendsTree(Tree):
-    def __init__(self, portfolio):
+    def __init__(self, portfolio, actiongroup):
         self.portfolio = portfolio
-        self.selected_item = None
-        Tree.__init__(self)
-        self.set_model(gtk.TreeStore(int, object,str, str, str,float))
-        
-        self.create_column(_('Name'), 2)
-        self.create_column(_('Date'), 3)
-        self.create_column(_('Value'), 4)
-        self.create_column(_('Percentage'), 5)
-        
+        self.actiongroup = actiongroup
+        self.selected_item = None        
+        Tree.__init__(self)        
+        self._init_widgets()
         self.load_dividends()
-        pubsub.subscribe('position.dividend.added', self.on_dividend_added)
-        pubsub.subscribe('dividendstoolbar.remove', self.on_remove)
-        self.connect('cursor_changed', self.on_cursor_changed)
+        self.connect('cursor_changed', self.on_cursor_changed)        
+               
+    def _init_widgets(self):    
+        self.set_model(gtk.TreeStore(object, str, str, float, float))
+        self.create_column(_('Position'), 1)
+        self.create_column(_('Date'), 2)
+        self.create_column(_('Amount'), 3, func=float_to_string)
+        self.create_column(_('Transaction costs'), 4, func=float_to_string)
         
     def on_cursor_changed(self, widget):
-        #Get the current selection in the gtk.TreeView
-        selection = widget.get_selection()
-        # Get the selection iter
-        treestore, selection_iter = selection.get_selected()
-        if (selection_iter and treestore):
-            #Something is selected so get the object
-            obj = treestore.get_value(selection_iter, 1)
-            self.selected_item = obj, selection_iter
-            if isinstance(obj, model.Dividend):
-                pubsub.publish('dividendstree.select', obj)
-                return
-        pubsub.publish('dividendstree.unselect')
+        obj, iterator = self.get_selected_item()
+        if isinstance(obj, controller.Dividend):
+            self.actiongroup.get_action('remove').set_sensitive(True)
+            return
+        self.actiongroup.get_action('remove').set_sensitive(False)
         
     def load_dividends(self):
-        for pos in self.portfolio.positions:
+        for pos in self.portfolio:
             for div in pos.dividends:
-                self.insert_dividend(div, pos)
+                self.insert_dividend(div)
     
-    def on_dividend_added(self, item, position):
-        if position.container_id == self.portfolio.id:
-            self.insert_dividend(item, position)    
-    
-    def insert_dividend(self, div, pos):
-        self.get_model().append(None, [div.id, div, get_name_string(pos.stock), get_datetime_string(div.date), div.value, 0.0])
+    def insert_dividend(self, div):
+        self.get_model().append(None, [div, get_name_string(div.position.stock), get_datetime_string(div.date), div.price, div.costs])
 
-    def on_remove(self):
-        if self.selected_item is None:
+    def on_add(self, widget=None):
+        AddDividendDialog(self.portfolio, self)
+
+    def on_remove(self, widget=None):
+        obj, iterator = self.get_selected_item()
+        if obj is None:
             return
-        obj, iter = self.selected_item
-        if isinstance(obj, model.Dividend):
-            dlg = gtk.MessageDialog(None, 
-                 gtk.DIALOG_DESTROY_WITH_PARENT, gtk.MESSAGE_QUESTION, 
-                 gtk.BUTTONS_OK_CANCEL, 
-                 _("Permanently delete dividend?"))
-            response = dlg.run()
-            dlg.destroy()
-            if response == gtk.RESPONSE_OK:
-                self.portfolio.positions[obj.pos_id].remove_dividend(obj)
-                self.get_model().remove(iter) 
-
+        dlg = gtk.MessageDialog(None, 
+             gtk.DIALOG_DESTROY_WITH_PARENT, gtk.MESSAGE_QUESTION, 
+             gtk.BUTTONS_OK_CANCEL, 
+             _("Permanently delete dividend?"))
+        response = dlg.run()
+        dlg.destroy()
+        if response == gtk.RESPONSE_OK:
+            obj.delete()
+            self.get_model().remove(iterator) 
+            self.actiongroup.get_action('remove').set_sensitive(False)
 
 
 class AddDividendDialog(gtk.Dialog):
-    def __init__(self, pf):
+    def __init__(self, pf, tree):
         gtk.Dialog.__init__(self, _("Add dividend"), None
                             , gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
                      (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
                       'Add', gtk.RESPONSE_ACCEPT))
         self.pf = pf
+        self.tree = tree
         vbox = self.get_content_area()
         table = gtk.Table()
         vbox.pack_start(table)
@@ -134,37 +100,38 @@ class AddDividendDialog(gtk.Dialog):
                 
         self.selected_pos = None
         
-        table.attach(gtk.Label(_('Value: ')),0,1,1,2)
+        table.attach(gtk.Label(_('Amount: ')),0,1,1,2)
         self.value_entry = gtk.SpinButton(gtk.Adjustment(lower=0, upper=100000,step_incr=0.1, value = 1.0), digits=2)
         table.attach(self.value_entry, 1,2,1,2)
         
-        self.calendar = gtk.Calendar()
-        table.attach(self.calendar, 0,2,2,3)
+        table.attach(gtk.Label(_('Transaction costs: ')),0,1,2,3)
+        self.tacosts_entry = gtk.SpinButton(gtk.Adjustment(lower=0, upper=100000,step_incr=0.1, value = 0.0), digits=2)
+        table.attach(self.tacosts_entry, 1,2,2,3)
         
+        self.calendar = gtk.Calendar()
+        table.attach(self.calendar, 0,2,3,4)
         
         self.set_response_sensitive(gtk.RESPONSE_ACCEPT, False)
         self.show_all()
         response = self.run()  
         self.process_result(response)
-        
         self.destroy()
     
     def changed_pos(self, combobox):
         model = combobox.get_model()
         index = combobox.get_active()
         if index:
-            self.selected_pos = self.pf.positions[model[index][0]]
+            self.selected_pos = model[index][0]
+            self.set_response_sensitive(gtk.RESPONSE_ACCEPT, True)
         else:
             self.selected_pos = None
-            
-        if self.selected_pos is not None:
-            self.set_response_sensitive(gtk.RESPONSE_ACCEPT, True)
-        else:   
             self.set_response_sensitive(gtk.RESPONSE_ACCEPT, False)
-        
+            
     def process_result(self, response):
         if response == gtk.RESPONSE_ACCEPT:
             year, month, day = self.calendar.get_date()
             date = datetime(year, month+1, day)
-            value = self.value_entry.get_text()
-            self.selected_pos.add_dividend(value, date)
+            value = self.value_entry.get_value()
+            ta_costs = self.tacosts_entry.get_value()
+            div = controller.newDividend(price=value, date=date, costs=ta_costs, position=self.selected_pos, shares=self.selected_pos.quantity)
+            self.tree.insert_dividend(div)

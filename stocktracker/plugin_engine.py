@@ -74,7 +74,11 @@ class Plugin(object):
             for key, item in module.__dict__.iteritems():
                 if isinstance(item, types.ClassType):
                     self.plugin_class = item
-                    self.class_name = item.__dict__['__module__'].split('.')[1]
+                    try:
+                        self.class_name = item.__dict__['__module__'].split('.')[1]
+                    except:
+                        #plugins that are not in a directory
+                        self.class_name = item.__name__
                     break
         except ImportError, e:
             Log.debug(self.module_name+str(e))

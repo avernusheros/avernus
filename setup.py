@@ -1,19 +1,5 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-### BEGIN LICENSE
-# Copyright (C) 2008-2009 Wolfgang Steitz <wsteitz(at)gmail.com>
-#This program is free software: you can redistribute it and/or modify it 
-#under the terms of the GNU General Public License version 3, as published 
-#by the Free Software Foundation.
-#
-#This program is distributed in the hope that it will be useful, but 
-#WITHOUT ANY WARRANTY; without even the implied warranties of 
-#MERCHANTABILITY, SATISFACTORY QUALITY, or FITNESS FOR A PARTICULAR 
-#PURPOSE.  See the GNU General Public License for more details.
-#
-#You should have received a copy of the GNU General Public License along 
-#with this program.  If not, see <http://www.gnu.org/licenses/>.
-### END LICENSE
 
 ###################### DO NOT TOUCH THIS (HEAD TO THE SECOND PART) ######################
 
@@ -94,12 +80,13 @@ class InstallAndUpdateDataDirectory(DistUtilsExtra.auto.install_auto):
 
 DistUtilsExtra.auto.setup(
     name='stocktracker',
-    version='0.3',
+    version='0.4.1',
     license='GPL v3',
-    author='wolfer',
-    author_email='wsteitz@gmail.com',
+    author='stocktracker-heros',
+    author_email='xyz@gmail.com',
     description='A lightweight program to easily track your investments.',
-    #long_description='Here a longer description',
+    download_url='https://launchpad.net/stocktracker/+download',
+    long_description='portfolios, watchlists, tags...<br>stocktracker utilizes online data sources for updating its quotations. You can view charts and other diagrams',
     url='https://launchpad.net/stocktracker',
     cmdclass={'install': InstallAndUpdateDataDirectory}
     )

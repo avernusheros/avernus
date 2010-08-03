@@ -3,6 +3,7 @@
 import sys
 import os
 import gtk
+import logging
 
 # Check if we are working in the source tree or from the installed 
 # package and mangle the python path accordingly
@@ -21,6 +22,8 @@ sys.path.insert(0, os.path.dirname(fullPath))
 from stocktracker import config
 from stocktracker.plugin_engine import PluginEngine
 from stocktracker.plugin_api    import PluginAPI
+from stocktracker.logger import Log
+
 
 def init_translations():
     import locale
@@ -76,14 +79,14 @@ def init_plugin_engine(api):
     pengine.enable_from_config()
     return pengine
     
-def start():
+def start(db_file = None):
     init_translations()
     init_icons()
     
-    
-    from stocktracker import config
-    configs = config.StocktrackerConfig()
-    db_file = configs.get_option('database file')
+    if db_file == None:
+        from stocktracker import config
+        configs = config.StocktrackerConfig()
+        db_file = configs.get_option('database file')
     
     from stocktracker.objects import model, controller, store
     model.store = store.Store(db_file)
@@ -110,17 +113,21 @@ if __name__ == "__main__":
     parser = optparse.OptionParser(version="%prog "+stocktracker.__version__)
     parser.add_option("-v", "--verbose", action="store_true", dest="verbose", help="Show debug messages")
     parser.add_option("-d", "--debug", action="store_true", dest="debug", help="Enable debugging")
+    parser.add_option("-f", "--file",  dest="datafile", help="Set database file")
     (options, args) = parser.parse_args()
 
     #set the logging level to show debug messages
     if options.verbose:
         print "please tell the guys to implement this"
-    if options.debug or source_start:
-        #nothing is really happening here...
-        import stocktracker.logger
+    elif options.debug:
+        Log.setLevel(logging.DEBUG)
+        Log.debug("Debug output enabled.")
+        Log.set_debugging_mode(True)
+    
+    if source_start:
+        pass
     
     #gobject.threads_init()
     gtk.gdk.threads_init()
     #run the application
-    start()
-
+    start(options.datafile)

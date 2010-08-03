@@ -24,21 +24,18 @@ class ChartTab(gtk.ScrolledWindow):
         #table.attach(gtk.Label(_('Cash over time')), 0,2,0,1)
         #table.attach(self.cash_chart(),0,2,1,2)
 
-        table.attach(gtk.Label(_('Market value')), 0, 1, 2, 3)
-        table.attach(self.current_pie(),0,1,3,4)
+        table.attach(gtk.Label(_('Market value')), 0, 1, 0, 1)
+        table.attach(self.current_pie(),0,1,1,2)
 
-        table.attach(gtk.Label(_('Buy value')),1,2,2,3)
-        table.attach(self.buy_pie(),1,2,3,4)
-        
-        table.attach(gtk.Label(_('Investment types')),0,1,4,5)
-        table.attach(self.types_chart('pie'),0,1,5,6)
+        table.attach(gtk.Label(_('Investment types')),1,2,0,1)
+        table.attach(self.types_chart('pie'),1,2,1,2)
         #table.attach(self.types_chart('vertical_bars'),1,2,3,4)
         
-        table.attach(gtk.Label(_('Tags')),1,2,4,5)
-        table.attach(self.tags_pie(),1,2,5,6)
+        table.attach(gtk.Label(_('Tags')),0,1,2,3)
+        table.attach(self.tags_pie(),0,1,3,4)
         
-        table.attach(gtk.Label(_('Sectors')),0,1,6,7)
-        table.attach(self.sector_pie(),0,1,7,8)
+        table.attach(gtk.Label(_('Sectors')),1,2,2,3)
+        table.attach(self.sector_pie(),1,2,3,4)
         
         #FIXME countries not supported yet
         #table.attach(gtk.Label(_('Countries')),0,1,6,7)
@@ -54,27 +51,17 @@ class ChartTab(gtk.ScrolledWindow):
     def current_pie(self):
         data = {}
         for pos in self.pf:
-            val = pos.cvalue
-            if val != 0:
-                data[pos.name] = val
+            if pos.cvalue != 0:
+                try:
+                    data[pos.name] += pos.cvalue
+                except:
+                    data[pos.name] = pos.cvalue
         if len(data) == 0:
             return gtk.Label(no_data_string)  
         pie = gtk_pie_plot()        
         pie.set_args({'data':data, 'width':300, 'height':300, 'gradient':True})
         return pie
 
-    def buy_pie(self):
-        data = {}
-        for pos in self.pf:
-            val = pos.bvalue
-            if val != 0:
-                data[pos.name] = val
-        if len(data) == 0:
-            return gtk.Label(no_data_string)  
-        pie = gtk_pie_plot()        
-        pie.set_args({'data':data, 'width':300, 'height':300, 'gradient':True})
-        return pie
-   
     def types_chart(self, chart_type):
         sum = {0:0.0, 1:0.0, 2:0.0}
         for pos in self.pf:

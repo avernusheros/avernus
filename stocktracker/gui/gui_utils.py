@@ -8,6 +8,17 @@ class Tree(gtk.TreeView):
         gtk.TreeView.__init__(self)
         pubsub.subscribe('clear!', self.clear)
     
+    def get_selected_item(self):
+        #Get the current selection in the gtk.TreeView
+        selection = self.get_selection()
+        # Get the selection iter
+        treestore, selection_iter = selection.get_selected()
+        if (selection_iter and treestore):
+            #Something is selected so get the object
+            obj = treestore.get_value(selection_iter, 0)
+            return obj, selection_iter 
+        return None, None
+    
     def create_column(self, name, attribute, func=None):
         column = gtk.TreeViewColumn(name)
         self.append_column(column)
@@ -93,9 +104,16 @@ def float_to_red_green_string(column, cell, model, iter, user_data):
 
 
 def float_to_string(column, cell, model, iter, user_data):
-    text =  str(round(model.get_value(iter, user_data), 2))
+    text = str(round(model.get_value(iter, user_data), 2))
     cell.set_property('text', text)
 
+def float_to_string_ignore_dot_zero(column, cell, model, iter, user_data):
+    num = model.get_value(iter, user_data)
+    if num % 1 == 0.0:
+        text = str(int(num))
+    else:
+        text = str(round(num, 2))
+    cell.set_property('text', text)
 
 def get_price_string(item):
     if item.price is None:

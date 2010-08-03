@@ -2160,7 +2160,6 @@ def pie_plot( name, data, width, height, background = "white light_gray", gradie
         teste_data = {"john" : 123, "mary" : 489, "philip" : 890 , "suzy" : 235}
         CairoPlot.pie_plot("pie_teste", teste_data, 500, 500)
     '''
-
     plot = PiePlot( name, data, width, height, background, gradient, shadow, colors )
     plot.render()
     plot.commit()

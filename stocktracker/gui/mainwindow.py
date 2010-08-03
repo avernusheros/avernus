@@ -138,7 +138,8 @@ class MainWindow(gtk.Window):
         
         self.tabs = {}
         self.tabs['Portfolio'] = [(PositionsTab, 'Positions'), 
-                                  (TransactionsTab, 'Transaction'),
+                                  (TransactionsTab, 'Transactions'),
+                                  (DividendsTab, 'Dividends'),
                                   (chart_tab.ChartTab, 'Charts')]
         self.tabs['Watchlist'] = [(PositionsTab, 'Positions')]
         self.tabs['Tag']       = [(PositionsTab, 'Positions'),
