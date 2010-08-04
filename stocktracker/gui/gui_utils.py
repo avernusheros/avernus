@@ -1,6 +1,6 @@
 import gtk, pytz
 from stocktracker import config, pubsub
-
+import locale
 
 class Tree(gtk.TreeView):
     def __init__(self):
@@ -68,8 +68,6 @@ class Tree(gtk.TreeView):
         self.get_model().clear()
 
 
-
-
 class ContextMenu(gtk.Menu):
     def __init__(self):
         gtk.Menu.__init__(self)
@@ -92,34 +90,27 @@ class ContextMenu(gtk.Menu):
             self.add(item)
 
 
+def get_string_from_float(number):
+    return locale.format('%g', round(number,2), grouping=True, monetary=True)
+
 def float_to_red_green_string(column, cell, model, iter, user_data):
-    num = round(model.get_value(iter, user_data), 2)
+    num = model.get_value(iter, user_data)
+    text = get_string_from_float(num)
     if num < 0:
-        markup =  '<span foreground="red">'+ str(num) + '</span>'
+        markup =  '<span foreground="red">'+ text + '</span>'
     elif num > 0:
-        markup =  '<span foreground="dark green">'+ str(num) + '</span>'
+        markup =  '<span foreground="dark green">'+ text + '</span>'
     else:
-        markup =  str(num)
+        markup =  text
     cell.set_property('markup', markup)
 
-
 def float_to_string(column, cell, model, iter, user_data):
-    text = str(round(model.get_value(iter, user_data), 2))
-    cell.set_property('text', text)
-
-def float_to_string_ignore_dot_zero(column, cell, model, iter, user_data):
-    num = model.get_value(iter, user_data)
-    if num % 1 == 0.0:
-        text = str(int(num))
-    else:
-        text = str(round(num, 2))
-    cell.set_property('text', text)
-
+    cell.set_property('text', get_string_from_float(model.get_value(iter, user_data)))
+    
 def get_price_string(item):
     if item.price is None:
         return 'n/a'
-    return str(round(item.price,2)) +'\n' +'<small>'+get_datetime_string(item.date)+'</small>'
-
+    return get_string_from_float(item.price) +'\n' +'<small>'+get_datetime_string(item.date)+'</small>'
 
 def to_local_time(date):
     if date is not None:
@@ -175,3 +166,7 @@ def resize_wrap(scroll, allocation, treeview, column, cell):
             store.row_changed(store.get_path(iter), iter)
             iter = store.iter_next(iter)
             treeview.set_size_request(0,-1)
+
+
+if __name__ == '__main__':
+    print locale.format('%g', 12111.3, grouping=True, monetary=True)
