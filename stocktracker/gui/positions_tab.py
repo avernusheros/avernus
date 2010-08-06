@@ -162,6 +162,7 @@ class PositionsTree(Tree):
             for row in self.get_model():
                 item = row[0]
                 gain, gain_percent = item.gain
+                row[self.cols['name']] = get_name_string(item.stock)
                 row[self.cols['last_price']] = item.stock.price
                 row[self.cols['change']] = item.current_change[0]
                 row[self.cols['change_percent']] = item.current_change[1]
