@@ -36,15 +36,19 @@ class Yahoo():
         ids = []
         for stock in stocks:
             try:
-                #TODO always uses first yahoo id in cache, maybe could use some heuristic to choose a better exchange (e.g. highest volume)
                 ids.append(self.yahoo_ids[(stock.isin, stock.currency)][0])
             except:
                 print "no yahoo id cached"
-                #TODO try to get it!
+        return '+'.join(ids)
+
+    def __get_all_yahoo_ids(self, stocks):
+        ids = []
+        for stock in stocks:
+            ids+= self.yahoo_ids[(stock.isin, stock.currency)]
         return '+'.join(ids)
 
     def update_stocks(self, stocks):
-        ids = self.__get_yahoo_ids(stocks)
+        ids = self.__get_all_yahoo_ids(stocks)
         s = 0
         res = self.__request_csv(ids, 'l1d1d3c1x')
         for row in csv.reader(res):
@@ -64,11 +68,11 @@ class Yahoo():
                     date = datetime.strptime(row[1], '%m/%d/%Y')
                 date = pytz.timezone('US/Eastern').localize(date)
                 date = date.astimezone(pytz.utc)
-                stocks[s].date = date.replace(tzinfo = None)
-                stocks[s].change = float(row[3])
-                stocks[s].exchange = row[4]
-                stocks[s].updated = True
-                s+=1
+                date = date.replace(tzinfo = None)
+                if date > stocks[s].date: #we have a newer quote
+                    stocks[s].date = date
+                    stocks[s].change = float(row[3])
+                    stocks[s].exchange = row[4]
                          
     def get_info(self, symbol):
         #name, isin, exchange, currency
@@ -81,9 +85,9 @@ class Yahoo():
         for row in csv.reader(self.__request_csv(symbol, 'nxc4n0n1n2n3n4')):
             print row
     
-
-
     def update_historical_prices(self, stock, start_date, end_date):
+        #FIXME more intelligent way of choosing the exchange
+        #we should use the exchange with the highest volume for this stock
         yid = self.__get_yahoo_ids([stock])
         url = 'http://ichart.yahoo.com/table.csv?s=%s&' % yid + \
               'a=%s&' % str(start_date.month-1) + \
