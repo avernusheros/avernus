@@ -81,7 +81,9 @@ class Chart(gtk.VBox):
         y_min = 0.95*min(quotes)
         y_max = 1.05*max(quotes)
         
-        legend = [str(data[int(len(data)/20 *i)].date) for i in range(20)]
+        legend = [str(data[int(len(data)/18 *i)].date) for i in range(18)]
+        legend.insert(0,str(data[0].date))
+        legend.insert(len(legend),str(data[-1].date))
        
         p1 = gtk_dot_line_plot()
         p1.set_args({'data':quotes, 
@@ -94,7 +96,11 @@ class Chart(gtk.VBox):
                      'y_bounds':(y_min, y_max)})
                    
         change = quotes[-1] - quotes[0]
-        change_str = get_green_red_string(change, str(change)+' ('+str(round(change/quotes[0]*100,2))+'%)')
+        if quotes[0] == 0:
+            safeDiv = 1
+        else:
+            safeDiv = quotes[0]
+        change_str = get_green_red_string(change, str(change)+' ('+str(round(change/safeDiv*100,2))+'%)')
         label = gtk.Label()
         label.set_markup(str(date2)+' - '+str(date1)+'     '+change_str)
         vbox.add(label)
