@@ -152,10 +152,10 @@ class StockSelector(gtk.VBox):
         self.search_field.set_icon_activatable(0, True)
         self.search_field.connect('activate', self.on_search)
         self.search_field.connect('icon-press', self.on_search)
-        self.pack_start(self.search_field)
+        self.pack_start(self.search_field, expand=False, fill=False)
         
         self.spinner = gtk.Spinner()
-        self.pack_start(self.spinner)
+        self.pack_start(self.spinner)#, fill=False, expand=False)
         
         sw = gtk.ScrolledWindow()
         sw.set_property('hscrollbar-policy', gtk.POLICY_AUTOMATIC)
@@ -288,32 +288,32 @@ class BuyDialog(gtk.Dialog):
         self.stock_ok = False
 
         #shares entry
-        table.attach(gtk.Label(_('Shares')),1,2,1,2)
+        table.attach(gtk.Label(_('Shares')),1,2,1,2,xoptions=gtk.SHRINK,yoptions=gtk.SHRINK)
         self.shares_entry = gtk.SpinButton(gtk.Adjustment(lower=0, upper=100000,step_incr=1.0, value = 0), digits=2)
         self.shares_entry.connect("value-changed", self.on_change)
-        table.attach(self.shares_entry,2,3,1,2)
+        table.attach(self.shares_entry,2,3,1,2,xoptions=gtk.SHRINK,yoptions=gtk.SHRINK)
         
         #price entry
-        table.attach(gtk.Label(_('Price')),1,2,2,3)
+        table.attach(gtk.Label(_('Price')),1,2,2,3,xoptions=gtk.SHRINK,yoptions=gtk.SHRINK)
         self.price_entry = gtk.SpinButton(gtk.Adjustment(lower=0, upper=100000,step_incr=0.1, value = 1.0), digits=2)
         self.price_entry.connect("value-changed", self.on_change)
-        table.attach(self.price_entry,2,3,2,3)
+        table.attach(self.price_entry,2,3,2,3,xoptions=gtk.SHRINK,yoptions=gtk.SHRINK)
         
         #ta_costs entry
-        table.attach(gtk.Label(_('Transaction Costs')),1,2,3,4)
+        table.attach(gtk.Label(_('Transaction Costs')),1,2,3,4,xoptions=gtk.SHRINK,yoptions=gtk.SHRINK)
         self.tacosts_entry = gtk.SpinButton(gtk.Adjustment(lower=0, upper=100000,step_incr=0.1, value = 0.0), digits=2)
         self.tacosts_entry.connect("value-changed", self.on_change)
-        table.attach(self.tacosts_entry,2,3,3,4)
+        table.attach(self.tacosts_entry,2,3,3,4,xoptions=gtk.SHRINK,yoptions=gtk.SHRINK)
         
         #total
-        table.attach(gtk.Label(_('Total')),1,2,4,5)
+        table.attach(gtk.Label(_('Total')),1,2,4,5,xoptions=gtk.SHRINK,yoptions=gtk.SHRINK)
         self.total = gtk.Label('0.0')
-        table.attach(self.total,2,3,4,5)
+        table.attach(self.total,2,3,4,5,xoptions=gtk.SHRINK,yoptions=gtk.SHRINK)
         
         #date 
         self.calendar = gtk.Calendar()
         self.calendar.connect('day-selected', self.on_calendar_day_selected)
-        table.attach(self.calendar,0,1,1,5)
+        table.attach(self.calendar,0,1,1,5,yoptions=gtk.SHRINK)
         self.date_ok = True
         
         self.infobar = gtk.InfoBar()
