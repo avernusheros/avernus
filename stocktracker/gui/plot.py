@@ -81,7 +81,9 @@ class Chart(gtk.VBox):
         y_min = 0.95*min(quotes)
         y_max = 1.05*max(quotes)
         
-        legend = [str(data[int(len(data)/20 *i)].date) for i in range(20)]
+        legend = [str(data[int(len(data)/18 *i)].date) for i in range(18)]
+        legend.insert(0,str(data[0].date))
+        legend.insert(len(legend),str(data[-1].date))
        
         p1 = gtk_dot_line_plot()
         p1.set_args({'data':quotes, 

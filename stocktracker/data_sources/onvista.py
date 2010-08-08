@@ -221,24 +221,24 @@ class Onvista():
                       'date':temp_date,'currency':currency,'volume':volume,
                       'type':stockType,'change':change}
 
-    def update_stocks(self, stocks):
-        for stock in stocks:
-            if stock.type == stocks.FUND:
-                file = opener.open("http://fonds.onvista.de/kurse.html", urllib.urlencode({"ISIN": stock.isin}))
-                generator = self._parse_kurse_html_fonds(file)
-            elif stock.type == stocks.ETF:
-                file = opener.open("http://etf.onvista.de/kurse.html", urllib.urlencode({"ISIN": stock.isin}))
-                generator = self._parse_kurse_html_etf(file)
+    def update_stocks(self, sts):
+        for st in sts:
+            if st.type == stock.FUND:
+                file = opener.open("http://fonds.onvista.de/kurse.html", urllib.urlencode({"ISIN": st.isin}))
+                generator = self._parse_kurse_html(file)
+            elif st.type == stock.ETF:
+                file = opener.open("http://etf.onvista.de/kurse.html", urllib.urlencode({"ISIN": st.isin}))
+                generator = self._parse_kurse_html(file, tdInd=etfTDS, stockType=stock.ETF)
             else:
                 print "Unknown stock type in onvistaplugin.update_stocks"
             for item in generator:
-                if item['exchange'] == stock.exchange and \
-                        item['currency'] == stock.currency:
-                    stock.price = item['price']
-                    stock.date = item['date']
-                    stock.change = item['change']
-                    stock.volume = item['volume']
-                    stock.updated = True
+                if item['exchange'] == st.exchange and \
+                        item['currency'] == st.currency:
+                    st.price = item['price']
+                    st.date = item['date']
+                    st.change = item['change']
+                    st.volume = item['volume']
+                    st.updated = True
                     break
 
     def update_historical_prices(self, st, start_date, end_date):
