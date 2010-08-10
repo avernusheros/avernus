@@ -175,6 +175,7 @@ class StockSelector(gtk.VBox):
         
         sw.add(self.result_tree)
         self.pack_end(sw)
+        self.spinner = None
 
     def get_stock(self):
         path, col = self.result_tree.get_cursor()
@@ -188,9 +189,11 @@ class StockSelector(gtk.VBox):
         self.spinner.start()
     
     def _hide_spinner(self):
-        self.remove(self.spinner)
+        if self.spinner:
+            self.remove(self.spinner)
 
     def on_search(self, *args):
+        self.stop_search()
         self.result_tree.clear()
         searchstring = self.search_field.get_text()
         self._show_spinner()
