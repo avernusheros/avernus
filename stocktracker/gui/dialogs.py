@@ -144,6 +144,8 @@ class EditPositionTable(gtk.Table):
             self.pos.comment = buffer.get_text(buffer.get_start_iter(), buffer.get_end_iter())            
 
 
+SPINNER_SIZE = 40
+
 class StockSelector(gtk.VBox):
     def __init__(self):
         gtk.VBox.__init__(self)
@@ -153,9 +155,6 @@ class StockSelector(gtk.VBox):
         self.search_field.connect('activate', self.on_search)
         self.search_field.connect('icon-press', self.on_search)
         self.pack_start(self.search_field, expand=False, fill=False)
-        
-        self.spinner = gtk.Spinner()
-        self.pack_start(self.spinner)#, fill=False, expand=False)
         
         sw = gtk.ScrolledWindow()
         sw.set_property('hscrollbar-policy', gtk.POLICY_AUTOMATIC)
@@ -175,17 +174,26 @@ class StockSelector(gtk.VBox):
                          cell)
         
         sw.add(self.result_tree)
-        self.pack_start(sw)
+        self.pack_end(sw)
 
     def get_stock(self):
         path, col = self.result_tree.get_cursor()
         return self.result_tree.get_model()[path][0]
 
+    def _show_spinner(self):
+        self.spinner = gtk.Spinner()
+        self.pack_start(self.spinner, fill=True, expand=False)
+        self.spinner.show()
+        self.spinner.set_size_request(SPINNER_SIZE, SPINNER_SIZE);
+        self.spinner.start()
+    
+    def _hide_spinner(self):
+        self.remove(self.spinner)
+
     def on_search(self, *args):
         self.result_tree.clear()
         searchstring = self.search_field.get_text()
-        self.spinner.start()
-        self.spinner.show()
+        self._show_spinner()
         for item in controller.getStockForSearchstring(searchstring):
             self.insert_item(item)
         self.search_source_count = controller.datasource_manager.get_source_count()
@@ -194,12 +202,10 @@ class StockSelector(gtk.VBox):
     def search_complete_callback(self):
         self.search_source_count -= 1
         if self.search_source_count == 0:
-            self.spinner.stop()
-            self.spinner.hide()
+            self._hide_spinner()
     
     def stop_search(self):
-        self.spinner.stop()
-        self.spinner.hide()
+        self._hide_spinner()
         controller.datasource_manager.stop_search()
         
     def insert_item(self, stock, icon='gtk-harddisk'):

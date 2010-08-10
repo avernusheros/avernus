@@ -123,6 +123,7 @@ if __name__ == "__main__":
 
     #set the logging level to show debug messages
     if options.verbose:
+        import logging
         Log.setLevel(logging.DEBUG)
         Log.debug("Debug output enabled.")
         Log.set_debugging_mode(True)

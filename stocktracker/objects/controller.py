@@ -195,6 +195,7 @@ def newQuotation(date=datetime.date.today(),\
                  low=0,\
                  close=0,\
                  vol=0,\
+                 exchange='',\
                  detectDuplicates = True):
     if detectDuplicates:
         return detectDuplicate(Quotation,\
@@ -204,6 +205,7 @@ def newQuotation(date=datetime.date.today(),\
                                low=low,\
                                close=close,\
                                stock=stock.id,\
+                               exchange=exchange,\
                                volume=vol)
     else:
         result = Quotation(id=None,\
@@ -213,6 +215,7 @@ def newQuotation(date=datetime.date.today(),\
                            low=low,\
                            close=close,\
                            stock=stock,\
+                           exchange=exchange,\
                            volume=vol)
         result.insert()
         return result
@@ -298,7 +301,8 @@ def getStockForSearchstring(searchstring):
     return Stock.getByColumns(sqlArgs,operator=" OR ",operator2=' LIKE ', create=True)
 
 def getQuotationsFromStock(stock, start):
-    erg = Quotation.getAllFromOneColumn('stock', stock.getPrimaryKey())
+    args = {'stock': stock.getPrimaryKey(), 'exchange':stock.exchange}
+    erg = Quotation.getByColumns(args, create=True)
     erg = filter(lambda quote: quote.date > start, erg)
     erg = sorted(erg, key=lambda stock: stock.date)
     return erg

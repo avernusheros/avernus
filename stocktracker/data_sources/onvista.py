@@ -123,7 +123,6 @@ class FileDownloadParalyzer(Paralyzer):
             self.q.put(thread, True)
 
 
-
 class KursParseParalyzer(Paralyzer):
 
     def __init__(self, pages, fun):
@@ -157,7 +156,6 @@ etfTDS = {
           }
 
 class Onvista():
-    configurable = False
 
     def __init__(self):
         self.name = 'onvista.de'
@@ -232,8 +230,8 @@ class Onvista():
             else:
                 print "Unknown stock type in onvistaplugin.update_stocks"
             for item in generator:
-                if item['exchange'] == st.exchange and \
-                        item['currency'] == st.currency:
+                if st.date < item['date']: #found newer price
+                    st.exchange = item['exchange']
                     st.price = item['price']
                     st.date = item['date']
                     st.change = item['change']
@@ -272,7 +270,7 @@ class Onvista():
             tds = line.findAll('td')
             day = to_datetime(tds[0].contents[0].replace('&nbsp;','')).date()
             kurs = to_float(tds[1].contents[0].replace('&nbsp;',''))
-            yield (st,day,kurs,kurs,kurs,kurs,0)
+            yield (st,'KAG',day,kurs,kurs,kurs,kurs,0)
 
 
 

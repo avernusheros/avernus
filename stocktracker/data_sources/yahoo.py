@@ -102,7 +102,7 @@ class Yahoo():
         for row in [day[:-2].split(',') for day in days[1:]]:
             dt = datetime.strptime(row[0], '%Y-%m-%d').date()
             #(stock, date, open, high, low, close, vol)
-            yield (stock,dt,float(row[1]),float(row[2]),\
+            yield (stock,stock.exchange,dt,float(row[1]),float(row[2]),\
                         float(row[3]),float(row[6]), int(row[5]))
             
     def search(self, searchstring):
