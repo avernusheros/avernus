@@ -98,7 +98,11 @@ class Yahoo():
               'e=%s&' % str(end_date.day) + \
               'f=%s&' % str(end_date.year) + \
               'ignore=.csv'
-        days = urlopen(url).readlines()
+        file = urlopen(url)
+        if file.info().gettype() == 'text/html':
+            Log.info("no historical data found for stock: "+stock.name)
+            return
+        days = file.readlines()
         for row in [day[:-2].split(',') for day in days[1:]]:
             dt = datetime.strptime(row[0], '%Y-%m-%d').date()
             #(stock, date, open, high, low, close, vol)
