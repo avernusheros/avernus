@@ -183,8 +183,8 @@ class Onvista():
         
     def _parse_kurse_html(self, kursPage, tdInd=fondTDS, stockType = stock.FUND):
         base = BeautifulSoup(kursPage).find('div', 'content')
-        name = str(base.h1.contents[0])
-        isin = base.findAll('tr','hgrau2')[1].findAll('td')[1].contents[0].replace('&nbsp;','')
+        name = unicode(base.h1.contents[0])
+        isin = str(base.findAll('tr','hgrau2')[1].findAll('td')[1].contents[0].replace('&nbsp;',''))
         try:
             yearTable = base.find('div','tt_hl').findNextSibling('table','weiss abst').find('tr','hgrau2')
         except:
@@ -194,7 +194,7 @@ class Onvista():
             year = yearTable.td.string.split(".")[2]
         else:
             #fallback to the hardcoded current year
-            year = date.today().year
+            year = unicode(str(date.today().year)[2:])
         for row in base.findAll('div','t')[tdInd['table']].find('table'):
             tds = row.findAll('td')
             if len(tds)>3:
@@ -205,8 +205,8 @@ class Onvista():
                         exchange = exchangeTag.a.contents[0]
                     else:
                         exchange = exchangeTag.contents[0]
-                    #print exchange
-                    currency = tds[tdInd['currency']].contents[0]
+                    exchange = str(exchange)
+                    currency = str(tds[tdInd['currency']].contents[0])
                     price = to_float(tds[tdInd['price']].contents[0])
                     temp_date = to_datetime(tds[tdInd['temp_date']].contents[0]+year, 
                                             tds[tdInd['temp_date']+1].contents[0])
@@ -215,9 +215,11 @@ class Onvista():
                     if change.span:
                         change = change.span
                     change = to_float(change.contents[0])
-                    yield {'name':name,'isin':isin,'exchange':exchange,'price':price,
+                    erg = {'name':name,'isin':isin,'exchange':exchange,'price':price,
                       'date':temp_date,'currency':currency,'volume':volume,
                       'type':stockType,'change':change}
+                    #print [(k,type(v)) for k,v in erg.items()]
+                    yield erg
 
     def update_stocks(self, sts):
         for st in sts:

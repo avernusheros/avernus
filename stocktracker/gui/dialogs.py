@@ -210,7 +210,7 @@ class StockSelector(gtk.VBox):
         
     def insert_item(self, stock, icon='gtk-harddisk'):
         #FIXME ETFs need an icon
-        icons = ['F', 'A', 'F']
+        icons = ['fund', 'stock', 'etf']
         self.result_tree.get_model().append(None, [
                                        stock, 
                                        icon,

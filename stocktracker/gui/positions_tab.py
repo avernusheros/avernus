@@ -246,7 +246,7 @@ class PositionsTree(Tree):
         gain_icon = get_arrow_icon(gain[1])
         c_change = position.current_change
         #FIXME etf need an icon
-        icons = ['F', 'A', 'F']
+        icons = ['fund', 'stock', 'etf']
         ret = [position, 
                get_name_string(stock), 
                position.price, 
