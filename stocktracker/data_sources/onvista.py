@@ -270,7 +270,7 @@ class Onvista():
             tds = line.findAll('td')
             day = to_datetime(tds[0].contents[0].replace('&nbsp;','')).date()
             kurs = to_float(tds[1].contents[0].replace('&nbsp;',''))
-            yield (st,day,kurs,kurs,kurs,kurs,0)
+            yield (st,'KAG',day,kurs,kurs,kurs,kurs,0)
 
 
 

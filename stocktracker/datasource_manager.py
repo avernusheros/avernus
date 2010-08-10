@@ -72,10 +72,10 @@ class DatasourceManager(object):
             newest = datetime.date(today.year -20, today.month, today.day)
         if newest <= today:
             for qt in sources[stock.source].update_historical_prices(stock, newest, today):
-                #qt : (stock, date, open, high, low, close, vol)
-                controller.newQuotation(stock=qt[0], date=qt[1],\
-                                        open=qt[2], high=qt[3],\
-                                        low=qt[4], close=qt[5],\
-                                        vol=qt[6], detectDuplicates=True)
+                #qt : (stock, exchange, date, open, high, low, close, vol)
+                controller.newQuotation(stock=qt[0], exchange=qt[1],\
+                            date=qt[2], open=qt[3], high=qt[4],\
+                            low=qt[5], close=qt[6], vol=qt[7],\
+                            detectDuplicates=True)
         #needed to run as generator thread
         yield 1

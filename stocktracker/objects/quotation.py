@@ -8,6 +8,7 @@ class Quotation(SQLiteEntity):
     __columns__ = {
                    'id': 'INTEGER',
                    'stock': Stock,
+                   'exchange':'VARCHAR',
                    'date': 'DATE',
                    'open': 'FLOAT',
                    'high': 'FLOAT',
@@ -16,4 +17,4 @@ class Quotation(SQLiteEntity):
                    'volume': 'INTEGER',
                    
                   }
-    __comparisonPositives__ = ['stock','date']
+    __comparisonPositives__ = ['stock','date', 'exchange']
