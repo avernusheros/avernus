@@ -76,7 +76,10 @@ class Chart(gtk.VBox):
         date2 = self.get_date2(self.current_zoom, date1)
         
         data = controller.getQuotationsFromStock(self.stock, date2)
-                
+        if len(data) == 0:
+            self.add(gtk.Label('No historical data found!'))
+            self.show_all()
+            return
         quotes = [d.close for d in data]
         y_min = 0.95*min(quotes)
         y_max = 1.05*max(quotes)
