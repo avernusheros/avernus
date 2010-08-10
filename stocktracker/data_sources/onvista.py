@@ -205,8 +205,8 @@ class Onvista():
                         exchange = exchangeTag.a.contents[0]
                     else:
                         exchange = exchangeTag.contents[0]
-                    exchange = str(exchange)
-                    currency = str(tds[tdInd['currency']].contents[0])
+                    exchange = unicode(exchange)
+                    currency = unicode(tds[tdInd['currency']].contents[0])
                     price = to_float(tds[tdInd['price']].contents[0])
                     temp_date = to_datetime(tds[tdInd['temp_date']].contents[0]+year, 
                                             tds[tdInd['temp_date']+1].contents[0])

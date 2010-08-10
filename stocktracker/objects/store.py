@@ -32,7 +32,7 @@ class Store(Thread):
         while True:
             req, arg, res = self.reqs.get()
             if req=='--close--': break
-            #print "exec ", req, arg
+            print "exec ", req, arg
             cursor.execute(req, arg)
             if res:
                 for rec in cursor:
