@@ -58,8 +58,8 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="1"
-     inkscape:cx="20.576375"
-     inkscape:cy="8.953696"
+     inkscape:cx="39.689445"
+     inkscape:cy="25.191144"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -175,46 +175,46 @@
          x="10.169456"
          y="1032.2103">$</tspan></text>
     <path
-       transform="matrix(1.4382022,0,0,0.78089888,63.066714,1010.9169)"
+       transform="matrix(2.4839563,0,0,1.1165175,87.443529,999.54337)"
        d="m -17.125,39.1875 a 5.5625,5.5625 0 1 1 -11.125,0 5.5625,5.5625 0 1 1 11.125,0 z"
        sodipodi:ry="5.5625"
        sodipodi:rx="5.5625"
        sodipodi:cy="39.1875"
        sodipodi:cx="-22.6875"
        id="path3808"
-       style="opacity:0.54337899999999995;fill:#aaaaaa;fill-opacity:1;stroke:#aaaaaa;stroke-width:4.71805096000000024;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:5"
+       style="opacity:0.543379;fill:#aaaaaa;fill-opacity:1;stroke:#aaaaaa;stroke-width:3.00237703;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:5"
        sodipodi:type="arc" />
     <path
        sodipodi:type="arc"
-       style="opacity:0.543379;fill:#666666;fill-opacity:1;stroke:#666666;stroke-width:5.15996218;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:5"
+       style="opacity:0.543379;fill:#666666;fill-opacity:1;stroke:#666666;stroke-width:3.28359175;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:5"
        id="path3784"
        sodipodi:cx="-22.6875"
        sodipodi:cy="39.1875"
        sodipodi:rx="5.5625"
        sodipodi:ry="5.5625"
        d="m -17.125,39.1875 a 5.5625,5.5625 0 1 1 -11.125,0 5.5625,5.5625 0 1 1 11.125,0 z"
-       transform="matrix(1.3370786,0,0,0.70224719,60.772472,1013.9991)" />
+       transform="matrix(2.309303,0,0,1.0040625,83.481084,1003.9502)" />
     <text
        id="text3790"
-       y="1044.8622"
-       x="23.625"
-       style="font-size:8px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;fill:#eeeeee;fill-opacity:1;stroke:none;font-family:Monospace;-inkscape-font-specification:Monospace"
+       y="1049.5684"
+       x="16.628216"
+       style="font-size:16.98058128px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;fill:#eeeeee;fill-opacity:1;stroke:none;font-family:Monospace;-inkscape-font-specification:Monospace"
        xml:space="preserve"><tspan
-         style="font-weight:bold;-inkscape-font-specification:AlArabiya Bold;fill:#eeeeee;fill-opacity:1"
-         y="1044.8622"
-         x="23.625"
+         style="font-weight:bold;fill:#eeeeee;fill-opacity:1;-inkscape-font-specification:AlArabiya Bold"
+         y="1049.5684"
+         x="16.628216"
          id="tspan3792"
          sodipodi:role="line">ETF</tspan></text>
     <text
        xml:space="preserve"
-       style="font-size:8px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;fill:#ffffff;fill-opacity:1;stroke:none;font-family:Monospace;-inkscape-font-specification:Monospace"
-       x="23.375"
-       y="1044.6122"
+       style="font-size:16.98058127999999911px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;fill:#000000;fill-opacity:1;stroke:none;font-family:Monospace;-inkscape-font-specification:Monospace"
+       x="16.097572"
+       y="1049.0377"
        id="text3786"><tspan
          sodipodi:role="line"
          id="tspan3788"
-         x="23.375"
-         y="1044.6122"
-         style="font-weight:bold;-inkscape-font-specification:AlArabiya Bold">ETF</tspan></text>
+         x="16.097572"
+         y="1049.0377"
+         style="font-weight:bold;-inkscape-font-specification:AlArabiya Bold;fill:#000000">ETF</tspan></text>
   </g>
 </svg>

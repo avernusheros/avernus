@@ -15,8 +15,8 @@
    id="svg2"
    version="1.1"
    inkscape:version="0.47 r22583"
-   sodipodi:docname="stock.svg"
-   inkscape:export-filename="/home/simpsus/Dropbox/UNI/workspace/stocktracker/trunk/data/images/48x48/stock.png"
+   sodipodi:docname="fund.svg"
+   inkscape:export-filename="/home/simpsus/Dropbox/UNI/workspace/stocktracker/trunk/data/images/48x48/fund.png"
    inkscape:export-xdpi="90"
    inkscape:export-ydpi="90">
   <defs
@@ -78,8 +78,8 @@
      showguides="true"
      inkscape:guide-bbox="true"
      inkscape:window-width="1600"
-     inkscape:window-height="1111"
-     inkscape:window-x="0"
+     inkscape:window-height="1174"
+     inkscape:window-x="1600"
      inkscape:window-y="0"
      inkscape:window-maximized="1" />
   <metadata
