@@ -30,7 +30,7 @@ class Stock(SQLiteEntity):
                          'exchange':None,
                          'currency':'',
                          'price':0.0,
-                         'date':datetime.datetime.now(),
+                         'date':datetime.datetime.utcnow(),
                          'change':0.0,
                          'type':1,
                          'name':'',
