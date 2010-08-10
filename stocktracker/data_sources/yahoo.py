@@ -6,9 +6,9 @@ from datetime import datetime
 from stocktracker import config
 
 from stocktracker.logger import Log
+from stocktracker.objects import stock
 
-
-TYPES = ['Fonds', 'Aktie']
+TYPES = {'Fonds':stock.FUND, 'Aktie':stock.STOCK, 'Namensaktie':stock.STOCK}
 
 class Yahoo():
     name = "yahoo"
@@ -162,7 +162,7 @@ class Yahoo():
         res['isin']                   = item[2]
         res['wkn']                    = item[3]
         res['exchange']               = item[4]
-        res['type']                   = TYPES.index(item[5])
+        res['type']                   = TYPES[item[5]]
         res['price'], res['currency'] = self.__parse_price(item[6])
         #res['time']                   = item[7]  #only time not date
         res['change']                 = self.__parse_change(item[8], res['price'])
