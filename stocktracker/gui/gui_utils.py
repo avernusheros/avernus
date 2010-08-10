@@ -30,10 +30,13 @@ class Tree(gtk.TreeView):
         column.set_sort_column_id(attribute)
         return column, cell
 
-    def create_icon_column(self, name, attribute):
+    def create_icon_column(self, name, attribute, size=None):
+        #gtk.ICON_SIZE_MENU, gtk.ICON_SIZE_SMALL_TOOLBAR, gtk.ICON_SIZE_LARGE_TOOLBAR, gtk.ICON_SIZE_BUTTON, gtk.ICON_SIZE_DND and gtk.ICON_SIZE_DIALOG.
         column = gtk.TreeViewColumn(name)
         self.append_column(column)
         cell = gtk.CellRendererPixbuf()
+        if size:
+            cell.set_property('stock-size', size)
         column.pack_start(cell, expand = True)
         column.set_attributes(cell, icon_name=attribute)
         return column, cell

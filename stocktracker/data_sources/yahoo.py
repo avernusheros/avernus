@@ -165,6 +165,7 @@ class Yahoo():
         res['type']                   = TYPES[item[5]]
         res['price'], res['currency'] = self.__parse_price(item[6])
         #res['time']                   = item[7]  #only time not date
+        res['date']                   = datetime.utcnow().replace(year=2009)
         res['change']                 = self.__parse_change(item[8], res['price'])
         res['volume']                 = int(item[9].replace(",", ""))
         return res

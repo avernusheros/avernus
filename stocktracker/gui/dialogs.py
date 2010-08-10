@@ -165,7 +165,7 @@ class StockSelector(gtk.VBox):
         col, cell = self.result_tree.create_column(_('Name'), 2)
         self.result_tree.create_column('ISIN', 3)
         self.result_tree.create_column(_('Currency'), 4)
-        self.result_tree.create_icon_column(_('Type'), 5)
+        self.result_tree.create_icon_column(_('Type'), 5,size= gtk.ICON_SIZE_DND)
         self.result_tree.set_size_request(600,300)
         sw.connect_after('size-allocate', 
                          resize_wrap, 

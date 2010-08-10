@@ -72,7 +72,7 @@ class PositionsTree(Tree):
         if not self.watchlist:
             self.create_column('#', self.cols['shares'], func=float_to_string)
         self.create_column(_('Name'), self.cols['name'])
-        self.create_icon_column(_('Type'), self.cols['type'])
+        self.create_icon_column(_('Type'), self.cols['type'],size= gtk.ICON_SIZE_DND)
         if not self.watchlist:
             self.create_column(_('Pf %'), self.cols['pf_percent'], func=float_to_string)
         self.create_column(_('Start'), self.cols['start'], func=start_price_markup)
