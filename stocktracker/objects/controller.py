@@ -324,12 +324,7 @@ def getBuyTransaction(portfolio_position):
 def onPositionNewTag(position=None,tagText=None):
     if not position or not tagText:
         Log.error("Malformed onPositionNewTag Call (position,tagText)" + str((position,tagText)))
-    tag = None
-    if Tag.primaryKeyExists(tagText):
-        tag = Tag.getByPrimaryKey(tagText)
-    else:
-        tag = newTag(tagText)
-    position.tags.append(tag)
+    position.tags.append(detectDuplicate(Tag, name=tagText))
 
 pubsub.subscribe('position.newTag', onPositionNewTag)
 
