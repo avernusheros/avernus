@@ -218,5 +218,13 @@ class Tag(SQLiteEntity, Container):
                   }
     __comparisonPositives__ = ['name']
 
+    def onInit(self, **kwargs):
+        pubsub.publish('tag.created', self)
+    __callbacks__ = {'onInit':onInit}
+    
     def __iter__(self):
         return stocktracker.objects.controller.getPositionForTag(self).__iter__()
+
+    @property
+    def date(self):
+        return None

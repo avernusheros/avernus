@@ -59,7 +59,6 @@ class MainTree(Tree):
         self.connect('button-press-event', self.on_button_press_event)
         self.connect('cursor_changed', self.on_cursor_changed)
         self.subscriptions = (
-                    ('index.created', self.insert_index),
                     ("container.edited", self.on_updated),
                     ("tag.created", self.insert_tag),
                     ("tag.updated", self.on_updated),
@@ -103,9 +102,6 @@ class MainTree(Tree):
 
     def insert_tag(self, item):
         self.get_model().append(self.tag_iter, [item, 'tag', item.name])
-
-    def insert_index(self, item):
-        self.get_model().append(self.index_iter, [item, 'index', item.name])
 
     def on_remove(self, widget=None):
         if self.selected_item is None:

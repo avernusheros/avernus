@@ -7,6 +7,7 @@ from stocktracker.gui.plot import ChartWindow
 from stocktracker.objects import controller
 from stocktracker.objects.position import WatchlistPosition, PortfolioPosition
 from stocktracker.objects.stock import Stock
+from stocktracker.gui import gui_utils
 
 class ContainerOverviewTab(gtk.VBox):
     def __init__(self, item):
@@ -34,9 +35,6 @@ class ContainerOverviewTree(Tree):
                      'change_percent':4,
                       }
         
-        def float_to_string(column, cell, model, iter, user_data):
-            text =  str(round(model.get_value(iter, user_data), 2))
-            cell.set_property('text', text)
         
         self.set_model(gtk.TreeStore(object,str, str,float, float))
         
