@@ -9,31 +9,9 @@ import chardet
 
 from stocktracker.objects import controller
 
-profiles = {
-     "comdirect": {
-         "amountColumn": 5,
-         "dateColumn": 1,
-         "dateFormat": "%d.%m.%Y",
-         "decimalSeparator": ",",
-         "descriptionColumns": "4 (3)",
-         "row length": 5,
-         "header": True
-         },
-    "psd": {
-        'linesToSkip':13, 
-        'encoding':'iso-8859-15',
-        'delimiter':';',
-        'amountColumn':8,
-        'decimalSeparator':',',
-        'descriptionColumn':6,
-        'dateColumn':1,
-        'dateFormat':'%d.%m.%Y',
-        'saldoIndicator':9,
-        'negativeSaldo':'S',
-        'receiver':3,
-        'sender':2,
-        }
-}
+
+FORMATS = ['%Y-%m-%d',
+           '%d.%m.%Y']
 
 
 class CsvImporter:
@@ -90,6 +68,7 @@ class CsvImporter:
                 for col in row:
                     if re.match('[0-9]+[\.\-]*[0-9]*[\.\-][0-9]+', col ) is not None:
                         profile['date column'] = col_count
+                        profile['date format'] = self._detect_date_format(col)
                     elif re.match('-?[0-9]+[\.\,]*[0-9]*[\.\,]+[0-9]*', col) is not None:
                         profile['amount column'] = col_count
                         for s in reversed(col):
@@ -119,6 +98,17 @@ class CsvImporter:
                 writer.writerow(row)
         return temp_file
 
+    def _detect_date_format(self, datestring):
+        for format in FORMATS:
+            try:
+                datetime.strptime(datestring, format)
+                return format
+            except:
+                pass
+
+    def _parse_date(self, datestring, dateformat):
+        return datetime.strptime(datestring, dateformat).date()
+
     def _parse_amount(self, amount_string, decimal_separator, saldo_indicator=None):
         if decimal_separator == '.':
             amount_string = amount_string.replace(',','')
@@ -140,7 +130,7 @@ class CsvImporter:
                 if not first_line_skipped and profile['header']:
                     first_line_skipped = True
                     continue
-                tran = [row[profile['date column']], 
+                tran = [self._parse_date(row[profile['date column']], profile['date format']), 
                         ' - '.join([row[d] for d in profile['description column']]),
                         self._parse_amount(row[profile['amount column']], 
                                            profile['decimal separator'], 
@@ -156,9 +146,7 @@ class CsvImporter:
     def create_transactions(self, account):
         #FIXME detect duplicates
         for result in self.results:
-            #FIXME date
-            #controller.newAccountTransaction(date=result[0], description=result[1], amount=result[2], account=account)
-            controller.newAccountTransaction(date=date.today(), description=result[1], amount=result[2], account=account)
+            controller.newAccountTransaction(date=result[0], description=result[1], amount=result[2], account=account)
                         
     def getTransactionsFromCSV(self, csvdata, settings):
         csvdata = StringIO(csvdata)
