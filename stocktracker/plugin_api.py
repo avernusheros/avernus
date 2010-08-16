@@ -2,15 +2,13 @@
 from __future__ import with_statement
 import os
 import pickle
-from stocktracker import config, logger
+from stocktracker import config
 
 
 class PluginAPI():
 
     def __init__(self, main_window, datasource_manager):
         self.main_window = main_window
-        self.datasource_manager = datasource_manager
-        self.logger = logger.logger
         
     def add_menu_item(self, item, menu_name):
         menu = self.main_window.main_menu
@@ -34,12 +32,6 @@ class PluginAPI():
         for cat in categories:
             self.main_window.tabs[cat].remove((item, name))
 
-    def register_datasource(self, item, name):
-        self.datasource_manager.register(item, name)
-        
-    def deregister_datasource(self, item, name):
-        self.datasource_manager.deregister(item, name)
-
     def load_configuration(self, plugin_name, filename):
         path = os.path.join(config.config_path, plugin_name, filename)        
         if os.path.isfile(path):
@@ -54,4 +46,3 @@ class PluginAPI():
         path = os.path.join(path, filename)
         with open(path, 'wb') as file:
              pickle.dump(item, file)
-

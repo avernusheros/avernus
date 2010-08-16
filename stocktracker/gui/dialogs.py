@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 
 import gtk
-from stocktracker import pubsub, config, logger
+from stocktracker import pubsub, config
 from datetime import datetime
 from stocktracker.objects import controller
 from stocktracker.gui import gui_utils
-
+from stocktracker.gui.gui_utils import resize_wrap
 
 class EditPositionDialog(gtk.Dialog):
     def __init__(self, position):
@@ -77,12 +77,7 @@ class EditStockTable(gtk.Table):
         self.type_cb.set_active(self.stock.type)
         self.attach(self.type_cb, 1,2,2,3)
 
-        self.attach(gtk.Label(_('yahoo symbol')),0,1,3,4)
-        self.yahoo_entry = gtk.Entry()
-        self.yahoo_entry.set_text(stock.yahoo_symbol)
-        self.attach(self.yahoo_entry,1,2,3,4)
-
-        self.attach(gtk.Label(_('Sector')),0,1,4,5)
+        self.attach(gtk.Label(_('Sector')),0,1,3,4)
         self.sector_cb = gtk.combo_box_new_text()
         self.sectors = {}
         current = 0
@@ -95,14 +90,13 @@ class EditStockTable(gtk.Table):
                 current = count
             count+=1
         self.sector_cb.set_active(current)
-        self.attach(self.sector_cb, 1,2,4,5)
+        self.attach(self.sector_cb, 1,2,3,4)
 
     def process_result(self, widget=None, response = gtk.RESPONSE_ACCEPT):
         if response == gtk.RESPONSE_ACCEPT:
             self.stock.name = self.name_entry.get_text()
             self.stock.isin = self.isin_entry.get_text()
             self.stock.type = self.types[self.type_cb.get_active_text()]
-            self.stock.yahoo_symbol = self.yahoo_entry.get_text()
             if self.sector_cb.get_active() != 0:   
                 self.stock.sector = self.sectors[self.sector_cb.get_active()]
             else:
@@ -150,47 +144,76 @@ class EditPositionTable(gtk.Table):
             self.pos.comment = buffer.get_text(buffer.get_start_iter(), buffer.get_end_iter())            
 
 
-class StockSelector(gtk.Table):
+SPINNER_SIZE = 40
+
+class StockSelector(gtk.VBox):
     def __init__(self):
-        gtk.Table.__init__(self)
-        
+        gtk.VBox.__init__(self)
         self.search_field = gtk.Entry()
-        self.search_field.connect('activate', self.on_search)
         self.search_field.set_icon_from_stock(1, gtk.STOCK_FIND)
-        self.attach(self.search_field,0,1,0,1,xoptions=gtk.FILL, yoptions=gtk.FILL)
-        
-        button = gtk.Button(label='search', stock='gtk-find')
-        self.attach(button,1,2,0,1, xoptions=gtk.FILL, yoptions=gtk.FILL)
-        button.connect('clicked', self.on_search)
+        self.search_field.set_icon_activatable(0, True)
+        self.search_field.connect('activate', self.on_search)
+        self.search_field.connect('icon-press', self.on_search)
+        self.pack_start(self.search_field, expand=False, fill=False)
         
         sw = gtk.ScrolledWindow()
-        sw.set_property('hscrollbar-policy', gtk.POLICY_NEVER)
+        sw.set_property('hscrollbar-policy', gtk.POLICY_AUTOMATIC)
         sw.set_property('vscrollbar-policy', gtk.POLICY_AUTOMATIC)
         self.result_tree = gui_utils.Tree()
         self.result_tree.set_model(gtk.TreeStore(object, str, str,str,str,str))
         self.result_tree.create_icon_column(None, 1)
-        self.result_tree.create_column(_('Name'), 2)
+        col, cell = self.result_tree.create_column(_('Name'), 2)
         self.result_tree.create_column('ISIN', 3)
         self.result_tree.create_column(_('Currency'), 4)
-        self.result_tree.create_icon_column(_('Type'), 5)
-        self.result_tree.set_size_request(300,300)
+        self.result_tree.create_icon_column(_('Type'), 5,size= gtk.ICON_SIZE_DND)
+        self.result_tree.set_size_request(600,300)
+        sw.connect_after('size-allocate', 
+                         resize_wrap, 
+                         self.result_tree, 
+                         col, 
+                         cell)
+        
         sw.add(self.result_tree)
-        self.attach(sw, 0,2,1,2)
+        self.pack_end(sw)
+        self.spinner = None
 
     def get_stock(self):
         path, col = self.result_tree.get_cursor()
         return self.result_tree.get_model()[path][0]
 
+    def _show_spinner(self):
+        self.spinner = gtk.Spinner()
+        self.pack_start(self.spinner, fill=True, expand=False)
+        self.spinner.show()
+        self.spinner.set_size_request(SPINNER_SIZE, SPINNER_SIZE);
+        self.spinner.start()
+    
+    def _hide_spinner(self):
+        if self.spinner:
+            self.remove(self.spinner)
+
     def on_search(self, *args):
+        self.stop_search()
         self.result_tree.clear()
         searchstring = self.search_field.get_text()
+        self._show_spinner()
         for item in controller.getStockForSearchstring(searchstring):
-            self.insert_item(item)    
-        controller.datasource_manager.search(searchstring, self.insert_item)
+            self.insert_item(item)
+        self.search_source_count = controller.datasource_manager.get_source_count()
+        controller.datasource_manager.search(searchstring, self.insert_item, self.search_complete_callback)
+    
+    def search_complete_callback(self):
+        self.search_source_count -= 1
+        if self.search_source_count == 0:
+            self._hide_spinner()
+    
+    def stop_search(self):
+        self._hide_spinner()
+        controller.datasource_manager.stop_search()
         
     def insert_item(self, stock, icon='gtk-harddisk'):
         #FIXME ETFs need an icon
-        icons = ['F', 'A', 'F']
+        icons = ['fund', 'stock', 'etf']
         self.result_tree.get_model().append(None, [
                                        stock, 
                                        icon,
@@ -253,7 +276,7 @@ class SellDialog(gtk.Dialog):
             
  
 class BuyDialog(gtk.Dialog):
-    #FIXME user should not be able to select a date in the future
+
     def __init__(self, pf):
         gtk.Dialog.__init__(self, _("Buy a position"), None
                             , gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
@@ -263,59 +286,96 @@ class BuyDialog(gtk.Dialog):
         
         vbox = self.get_content_area()
         table = gtk.Table()
-        vbox.pack_start(table)
+        table.set_row_spacings(4)
+        table.set_col_spacings(4)
+        vbox.pack_end(table)
         #stock entry
         self.stock_selector = StockSelector()
-        table.attach(self.stock_selector,0,2,0,1)
+        table.attach(self.stock_selector,0,3,0,1)
         self.stock_selector.result_tree.connect('cursor-changed', self.on_stock_selection)
         self.stock_selector.result_tree.get_model().connect('row-deleted', self.on_stock_deselection)
+        self.stock_ok = False
 
         #shares entry
-        table.attach(gtk.Label(_('Shares')),0,1,1,2)
+        table.attach(gtk.Label(_('Shares')),1,2,1,2,xoptions=gtk.SHRINK,yoptions=gtk.SHRINK)
         self.shares_entry = gtk.SpinButton(gtk.Adjustment(lower=0, upper=100000,step_incr=1.0, value = 0), digits=2)
         self.shares_entry.connect("value-changed", self.on_change)
-        table.attach(self.shares_entry,1,2,1,2)
+        table.attach(self.shares_entry,2,3,1,2,xoptions=gtk.SHRINK,yoptions=gtk.SHRINK)
         
         #price entry
-        table.attach(gtk.Label(_('Price')),0,1,2,3)
+        table.attach(gtk.Label(_('Price')),1,2,2,3,xoptions=gtk.SHRINK,yoptions=gtk.SHRINK)
         self.price_entry = gtk.SpinButton(gtk.Adjustment(lower=0, upper=100000,step_incr=0.1, value = 1.0), digits=2)
         self.price_entry.connect("value-changed", self.on_change)
-        table.attach(self.price_entry,1,2,2,3)
+        table.attach(self.price_entry,2,3,2,3,xoptions=gtk.SHRINK,yoptions=gtk.SHRINK)
         
         #ta_costs entry
-        table.attach(gtk.Label(_('Transaction Costs')),0,1,3,4)
+        table.attach(gtk.Label(_('Transaction Costs')),1,2,3,4,xoptions=gtk.SHRINK,yoptions=gtk.SHRINK)
         self.tacosts_entry = gtk.SpinButton(gtk.Adjustment(lower=0, upper=100000,step_incr=0.1, value = 0.0), digits=2)
         self.tacosts_entry.connect("value-changed", self.on_change)
-        table.attach(self.tacosts_entry,1,2,3,4)
+        table.attach(self.tacosts_entry,2,3,3,4,xoptions=gtk.SHRINK,yoptions=gtk.SHRINK)
         
         #total
-        table.attach(gtk.Label(_('Total')),0,1,4,5)
+        table.attach(gtk.Label(_('Total')),1,2,4,5,xoptions=gtk.SHRINK,yoptions=gtk.SHRINK)
         self.total = gtk.Label('0.0')
-        table.attach(self.total,1,2,4,5)
+        table.attach(self.total,2,3,4,5,xoptions=gtk.SHRINK,yoptions=gtk.SHRINK)
         
         #date 
         self.calendar = gtk.Calendar()
-        table.attach(self.calendar,0,2,5,6)
+        self.calendar.connect('day-selected', self.on_calendar_day_selected)
+        table.attach(self.calendar,0,1,1,5,yoptions=gtk.SHRINK)
+        self.date_ok = True
+        
+        self.infobar = gtk.InfoBar()
+        self.infobar.set_message_type(gtk.MESSAGE_WARNING)
+        
+        content = self.infobar.get_content_area()
+        label = gtk.Label('Date cannot be in the future!')
+        image = gtk.Image()
+        image.set_from_stock(gtk.STOCK_DIALOG_WARNING, gtk.ICON_SIZE_DIALOG)
+        content.pack_start(image)
+        content.pack_start(label)
+        vbox.pack_start(self.infobar)
         
         self.set_response_sensitive(gtk.RESPONSE_ACCEPT, False)
-        self.show_all()
+        table.show_all()
         response = self.run()  
         self.process_result(response)
         self.destroy()
+    
+    def on_calendar_day_selected(self, calendar):
+        year, month, day = self.calendar.get_date()
+        date = datetime(year, month+1, day)
+        if date > datetime.today():
+            self.infobar.show_all()
+            self.date_ok = False
+        else:
+            self.infobar.hide_all()
+            self.date_ok = True
+        self.set_response_sensitivity()
 
     def on_change(self, widget):
         total = self.shares_entry.get_value() * self.price_entry.get_value() + self.tacosts_entry.get_value()
         self.total.set_text(str(total))
 
     def on_stock_selection(self, *args):
-        self.set_response_sensitive(gtk.RESPONSE_ACCEPT, True)
+        self.stock_ok = True
+        self.set_response_sensitivity()
     
     def on_stock_deselection(self, *args):
-        self.set_response_sensitive(gtk.RESPONSE_ACCEPT, False)   
+        self.stock_ok = False
+        self.set_response_sensitivity()
         
+    def set_response_sensitivity(self):
+        if self.stock_ok and self.date_ok:
+            self.set_response_sensitive(gtk.RESPONSE_ACCEPT, True)
+        else:
+            self.set_response_sensitive(gtk.RESPONSE_ACCEPT, False)  
+
     def process_result(self, response):
+        self.stock_selector.stop_search()
         if response == gtk.RESPONSE_ACCEPT:
             stock = self.stock_selector.get_stock()
+            stock.update_price()
             shares = self.shares_entry.get_value()
             if shares == 0.0:
                 return
@@ -356,6 +416,7 @@ class NewWatchlistPositionDialog(gtk.Dialog):
         self.set_response_sensitive(gtk.RESPONSE_ACCEPT, False)   
         
     def process_result(self, response):
+        self.stock_selector.stop_search()
         if response == gtk.RESPONSE_ACCEPT:
             stock = self.stock_selector.get_stock()
             stock.update_price()
@@ -388,10 +449,10 @@ class PosSelector(gtk.ComboBox):
         if pf is None:
             self.set_model()
             return
-        liststore = gtk.ListStore(int, str)
+        liststore = gtk.ListStore(object, str)
         liststore.append([-1, 'Select a position'])
         for pos in pf:
-            liststore.append([pos.id, str(pos.quantity) +' ' +pos.name])
+            liststore.append([pos, str(pos.quantity) +' ' +pos.name])
         self.set_model(liststore)
             
 

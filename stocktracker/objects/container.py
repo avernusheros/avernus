@@ -2,7 +2,7 @@ from stocktracker.objects.model import SQLiteEntity
 from stocktracker.objects.stock import Stock
 #FIXME why does the following import give an error
 #from stocktracker.objects import controller
-import controller
+import stocktracker.objects.controller
 from stocktracker import pubsub
 
 from datetime import datetime, date
@@ -67,9 +67,10 @@ class Container(object):
         return change, percent 
      
     def update_positions(self):
-        controller.datasource_manager.update_stocks([pos.stock for pos in self])
+        stocktracker.objects.controller.datasource_manager.update_stocks([pos.stock for pos in self])
         self.last_update = datetime.now()
         pubsub.publish("stocks.updated", self)
+
 
 class Portfolio(SQLiteEntity, Container):
 
@@ -84,7 +85,7 @@ class Portfolio(SQLiteEntity, Container):
                    }
     
     def __iter__(self):
-        return controller.getPositionForPortfolio(self).__iter__()
+        return stocktracker.objects.controller.getPositionForPortfolio(self).__iter__()
     
     def get_cash_over_time(self):
         cash = self.cash
@@ -104,7 +105,7 @@ class Portfolio(SQLiteEntity, Container):
     
     @property
     def transactions(self):
-        return controller.getTransactionForPortfolio(self)
+        return stocktracker.objects.controller.getTransactionForPortfolio(self)
         
     def onUpdate(self, **kwargs):
         pubsub.publish('container.updated', self)
@@ -113,9 +114,8 @@ class Portfolio(SQLiteEntity, Container):
         pass
         
     def onDelete(self, **kwargs):
-        controller.deleteAllPortfolioPosition(self)
-        controller.deleteAllPortfolioTransaction(self)
-
+        stocktracker.objects.controller.deleteAllPortfolioPosition(self)
+        stocktracker.objects.controller.deleteAllPortfolioTransaction(self)
         
     def onRemoveRelationEntry(self, **kwargs):
         pass
@@ -148,10 +148,10 @@ class Watchlist(SQLiteEntity, Container):
                   }
     
     def __iter__(self):
-        return controller.getPositionForWatchlist(self).__iter__()
+        return stocktracker.objects.controller.getPositionForWatchlist(self).__iter__()
     
     def onDelete(self, **kwargs):
-        controller.deleteAllWatchlistPosition(self)
+        stocktracker.objects.controller.deleteAllWatchlistPosition(self)
         
     __callbacks__ = {
                      'onDelete':onDelete,
@@ -209,11 +209,21 @@ class Index(SQLiteEntity):
 
 class Tag(SQLiteEntity, Container):
 
-    __primaryKey__ = 'name'
+    __primaryKey__ = 'id'
     __tableName__ = "tag"
     __columns__ = {
+                   'id': 'INTEGER',
                    'name': 'VARCHAR',
                   }
+    __comparisonPositives__ = ['name']
 
+    def onInit(self, **kwargs):
+        pubsub.publish('tag.created', self)
+    __callbacks__ = {'onInit':onInit}
+    
     def __iter__(self):
-        return controller.getPositionForTag(self).__iter__()
+        return stocktracker.objects.controller.getPositionForTag(self).__iter__()
+
+    @property
+    def date(self):
+        return None

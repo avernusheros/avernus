@@ -9,8 +9,9 @@ from stocktracker.objects.stock import Stock
 from stocktracker.objects.dividend import Dividend
 from stocktracker.objects.quotation import Quotation
 from stocktracker.objects.sector import Sector
+from stocktracker import pubsub
 from stocktracker.objects.account import Account, AccountTransaction, AccountCategory
-from stocktracker import pubsub, logger
+from stocktracker.logger import Log
 
 import datetime
 import gobject
@@ -34,13 +35,13 @@ datasource_manager = None
 def initialLoading():
     #first load all the objects from the database so that they are cached
     for cl in initialLoadingClasses:
-        logger.logger.debug("Loading Objects of Class: " + cl.__name__)
+        Log.debug("Loading Objects of Class: " + cl.__name__)
         cl.getAll()
     #now load all of the composite
     for cl in initialLoadingClasses:
         #this will now be much faster as everything is in the cache
         for obj in cl.getAll():
-            logger.logger.debug("Loading Composites of Objekt: " + str(obj))
+            Log.debug("Loading Composites of Objekt: " + str(obj))
             obj.retrieveAllComposite()
 
 def is_duplicate(tp, **kwargs):
@@ -51,7 +52,7 @@ def is_duplicate(tp, **kwargs):
     if present:
         return True
     else: return False
-
+            
 def detectDuplicate(tp,**kwargs):
     #print tp, kwargs
     sqlArgs = {}
@@ -60,11 +61,13 @@ def detectDuplicate(tp,**kwargs):
     present = tp.getByColumns(sqlArgs,operator=" AND ",create=True)
     if present:
         if len(present) == 1:
+            #print "PRESENT!"
             return present[0]
         else:
             #print tp, kwargs
             #print present
             raise Exception("Multiple results for duplicate detection")
+    #print "not Present!"
     new = tp(**kwargs)
     new.insert()
     return new
@@ -102,7 +105,7 @@ def newPortfolio(name, id=None, last_update = datetime.datetime.now(), comment="
     result = Portfolio(id=id, name=name,last_update=last_update,comment=comment,cash=cash)
     result.insert()
     return result
-
+    
 def newWatchlist(name, id=None, last_update = datetime.datetime.now(), comment=""):
     result = Watchlist(id=id, name=name,last_update=last_update,comment=comment)
     result.insert()
@@ -124,6 +127,11 @@ def newAccountCategory(name='', id=None):
     result.insert()
     return result
 
+def newDividend(new_id=None, price=0, date=datetime.date.today(), costs=0, position=None, shares=0):
+    result = Dividend(id=new_id, price=price, date=date, costs=costs, position=position, shares=shares)
+    result.insert()
+    return result
+
 def newTransaction(date=datetime.datetime.now(),\
                    portfolio=None,\
                    position=None,\
@@ -141,7 +149,7 @@ def newTransaction(date=datetime.datetime.now(),\
                          costs=costs)
     result.insert()
     return result
-
+    
 
 def newIndex(name='', isin='', currency='', date=datetime.datetime.now(), exchange='', yahoo_symbol=''):
     result = Index(id=None, name=name, currency=currency, isin=isin, date=date, exchange=exchange, yahoo_symbol=yahoo_symbol, price=0, change=0)
@@ -164,7 +172,7 @@ def newPortfolioPosition(price=0,\
                                comment=comment\
                                )
     result.insert()
-    return result
+    return result   
 
 
 def newWatchlistPosition(price=0,\
@@ -182,7 +190,7 @@ def newWatchlistPosition(price=0,\
                                comment=comment\
                                )
     result.insert()
-    return result
+    return result 
 
 
 def newTag(name):
@@ -190,7 +198,7 @@ def newTag(name):
     result.insert()
     pubsub.publish('tag.created',result)
     return result
-
+ 
 def newStock(insert=True, **kwargs):
     result = Stock(**kwargs)
     if insert:
@@ -203,17 +211,32 @@ def newQuotation(date=datetime.date.today(),\
                  high=0,\
                  low=0,\
                  close=0,\
-                 vol=0):
-    result = Quotation(id=None,\
-                       date=date,\
-                       open=open,\
-                       high=high,\
-                       low=low,\
-                       close=close,\
-                       stock=stock,\
-                       volume=vol)
-    result.insert()
-    return result
+                 vol=0,\
+                 exchange='',\
+                 detectDuplicates = True):
+    if detectDuplicates:
+        return detectDuplicate(Quotation,\
+                               date=date,\
+                               open=open,\
+                               high=high,\
+                               low=low,\
+                               close=close,\
+                               stock=stock.id,\
+                               exchange=exchange,\
+                               volume=vol)
+    else:
+        result = Quotation(id=None,\
+                           date=date,\
+                           open=open,\
+                           high=high,\
+                           low=low,\
+                           close=close,\
+                           stock=stock,\
+                           exchange=exchange,\
+                           volume=vol)
+        result.insert()
+        return result
+        
 
 def getAllPortfolio():
     return Portfolio.getAll()
@@ -241,7 +264,7 @@ def getAllSector():
 
 def getAllTag():
     return Tag.getAll()
-
+    
 def getAllStock():
     return Stock.getAll()
 
@@ -255,7 +278,7 @@ def deleteAllPortfolioPosition(portfolio):
     for pos in getPositionForPortfolio(portfolio):
         #print "deleting ",pos
         pos.delete()
-
+        
 def getTransactionForPosition(position):
     key = position.getPrimaryKey()
     erg = Transaction.getAllFromOneColumn("position", key)
@@ -264,7 +287,7 @@ def getTransactionForPosition(position):
 def deleteAllPositionTransaction(position):
     for trans in getTransactionForPosition(position):
         trans.delete()
-
+    
 def getPositionForWatchlist(watchlist):
     key = watchlist.getPrimaryKey()
     return WatchlistPosition.getAllFromOneColumn("watchlist",key)
@@ -281,6 +304,9 @@ def getPositionForTag(tag):
             pos.retrieveAllComposite()
     possible = filter(lambda pos: pos.hasTag(tag), possible)
     return possible
+
+def getDividendForPosition(pos):
+    return Dividend.getAllFromOneColumn("position", pos.getPrimaryKey())
 
 def getTransactionForPortfolio(portfolio):
     key = portfolio.getPrimaryKey()
@@ -325,7 +351,7 @@ def getEarningsOrSpendingsSummedInPeriod(account, start_date, end_date, earnings
     
 def deleteAllPortfolioTransaction(portfolio):
     for trans in getTransactionForPortfolio(portfolio):
-        trans.delete()
+        trans.delete() 
 
 def getStockForSearchstring(searchstring):
     sqlArgs = {}
@@ -334,7 +360,8 @@ def getStockForSearchstring(searchstring):
     return Stock.getByColumns(sqlArgs,operator=" OR ",operator2=' LIKE ', create=True)
 
 def getQuotationsFromStock(stock, start):
-    erg = Quotation.getAllFromOneColumn('stock', stock.getPrimaryKey())
+    args = {'stock': stock.getPrimaryKey(), 'exchange':stock.exchange}
+    erg = Quotation.getByColumns(args, create=True)
     erg = filter(lambda quote: quote.date > start, erg)
     erg = sorted(erg, key=lambda stock: stock.date)
     return erg
@@ -346,22 +373,17 @@ def getNewestQuotation(stock):
         return None
     else:
         return erg[0].date
-
+    
 def getBuyTransaction(portfolio_position):
     key = portfolio_position.getPrimaryKey()
     for ta in Transaction.getAllFromOneColumn('position', key):
         if ta.type == 1:
-            return ta
-
+            return ta    
+    
 def onPositionNewTag(position=None,tagText=None):
     if not position or not tagText:
-        logger.logger.error("Malformed onPositionNewTag Call (position,tagText)" + str((position,tagText)))
-    tag = None
-    if Tag.primaryKeyExists(tagText):
-        tag = Tag.getByPrimaryKey(tagText)
-    else:
-        tag = newTag(tagText)
-    position.tags.append(tag)
+        Log.error("Malformed onPositionNewTag Call (position,tagText)" + str((position,tagText)))
+    position.tags.append(detectDuplicate(Tag, name=tagText))
 
 pubsub.subscribe('position.newTag', onPositionNewTag)
 
@@ -369,31 +391,31 @@ pubsub.subscribe('position.newTag', onPositionNewTag)
 class GeneratorTask(object):
     """
     http://unpythonic.blogspot.com/2007/08/using-threads-in-pygtk.html
-    Thanks!
+    Thanks!    
     """
     def __init__(self, generator, loop_callback, complete_callback=None):
         self.generator = generator
         self.loop_callback = loop_callback
         self.complete_callback = complete_callback
-
+        
     def _start(self, *args, **kwargs):
         self._stopped = False
         for ret in self.generator(*args, **kwargs):
-           if self._stopped:
-               thread.exit()
-           gobject.idle_add(self._loop, ret)
+            if self._stopped:
+                thread.exit()
+            gobject.idle_add(self._loop, ret)
         if self.complete_callback is not None:
-           gobject.idle_add(self.complete_callback)
+            gobject.idle_add(self.complete_callback)
 
     def _loop(self, ret):
-       if ret is None:
-           ret = ()
-       if not isinstance(ret, tuple):
-           ret = (ret,)
-       self.loop_callback(*ret)
+        if ret is None:
+            ret = ()
+        if not isinstance(ret, tuple):
+            ret = (ret,)
+        self.loop_callback(*ret)
 
     def start(self, *args, **kwargs):
         threading.Thread(target=self._start, args=args, kwargs=kwargs).start()
 
     def stop(self):
-       self._stopped = True
+        self._stopped = True

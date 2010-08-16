@@ -22,7 +22,7 @@ class Chart(gtk.VBox):
         hbox = gtk.HBox()
         self.add(hbox)
         label = gtk.Label()
-        label.set_markup('<b>'+stock.name+'</b>')
+        label.set_markup('<b>'+stock.name+'</b>\n'+stock.exchange)
         hbox.add(label)
         hbox.add(gtk.VSeparator())
         hbox.add(gtk.Label('Zoom:'))
@@ -76,12 +76,17 @@ class Chart(gtk.VBox):
         date2 = self.get_date2(self.current_zoom, date1)
         
         data = controller.getQuotationsFromStock(self.stock, date2)
-                
+        if len(data) == 0:
+            self.add(gtk.Label('No historical data found!'))
+            self.show_all()
+            return
         quotes = [d.close for d in data]
         y_min = 0.95*min(quotes)
         y_max = 1.05*max(quotes)
         
-        legend = [str(data[int(len(data)/20 *i)].date) for i in range(20)]
+        legend = [str(data[int(len(data)/18 *i)].date) for i in range(18)]
+        legend.insert(0,str(data[0].date))
+        legend.insert(len(legend),str(data[-1].date))
        
         p1 = gtk_dot_line_plot()
         p1.set_args({'data':quotes, 
@@ -94,21 +99,34 @@ class Chart(gtk.VBox):
                      'y_bounds':(y_min, y_max)})
                    
         change = quotes[-1] - quotes[0]
-        change_str = get_green_red_string(change, str(change)+' ('+str(round(change/quotes[0]*100,2))+'%)')
+        if quotes[0] == 0:
+            safeDiv = 1
+        else:
+            safeDiv = quotes[0]
+        change_str = get_green_red_string(change, str(change)+' ('+str(round(change/safeDiv*100,2))+'%)')
         label = gtk.Label()
         label.set_markup(str(date2)+' - '+str(date1)+'     '+change_str)
         vbox.add(label)
         vbox.add(p1)
-        vbox.add(gtk.Label(_('Volume (mil/1d)')))
+        vbox.add(gtk.Label(_('Trade Volume')))
         
         p2 = gtk_vertical_bar_plot()
         vols = [d.volume for d in data]
+        volLegend = []
+        maxVol = max(vols)
+        if maxVol > 0:
+            split = 3
+            slice = maxVol / (split+1)
+            volLegend.append('0')
+            for i in range(split):
+                volLegend.append(str((i+1)*slice))
+        #[str(max(vols)), str(min(vols))]
         p2.set_args({'data':vols, 
                      #'x_labels':legend, 
                      'grid': True,
                      'width':600, 
                      'height':100,
-                     #'y_labels':[str(max(vols)), str(min(vols))],
+                     'y_labels': volLegend,
                      'colors':['blue' for i in range(len(vols))]})
                      
         vbox.add(p2)

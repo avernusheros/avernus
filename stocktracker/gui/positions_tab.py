@@ -4,7 +4,9 @@ import gtk,sys
 from stocktracker import pubsub
 from stocktracker.gui.plot import ChartWindow
 from stocktracker.gui.dialogs import SellDialog, NewWatchlistPositionDialog, SplitDialog, BuyDialog, EditPositionDialog
-from stocktracker.gui.gui_utils import Tree, ContextMenu, float_to_red_green_string, float_to_string, get_name_string, datetime_format, get_datetime_string
+from stocktracker.gui.gui_utils import Tree, ContextMenu, float_to_red_green_string, float_to_string, get_name_string, datetime_format
+from stocktracker.gui import gui_utils
+
 
 gain_thresholds = {
                    (-sys.maxint,-0.5):'arrow_down',
@@ -21,12 +23,12 @@ def get_arrow_icon(perc):
 
 def start_price_markup(column, cell, model, iter, user_data):
     pos = model.get_value(iter, 0)
-    markup = str(round(model.get_value(iter, user_data),2)) +'\n' +'<small>'+get_datetime_string(pos.date)+'</small>'
+    markup = gui_utils.get_string_from_float(model.get_value(iter, user_data)) +'\n' +'<small>'+gui_utils.get_datetime_string(pos.date)+'</small>'
     cell.set_property('markup', markup)
 
 def current_price_markup(column, cell, model, iter, user_data):
     stock = model.get_value(iter, 0).stock
-    markup = str(round(model.get_value(iter, user_data),2)) +'\n' +'<small>'+get_datetime_string(stock.date)+'</small>'
+    markup = gui_utils.get_string_from_float(model.get_value(iter, user_data)) +'\n' +'<small>'+gui_utils.get_datetime_string(stock.date)+'</small>'
     cell.set_property('markup', markup)
 
 
@@ -61,16 +63,16 @@ class PositionsTree(Tree):
                      'pf_percent': 15
                       }
         
-        self.set_model(gtk.ListStore(object,str, float, float,float, float, int, float, float, str, float, float,str, float, str, float))
+        self.set_model(gtk.ListStore(object,str, float, float,float, float, float, float, float, str, float, float,str, float, str, float))
         
         self.watchlist = False
         if container.__name__ == 'Watchlist':
             self.watchlist = True
 
         if not self.watchlist:
-            self.create_column('#', self.cols['shares'])
+            self.create_column('#', self.cols['shares'], func=float_to_string)
         self.create_column(_('Name'), self.cols['name'])
-        self.create_icon_column(_('Type'), self.cols['type'])
+        self.create_icon_column(_('Type'), self.cols['type'],size= gtk.ICON_SIZE_DND)
         if not self.watchlist:
             self.create_column(_('Pf %'), self.cols['pf_percent'], func=float_to_string)
         self.create_column(_('Start'), self.cols['start'], func=start_price_markup)
@@ -160,6 +162,7 @@ class PositionsTree(Tree):
             for row in self.get_model():
                 item = row[0]
                 gain, gain_percent = item.gain
+                row[self.cols['name']] = get_name_string(item.stock)
                 row[self.cols['last_price']] = item.stock.price
                 row[self.cols['change']] = item.current_change[0]
                 row[self.cols['change_percent']] = item.current_change[1]
@@ -168,10 +171,16 @@ class PositionsTree(Tree):
                 row[self.cols['gain_icon']] = get_arrow_icon(gain_percent)
                 row[self.cols['days_gain']] = item.days_gain
                 row[self.cols['mkt_value']] = round(item.cvalue,2)
+                if not self.watchlist:
+                    row[self.cols['pf_percent']] = item.portfolio_fraction
                 
     def on_position_added(self, container, item):
         if container.id == self.container.id:
             self.insert_position(item)
+            if not self.watchlist:
+                #update portfolio fractions
+                for row in self.get_model():
+                    row[self.cols['pf_percent']] = row[self.cols['obj']].portfolio_fraction
      
     def on_remove(self, widget):
         position, iter = self.selected_item
@@ -237,12 +246,8 @@ class PositionsTree(Tree):
         gain_icon = get_arrow_icon(gain[1])
         c_change = position.current_change
         #FIXME etf need an icon
-        icons = ['F', 'A', 'F']
-        if self.container.cvalue == 0:
-            change = 0
-        else:
-            change = 100 * position.cvalue / self.container.cvalue
-        return [position, 
+        icons = ['fund', 'stock', 'etf']
+        ret = [position, 
                get_name_string(stock), 
                position.price, 
                stock.price, 
@@ -257,7 +262,10 @@ class PositionsTree(Tree):
                gain_icon,
                c_change[1],
                icons[position.stock.type],
-               change]
+               0]
+        if not self.watchlist:
+            ret[-1] = position.portfolio_fraction
+        return ret
             
     def insert_position(self, position):
         if position.quantity != 0:
@@ -298,6 +306,7 @@ class InfoBar(gtk.HBox):
         pubsub.subscribe('position.created', self.on_container_update)
         pubsub.subscribe('stocks.updated', self.on_container_update)
         pubsub.subscribe('container.updated', self.on_container_update)
+        pubsub.subscribe('container.position.added', self.on_container_update)
 
     def on_container_update(self, container, position=None):
         if self.container == container:
@@ -322,7 +331,7 @@ class InfoBar(gtk.HBox):
         change, percent = item
         if change is None:
             return 'n/a'
-        text = str(percent) + '%' + ' | ' + str(round(change,2))
+        text = gui_utils.get_string_from_float(percent) + '%' + ' | ' + gui_utils.get_string_from_float(change)
         if change < 0.0:
             text = '<span foreground="red">'+ text + '</span>'
         else:

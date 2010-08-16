@@ -4,21 +4,28 @@ Priority: extra
 Build-Depends: cdbs (>= 0.4.43),
  debhelper (>= 6),
  python,
- python-central (>= 0.6.11),
+ python-support (>= 0.6.4),
  python-distutils-extra (>= 2.10)
-Maintainer: wolfer <wsteitz@gmail.com>
-Standards-Version: 3.8.2
+Maintainer: stocktracker-heros <xyz@gmail.com>
+Standards-Version: 3.8.3
 XS-Python-Version: current
 
 Package: stocktracker
 Architecture: all
 XB-Python-Version: ${python:Versions}
 Depends: ${misc:Depends},
- ${python:Depends}${misc:Depends},
  ${python:Depends},
+ python-configobj,
+ python-beautifulsoup,
+ python-dbus,
+ python-feedparser,
  python-tz,
- python-gobject,
+ python-dateutil,
  python-cairo,
+ python-apport,
+ python-gobject,
  python-gtk2
 Description: A lightweight program to easily track your investments.
- UNKNOWN
+ portfolios, watchlists, tags...<br>stocktracker utilizes online data
+ sources for updating its quotations. You can view charts and other
+ diagrams
