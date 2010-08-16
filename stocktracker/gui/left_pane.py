@@ -154,12 +154,10 @@ class MainTree(Tree):
     def on_select(self, obj):
         if isinstance(obj, Category):
             self.on_unselect()
-            if obj.name == 'Portfolios':
-                self.selected_type = 'portfolio'
-            elif not obj.name=='Tags': self.selected_type = 'watchlist'
-			elif obj.name == 'Accounts':
-				self.selected_type = 'account'   
-         else:
+            #if obj.name == 'Portfolios': self.selected_type = 'portfolio'
+            #elif obj.name == 'Watchlists': self.selected_type = 'watchlist'
+            #elif obj.name == 'Accounts': self.selected_type = 'account'   
+            if not obj.name in ['Portfolios', 'Watchlists', 'Accounts']:
                 return
             self.actiongroup.get_action('add').set_sensitive(True)
         else:
@@ -183,17 +181,20 @@ class MainTree(Tree):
         obj, row = self.selected_item
         model = self.get_model()
         if obj.name == 'Portfolios':
-            type = 'portfolio'
+            cat_type = 'portfolio'
             parent_iter = self.pf_iter
-            item = controller.newPortfolio('new '+type)
+            item = controller.newPortfolio('new '+cat_type)
         elif obj.name == 'Watchlists':
-            type = 'watchlist'
+            cat_type = 'watchlist'
             parent_iter = self.wl_iter
-            item = controller.newWatchlist('new '+type)
-        #if obj.name != 'Tags':
-        iter = model.append(parent_iter, [item, type, item.name])
+            item = controller.newWatchlist('new '+cat_type)
+        elif obj.name == 'Accounts':
+            cat_type = 'account'
+            parent_iter = self.accounts_iter
+            item = controller.newAccount('new '+cat_type)
+        iterator = model.append(parent_iter, [item, cat_type, item.name])
         self.expand_row( model.get_path(parent_iter), True)
-        self.set_cursor(model.get_path(iter), focus_column = self.get_column(0), start_editing=True)
+        self.set_cursor(model.get_path(iterator), focus_column = self.get_column(0), start_editing=True)
 
 
 class EditWatchlist(gtk.Dialog):
