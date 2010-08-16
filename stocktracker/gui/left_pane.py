@@ -73,8 +73,8 @@ class MainTree(Tree):
             self.insert_watchlist(wl)
         for tag in controller.getAllTag():
             self.insert_tag(tag)
-        for index in controller.getAllIndex():
-            self.insert_index(index)
+        for account in controller.getAllAccount():
+            self.insert_account(account)
         self.expand_all()
 
     def on_button_press_event(self, widget, event):
