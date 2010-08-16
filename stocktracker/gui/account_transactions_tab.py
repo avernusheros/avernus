@@ -145,29 +145,49 @@ class CategoriesTree(Tree):
         #object, name, price, change
         self.set_model(gtk.TreeStore(object, str))
         self.set_reorderable(True)
-        self.create_column(_('Name'), 1)
-        
+        col, cell = self.create_column(_('Name'), 1)
+        cell.set_property('editable', True)
+        cell.connect('edited', self.on_cell_edited)        
         self.enable_model_drag_dest([ ( 'text/plain', 0, 80 )],
                                     gtk.gdk.ACTION_DEFAULT | gtk.gdk.ACTION_MOVE)
         self.connect("drag_data_received", self.on_drag_data_received)
+        self.connect('cursor_changed', self.on_cursor_changed)
         
     def load_categories(self):
         for cat in controller.getAllAccountCategories():
             self.insert_item(cat)
     
     def insert_item(self, cat):
-        self.get_model().append(None, [cat, cat.name])
+        return self.get_model().append(None, [cat, cat.name])
 
     def on_add(self, widget=None):
-        new_cat = NewCategoryDialog().start()        
-        if new_cat is not None:
-            self.insert_item(new_cat)
-    
+        item = controller.newAccountCategory('new category')
+        iterator = self.insert_item(item)
+        model = self.get_model()
+        #self.expand_row( model.get_path(parent_iter), True)
+        self.set_cursor(model.get_path(iterator), focus_column = self.get_column(0), start_editing=True)
+
     def on_edit(self, widget=None):
-        pass
+        selection = self.get_selection()
+        treestore, selection_iter = selection.get_selected()
+        model = self.get_model()
+        self.set_cursor(model.get_path(selection_iter), focus_column = self.get_column(0), start_editing=True)
     
     def on_remove(self, widget=None):
-        pass
+        obj, iterator = self.selected_item
+        dlg = gtk.MessageDialog(None,
+             gtk.DIALOG_DESTROY_WITH_PARENT, gtk.MESSAGE_QUESTION,
+             gtk.BUTTONS_OK_CANCEL)
+        dlg.set_markup(_("Permanently delete category <b>")+obj.name+'</b>?')
+        response = dlg.run()
+        dlg.destroy()
+        if response == gtk.RESPONSE_OK:
+            obj.delete()
+            self.get_model().remove(iterator)
+    
+    def on_cell_edited(self, cellrenderertext, path, new_text):
+        m = self.get_model()
+        m[path][0].name = m[path][1] = new_text
 
     def on_cursor_changed(self, widget):
         #Get the current selection in the gtk.TreeView
@@ -205,41 +225,3 @@ class CategoriesTree(Tree):
             for id in selection.data.split():
                 transaction = controller.AccountTransaction.getByPrimaryKey(int(id))
                 transaction.category = cat
-
-
-class NewCategoryDialog(gtk.Dialog):
-    def __init__(self):
-        gtk.Dialog.__init__(self, _("Create new category"), None
-                            , gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
-                     (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
-                      gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
-        self.container_type = type
-        vbox = self.get_content_area()
-               
-        hbox = gtk.HBox()
-        vbox.pack_start(hbox)
-        label = gtk.Label(_('Name:'))
-        hbox.pack_start(label)
-        self.name_entry = gtk.Entry()
-        self.name_entry.set_text('unknown')
-        self.name_entry.connect("activate", self.callback)
-         
-        hbox.pack_start(self.name_entry)
-
-        self.show_all()
-        
-    def start(self):
-        response = self.run()  
-        res = self.process_result(response)
-        self.destroy()
-        return res
-        
-    def callback(self, widget):
-        self.process_result(gtk.RESPONSE_ACCEPT)
-
-    def process_result(self, response):
-        if response == gtk.RESPONSE_ACCEPT:
-            #grab the name
-            name = self.name_entry.get_text()
-            return controller.newAccountCategory(name)
-        return None
