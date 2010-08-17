@@ -122,8 +122,8 @@ def newAccountTransaction(id=None, description='', amount=0.0, type=1, account=N
     result.insert()
     return result
 
-def newAccountCategory(name='', id=None):
-    result = AccountCategory(id=id, name=name)
+def newAccountCategory(name='', cid=None, parent=-1):
+    result = AccountCategory(id=cid, name=name, parent=parent)
     result.insert()
     return result
 

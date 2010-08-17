@@ -81,12 +81,16 @@ class Account(SQLiteEntity):
             self.birthday_cache = birthday
             return birthday
 
+
 class AccountCategory(SQLiteEntity):
     __primaryKey__ = 'id'
     __tableName__ = "accountcategory"
     __columns__ = {
                    'id': 'INTEGER',
-                   'name': 'VARCHAR'
+                   'name': 'VARCHAR',
+                   'parent': 'INTEGER'
+                   #FIXME the line below does not work. alternatives?
+                   #'parent': AccountCategory
                   }
 
 

@@ -30,13 +30,13 @@ class AccountTransactionTab(gtk.HPaned):
         sw.set_property('hscrollbar-policy', gtk.POLICY_AUTOMATIC)
         sw.set_property('vscrollbar-policy', gtk.POLICY_AUTOMATIC)
         actiongroup = gtk.ActionGroup('categories')
-        self.category_tree = CategoriesTree()
+        self.category_tree = CategoriesTree(actiongroup)
         actiongroup.add_actions([
                 ('add',    gtk.STOCK_ADD,    'new category',    None, _('Add new category'), self.category_tree.on_add),      
                 ('edit' ,  gtk.STOCK_EDIT,   'rename category',   None, _('Rename selected category'),   self.category_tree.on_edit),
                 ('remove', gtk.STOCK_DELETE, 'remove category', None, _('Remove selected category'), self.category_tree.on_remove)
                                 ])
-        self.category_tree.actiongroup = actiongroup
+        self.category_tree.on_unselect()
         sw.add(self.category_tree)
         vbox.pack_start(sw)
         toolbar = gtk.Toolbar()
@@ -139,18 +139,26 @@ class TransactionsTree(Tree):
         self.get_selection().set_select_function(lambda *ignore: True)        
 
 
+
 class CategoriesTree(Tree):
-    def __init__(self):
+    
+    TARGETS = [('MY_TREE_MODEL_ROW', gtk.TARGET_SAME_WIDGET, 0),
+               ('text/plain', 0, 80)]
+
+    def __init__(self, actiongroup):
         Tree.__init__(self)
-        #object, name, price, change
+        self.actiongroup = actiongroup
         self.set_model(gtk.TreeStore(object, str))
-        self.set_reorderable(True)
         col, cell = self.create_column(_('Name'), 1)
         cell.set_property('editable', True)
         cell.connect('edited', self.on_cell_edited)        
-        self.enable_model_drag_dest([ ( 'text/plain', 0, 80 )],
-                                    gtk.gdk.ACTION_DEFAULT | gtk.gdk.ACTION_MOVE)
-        self.connect("drag_data_received", self.on_drag_data_received)
+        self.enable_model_drag_dest(self.TARGETS, gtk.gdk.ACTION_DEFAULT)
+        # Allow enable drag and drop of rows including row move
+        self.enable_model_drag_source( gtk.gdk.BUTTON1_MASK,
+                                self.TARGETS,
+                                gtk.gdk.ACTION_DEFAULT|gtk.gdk.ACTION_MOVE)
+                                    
+        self.connect('drag_data_received', self.on_drag_data_received)
         self.connect('cursor_changed', self.on_cursor_changed)
         
     def load_categories(self):
@@ -159,7 +167,7 @@ class CategoriesTree(Tree):
     
     def insert_item(self, cat):
         return self.get_model().append(None, [cat, cat.name])
-
+    
     def on_add(self, widget=None):
         item = controller.newAccountCategory('new category')
         iterator = self.insert_item(item)
@@ -184,6 +192,7 @@ class CategoriesTree(Tree):
         if response == gtk.RESPONSE_OK:
             obj.delete()
             self.get_model().remove(iterator)
+            self.on_unselect()
     
     def on_cell_edited(self, cellrenderertext, path, new_text):
         m = self.get_model()
@@ -203,6 +212,7 @@ class CategoriesTree(Tree):
                 pubsub.publish('categorytree.select', obj)
             return 
         self.selected_item = None
+        self.on_unselect()
         pubsub.publish('categorytree.unselect')
   
     def on_unselect(self):
@@ -213,15 +223,52 @@ class CategoriesTree(Tree):
         for action in ['remove', 'edit']:
             self.actiongroup.get_action(action).set_sensitive(True)
 
-    def on_drag_data_received(self, widget, context, x, y, selection, target_type, time):
+    def _copy_row(self, source, target, drop_position):
+        model = self.get_model()
+        source_row = model[source]
+        if drop_position is None:
+            model.append(None, row=source_row)
+        elif drop_position == gtk.TREE_VIEW_DROP_INTO_OR_BEFORE:
+            new_iter = model.prepend(parent=target, row=source_row)
+            self.expand_row(model.get_path(target), False)
+        elif drop_position == gtk.TREE_VIEW_DROP_INTO_OR_AFTER:
+            new_iter = model.append(parent=target, row=source_row)
+            self.expand_row(model.get_path(target), False)
+        elif drop_position == gtk.TREE_VIEW_DROP_BEFORE:
+            new_iter = model.insert_before(
+                parent=None, sibling=target, row=source_row)
+        elif drop_position == gtk.TREE_VIEW_DROP_AFTER:
+            new_iter = model.insert_after(
+                parent=None, sibling=target, row=source_row)
+    
+        # Copy any children of the source row.
+        for n in range(model.iter_n_children(source)):
+            child = model.iter_nth_child(source, n)
+            self._copy_row(child, new_iter, gtk.TREE_VIEW_DROP_INTO_OR_BEFORE)
+    
+        # If the source row is expanded, expand the newly copied row
+        if self.row_expanded(model.get_path(source)):
+            self.expand_row(model.get_path(new_iter), False)
+
+    def on_drag_data_received(self, widget, context, x, y, selection, target_type, etime):
         drop_info = self.get_dest_row_at_pos(x, y)
-        if drop_info is None:
-            print "NO CATEGORY"
-            return
-        else:
-            model = self.get_model()
-            path, position = drop_info
-            cat = self.get_model()[path[0]][0]
-            for id in selection.data.split():
-                transaction = controller.AccountTransaction.getByPrimaryKey(int(id))
-                transaction.category = cat
+        if 'MY_TREE_MODEL_ROW' in context.targets:
+            model, source_iter = self.get_selection().get_selected()
+            if drop_info:
+                target_path, drop_position = drop_info
+                target_iter = model.get_iter(target_path)
+                self._copy_row(source_iter, target_iter, drop_position)
+            else:
+                self._copy_row(source_iter, None, None)
+            context.finish(True, True, etime)
+        else: #drop from other widget
+            if drop_info:
+                path, position = drop_info
+                cat = self.get_model()[path[0]][0]
+                for id in selection.data.split():
+                    transaction = controller.AccountTransaction.getByPrimaryKey(int(id))
+                    transaction.category = cat
+            else:
+                print "NO CATEGORY"
+        return
+           
