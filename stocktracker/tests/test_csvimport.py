@@ -25,11 +25,11 @@ class CsvImporterTest(unittest.TestCase):
         
     def test_comdirect(self):
         filename = 'data/csv/comdirect.csv'
-        profile = {'encoding':'iso-8859-2', 'row length':5 }
+        profile = {'encoding':'ISO-8859-2', 'row length':5 }
         
         new_profile = self.importer._sniff_csv(filename)
-        self.assertEqual(profile['encoding'], new_profile['encoding'])
-        self.assertEqual(profile['row length'], new_profile['row length'])
+        for key, val in profile.items():
+            self.assertEqual(profile[key], new_profile[key])
 
         transactions = self.importer.get_rows_from_csv(filename, new_profile)
         self.assertEqual(len(transactions), 5)
