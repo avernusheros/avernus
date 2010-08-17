@@ -57,20 +57,20 @@ class Yahoo():
                     s+=1
                     continue 
                 try:
-                    stocks[s].price = float(row[0])
+                    new_date = datetime.strptime(row[1] + ' ' + row[2], '%m/%d/%Y %H:%M%p')
                 except Exception as e:
                     Log.info(e)
-                    continue
-                try:
-                    date = datetime.strptime(row[1] + ' ' + row[2], '%m/%d/%Y %H:%M%p')
-                except Exception as e:
-                    Log.info(e)
-                    date = datetime.strptime(row[1], '%m/%d/%Y')
-                date = pytz.timezone('US/Eastern').localize(date)
-                date = date.astimezone(pytz.utc)
-                date = date.replace(tzinfo = None)
-                if date > stocks[s].date: #we have a newer quote
-                    stocks[s].date = date
+                    new_date = datetime.strptime(row[1], '%m/%d/%Y')
+                new_date = pytz.timezone('US/Eastern').localize(new_date)
+                new_date = new_date.astimezone(pytz.utc)
+                new_date = new_date.replace(tzinfo = None)
+                if new_date > stocks[s].date: #we have a newer quote
+                    try:
+                        stocks[s].price = float(row[0])
+                    except Exception as e:
+                        Log.info(e)
+                        continue
+                    stocks[s].date = new_date
                     stocks[s].change = float(row[3])
                     stocks[s].exchange = row[4]
                          
