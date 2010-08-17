@@ -70,5 +70,25 @@ class CsvImporterTest(unittest.TestCase):
         self.assertEqual(desc, u'max Mustermann - billy - 1234566789 - 46534543 - \xdcberweisung\nSTROM NACHZAHLUNG\nVerwendete TAN: 196851 - EUR')
         self.assertEqual(amount, 46.00) 
         
-if __name__ == "__main__":
-    unittest.main()
+    def test_cortalconsors(self):
+        filename = 'data/csv/cortal_consors.csv'
+        profile = {'encoding':'windows-1252',
+                   'row length': 7,
+                   'saldo indicator': None,
+                   'description column': [2, 3, 4, 6],
+                   'amount column': 5,
+                   'header': True,
+                   'date format': '%d.%m.%Y',
+                   'date column': 1, 
+                   'decimal separator': ','
+                   }
+        new_profile = self.importer._sniff_csv(filename)
+        for key, val in profile.items():
+            self.assertEqual(profile[key], new_profile[key])
+
+        transactions = self.importer.get_transactions_from_csv(filename)
+        self.assertEqual(len(transactions), 4)
+        date, desc, amount = transactions[3]
+        self.assertEqual(date, datetime.date(2010, 2, 1))
+        self.assertEqual(desc,  u'\xdcberweisungsgutschrift -  - Mustermann,Max - ')
+        self.assertEqual(amount, 2500.00) 
