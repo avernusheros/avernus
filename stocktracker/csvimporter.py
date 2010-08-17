@@ -18,10 +18,6 @@ class CsvImporter:
     
     def __init__(self):
         self.results = []
-    
-    def getTransactionsFromFile(self, filename, settings):
-        contents = open(filename, 'rb').read()
-        return self.getTransactionsFromCSV(contents, settings)
 
     def _sniff_csv(self, filename):
         profile = {}
@@ -58,7 +54,7 @@ class CsvImporter:
         profile['saldo indicator'] = None
         csvdata.seek(0)
         first_line_skipped = False
-        for row in UnicodeReader(csvdata, profile['dialect'], profile['encoding']):            
+        for row in UnicodeReader(csvdata, profile['dialect'], profile['encoding']):  
             if len(row) == profile['row length']:
                 profile['description column'] = []
                 if not first_line_skipped and profile['header']:
