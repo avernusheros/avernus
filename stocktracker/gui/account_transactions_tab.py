@@ -162,8 +162,23 @@ class CategoriesTree(Tree):
         self.connect('cursor_changed', self.on_cursor_changed)
         
     def load_categories(self):
+        def insert_recursive(cat, parent):
+            new_iter = model.append(parent, [cat, cat.name])
+            if cat.id in hierarchy:
+                for child_cat in hierarchy[cat.id]:
+                    insert_recursive(child_cat, new_iter)
+        hierarchy = {}
+        roots = []
+        model = self.get_model()
         for cat in controller.getAllAccountCategories():
-            self.insert_item(cat)
+            if cat.parent == -1:
+                roots.append(cat)
+            elif cat.parent in hierarchy: 
+                hierarchy[cat.parent].append(cat)
+            else:
+                hierarchy[cat.parent] = [cat]
+        for cat in roots: #start with root categories
+            insert_recursive(cat, None)
     
     def insert_item(self, cat):
         return self.get_model().append(None, [cat, cat.name])
@@ -223,29 +238,35 @@ class CategoriesTree(Tree):
         for action in ['remove', 'edit']:
             self.actiongroup.get_action(action).set_sensitive(True)
 
-    def _copy_row(self, source, target, drop_position):
+    def _move_row(self, source, target, drop_position):
         model = self.get_model()
         source_row = model[source]
+        source_category = source_row[0]
         if drop_position is None:
             model.append(None, row=source_row)
-        elif drop_position == gtk.TREE_VIEW_DROP_INTO_OR_BEFORE:
-            new_iter = model.prepend(parent=target, row=source_row)
-            self.expand_row(model.get_path(target), False)
-        elif drop_position == gtk.TREE_VIEW_DROP_INTO_OR_AFTER:
-            new_iter = model.append(parent=target, row=source_row)
-            self.expand_row(model.get_path(target), False)
-        elif drop_position == gtk.TREE_VIEW_DROP_BEFORE:
-            new_iter = model.insert_before(
-                parent=None, sibling=target, row=source_row)
-        elif drop_position == gtk.TREE_VIEW_DROP_AFTER:
-            new_iter = model.insert_after(
-                parent=None, sibling=target, row=source_row)
-    
+            source_category.parent = -1
+        else:
+            target_category = model[target][0]
+            if drop_position == gtk.TREE_VIEW_DROP_INTO_OR_BEFORE:
+                new_iter = model.prepend(parent=target, row=source_row)
+                source_category.parent = target_category.id
+                self.expand_row(model.get_path(target), False)
+            elif drop_position == gtk.TREE_VIEW_DROP_INTO_OR_AFTER:
+                new_iter = model.append(parent=target, row=source_row)
+                source_category.parent = target_category.id
+                self.expand_row(model.get_path(target), False)
+            elif drop_position == gtk.TREE_VIEW_DROP_BEFORE:
+                new_iter = model.insert_before(
+                    parent=None, sibling=target, row=source_row)
+                source_category.parent = target_category.parent
+            elif drop_position == gtk.TREE_VIEW_DROP_AFTER:
+                new_iter = model.insert_after(
+                    parent=None, sibling=target, row=source_row)  
+                source_category.parent = target_category.parent
         # Copy any children of the source row.
         for n in range(model.iter_n_children(source)):
             child = model.iter_nth_child(source, n)
-            self._copy_row(child, new_iter, gtk.TREE_VIEW_DROP_INTO_OR_BEFORE)
-    
+            self._copy_row(child, new_iter, gtk.TREE_VIEW_DROP_INTO_OR_BEFORE)  
         # If the source row is expanded, expand the newly copied row
         if self.row_expanded(model.get_path(source)):
             self.expand_row(model.get_path(new_iter), False)
@@ -257,9 +278,9 @@ class CategoriesTree(Tree):
             if drop_info:
                 target_path, drop_position = drop_info
                 target_iter = model.get_iter(target_path)
-                self._copy_row(source_iter, target_iter, drop_position)
+                self._move_row(source_iter, target_iter, drop_position)
             else:
-                self._copy_row(source_iter, None, None)
+                self._move_row(source_iter, None, None)
             context.finish(True, True, etime)
         else: #drop from other widget
             if drop_info:
