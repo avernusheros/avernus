@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 import gtk, datetime
-from stocktracker import pubsub
 from stocktracker.gui import gui_utils
 import stocktracker.objects
 from stocktracker.objects import controller
@@ -68,8 +67,7 @@ class TransactionsTree(gui_utils.Tree):
         self.account = account
         self.actiongroup = actiongroup
         gui_utils.Tree.__init__(self)
-        #object, name, price, change
-        self.set_model(gtk.ListStore(object,str, int, str,str))
+        self.set_model(gtk.ListStore(object, str, int, str, str))
         
         col, cell = self.create_column(_('Description'), 1)
         self.dynamicWrapColumn = col
@@ -81,10 +79,6 @@ class TransactionsTree(gui_utils.Tree):
         self.create_column(_('Date'), 4)
         
         self.get_selection().set_mode(gtk.SELECTION_MULTIPLE)
-        #allows selecting multiple rows by dragging. does not work in 
-        #combination with drag and drop
-        #self.set_rubber_banding(True)
-        
         self.enable_model_drag_source(gtk.gdk.BUTTON1_MASK, 
                                       [ ( 'text/plain', 0, 80 )],
                                       gtk.gdk.ACTION_DEFAULT | gtk.gdk.ACTION_MOVE)
@@ -259,11 +253,9 @@ class CategoriesTree(gui_utils.Tree):
             if self.selected_item is None or self.selected_item[0] != obj:
                 self.selected_item = obj, selection_iter
                 self.on_select(obj)  
-                pubsub.publish('categorytree.select', obj)
             return 
         self.selected_item = None
         self.on_unselect()
-        pubsub.publish('categorytree.unselect')
   
     def on_unselect(self):
         for action in ['remove', 'edit']:

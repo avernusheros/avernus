@@ -13,7 +13,14 @@ class Account(SQLiteEntity):
                    'type': 'INTEGER',
                    'amount': 'FLOAT'
                   }
-
+                  
+    def on_delete(self, **kwargs):
+        controller.deleteAllAccountTransaction(self)
+                  
+    __callbacks__ = {
+                     'onDelete':on_delete,
+                    }
+                  
     def __iter__(self):
         return controller.getTransactionsForAccount(self).__iter__()
 

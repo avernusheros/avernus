@@ -143,49 +143,6 @@ class CsvImporter:
         #FIXME detect duplicates
         for result in self.results:
             controller.newAccountTransaction(date=result[0], description=result[1], amount=result[2], account=account)
-                        
-    def getTransactionsFromCSV(self, csvdata, settings):
-        csvdata = StringIO(csvdata)
-        csvReader = csv.reader(
-            UTF8Recoder(csvdata, settings['encoding']),
-            delimiter=settings['delimiter'])
-        transactions = []
-        linesSkipped = 0
-        for row in csvReader:
-            # Unfortunately csvReader is not subscriptable so we must count ourselves.
-            if settings['linesToSkip']>linesSkipped:
-                linesSkipped+=1
-                continue
-
-            # If we find a blank line, assume we've hit the end of the transactions.
-            if not row:
-                break
-            # convert to python unicode strings
-            row = [unicode(s, "utf-8") for s in row]
-            amount = self.parseAmount(row[settings['amountColumn']], settings['decimalSeparator'])
-            if 'saldoIndicator' in settings:
-                indicator = row[settings['saldoIndicator']]
-                if indicator == settings['negativeSaldo']:
-                    amount *= -1
-            sender = receiver = None
-            if 'sender' in settings:
-                sender = row[settings['sender']]
-            if 'receiver' in settings:
-                receiver = row[settings['receiver']]
-            desc = self.parseDesc(row[settings['descriptionColumn']])
-            tdate = datetime.strptime(row[settings['dateColumn']],
-                settings['dateFormat']).strftime('%Y-%m-%d')
-            erg = [tdate, desc, amount]
-            if sender is not None:
-                erg.append(sender)
-            if receiver is not None:
-                erg.append(receiver)
-            transactions.append(erg)
-            
-        return transactions
-    
-    def parseDesc(self, desc):
-        return re.sub('[\s]+',' ',desc)
        
 
 class UnicodeReader:

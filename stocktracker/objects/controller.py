@@ -353,6 +353,10 @@ def deleteAllPortfolioTransaction(portfolio):
     for trans in getTransactionForPortfolio(portfolio):
         trans.delete() 
 
+def deleteAllAccountTransaction(account):
+    for trans in getTransactionsForAccount(account):
+        trans.delete()
+
 def getStockForSearchstring(searchstring):
     sqlArgs = {}
     for req in ['name', 'isin']:

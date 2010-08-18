@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import gtk
-from stocktracker.gui.gui_utils import Tree, float_to_string, resize_wrap
+from stocktracker.gui import gui_utils
 from stocktracker import csvimporter
 from stocktracker.objects import controller
 
@@ -50,7 +50,7 @@ class CSVImportDialog(gtk.Dialog):
         sw.set_policy(gtk.POLICY_AUTOMATIC,gtk.POLICY_AUTOMATIC)
         self.tree = PreviewTree()
         sw.connect_after('size-allocate', 
-                         resize_wrap, 
+                         gui_utils.resize_wrap, 
                          self.tree, 
                          self.tree.dynamicWrapColumn, 
                          self.tree.dynamicWrapCell)
@@ -64,7 +64,6 @@ class CSVImportDialog(gtk.Dialog):
     def process_result(self, widget=None, response = gtk.RESPONSE_ACCEPT):
         if response == gtk.RESPONSE_ACCEPT:
             model = self.account_cb.get_model()
-            print "do import to account", model[self.account_cb.get_active()][1]
             account = model[self.account_cb.get_active()][0]
             self.importer.create_transactions(account)
         self.destroy()  
@@ -84,13 +83,12 @@ class CSVImportDialog(gtk.Dialog):
         self.b_account = True
         if self.b_file:
             self.import_button.set_sensitive(True)
-            
-        
 
-class PreviewTree(Tree):
+
+class PreviewTree(gui_utils.Tree):
     
     def __init__(self):
-        Tree.__init__(self)
+        gui_utils.Tree.__init__(self)
         self.set_rules_hint(True)
         
         self.set_size_request(700,400)
@@ -102,7 +100,7 @@ class PreviewTree(Tree):
         self.dynamicWrapColumn = column
         self.dynamicWrapCell = cell
         cell.props.wrap_mode = gtk.WRAP_WORD
-        self.create_column('amount', 2, func=float_to_string)
+        self.create_column('amount', 2, func=gui_utils.float_to_string)
     
     def reload(self, transactions):
         self.clear()
