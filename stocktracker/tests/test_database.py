@@ -8,7 +8,7 @@ class A(model.SQLiteEntity):
     __tableName__ = "a"
     __columns__ = {
                    "name": "VARCHAR",
-                   "comment": "TEXT"
+                   "comment": "VARCHAR"
                    }
     
 class B(model.SQLiteEntity):
@@ -31,7 +31,7 @@ class TestDatabase(unittest.TestCase):
         a.insert()
     
     def test_one2one(self):
-        a = A(name='foo')
+        a = A(name='foo', comment='bar')
         b = B(name="test", link=a)
         self.assertEquals(b.link,a)
         b.insert()
@@ -53,9 +53,9 @@ class TestDatabase(unittest.TestCase):
         self.assertEqual(B.getByPrimaryKey("foo"), None)
                 
     def test_relations(self):
-        anA = A(name='foo')
-        anotherA = A(name='foo2')
-        aB  = B(name='bar')
+        anA = A(name='foo', comment='bar')
+        anotherA = A(name='foo2', comment='bar2')
+        aB  = B(name='bar', link=None)
         aB.theAs.append(anA)
         aB.theAs.append(anotherA)
         self.assertEqual(aB.theAs[0], anA)
