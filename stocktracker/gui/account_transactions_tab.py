@@ -378,6 +378,8 @@ class EditTransaction(gtk.Dialog):
                 hierarchy[cat.parent].append(cat)
             else:
                 hierarchy[cat.parent] = [cat]
+        new_iter = treestore.append(None, [None, 'None'])
+        self.combobox.set_active_iter(new_iter)
         for cat in roots: #start with root categories
             insert_recursive(cat, None)
         
@@ -397,7 +399,7 @@ class EditTransaction(gtk.Dialog):
     def process_result(self, response):
         if response == gtk.RESPONSE_ACCEPT:
             buffer = self.description_entry.get_buffer()
-            self.transaction.description = buffer.get_text(buffer.get_start_iter(), buffer.get_end_iter())  
+            self.transaction.description = unicode(buffer.get_text(buffer.get_start_iter(), buffer.get_end_iter()))  
             self.transaction.amount = self.amount_entry.get_value()
             year, month, day = self.calendar.get_date()
             self.transaction.date = datetime.date(year, month+1, day)
