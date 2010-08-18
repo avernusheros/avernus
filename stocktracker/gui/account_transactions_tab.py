@@ -1,11 +1,10 @@
 #!/usr/bin/env python
 
-import gtk
+import gtk, datetime
 from stocktracker import pubsub
-from stocktracker.gui.gui_utils import Tree, get_datetime_string
+from stocktracker.gui import gui_utils
 import stocktracker.objects
 from stocktracker.objects import controller
-from stocktracker.gui.gui_utils import resize_wrap
 
 
 class AccountTransactionTab(gtk.HPaned):
@@ -15,10 +14,16 @@ class AccountTransactionTab(gtk.HPaned):
         sw = gtk.ScrolledWindow()
         sw.set_property('hscrollbar-policy', gtk.POLICY_AUTOMATIC)
         sw.set_property('vscrollbar-policy', gtk.POLICY_AUTOMATIC)
-        self.transactions_tree = TransactionsTree(item)
+        actiongroup = gtk.ActionGroup('transactions')
+        self.transactions_tree = TransactionsTree(item, actiongroup)
+        actiongroup.add_actions([
+                ('add',    gtk.STOCK_ADD,    'new transaction',    None, _('Add new transaction'), self.transactions_tree.on_add),      
+                ('edit' ,  gtk.STOCK_EDIT,   'edit transaction',   None, _('Edit selected transaction'),   self.transactions_tree.on_edit),
+                ('remove', gtk.STOCK_DELETE, 'remove transaction', None, _('Remove selected transaction'), self.transactions_tree.on_remove)
+                                ])
         sw.add(self.transactions_tree)
         sw.connect_after('size-allocate', 
-                         resize_wrap, 
+                         gui_utils.resize_wrap, 
                          self.transactions_tree, 
                          self.transactions_tree.dynamicWrapColumn, 
                          self.transactions_tree.dynamicWrapCell)
@@ -58,16 +63,15 @@ class AccountTransactionTab(gtk.HPaned):
         self.category_tree.load_categories()
 
 
-class TransactionsTree(Tree):
-    def __init__(self, account):
+class TransactionsTree(gui_utils.Tree):
+    def __init__(self, account, actiongroup):
         self.account = account
-        Tree.__init__(self)
+        self.actiongroup = actiongroup
+        gui_utils.Tree.__init__(self)
         #object, name, price, change
         self.set_model(gtk.ListStore(object,str, int, str,str))
         
         col, cell = self.create_column(_('Description'), 1)
-        cell.set_property('editable', True)
-        cell.connect('edited', self.on_description_edited)
         self.dynamicWrapColumn = col
         self.dynamicWrapCell = cell
         cell.props.wrap_mode = gtk.WRAP_WORD
@@ -105,11 +109,6 @@ class TransactionsTree(Tree):
             trans = model.get_value(iter, 0)
             model[iter] = self.get_item_to_insert(trans) 
         
-    def on_description_edited(self, renderer, path, new_text):
-        row = self.get_model()[path]
-        row[0].description = new_text
-        row[1] = new_text        
-        
     def get_item_to_insert(self, ta):
         if ta.category:
             return [ta, ta.description, ta.amount, ta.category.name, str(ta.date)]
@@ -123,30 +122,66 @@ class TransactionsTree(Tree):
     def insert_transaction(self, ta):
         self.get_model().append(self.get_item_to_insert(ta))
 
+    def _get_selected_transaction(self):
+        selection = self.get_selection()
+        model, paths = selection.get_selected_rows()
+        return model[paths[0]][0], model.get_iter(paths[0])
+
+    def on_add(self, widget=None):
+        dlg = EditTransaction()
+        b_change, transaction = dlg.start()
+        self.insert_transaction(transaction)
+        
+    def on_edit(self, widget=None):
+        transaction, iterator = self._get_selected_transaction()
+        dlg = EditTransaction(transaction)
+        b_change, transaction = dlg.start()
+        if b_change:
+            self.get_model()[iterator] = self.get_item_to_insert(transaction)
+    
+    def on_remove(self, widget=None):
+        trans, iter = self._get_selected_transaction()
+        dlg = gtk.MessageDialog(None, 
+                 gtk.DIALOG_DESTROY_WITH_PARENT, gtk.MESSAGE_QUESTION, 
+                    gtk.BUTTONS_OK_CANCEL, _("Permanently delete transaction?"))
+        response = dlg.run()
+        dlg.destroy()
+        if response == gtk.RESPONSE_OK:
+            trans.delete()
+            self.get_model().remove(iter)
+
     def on_button_press(self, widget, event):
-        # Here we intercept mouse clicks on selected items so that we can
-        # drag multiple items without the click selecting only one
-        target = self.get_path_at_pos(int(event.x), int(event.y))
-        if (target 
-           and event.type == gtk.gdk.BUTTON_PRESS
-           and not (event.state & (gtk.gdk.CONTROL_MASK|gtk.gdk.SHIFT_MASK))
-           and self.get_selection().path_is_selected(target[0])):
-               # disable selection
-               self.get_selection().set_select_function(lambda *ignore: False)
+        if event.button == 3:
+            selection = widget.get_selection()
+            model, paths = selection.get_selected_rows()
+            if len(paths) != 0:            
+                context_menu = gui_utils.ContextMenu()
+                for action in self.actiongroup.list_actions():
+                    context_menu.add(action.create_menu_item())
+                context_menu.show(event)
+        else:
+            # Here we intercept mouse clicks on selected items so that we can
+            # drag multiple items without the click selecting only one
+            target = self.get_path_at_pos(int(event.x), int(event.y))
+            if (target 
+               and event.type == gtk.gdk.BUTTON_PRESS
+               and not (event.state & (gtk.gdk.CONTROL_MASK|gtk.gdk.SHIFT_MASK))
+               and self.get_selection().path_is_selected(target[0])):
+                   # disable selection
+                   self.get_selection().set_select_function(lambda *ignore: False)
             
     def on_button_release(self, widget, event):
         # re-enable selection
         self.get_selection().set_select_function(lambda *ignore: True)        
 
 
-
-class CategoriesTree(Tree):
+class CategoriesTree(gui_utils.Tree):
     
     TARGETS = [('MY_TREE_MODEL_ROW', gtk.TARGET_SAME_WIDGET, 0),
                ('text/plain', 0, 80)]
 
     def __init__(self, actiongroup):
-        Tree.__init__(self)
+        gui_utils.Tree.__init__(self)
         self.actiongroup = actiongroup
         self.set_model(gtk.TreeStore(object, str))
         col, cell = self.create_column(_('Name'), 1)
@@ -284,8 +319,10 @@ class CategoriesTree(Tree):
             context.finish(True, True, etime)
         else: #drop from other widget
             if drop_info:
+                model = self.get_model()
                 path, position = drop_info
-                cat = self.get_model()[path[0]][0]
+                target_iter = model.get_iter(path)
+                cat = model[target_iter][0]
                 for id in selection.data.split():
                     transaction = controller.AccountTransaction.getByPrimaryKey(int(id))
                     transaction.category = cat
@@ -293,3 +330,89 @@ class CategoriesTree(Tree):
                 print "NO CATEGORY"
         return
            
+           
+class EditTransaction(gtk.Dialog):
+    def __init__(self, transaction = None):
+        gtk.Dialog.__init__(self, _("Edit transaction"), None
+                            , gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
+                     (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
+                      gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
+        self.transaction = transaction
+        vbox = self.get_content_area()
+        
+        if self.transaction is None:
+            self.transaction = controller.newAccountTransaction()
+        
+        #description 
+        frame = gtk.Frame('Description')
+        self.description_entry = gtk.TextView()
+        self.description_entry.set_wrap_mode(gtk.WRAP_WORD)
+        entry_buffer = self.description_entry.get_buffer()
+        entry_buffer.set_text(self.transaction.description)
+        frame.add(self.description_entry)
+        vbox.pack_start(frame)
+
+        #amount
+        hbox = gtk.HBox()
+        label = gtk.Label(_('Amount'))
+        hbox.pack_start(label)
+        self.amount_entry = gtk.SpinButton(gtk.Adjustment(lower=-999999999, upper=999999999,step_incr=10, value = self.transaction.amount), digits=2)
+        hbox.pack_start(self.amount_entry)
+        vbox.pack_start(hbox)
+        
+        #category
+        hbox = gtk.HBox()
+        label = gtk.Label(_('Category'))
+        hbox.pack_start(label)
+        treestore = gtk.TreeStore(object, str)
+        self.combobox = gtk.ComboBox(treestore)
+        cell = gtk.CellRendererText()
+        self.combobox.pack_start(cell, True)
+        self.combobox.add_attribute(cell, 'text', 1)
+        #FIXME duplicate code: we are doing the same thing in CategoriesTree
+        def insert_recursive(cat, parent):
+            new_iter = treestore.append(parent, [cat, cat.name])
+            if cat == self.transaction.category:
+                self.combobox.set_active_iter(new_iter)
+            if cat.id in hierarchy:
+                for child_cat in hierarchy[cat.id]:
+                    insert_recursive(child_cat, new_iter)
+        hierarchy = {}
+        roots = []
+        for cat in controller.getAllAccountCategories():
+            if cat.parent == -1:
+                roots.append(cat)
+            elif cat.parent in hierarchy: 
+                hierarchy[cat.parent].append(cat)
+            else:
+                hierarchy[cat.parent] = [cat]
+        for cat in roots: #start with root categories
+            insert_recursive(cat, None)
+        
+        hbox.pack_start(self.combobox)        
+        vbox.pack_start(hbox)
+        
+        #date
+        self.calendar = gtk.Calendar()
+        self.calendar.select_month(self.transaction.date.month-1, self.transaction.date.year)
+        self.calendar.select_day(self.transaction.date.day)
+        vbox.pack_start(self.calendar)
+        
+    def start(self):
+        self.show_all()
+        return self.process_result(self.run())
+
+    def process_result(self, response):
+        if response == gtk.RESPONSE_ACCEPT:
+            buffer = self.description_entry.get_buffer()
+            self.transaction.description = buffer.get_text(buffer.get_start_iter(), buffer.get_end_iter())  
+            self.transaction.amount = self.amount_entry.get_value()
+            year, month, day = self.calendar.get_date()
+            self.transaction.date = datetime.date(year, month+1, day)
+            iter = self.combobox.get_active_iter()
+            if iter is None:
+                self.transaction.category = None
+            else:
+                self.transaction.category = self.combobox.get_model()[self.combobox.get_active_iter()][0]
+        self.destroy()
+        return response == gtk.RESPONSE_ACCEPT, self.transaction
