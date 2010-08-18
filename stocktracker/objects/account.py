@@ -1,4 +1,5 @@
 from stocktracker.objects.model import SQLiteEntity
+from stocktracker import pubsub
 import controller
 import datetime
 from dateutil.relativedelta import relativedelta
@@ -113,6 +114,6 @@ class AccountTransaction(SQLiteEntity):
                    'account': Account,
                    'category': AccountCategory
                   }
-
+    
     def isEarning(self):
         return self.amount >= 0

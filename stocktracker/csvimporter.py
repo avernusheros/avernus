@@ -8,6 +8,7 @@ import tempfile
 import chardet
 
 from stocktracker.objects import controller
+from stocktracker import pubsub
 
 
 FORMATS = ['%Y-%m-%d',
@@ -142,7 +143,8 @@ class CsvImporter:
     def create_transactions(self, account):
         #FIXME detect duplicates
         for result in self.results:
-            controller.newAccountTransaction(date=result[0], description=result[1], amount=result[2], account=account)
+            ta = controller.newAccountTransaction(date=result[0], description=result[1], amount=result[2], account=account)
+            pubsub.publish('accountTransaction.created', ta)
        
 
 class UnicodeReader:

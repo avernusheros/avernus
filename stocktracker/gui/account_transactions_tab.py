@@ -4,12 +4,17 @@ import gtk, datetime
 from stocktracker.gui import gui_utils
 import stocktracker.objects
 from stocktracker.objects import controller
+from stocktracker import pubsub
 
 
 class AccountTransactionTab(gtk.HPaned):
+    
+    BORDER_WIDTH = 5
+    
     def __init__(self, item):
         gtk.HPaned.__init__(self)
         
+        self.set_border_width(self.BORDER_WIDTH)
         sw = gtk.ScrolledWindow()
         sw.set_property('hscrollbar-policy', gtk.POLICY_AUTOMATIC)
         sw.set_property('vscrollbar-policy', gtk.POLICY_AUTOMATIC)
@@ -26,10 +31,16 @@ class AccountTransactionTab(gtk.HPaned):
                          self.transactions_tree, 
                          self.transactions_tree.dynamicWrapColumn, 
                          self.transactions_tree.dynamicWrapCell)
-        self.pack1(sw)
+        frame = gtk.Frame()
+        frame.add(sw)
+        frame.set_shadow_type(gtk.SHADOW_IN)
+        self.pack1(frame, shrink=True, resize=True)
         
         vbox = gtk.VBox()
-        self.pack2(vbox)
+        frame = gtk.Frame()
+        frame.add(vbox)
+        frame.set_shadow_type(gtk.SHADOW_IN)
+        self.pack2(frame, shrink=False, resize=True)
         sw = gtk.ScrolledWindow()
         sw.set_property('hscrollbar-policy', gtk.POLICY_AUTOMATIC)
         sw.set_property('vscrollbar-policy', gtk.POLICY_AUTOMATIC)
@@ -50,9 +61,7 @@ class AccountTransactionTab(gtk.HPaned):
             button = actiongroup.get_action(action).create_tool_item()
             toolbar.insert(button, -1)
         vbox.pack_start(toolbar, expand=False, fill=False)
-
-        #FIXME use something like 75% of available space
-        self.set_position(400)
+        
         self.show_all()
     
     def show(self):
@@ -77,6 +86,7 @@ class TransactionsTree(gui_utils.Tree):
         self.create_column(_('Amount'), 2)
         self.create_column(_('Category'), 3)
         self.create_column(_('Date'), 4)
+        self.set_rules_hint(True)
         
         self.get_selection().set_mode(gtk.SELECTION_MULTIPLE)
         self.enable_model_drag_source(gtk.gdk.BUTTON1_MASK, 
@@ -86,6 +96,11 @@ class TransactionsTree(gui_utils.Tree):
         self.connect('drag-end', self.on_drag_end)
         self.connect('button_press_event', self.on_button_press)
         self.connect('button_release_event', self.on_button_release)
+        pubsub.subscribe('accountTransaction.created', self.on_transaction_created)        
+
+    def on_transaction_created(self, transaction):
+        if transaction.account == self.account:
+            self.insert_transaction(transaction)
 
     def on_drag_data_get(self, treeview, context, selection, info, timestamp):
         treeselection = treeview.get_selection()
@@ -178,7 +193,7 @@ class CategoriesTree(gui_utils.Tree):
         gui_utils.Tree.__init__(self)
         self.actiongroup = actiongroup
         self.set_model(gtk.TreeStore(object, str))
-        col, cell = self.create_column(_('Name'), 1)
+        col, cell = self.create_column(_('Categories'), 1)
         cell.set_property('editable', True)
         cell.connect('edited', self.on_cell_edited)        
         self.enable_model_drag_dest(self.TARGETS, gtk.gdk.ACTION_DEFAULT)
