@@ -54,11 +54,10 @@ class DatasourceManager(object):
     def update_stocks(self, stocks):
         if len(stocks) == 0 or not self.b_online:
             return
-        for stock in stocks:
-            stock.updated = False
         for name, source in sources.iteritems():
             temp = filter(lambda s: s.source == name, stocks)
-            source.update_stocks(temp)
+            if len(temp) > 0:
+                source.update_stocks(temp)
         
     def update_stock(self, stock):
         self.update_stocks([stock])
