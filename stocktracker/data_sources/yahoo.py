@@ -49,12 +49,16 @@ class Yahoo():
 
     def update_stocks(self, stocks):
         ids = self.__get_all_yahoo_ids(stocks)
-        s = 0
+        current_stock = -1
+        len_ids = 0
         res = self.__request_csv(ids, 'l1d1d3c1x')
         for row in csv.reader(res):
+            if len_ids == 0:
+                len_ids = len(self.yahoo_ids[(stocks[current_stock].isin, stocks[current_stock].currency)])
+                current_stock += 1
+            len_ids -= 1
             if len(row) > 1:
                 if row[1] == 'N/A':
-                    s+=1
                     continue 
                 try:
                     new_date = datetime.strptime(row[1] + ' ' + row[2], '%m/%d/%Y %H:%M%p')
@@ -64,15 +68,15 @@ class Yahoo():
                 new_date = pytz.timezone('US/Eastern').localize(new_date)
                 new_date = new_date.astimezone(pytz.utc)
                 new_date = new_date.replace(tzinfo = None)
-                if new_date > stocks[s].date: #we have a newer quote
+                if new_date > stocks[current_stock].date: #we have a newer quote
                     try:
-                        stocks[s].price = float(row[0])
+                        stocks[current_stock].price = float(row[0])
                     except Exception as e:
                         Log.info(e)
                         continue
-                    stocks[s].date = new_date
-                    stocks[s].change = float(row[3])
-                    stocks[s].exchange = row[4]
+                    stocks[current_stock].date = new_date
+                    stocks[current_stock].change = float(row[3])
+                    stocks[current_stock].exchange = row[4]
                          
     def get_info(self, symbol):
         #name, isin, exchange, currency
