@@ -8,7 +8,7 @@ from stocktracker import config
 from stocktracker.logger import Log
 from stocktracker.objects import stock
 
-TYPES = {'Fonds':stock.FUND, 'Aktie':stock.STOCK, 'Namensaktie':stock.STOCK}
+TYPES = {'Fonds':stock.FUND, 'Aktie':stock.STOCK, 'Namensaktie':stock.STOCK, 'Vorzugsaktie':stock.STOCK}
 
 class Yahoo():
     name = "yahoo"
@@ -54,8 +54,8 @@ class Yahoo():
         res = self.__request_csv(ids, 'l1d1d3c1x')
         for row in csv.reader(res):
             if len_ids == 0:
-                len_ids = len(self.yahoo_ids[(stocks[current_stock].isin, stocks[current_stock].currency)])
                 current_stock += 1
+                len_ids = len(self.yahoo_ids[(stocks[current_stock].isin, stocks[current_stock].currency)])
             len_ids -= 1
             if len(row) > 1:
                 if row[1] == 'N/A':
