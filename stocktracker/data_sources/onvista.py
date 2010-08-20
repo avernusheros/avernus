@@ -227,7 +227,7 @@ class Onvista():
                 file = opener.open("http://fonds.onvista.de/kurse.html", urllib.urlencode({"ISIN": st.isin}))
                 generator = self._parse_kurse_html(file)
             elif st.type == stock.ETF:
-                file = opener.open("http://etf.onvista.de/kurse.html", urllib.urlencode({"ISIN": st.isin}))
+                file = opener.open("http://www.onvista.de/etf/kurse.html", urllib.urlencode({"ISIN": st.isin}))
                 generator = self._parse_kurse_html(file, tdInd=etfTDS, stockType=stock.ETF)
             else:
                 print "Unknown stock type in onvistaplugin.update_stocks"
@@ -315,21 +315,22 @@ if __name__ == "__main__":
 
     def test_parse_kurse():
         page = opener.open('http://fonds.onvista.de/kurse.html?ID_INSTRUMENT=83602')
-        for item in plugin._parse_kurse_html_fonds(page):
+        for item in plugin._parse_kurse_html(page, tdInd=fondTDS, stockType = stock.FUND):
             print item
         print "---------------------------------"
-        page = opener.open('http://etf.onvista.de/kurse.html?ID_INSTRUMENT=21384252')
-        for item in plugin._parse_kurse_html_etf(page):
+        page = opener.open('http://www.onvista.de/etf/kurse.html?ISIN=LU0203243414')
+        for item in plugin._parse_kurse_html(page, tdInd=etfTDS, stockType = stock.ETF):
             print item
-
+        
+        
     plugin = Onvista()
     ex = Exchange()
     s1 = Stock('LU0136412771', ex, stock.FUND)
     s2 = Stock('LU0103598305', ex, stock.FUND)
     s3 = Stock('LU0382362290', ex, stock.ETF)
-    test_search()
+    #test_search()
     #print plugin.search_kurse(s1)
     #print plugin.search_kurse(s3)
-    #test_parse_kurse()
+    test_parse_kurse()
     #test_update()
     #test_historicals()

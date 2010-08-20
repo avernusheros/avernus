@@ -3,9 +3,10 @@
 import gtk
 from stocktracker import pubsub, config
 from datetime import datetime
-from stocktracker.objects import controller
+from stocktracker.objects import controller, stock
 from stocktracker.gui import gui_utils
 from stocktracker.gui.gui_utils import resize_wrap
+
 
 class EditPositionDialog(gtk.Dialog):
     def __init__(self, position):
@@ -54,26 +55,29 @@ class EditStockDialog(gtk.Dialog):
 
 
 class EditStockTable(gtk.Table):
-    def __init__(self, stock):
+    def __init__(self, current_stock):
         gtk.Table.__init__(self)
         
-        self.stock = stock
+        self.stock = current_stock
         
         self.attach(gtk.Label(_('Name')),0,1,0,1)
         self.name_entry = gtk.Entry()
-        self.name_entry.set_text(stock.name)
+        self.name_entry.set_text(current_stock.name)
         self.attach(self.name_entry,1,2,0,1)
 
         self.attach(gtk.Label(_('ISIN')),0,1,1,2)
         self.isin_entry = gtk.Entry()
-        self.isin_entry.set_text(stock.isin)
+        self.isin_entry.set_text(current_stock.isin)
         self.attach(self.isin_entry,1,2,1,2)
         
         self.attach(gtk.Label(_('Type')),0,1,2,3)
-        self.types = {'fund':0, 'stock':1}
-        self.type_cb = gtk.combo_box_new_text()
-        for key, val in self.types.items():
-            self.type_cb.append_text(key)
+        liststore = gtk.ListStore(str, int)
+        self.type_cb = gtk.ComboBox(liststore)
+        cell = gtk.CellRendererText()
+        self.type_cb.pack_start(cell, True)
+        self.type_cb.add_attribute(cell, 'text', 0)
+        for name, type in [('fund', stock.FUND), ('stock', stock.STOCK), ('etf', stock.ETF)]:
+            liststore.append([name, type])
         self.type_cb.set_active(self.stock.type)
         self.attach(self.type_cb, 1,2,2,3)
 
@@ -96,7 +100,8 @@ class EditStockTable(gtk.Table):
         if response == gtk.RESPONSE_ACCEPT:
             self.stock.name = self.name_entry.get_text()
             self.stock.isin = self.isin_entry.get_text()
-            self.stock.type = self.types[self.type_cb.get_active_text()]
+            active_iter = self.type_cb.get_active_iter()
+            self.stock.type = self.type_cb.get_model()[active_iter][1]
             if self.sector_cb.get_active() != 0:   
                 self.stock.sector = self.sectors[self.sector_cb.get_active()]
             else:
