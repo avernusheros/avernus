@@ -258,6 +258,18 @@ def getAllAccount():
 
 def getAllAccountCategories():
     return AccountCategory.getAll()
+    
+def getAllAccountCategoriesHierarchical():
+    roots = []
+    hierarchy = {}
+    for cat in getAllAccountCategories():
+        if cat.parent == -1:
+            roots.append(cat)
+        elif cat.parent in hierarchy: 
+            hierarchy[cat.parent].append(cat)
+        else:
+            hierarchy[cat.parent] = [cat]
+    return roots, hierarchy
 
 def getAllSector():
     return Sector.getAll()

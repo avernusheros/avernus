@@ -78,16 +78,14 @@ class TransactionsTree(gui_utils.Tree):
         gui_utils.Tree.__init__(self)
         self.set_model(gtk.ListStore(object, str, int, str, str))
         
+        self.create_column(_('Date'), 4)
         col, cell = self.create_column(_('Description'), 1)
         self.dynamicWrapColumn = col
         self.dynamicWrapCell = cell
         cell.props.wrap_mode = gtk.WRAP_WORD
-        
         self.create_column(_('Amount'), 2)
         self.create_column(_('Category'), 3)
-        self.create_column(_('Date'), 4)
         self.set_rules_hint(True)
-        
         self.get_selection().set_mode(gtk.SELECTION_MULTIPLE)
         self.enable_model_drag_source(gtk.gdk.BUTTON1_MASK, 
                                       [ ( 'text/plain', 0, 80 )],
@@ -134,7 +132,9 @@ class TransactionsTree(gui_utils.Tree):
     def _get_selected_transaction(self):
         selection = self.get_selection()
         model, paths = selection.get_selected_rows()
-        return model[paths[0]][0], model.get_iter(paths[0])
+        if len(paths) != 0:  
+            return model[paths[0]][0], model.get_iter(paths[0])
+        return None, None
 
     def on_add(self, widget=None):
         dlg = EditTransaction()
@@ -149,7 +149,7 @@ class TransactionsTree(gui_utils.Tree):
             self.get_model()[iterator] = self.get_item_to_insert(transaction)
     
     def on_remove(self, widget=None):
-        trans, iter = self._get_selected_transaction()
+        trans, iterator = self._get_selected_transaction()
         dlg = gtk.MessageDialog(None, 
                  gtk.DIALOG_DESTROY_WITH_PARENT, gtk.MESSAGE_QUESTION, 
                     gtk.BUTTONS_OK_CANCEL, _("Permanently delete transaction?"))
@@ -157,17 +157,50 @@ class TransactionsTree(gui_utils.Tree):
         dlg.destroy()
         if response == gtk.RESPONSE_OK:
             trans.delete()
-            self.get_model().remove(iter)
+            self.get_model().remove(iterator)
+    
+    def on_set_transaction_category(self, category = None):
+        trans, iterator = self._get_selected_transaction()
+        trans.category = category
+        self.get_model()[iterator] = self.get_item_to_insert(trans)
+
+    def show_context_menu(self, event):
+        trans, iter = self._get_selected_transaction()
+        if trans:            
+            context_menu = gui_utils.ContextMenu()
+            for action in self.actiongroup.list_actions():
+                context_menu.add(action.create_menu_item())
+            if trans.category:
+                context_menu.add_item('Remove category', lambda widget: self.on_set_transaction_category())
+            roots, hierarchy = controller.getAllAccountCategoriesHierarchical()
+            
+            def insert_recursive(cat, menu):
+                item = gtk.MenuItem(cat.name)
+                menu.append(item)
+                if cat.id in hierarchy:
+                    new_menu = gtk.Menu()
+                    item.set_submenu(new_menu)
+                    item = gtk.MenuItem(cat.name)
+                    new_menu.append(item)
+                    item.connect('activate', lambda widget: self.on_set_transaction_category(cat))
+                    new_menu.append(gtk.SeparatorMenuItem())
+                    for child_cat in hierarchy[cat.id]:
+                        insert_recursive(child_cat, new_menu)
+                else:
+                    item.connect('activate', lambda widget: self.on_set_transaction_category(cat))
+                        
+            if len(roots) > 0:
+                item = gtk.MenuItem("Move to category")
+                context_menu.add(item)
+                category_menu = gtk.Menu()
+                item.set_submenu(category_menu)
+                for cat in roots:
+                    insert_recursive(cat, category_menu)
+            context_menu.show(event)
 
     def on_button_press(self, widget, event):
         if event.button == 3:
-            selection = widget.get_selection()
-            model, paths = selection.get_selected_rows()
-            if len(paths) != 0:            
-                context_menu = gui_utils.ContextMenu()
-                for action in self.actiongroup.list_actions():
-                    context_menu.add(action.create_menu_item())
-                context_menu.show(event)
+            self.show_context_menu(event)
         else:
             # Here we intercept mouse clicks on selected items so that we can
             # drag multiple items without the click selecting only one
@@ -211,16 +244,8 @@ class CategoriesTree(gui_utils.Tree):
             if cat.id in hierarchy:
                 for child_cat in hierarchy[cat.id]:
                     insert_recursive(child_cat, new_iter)
-        hierarchy = {}
-        roots = []
         model = self.get_model()
-        for cat in controller.getAllAccountCategories():
-            if cat.parent == -1:
-                roots.append(cat)
-            elif cat.parent in hierarchy: 
-                hierarchy[cat.parent].append(cat)
-            else:
-                hierarchy[cat.parent] = [cat]
+        roots, hierarchy = controller.getAllAccountCategoriesHierarchical()
         for cat in roots: #start with root categories
             insert_recursive(cat, None)
     
@@ -376,7 +401,7 @@ class EditTransaction(gtk.Dialog):
         cell = gtk.CellRendererText()
         self.combobox.pack_start(cell, True)
         self.combobox.add_attribute(cell, 'text', 1)
-        #FIXME duplicate code: we are doing the same thing in CategoriesTree
+
         def insert_recursive(cat, parent):
             new_iter = treestore.append(parent, [cat, cat.name])
             if cat == self.transaction.category:
@@ -384,17 +409,9 @@ class EditTransaction(gtk.Dialog):
             if cat.id in hierarchy:
                 for child_cat in hierarchy[cat.id]:
                     insert_recursive(child_cat, new_iter)
-        hierarchy = {}
-        roots = []
-        for cat in controller.getAllAccountCategories():
-            if cat.parent == -1:
-                roots.append(cat)
-            elif cat.parent in hierarchy: 
-                hierarchy[cat.parent].append(cat)
-            else:
-                hierarchy[cat.parent] = [cat]
         new_iter = treestore.append(None, [None, 'None'])
         self.combobox.set_active_iter(new_iter)
+        roots, hierarchy = controller.getAllAccountCategoriesHierarchical()
         for cat in roots: #start with root categories
             insert_recursive(cat, None)
         

@@ -93,6 +93,7 @@ class ContextMenu(gtk.Menu):
             if func is not None:
                 item.connect("activate", func)
             self.add(item)
+            return item 
 
 
 def get_string_from_float(number):
