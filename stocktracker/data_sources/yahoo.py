@@ -86,8 +86,8 @@ class Yahoo():
             print row
     
     def update_historical_prices(self, stock, start_date, end_date):
-        #FIXME more intelligent way of choosing the exchange
-        #we should use the exchange with the highest volume for this stock
+        #we should use a more intelligent way of choosing the exchange
+        #e.g. the exchange with the highest volume for this stock
         yid = self.__get_yahoo_ids([stock])
         url = 'http://ichart.yahoo.com/table.csv?s=%s&' % yid + \
               'a=%s&' % str(start_date.month-1) + \
@@ -170,9 +170,6 @@ class Yahoo():
         res['volume']                 = int(item[9].replace(",", ""))
         return res
     
-    
-    #FIXME since yahoo.py is now part of the main program, we should store
-    #the ids in the db. or not?
     
     def __load_yahoo_ids(self):
         path = os.path.join(config.config_path, 'yahoo_ids')

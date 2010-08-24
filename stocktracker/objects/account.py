@@ -97,8 +97,6 @@ class AccountCategory(SQLiteEntity):
                    'id': 'INTEGER',
                    'name': 'VARCHAR',
                    'parent': 'INTEGER'
-                   #FIXME the line below does not work. alternatives?
-                   #'parent': AccountCategory
                   }
 
 

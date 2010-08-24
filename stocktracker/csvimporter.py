@@ -141,7 +141,6 @@ class CsvImporter:
         return result
 
     def create_transactions(self, account):
-        #FIXME detect duplicates
         for result in self.results:
             ta = controller.newAccountTransaction(date=result[0], description=result[1], amount=result[2], account=account)
             pubsub.publish('accountTransaction.created', ta)

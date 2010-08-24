@@ -52,7 +52,6 @@ class GainersTree(Tree):
         self.load()
         
     def load(self):
-        #FIXME
         pass
 
 
@@ -66,5 +65,4 @@ class LosersTree(Tree):
         self.load()
         
     def load(self):
-        #FIXME
         pass

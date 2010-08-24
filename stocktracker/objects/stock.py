@@ -54,6 +54,5 @@ class Stock(SQLiteEntity):
         return self.name +' | '+self.isin+' | '+self.exchange
 
     def update_price(self):
-        #FIXME should not import controller here
         from stocktracker.objects import controller
         controller.datasource_manager.update_stock(self)

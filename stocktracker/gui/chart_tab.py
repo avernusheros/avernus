@@ -20,7 +20,6 @@ class ChartTab(gtk.ScrolledWindow):
         self.clear()
         table = gtk.Table()
     
-        #FIXME 
         #table.attach(gtk.Label(_('Cash over time')), 0,2,0,1)
         #table.attach(self.cash_chart(),0,2,1,2)
 
@@ -37,7 +36,6 @@ class ChartTab(gtk.ScrolledWindow):
         table.attach(gtk.Label(_('Sectors')),1,2,2,3)
         table.attach(self.sector_pie(),1,2,3,4)
         
-        #FIXME countries not supported yet
         #table.attach(gtk.Label(_('Countries')),0,1,6,7)
         #table.attach(self.country_pie(),0,1,7,8)
         
@@ -121,7 +119,7 @@ class ChartTab(gtk.ScrolledWindow):
         return pie
 
     def cash_chart(self):
-        #FIXME stufenchart?
+        #stufenchart?
         cot = self.pf.get_cash_over_time()
         cot.reverse()
         

@@ -36,7 +36,6 @@ class Position(object):
         return self.quantity * self.price
     
     def split(self, val1, val2, date):
-        #FIXME
         pass
     
     @property
@@ -112,8 +111,6 @@ class PortfolioPosition(SQLiteEntity, Position):
                         quantity -= ta.quantity    
                     elif ta.type == 1: #buy
                         quantity += ta.quantity
-                    elif ta.type == 2: #split
-                        #FIXME handle splits correctly
                         pass
             res.append((current, ta.quantity*price))    
         return res
@@ -140,5 +137,4 @@ class WatchlistPosition(SQLiteEntity, Position):
                    }
 
     quantity = 1
-    #FIXME
     tags_string =''

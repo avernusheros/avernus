@@ -310,7 +310,6 @@ def deleteAllWatchlistPosition(watchlist):
 
 def getPositionForTag(tag):
     possible = getAllPosition()
-    #FIXME besser machen, als sql abfrage
     for pos in possible:
         if not pos.__composite_retrieved__:
             pos.retrieveAllComposite()

@@ -105,7 +105,7 @@ class EditStockTable(gtk.Table):
 
 
 class EditPositionTable(gtk.Table):
-    #FIXME tags
+
     def __init__(self, pos):
         gtk.Table.__init__(self)
         self.pos = pos
@@ -213,7 +213,6 @@ class StockSelector(gtk.VBox):
         controller.datasource_manager.stop_search()
         
     def insert_item(self, stock, icon='gtk-harddisk'):
-        #FIXME ETFs need an icon
         icons = ['fund', 'stock', 'etf']
         self.result_tree.get_model().append(None, [
                                        stock, 
@@ -536,7 +535,6 @@ class MergeDialog(gtk.Dialog):
         model = combobox.get_model()
         index = combobox.get_active()
         if index:
-            #FIXME
             pass
             #self.selected_pf = session['model'].portfolios[model[index][0]]
         else:

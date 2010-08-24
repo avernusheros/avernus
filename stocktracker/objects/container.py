@@ -1,7 +1,5 @@
 from stocktracker.objects.model import SQLiteEntity
 from stocktracker.objects.stock import Stock
-#FIXME why does the following import give an error
-#from stocktracker.objects import controller
 import stocktracker.objects.controller
 from stocktracker import pubsub
 
@@ -99,7 +97,7 @@ class Portfolio(SQLiteEntity, Container):
                 cash -= ta.quantity*ta.price-ta.ta_costs
         if len(self.transactions)>0:
             last_date = self.transactions[-1].date
-            #FIXME should be last day - 1 day
+            #should be last day - 1 day
             res.append((date(last_date.year, last_date.month, 1) , cash))
         return res   
     

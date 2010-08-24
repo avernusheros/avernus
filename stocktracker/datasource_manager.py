@@ -48,7 +48,6 @@ class DatasourceManager(object):
             return
         item['source'] = source.name
         stock = controller.newStock(**item)
-        #FIXME use icon of source
         self.search_callback(stock, 'gtk-add')
 
     def update_stocks(self, stocks):

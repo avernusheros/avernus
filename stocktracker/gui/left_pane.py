@@ -92,7 +92,6 @@ class MainTree(Tree):
         self.wl_iter = self.get_model().append(None, [Category('Watchlists'),'watchlists', _("<b>Watchlists</b>")])
         self.tag_iter = self.get_model().append(None, [Category('Tags'),'tags', _("<b>Tags</b>")])
         self.accounts_iter = self.get_model().append(None, [Category('Accounts'),'account', _("<b>Accounts</b>")])
-        #FIXME
         #self.index_iter = self.get_model().append(None, [Category('Indices'),'indices', _("<b>Indices</b>")])
 
     def insert_watchlist(self, item):
