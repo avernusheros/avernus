@@ -7,19 +7,27 @@ from stocktracker.objects import controller
 from stocktracker import pubsub
 
 
-class AccountTransactionTab(gtk.HPaned):
+class AccountTransactionTab(gtk.VBox):
     
     BORDER_WIDTH = 5
     
     def __init__(self, item):
-        gtk.HPaned.__init__(self)
+        gtk.VBox.__init__(self)
         
-        self.set_border_width(self.BORDER_WIDTH)
+        search_entry = gtk.Entry()
+        self.pack_start(search_entry, expand=False, fill=False)
+        search_entry.set_icon_from_stock(1, gtk.STOCK_CLEAR)
+        search_entry.set_property('secondary-icon-tooltip-text', 'Clear search')
+        search_entry.connect('icon-press', lambda entry, icon_pos, event: search_entry.set_text(''))
+        
+        hpaned = gtk.HPaned()
+        self.pack_start(hpaned)
+        hpaned.set_border_width(self.BORDER_WIDTH)
         sw = gtk.ScrolledWindow()
         sw.set_property('hscrollbar-policy', gtk.POLICY_AUTOMATIC)
         sw.set_property('vscrollbar-policy', gtk.POLICY_AUTOMATIC)
         actiongroup = gtk.ActionGroup('transactions')
-        self.transactions_tree = TransactionsTree(item, actiongroup)
+        self.transactions_tree = TransactionsTree(item, actiongroup, search_entry)
         actiongroup.add_actions([
                 ('add',    gtk.STOCK_ADD,    'new transaction',    None, _('Add new transaction'), self.transactions_tree.on_add),      
                 ('edit' ,  gtk.STOCK_EDIT,   'edit transaction',   None, _('Edit selected transaction'),   self.transactions_tree.on_edit),
@@ -34,13 +42,13 @@ class AccountTransactionTab(gtk.HPaned):
         frame = gtk.Frame()
         frame.add(sw)
         frame.set_shadow_type(gtk.SHADOW_IN)
-        self.pack1(frame, shrink=True, resize=True)
+        hpaned.pack1(frame, shrink=True, resize=True)
         
         vbox = gtk.VBox()
         frame = gtk.Frame()
         frame.add(vbox)
         frame.set_shadow_type(gtk.SHADOW_IN)
-        self.pack2(frame, shrink=False, resize=True)
+        hpaned.pack2(frame, shrink=False, resize=True)
         sw = gtk.ScrolledWindow()
         sw.set_property('hscrollbar-policy', gtk.POLICY_AUTOMATIC)
         sw.set_property('vscrollbar-policy', gtk.POLICY_AUTOMATIC)
@@ -72,19 +80,30 @@ class AccountTransactionTab(gtk.HPaned):
 
 
 class TransactionsTree(gui_utils.Tree):
-    def __init__(self, account, actiongroup):
+    
+    OBJECT = 0
+    DESCRIPTION = 1
+    AMOUNT = 2
+    CATEGORY = 3
+    DATE = 4
+    
+    def __init__(self, account, actiongroup, search_entry):
         self.account = account
         self.actiongroup = actiongroup
+        self.searchstring = ''
         gui_utils.Tree.__init__(self)
-        self.set_model(gtk.ListStore(object, str, int, str, str))
+        self.model = gtk.ListStore(object, str, int, str, str)
+        self.modelfilter = self.model.filter_new()
+        self.set_model(self.modelfilter)
+        self.modelfilter.set_visible_func(self.visible_cb)
         
-        self.create_column(_('Date'), 4)
-        col, cell = self.create_column(_('Description'), 1)
+        self.create_column(_('Date'), self.DATE)
+        col, cell = self.create_column(_('Description'), self.DESCRIPTION)
         self.dynamicWrapColumn = col
         self.dynamicWrapCell = cell
         cell.props.wrap_mode = gtk.WRAP_WORD
-        self.create_column(_('Amount'), 2)
-        self.create_column(_('Category'), 3)
+        self.create_column(_('Amount'), self.AMOUNT)
+        self.create_column(_('Category'), self.CATEGORY)
         self.set_rules_hint(True)
         self.get_selection().set_mode(gtk.SELECTION_MULTIPLE)
         self.enable_model_drag_source(gtk.gdk.BUTTON1_MASK, 
@@ -94,7 +113,23 @@ class TransactionsTree(gui_utils.Tree):
         self.connect('drag-end', self.on_drag_end)
         self.connect('button_press_event', self.on_button_press)
         self.connect('button_release_event', self.on_button_release)
+        search_entry.connect('changed', self.on_search_entry_changed)
         pubsub.subscribe('accountTransaction.created', self.on_transaction_created)        
+
+    def visible_cb(self, model, iter):
+        #transaction = model[iter][0]
+        transaction = model[iter][0]
+        if transaction and (
+                self.searchstring in transaction.description.lower() \
+                or self.searchstring in str(transaction.amount) \
+                or (transaction.category and self.searchstring in transaction.category.name.lower())
+                ):
+            return True
+        return False
+
+    def on_search_entry_changed(self, editable):
+        self.searchstring = editable.get_text().lower()
+        self.modelfilter.refilter()
 
     def on_transaction_created(self, transaction):
         if transaction.account == self.account:
@@ -104,7 +139,7 @@ class TransactionsTree(gui_utils.Tree):
         treeselection = treeview.get_selection()
         model, paths = treeselection.get_selected_rows()
         iters = [model.get_iter(path) for path in paths]
-        text = '\n'.join([str(model.get_value(iter, 0).id) for iter in iters])
+        text = '\n'.join([str(model.get_value(iter, self.OBJECT).id) for iter in iters])
         selection.set('text/plain', 8, text)
         return
     
@@ -113,7 +148,7 @@ class TransactionsTree(gui_utils.Tree):
         model, paths = treeselection.get_selected_rows()
         iters = [model.get_iter(path) for path in paths]
         for iter in iters:
-            trans = model.get_value(iter, 0)
+            trans = model.get_value(iter, self.OBJECT)
             model[iter] = self.get_item_to_insert(trans) 
         
     def get_item_to_insert(self, ta):
@@ -127,13 +162,13 @@ class TransactionsTree(gui_utils.Tree):
             self.insert_transaction(ta)
     
     def insert_transaction(self, ta):
-        self.get_model().append(self.get_item_to_insert(ta))
+        self.model.append(self.get_item_to_insert(ta))
 
     def _get_selected_transaction(self):
         selection = self.get_selection()
         model, paths = selection.get_selected_rows()
         if len(paths) != 0:  
-            return model[paths[0]][0], model.get_iter(paths[0])
+            return model[paths[0]][self.OBJECT], model.get_iter(paths[0])
         return None, None
 
     def on_add(self, widget=None):
@@ -157,12 +192,12 @@ class TransactionsTree(gui_utils.Tree):
         dlg.destroy()
         if response == gtk.RESPONSE_OK:
             trans.delete()
-            self.get_model().remove(iterator)
+            self.model.remove(iterator)
     
     def on_set_transaction_category(self, category = None):
         trans, iterator = self._get_selected_transaction()
         trans.category = category
-        self.get_model()[iterator] = self.get_item_to_insert(trans)
+        self.model[iterator] = self.get_item_to_insert(trans)
 
     def show_context_menu(self, event):
         trans, iter = self._get_selected_transaction()
@@ -215,6 +250,9 @@ class TransactionsTree(gui_utils.Tree):
     def on_button_release(self, widget, event):
         # re-enable selection
         self.get_selection().set_select_function(lambda *ignore: True)        
+
+    def clear(self):
+        self.model.clear()
 
 
 class CategoriesTree(gui_utils.Tree):

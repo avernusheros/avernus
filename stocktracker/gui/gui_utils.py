@@ -167,7 +167,7 @@ def resize_wrap(scroll, allocation, treeview, column, cell):
     cell.props.wrap_width = newWidth
     column.set_property('min-width', newWidth )
     column.set_property('max-width', newWidth )
-    store = treeview.get_model()
+    store = treeview.model
     iter = store.get_iter_first()
     while iter and store.iter_is_valid(iter):
             store.row_changed(store.get_path(iter), iter)

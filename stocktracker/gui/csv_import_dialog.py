@@ -92,8 +92,8 @@ class PreviewTree(gui_utils.Tree):
         self.set_rules_hint(True)
         
         self.set_size_request(700,400)
-        model = gtk.ListStore(str, str, float)
-        self.set_model(model)
+        self.model = gtk.ListStore(str, str, float)
+        self.set_model(self.model)
         
         self.create_column('date', 0)
         column, cell = self.create_column('description', 1)

@@ -152,7 +152,6 @@ class StockSelector(gtk.VBox):
         gtk.VBox.__init__(self)
         self.search_field = gtk.Entry()
         self.search_field.set_icon_from_stock(1, gtk.STOCK_FIND)
-        self.search_field.set_icon_activatable(0, True)
         self.search_field.connect('activate', self.on_search)
         self.search_field.connect('icon-press', self.on_search)
         self.pack_start(self.search_field, expand=False, fill=False)
