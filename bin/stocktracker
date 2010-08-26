@@ -117,9 +117,9 @@ def start(db_file = None):
 if __name__ == "__main__":
     init_translations()
     # Support for command line options.
-    parser = optparse.OptionParser(version="%prog %ver")
-    parser.add_option("-v", "--verbose", action="store_true", dest="verbose", help=_("Show debug messages"))
-    parser.add_option("-f", "--file",  dest="datafile", help="Set database file")
+    parser = optparse.OptionParser(version='%prog %ver')
+    parser.add_option("-d", "--debug", action="store_true", dest="debug", help=_("enable debug output"))
+    parser.add_option("-f", "--file",  dest="datafile", help="set database file")
     (options, args) = parser.parse_args()
 
     #set the logging level to show debug messages

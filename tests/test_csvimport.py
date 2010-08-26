@@ -24,7 +24,7 @@ class CsvImporterTest(unittest.TestCase):
         self.assertEqual(amount, -42.99)
         
     def test_comdirect(self):
-        filename = 'data/csv/comdirect.csv'
+        filename = 'tests/data/csv/comdirect.csv'
         profile = {'encoding':'ISO-8859-2',
                    'row length':5,
                    'saldo indicator': None,
@@ -48,7 +48,7 @@ class CsvImporterTest(unittest.TestCase):
         self.assertEqual(amount, -32.27)   
    
     def test_psd(self):
-        filename = 'data/csv/psd.csv'
+        filename = 'tests/data/csv/psd.csv'
         profile = {'encoding':'ISO-8859-2',
                    'row length': 10,
                    'saldo indicator': 9,
@@ -71,7 +71,7 @@ class CsvImporterTest(unittest.TestCase):
         self.assertEqual(amount, 46.00) 
         
     def test_cortalconsors(self):
-        filename = 'data/csv/cortal_consors.csv'
+        filename = 'tests/data/csv/cortal_consors.csv'
         profile = {'encoding':'windows-1252',
                    'row length': 7,
                    'saldo indicator': None,

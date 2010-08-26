@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import unittest, sys
-from stocktracker.tests import test_suite
+from tests import test_suite
 
 def main():
     runner = unittest.TextTestRunner(stream=sys.stdout, descriptions=False, verbosity=3)
