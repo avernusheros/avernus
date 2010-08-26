@@ -105,7 +105,7 @@ def start(db_file = None):
     from stocktracker.gui.mainwindow import MainWindow
     from stocktracker.datasource_manager import DatasourceManager
     dsm = DatasourceManager()
-    window = MainWindow(dsm)
+    window = MainWindow()
     api = PluginAPI(window, dsm)
     window.pengine = init_plugin_engine(api)
     controller.datasource_manager = dsm

@@ -3,11 +3,11 @@ import sys
 import gtk
 from stocktracker.gui import gui_utils
 from stocktracker.logger import Log
-
+from stocktracker.objects import controller
            
 class PrefDialog(gtk.Dialog):
     
-    def __init__(self, pengine, dsm):
+    def __init__(self, pengine):
         gtk.Dialog.__init__(self, "Preferences", None,
                             gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
                             (gtk.STOCK_OK, gtk.RESPONSE_ACCEPT),
@@ -17,46 +17,69 @@ class PrefDialog(gtk.Dialog):
         notebook = gtk.Notebook()
         vbox.pack_start(notebook)
         notebook.append_page(PluginManager(pengine), gtk.Label('Plugins'))
-        #dsp = DataSourcePriorities(dsm)
-        #notebook.append_page(dsp, gtk.Label('Sources'))
+        notebook.append_page(SectorList(), gtk.Label('Sectors'))
         self.show_all()
         self.run()
-        #dsp.on_close()  
         self.destroy()
         Log.debug("PrefDialog destroyed")
 
       
-class DataSourcePriorities(gtk.VBox):
+class SectorList(gtk.VBox):
     
-    def __init__(self, dsm):
+    OBJECT = 0
+    NAME = 1
+    
+    def __init__(self):
         gtk.VBox.__init__(self)
-        self.dsm = dsm
-        label = gtk.Label('Define priorities by reordering the sources')
-        self.pack_start(label)
-        
         self.tree = gui_utils.Tree()
-        self.model = gtk.ListStore(str, str, str, str)
+        self.model = gtk.ListStore(object, str)
         self.tree.set_model(self.model)
-        col, cell = self.tree.create_column('Source', 0)
-        col.set_reorderable(False)
-        self.tree.create_icon_column('Search', 1)
-        self.tree.create_icon_column('Update', 2)
-        self.tree.create_icon_column('Historical data', 3)
-        self.tree.set_reorderable(True)
-        self.pack_start(self.tree)
-        self.connect('expose-event', self.show)
-    
-    def show(self, *args):
-        icons = {True:'gtk-apply', False:'gtk-cancel'}
-        self.tree.clear()
-        for name in self.dsm.queue:
-            self.model.append([name, icons[getattr(self.dsm.sources[name], 'search', None) is not None]\
-                              , icons[getattr(self.dsm.sources[name], 'update_stocks', None) is not None]\
-                              , icons[getattr(self.dsm.sources[name], 'update_historical_prices', None) is not None]])
+        col, cell = self.tree.create_column('Sectors', self.NAME)
+        cell.set_property('editable', True)
+        cell.connect('edited', self.on_cell_edited) 
+        sw = gtk.ScrolledWindow()
+        sw.set_property('hscrollbar-policy', gtk.POLICY_AUTOMATIC)
+        sw.set_property('vscrollbar-policy', gtk.POLICY_AUTOMATIC)   
+        self.pack_start(sw, expand=True, fill=True)
+        sw.add(self.tree)
+        for sector in controller.getAllSector():
+            self.model.append([sector, sector.name])
+        actiongroup = gtk.ActionGroup('sectors')
+        actiongroup.add_actions([
+                ('add',     gtk.STOCK_ADD,    'new sector',      None, _('Add new sector'), self.on_add),      
+                ('rename',  gtk.STOCK_EDIT,   'rename sector',   None, _('Rename selected sector'), self.on_edit),
+                ('remove',  gtk.STOCK_DELETE, 'remove sector',   None, _('Remove selected sector'), self.on_remove)
+                     ])
+        toolbar = gtk.Toolbar()
+        self.conditioned = ['rename', 'edit']
+        
+        for action in actiongroup.list_actions():
+            button = action.create_tool_item()
+            toolbar.insert(button, -1)
+        self.pack_start(toolbar, expand=False, fill=True)
 
-    def on_close(self):
-        model = self.tree.get_model()
-        self.dsm.queue = [item[0] for item in model]
+    def on_add(self, widget):
+        sector = controller.newSector('new sector')
+        iterator = self.model.append([sector, sector.name])
+        #self.expand_row( model.get_path(parent_iter), True)
+        self.tree.set_cursor(self.model.get_path(iterator), focus_column = self.tree.get_column(0), start_editing=True)
+    
+    def on_edit(self, widget):
+        selection = self.tree.get_selection()
+        model, selection_iter = selection.get_selected()
+        if selection_iter:
+            self.tree.set_cursor(model.get_path(selection_iter), focus_column = self.tree.get_column(0), start_editing=True)
+    
+    def on_remove(self, widget):
+        selection = self.tree.get_selection()
+        model, selection_iter = selection.get_selected()
+        if selection_iter:
+            model[selection_iter][self.OBJECT].delete()
+            self.model.remove(selection_iter)
+
+    def on_cell_edited(self, cellrenderertext, path, new_text):
+        self.model[path][self.OBJECT].name = self.model[path][self.NAME] = new_text
+
 
 class PluginManager(gtk.VBox):
     

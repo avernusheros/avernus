@@ -86,8 +86,7 @@ def createTables():
 
 def load_fixtures():
     for sname in ['Basic Materials','Conglomerates','Consumer Goods','Energy','Financial','Healthcare','Industrial Goods','Services','Technology','Transportation','Utilities']:
-        s = Sector(name=sname)
-        s.insert()
+        newSector(sname)
 
 def update_all():
     datasource_manager.update_stocks(getAllStock()+getAllIndex())
@@ -198,6 +197,11 @@ def newTag(name):
     result.insert()
     pubsub.publish('tag.created',result)
     return result
+
+def newSector(name):
+    result = Sector(name=name)
+    result.insert()
+    return result
  
 def newStock(insert=True, **kwargs):
     result = Stock(**kwargs)
@@ -290,6 +294,11 @@ def deleteAllPortfolioPosition(portfolio):
     for pos in getPositionForPortfolio(portfolio):
         #print "deleting ",pos
         pos.delete()
+ 
+def deleteSectorFromStock(sector):
+    for stock in getAllStock():
+        if stock.sector == sector:
+            stock.sector = None
         
 def getTransactionForPosition(position):
     key = position.getPrimaryKey()

@@ -1,4 +1,6 @@
 from stocktracker.objects.model import SQLiteEntity
+import stocktracker.objects.controller
+
 
 class Sector(SQLiteEntity):
 
@@ -8,3 +10,10 @@ class Sector(SQLiteEntity):
                    'id': 'INTEGER',
                    'name': 'VARCHAR'                   
                   }
+
+    def onDelete(self, **kwargs):
+        stocktracker.objects.controller.deleteSectorFromStock(self)
+        
+    __callbacks__ = {
+                     'onDelete':onDelete
+                     }
