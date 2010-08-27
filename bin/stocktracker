@@ -28,6 +28,7 @@ if (os.path.exists(os.path.join(PROJECT_ROOT_DIRECTORY, 'stocktracker'))
     sys.path.insert(0, PROJECT_ROOT_DIRECTORY)
     os.putenv('PYTHONPATH', PROJECT_ROOT_DIRECTORY) # for subprocesses
 
+import stocktracker
 from stocktracker import config
 from stocktracker.plugin_engine import PluginEngine
 from stocktracker.plugin_api    import PluginAPI
@@ -117,13 +118,13 @@ def start(db_file = None):
 if __name__ == "__main__":
     init_translations()
     # Support for command line options.
-    parser = optparse.OptionParser(version='%prog %ver')
+    parser = optparse.OptionParser(version='%prog '+stocktracker.__version__)
     parser.add_option("-d", "--debug", action="store_true", dest="debug", help=_("enable debug output"))
     parser.add_option("-f", "--file",  dest="datafile", help="set database file")
     (options, args) = parser.parse_args()
 
     #set the logging level to show debug messages
-    if options.verbose:
+    if options.debug:
         import logging
         Log.setLevel(logging.DEBUG)
         Log.debug("Debug output enabled.")
