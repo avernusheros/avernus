@@ -142,8 +142,9 @@ class CsvImporter:
 
     def create_transactions(self, account):
         for result in self.results:
-            ta = controller.newAccountTransaction(date=result[0], description=result[1], amount=result[2], account=account)
-            pubsub.publish('accountTransaction.created', ta)
+            ta = controller.newAccountTransaction(date=result[0], description=result[1], amount=result[2], account=account, detect_duplicates = True)
+            if ta:
+                pubsub.publish('accountTransaction.created', ta)
        
 
 class UnicodeReader:

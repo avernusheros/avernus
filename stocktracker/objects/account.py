@@ -106,12 +106,12 @@ class AccountTransaction(SQLiteEntity):
     __columns__ = {
                    'id': 'INTEGER',
                    'description': 'VARCHAR',
-                   'type': 'INTEGER',
                    'amount': 'FLOAT',
                    'date' :'DATE',
                    'account': Account,
                    'category': AccountCategory
                   }
-    
+    __comparisonPositives__ = ['amount', 'date', 'description']
+
     def isEarning(self):
         return self.amount >= 0

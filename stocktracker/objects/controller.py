@@ -52,7 +52,17 @@ def is_duplicate(tp, **kwargs):
     if present:
         return True
     else: return False
-            
+
+def check_duplicate(tp, **kwargs):
+    sqlArgs = {}
+    for req in tp.__comparisonPositives__:
+        sqlArgs[req] = kwargs[req]
+    present = tp.getByColumns(sqlArgs,operator=" AND ",create=True)  
+    if present:
+        return present
+    return None
+    
+      
 def detectDuplicate(tp,**kwargs):
     #print tp, kwargs
     sqlArgs = {}
@@ -115,9 +125,23 @@ def newAccount(name, id=None, amount=0, type=1):
     result.insert()
     return result
 
-def newAccountTransaction(id=None, description='', amount=0.0, type=1, account=None, category=None, date=datetime.date.today()):
-    result = AccountTransaction(id=id, description=description, \
-                    amount=amount, date=date, type=type, account=account, category=None)
+def newAccountTransaction(id=None, description='', amount=0.0, account=None, category=None, date=datetime.date.today(), detect_duplicates=False):
+    
+    if detect_duplicates:
+        duplicates = check_duplicate(AccountTransaction,\
+                               description=description, \
+                               amount=amount, \
+                               date=date, \
+                               account=account, \
+                               category=category)
+        if duplicates:
+            return None
+    result = AccountTransaction(id=id, \
+                                description=description, \
+                                amount=amount, \
+                                date=date, \
+                                account=account, \
+                                category=category)
     result.insert()
     return result
 
