@@ -47,9 +47,9 @@ class AccountChartTab(gtk.ScrolledWindow):
 
     def show(self):
         self.table.attach(chart.AccountChart.getEarningsSpendingsChart(self.account, self.current_zoom, self.current_step),0,2,2,3)
-        self.table.attach(chart.AccountChart.get_balance_chart(self.account, self.current_zoom),0,2,4,5)
-        self.table.attach(chart.AccountChart.get_category_pie(self.account, self.current_zoom, earnings=False),0,1,6,7)
-        self.table.attach(chart.AccountChart.get_category_pie(self.account, self.current_zoom, earnings=True),1,2,6,7)
+        #self.table.attach(chart.AccountChart.get_balance_chart(self.account, self.current_zoom),0,2,4,5)
+        #self.table.attach(chart.AccountChart.get_category_pie(self.account, self.current_zoom, earnings=False),0,1,6,7)
+        #self.table.attach(chart.AccountChart.get_category_pie(self.account, self.current_zoom, earnings=True),1,2,6,7)
         self.show_all()
     
     def on_zoom_change(self, cb):

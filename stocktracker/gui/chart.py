@@ -59,14 +59,19 @@ class AccountChart:
         start_date = _get_start_date(end_date, zoom)
 
         earnings = chart.account.get_earnings_summed(end_date, start_date, step)
-        spendings = chart.account.get_earnings_summed(end_date, start_date, step)
+        spendings = chart.account.get_spendings_summed(end_date, start_date, step)
+        #print "EARNINGS"
+        #print earnings
+        #print "SPENDINGS"
+        #print spendings
         legend = _get_legend(end_date, start_date, step)
         chart.chart.set_args({'data':[earnings, spendings],
                      'x_labels':legend,
                      'y_title': 'Amount',
                      'series_colors': ['blue','green'],
                      'grid': True,
-                     'dots': True,
+                     'dots': 2,
+                     'dash': False,
                      'width':600,
                      'height':300,
                      })

@@ -48,7 +48,7 @@ class Account(SQLiteEntity):
         amount = self.amount
         res = [(today, amount)]
         for change, date in controller.getAccountChangeInPeriodPerDay(self, start_date, today):
-            print date, change
+            #print date, change
             res.append((date, amount)) 
             amount -= change
         res.reverse()
@@ -74,7 +74,6 @@ class Account(SQLiteEntity):
             temp = start_date+delta
             ret.append(controller.getEarningsOrSpendingsSummedInPeriod(self, start_date, temp, earnings=earnings))
             start_date += delta
-        print ret
         return ret
 
     def birthday(self):
