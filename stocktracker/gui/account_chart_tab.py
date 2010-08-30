@@ -1,10 +1,8 @@
 #!/usr/bin/env python
 
-from stocktracker.cairoplot.gtkcairoplot \
-    import gtk_pie_plot, gtk_vertical_bar_plot, gtk_dot_line_plot
+from stocktracker import cairoplot
 import gtk
 from stocktracker.objects import controller
-import chart
 import datetime
 from stocktracker import date_utils
 from dateutil.relativedelta import relativedelta
@@ -153,16 +151,17 @@ class BalanceChart(gtk.VBox, Chart):
         #selects every 20. date for the legend
         legend = [str(balance[int(len(balance)/20 *i)][0]) for i in range(20)]
         
-        self.chart = gtk_dot_line_plot()
-        self.chart.set_args({'data': [item[1] for item in balance],
-                             'x_labels':legend,
-                             'y_title': 'Amount',
-                             'series_colors': ['blue','green'],
-                             'grid': True,
-                             'dots': True,
-                             'width':600,
-                             'height':300,
-                             })
+        plot = cairoplot.plots.DotLinePlot('gtk', 
+                                data=[item[1] for item in balance],
+                                width=600,
+                                height=300,
+                                x_labels=legend,
+                                y_title='Amount',
+                                background="white light_gray",
+                                grid=True,
+                                dots=2,
+                                series_colors=['blue','green'])
+        self.chart = plot.handler
         self.pack_start(self.chart)
 
 
@@ -182,20 +181,21 @@ class EarningsVsSpendingsChart(gtk.VBox, Chart):
         self._draw_chart()
     
     def _draw_chart(self):
-        self.chart = gtk_dot_line_plot()
         earnings = self.account.get_earnings_summed(self.end_date, self.start_date, self.step)
         spendings = self.account.get_spendings_summed(self.end_date, self.start_date, self.step)
         legend = get_legend(self.start_date, self.end_date, self.step)
-        self.chart.set_args({'data':[earnings, spendings],
-                             'x_labels':legend,
-                             'y_title': 'Amount',
-                             'series_colors': ['blue','green'],
-                             'grid': True,
-                             'dots': 2,
-                             'dash': False,
-                             'width':600,
-                             'height':300,
-                     })
+        plot = cairoplot.plots.DotLinePlot('gtk', 
+                                data=[earnings, spendings],
+                                width=600,
+                                height=300,
+                                x_labels=legend,
+                                y_title='Amount',
+                                background="white light_gray",
+                                grid=True,
+                                dots=2,
+                                series_colors=['blue','green'],
+                                dash=False)
+        self.chart = plot.handler
         self.pack_start(self.chart)
 
 
@@ -240,10 +240,13 @@ class CategoryPie(gtk.VBox, Chart):
                 else: #new bucket
                     self.liststore.append([t.category, bucket])
                     buckets[bucket] = t.amount
-        self.chart = gtk_pie_plot()
-        self.chart.set_args({'data':buckets, 
-                        'width':300, 
-                        'height':300, 
-                        'gradient':True, 
-                        'shadow':False})
+                    
+        plot = cairoplot.plots.PiePlot('gtk', 
+                                data=buckets,
+                                width=300,
+                                height=300,
+                                gradient=True,
+                                shadow=False
+                                )
+        self.chart = plot.handler            
         self.pack_start(self.chart)

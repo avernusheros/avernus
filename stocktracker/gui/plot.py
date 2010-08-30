@@ -2,7 +2,7 @@
 
 import gtk
 from datetime import date
-from stocktracker.cairoplot.gtkcairoplot import gtk_dot_line_plot, gtk_vertical_bar_plot
+from stocktracker import cairoplot
 from stocktracker.gui.gui_utils import get_green_red_string
 from stocktracker.objects.quotation import Quotation
 from stocktracker.objects import controller
@@ -87,17 +87,18 @@ class Chart(gtk.VBox):
         legend = [str(data[int(len(data)/18 *i)].date) for i in range(18)]
         legend.insert(0,str(data[0].date))
         legend.insert(len(legend),str(data[-1].date))
-       
-        p1 = gtk_dot_line_plot()
-        p1.set_args({'data':quotes, 
-                     'x_labels':legend, 
-                     'y_title': 'Share Price',
-                     'series_colors': ['blue'],
-                     'grid': True,
-                     'width':600, 
-                     'height':250,
-                     'y_bounds':(y_min, y_max)})
-                   
+
+        plot = cairoplot.plots.DotLinePlot('gtk', 
+                        data=quotes,
+                        x_labels=legend, 
+                        y_title='Share Price',
+                        width=600,
+                        height=250,
+                        background="white light_gray",
+                        grid=True,                        
+                        series_colors=['blue'],
+                        y_bounds=(y_min, y_max)
+                        )
         change = quotes[-1] - quotes[0]
         if quotes[0] == 0:
             safeDiv = 1
@@ -107,10 +108,9 @@ class Chart(gtk.VBox):
         label = gtk.Label()
         label.set_markup(str(date2)+' - '+str(date1)+'     '+change_str)
         vbox.add(label)
-        vbox.add(p1)
+        vbox.add(plot.handler)
         vbox.add(gtk.Label(_('Trade Volume')))
         
-        p2 = gtk_vertical_bar_plot()
         vols = [d.volume for d in data]
         volLegend = []
         maxVol = max(vols)
@@ -121,19 +121,19 @@ class Chart(gtk.VBox):
             for i in range(split):
                 volLegend.append(str((i+1)*slice))
         #[str(max(vols)), str(min(vols))]
-        p2.set_args({'data':vols, 
-                     #'x_labels':legend, 
-                     'grid': True,
-                     'width':600, 
-                     'height':100,
-                     'y_labels': volLegend,
-                     'colors':['blue' for i in range(len(vols))]})
-                     
-        vbox.add(p2)
+        plot = cairoplot.plots.VerticalBarPlot('gtk', 
+                        data=vols,
+                        width=600,
+                        height=100,
+                        background="white light_gray",
+                        grid=True,
+                        y_labels=volLegend,
+                        series_colors=['blue' for i in range(len(vols))],
+                        )
+        vbox.add(plot.handler)
         self.current_chart = vbox
         self.add(vbox)
         self.show_all()
-        
         
     def on_zoom_change(self, cb):
         zoom = self.zooms[cb.get_active()]

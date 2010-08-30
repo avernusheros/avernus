@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
-from stocktracker.cairoplot.gtkcairoplot \
-    import gtk_pie_plot, gtk_vertical_bar_plot, gtk_dot_line_plot
+from stocktracker import cairoplot
 import gtk
 from stocktracker.objects import controller
 no_data_string = '\nNo Data!\nAdd positions to portfolio first.\n\n'
@@ -27,7 +26,7 @@ class ChartTab(gtk.ScrolledWindow):
         table.attach(self.current_pie(),0,1,1,2)
 
         table.attach(gtk.Label(_('Investment types')),1,2,0,1)
-        table.attach(self.types_chart('pie'),1,2,1,2)
+        table.attach(self.types_chart(),1,2,1,2)
         #table.attach(self.types_chart('vertical_bars'),1,2,3,4)
         
         table.attach(gtk.Label(_('Tags')),0,1,2,3)
@@ -56,23 +55,28 @@ class ChartTab(gtk.ScrolledWindow):
                     data[pos.name] = pos.cvalue
         if len(data) == 0:
             return gtk.Label(no_data_string)  
-        pie = gtk_pie_plot()        
-        pie.set_args({'data':data, 'width':300, 'height':300, 'gradient':True})
-        return pie
+        plot = cairoplot.plots.PiePlot('gtk',
+                                    data=data,
+                                    width=300,
+                                    height=300,
+                                    gradient=True
+                                    )        
+        return plot.handler
 
-    def types_chart(self, chart_type):
+    def types_chart(self):
         sum = {0:0.0, 1:0.0, 2:0.0}
         for pos in self.pf:
             sum[pos.stock.type] += pos.cvalue
         data = {'fund':sum[0], 'stock':sum[1]}
         if sum[0]+sum[1] == 0.0:
             return gtk.Label(no_data_string)      
-        if chart_type == 'pie':
-            chart = gtk_pie_plot()  
-        elif chart_type == 'vertical_bars':
-            chart = gtk_vertical_bar_plot()
-        chart.set_args({'data':data, 'width':300, 'height':300, 'gradient':True})
-        return chart
+        plot = cairoplot.plots.PiePlot('gtk',
+                                    data=data,
+                                    width=300,
+                                    height=300,
+                                    gradient=True
+                                    )        
+        return plot.handler
         
     def tags_pie(self):
         data = {}
@@ -84,9 +88,13 @@ class ChartTab(gtk.ScrolledWindow):
                     data[tag] = pos.cvalue
         if len(data) == 0:
             return gtk.Label(no_data_string)            
-        pie = gtk_pie_plot()        
-        pie.set_args({'data':data, 'width':300, 'height':300, 'gradient':True})
-        return pie
+        plot = cairoplot.plots.PiePlot('gtk',
+                                    data=data,
+                                    width=300,
+                                    height=300,
+                                    gradient=True
+                                    )        
+        return plot.handler       
         
     def country_pie(self):
         data = {}
@@ -97,9 +105,13 @@ class ChartTab(gtk.ScrolledWindow):
                 data[pos.stock.country] = pos.cvalue
         if len(data) == 0:
             return gtk.Label(no_data_string)        
-        pie = gtk_pie_plot()        
-        pie.set_args({'data':data, 'width':300, 'height':300, 'gradient':True})
-        return pie
+        plot = cairoplot.plots.PiePlot('gtk',
+                                    data=data,
+                                    width=300,
+                                    height=300,
+                                    gradient=True
+                                    )        
+        return plot.handler
     
     def sector_pie(self):       
         data = {'None':0.0}
@@ -114,9 +126,13 @@ class ChartTab(gtk.ScrolledWindow):
                     data[sector] = pos.cvalue
         if sum(data.values()) == 0:
             return gtk.Label(no_data_string)         
-        pie = gtk_pie_plot()        
-        pie.set_args({'data':data, 'width':300, 'height':300, 'gradient':True})
-        return pie
+        plot = cairoplot.plots.PiePlot('gtk',
+                                    data=data,
+                                    width=300,
+                                    height=300,
+                                    gradient=True
+                                    )        
+        return plot.handler
 
     def cash_chart(self):
         #stufenchart?
