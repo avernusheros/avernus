@@ -87,14 +87,14 @@ class AccountChartTab(gtk.ScrolledWindow):
         label = gtk.Label()
         label.set_markup('<b>Earnings</b>') 
         self.table.attach(label,0,1,5,6)
-        chart = CategoryPie(self.account, self.start_date, self.end_date, earnings=False)
+        chart = CategoryPie(self.account, self.start_date, self.end_date, earnings=True)
         self.charts.append(chart)
         self.table.attach(chart,0,1,6,7)
         
         label = gtk.Label()
         label.set_markup('<b>Spendings</b>')
         self.table.attach(label,1,2,5,6)
-        chart = CategoryPie(self.account, self.start_date, self.end_date, earnings=True)
+        chart = CategoryPie(self.account, self.start_date, self.end_date, earnings=False)
         self.table.attach(chart,1,2,6,7)
         self.charts.append(chart)
         self.show_all()
@@ -208,7 +208,6 @@ class CategoryPie(gtk.VBox, Chart):
         self.start_date = start_date
         self.end_date = end_date
         self.category = None
-        self.roots, self.hierarchy = controller.getAllAccountCategoriesHierarchical()
         self._init_widgets()
         self._draw_chart()
 
@@ -218,35 +217,41 @@ class CategoryPie(gtk.VBox, Chart):
         cell = gtk.CellRendererText()
         combobox.pack_start(cell, True)
         combobox.add_attribute(cell, 'text', 1)
+        combobox.connect('changed', self.on_category_changed)
         hbox = gtk.HBox()
         hbox.pack_start(gtk.Label(_('Category')))
         hbox.pack_start(combobox)
         self.pack_start(hbox)
     
     def _draw_chart(self):
-        if self.b_earnings:
-            trans = self.account.yield_earnings_in_period(self.start_date, self.end_date)
-        else:
-            trans = self.account.yield_spendings_in_period(self.start_date, self.end_date)
-        buckets =  {}
-        for t in trans:
-            if t.category in self.roots or t.category is None:
-                if t.category is None:
-                    bucket = 'None'
-                else:
-                    bucket = t.category.name
-                if bucket in buckets: 
-                    buckets[bucket] += t.amount
-                else: #new bucket
-                    self.liststore.append([t.category, bucket])
-                    buckets[bucket] = t.amount
-                    
+        self.liststore.clear()
+        self.liststore.append([None, 'top level'])
+        sums = self.account.get_sum_in_period_by_category(self.start_date,\
+                          self.end_date, self.category, self.b_earnings)        
+        data = {}
+        for cat, amount in sums.items():
+            if cat == 'None':
+                name = cat
+            else:
+                name = cat.name
+            if amount != 0:
+                data[name] = amount
+                if cat != 'None':
+                    self.liststore.append([cat, name])
         plot = cairoplot.plots.PiePlot('gtk', 
-                                data=buckets,
+                                data=data,
                                 width=300,
                                 height=300,
                                 gradient=True,
                                 shadow=False
                                 )
-        self.chart = plot.handler            
+        self.chart = plot.handler   
+        self.chart.show()         
         self.pack_start(self.chart)
+    
+    def on_category_changed(self, combobox):
+        active_iter = combobox.get_active_iter()
+        if active_iter:
+            self.category, name = self.liststore[active_iter]
+            self.remove(self.chart)
+            self._draw_chart()

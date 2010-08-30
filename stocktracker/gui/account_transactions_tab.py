@@ -207,7 +207,7 @@ class TransactionsTree(gui_utils.Tree):
                 context_menu.add(action.create_menu_item())
             if trans.category:
                 context_menu.add_item('Remove category', lambda widget: self.on_set_transaction_category())
-            roots, hierarchy = controller.getAllAccountCategoriesHierarchical()
+            hierarchy = controller.getAllAccountCategoriesHierarchical()
             
             def insert_recursive(cat, menu):
                 item = gtk.MenuItem(cat.name)
@@ -224,12 +224,12 @@ class TransactionsTree(gui_utils.Tree):
                 else:
                     item.connect('activate', lambda widget: self.on_set_transaction_category(cat))
                         
-            if len(roots) > 0:
+            if len(hierarchy[None]) > 0:
                 item = gtk.MenuItem("Move to category")
                 context_menu.add(item)
                 category_menu = gtk.Menu()
                 item.set_submenu(category_menu)
-                for cat in roots:
+                for cat in hierarchy[None]:
                     insert_recursive(cat, category_menu)
             context_menu.show(event)
 
@@ -283,8 +283,8 @@ class CategoriesTree(gui_utils.Tree):
                 for child_cat in hierarchy[cat.id]:
                     insert_recursive(child_cat, new_iter)
         model = self.get_model()
-        roots, hierarchy = controller.getAllAccountCategoriesHierarchical()
-        for cat in roots: #start with root categories
+        hierarchy = controller.getAllAccountCategoriesHierarchical()
+        for cat in hierarchy[None]: #start with root categories
             insert_recursive(cat, None)
     
     def insert_item(self, cat):
@@ -449,8 +449,8 @@ class EditTransaction(gtk.Dialog):
                     insert_recursive(child_cat, new_iter)
         new_iter = treestore.append(None, [None, 'None'])
         self.combobox.set_active_iter(new_iter)
-        roots, hierarchy = controller.getAllAccountCategoriesHierarchical()
-        for cat in roots: #start with root categories
+        hierarchy = controller.getAllAccountCategoriesHierarchical()
+        for cat in hierarchy[None]: #start with root categories
             insert_recursive(cat, None)
         
         hbox.pack_start(self.combobox)        

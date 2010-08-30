@@ -54,6 +54,40 @@ class Account(SQLiteEntity):
         res.reverse()
         return res
 
+    def get_sum_in_period_by_category(self, start_date, end_date, parent_category=None, b_earnings=False):
+        #sum for all categories including subcategories
+        if parent_category:
+            parent_category_id = parent_category.id
+        else:
+            parent_category_id = None
+        hierarchy = controller.getAllAccountCategoriesHierarchical()
+        cat_ids = {}
+        sums = {}
+        
+        def get_child_categories(parent):
+            if parent.id in hierarchy:
+                res = []
+                for cat in hierarchy[parent.id]:
+                    res.append(cat)
+                    res += get_child_categories(cat)
+                return res
+            return []
+        
+        if parent_category_id in hierarchy:
+            for cat in hierarchy[parent_category_id]:
+                cat_ids[cat] = [cat] + get_child_categories(cat)
+                sums[cat] = 0.0
+        
+        cat_ids['None'] = [parent_category]
+        sums['None'] = 0.0
+
+        for trans in self:
+            if trans.isEarning() == b_earnings:
+                for cat, subcats in cat_ids.items():
+                    if trans.category in subcats:
+                        sums[cat] += trans.amount
+        return sums
+
     def get_earnings_summed(self, end_date, start_date, period='month'):
         return self._get_earnings_or_spendings_summed(start_date, end_date, period, earnings=True)
     
