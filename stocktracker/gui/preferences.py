@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+# -*- Mode: Python; coding: utf-8; indent-tabs-mode: nil; tab-width: 4 -*-
 import sys
 import gtk
 from stocktracker.gui import gui_utils
@@ -7,11 +7,15 @@ from stocktracker.objects import controller
            
 class PrefDialog(gtk.Dialog):
     
+    DEFAULT_WIDTH = 200
+    DEFAULT_HEIGHT = 300
+    
     def __init__(self, pengine):
         gtk.Dialog.__init__(self, "Preferences", None,
                             gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
                             (gtk.STOCK_OK, gtk.RESPONSE_ACCEPT),
                             )
+        self.set_default_size(self.DEFAULT_WIDTH, self.DEFAULT_HEIGHT)
         Log.debug("PrefDialog started")
         vbox = self.get_content_area()
         notebook = gtk.Notebook()
@@ -103,12 +107,12 @@ class PluginManager(gtk.VBox):
         
         self.tree.set_headers_visible(False)
         self.tree.connect('cursor-changed', self.on_cursor_changed)
-        self.pack_start(self.tree, expand = False)
+        self.pack_start(self.tree, expand = True)
         self._insert_plugins()
         
         buttonbox = gtk.HButtonBox()
         buttonbox.set_layout(gtk.BUTTONBOX_END)
-        self.pack_start(buttonbox) 
+        self.pack_start(buttonbox, expand = False) 
         button = gtk.Button('About')
         button.connect('clicked', self.on_about_clicked)
         buttonbox.add(button)

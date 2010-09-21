@@ -10,6 +10,8 @@ from stocktracker import pubsub
 class AccountTransactionTab(gtk.VBox):
     
     BORDER_WIDTH = 5
+    #FIXME calculate slider position depending on the window size
+    SLIDER_POSITION = 600
     
     def __init__(self, item):
         gtk.VBox.__init__(self)
@@ -49,6 +51,7 @@ class AccountTransactionTab(gtk.VBox):
         frame.add(vbox)
         frame.set_shadow_type(gtk.SHADOW_IN)
         hpaned.pack2(frame, shrink=False, resize=True)
+        hpaned.set_position(self.SLIDER_POSITION)
         sw = gtk.ScrolledWindow()
         sw.set_property('hscrollbar-policy', gtk.POLICY_AUTOMATIC)
         sw.set_property('vscrollbar-policy', gtk.POLICY_AUTOMATIC)

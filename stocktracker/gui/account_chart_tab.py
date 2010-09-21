@@ -39,6 +39,8 @@ def get_legend(smaller, bigger, step):
 
 
 class AccountChartTab(gtk.ScrolledWindow):
+    
+    TABLE_SPACINGS = 5
 
     def __init__(self, account):
         gtk.ScrolledWindow.__init__(self)
@@ -46,6 +48,9 @@ class AccountChartTab(gtk.ScrolledWindow):
         self.set_property('hscrollbar-policy', gtk.POLICY_AUTOMATIC)
         self.set_property('vscrollbar-policy', gtk.POLICY_AUTOMATIC)
         self.table = gtk.Table()
+        self.table.set_col_spacings(self.TABLE_SPACINGS)
+        self.table.set_row_spacings(self.TABLE_SPACINGS)
+        
         self.add_with_viewport(self.table)
         self.zooms = ['ACT','1m', '3m', '6m', 'YTD', '1y','2y','5y', 'all']
         combobox = gtk.combo_box_new_text()
