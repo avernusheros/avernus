@@ -2,7 +2,7 @@
 # -*- coding: latin-1 -*-
 
 from __future__ import with_statement
-import os
+import os, glib
 __stocktracker_data_directory__ = '../data/'
 import ConfigParser
 
@@ -31,7 +31,7 @@ def getdatapath():
         raise project_path_not_found
 
 
-config_path = os.path.join( os.getenv('HOME'), '.config/stocktracker')
+config_path = os.path.join( glib.get_user_config_dir(), 'stocktracker')
 plugins_path = [os.path.join(os.getcwd(), 'stocktracker/plugins'), os.path.join(config_path,'plugins') ]
 #media_path = os.path.join(getdatapath(), 'media')
 timezone = 'CET'
