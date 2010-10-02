@@ -88,11 +88,16 @@ class CsvImporter:
     def _create_temp_csv(self, csvdata, profile):
         temp_file = tempfile.TemporaryFile()
         writer = csv.writer(temp_file)
+        started = False
         for row in UTF8Reader(csvdata, profile['dialect'], profile['encoding']):
             if len(row) == profile['row length']:
+                started = True
                 #remove newlines, caused sniffer to crash
                 row = map(lambda x: x.replace('\n', ''), row)
                 writer.writerow(row)
+            #If we find a blank line, assume we've hit the end of the transactions.
+            if not row and started:
+                break
         return temp_file
 
     def _detect_date_format(self, datestring):

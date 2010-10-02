@@ -1,56 +1,50 @@
-"PSD Bank Karlsruhe-Neustadt eG - BLZ 46534543"
+"PSD Bank Karlsruhe-Neustadt eG - BLZ 66090900"
 
 "Umsatzanzeige"
 
-"BLZ:";"46534543";;"Datum:";"26.06.2010"
-"Konto:";"1234566789";;"Uhrzeit:";"12:00:59"
-"Abfrage von:";"max Mustermann";;"Kontoinhaber:";"max Mustermann"
+"BLZ:";"66090900";;"Datum:";"03.09.2010"
+"Konto:";"3611673606";;"Uhrzeit:";"19:50:16"
+"Abfrage von:";"MAX MUSTERMANN";;"Kontoinhaber:";"MAX MUSTERMANN"
 
 "Zeitraum:";"Alle Umsätze";"von:";;"bis:";
 "Betrag in EUR:";;"von:";" ";"bis:";" "
 "Sortiert nach:";"Buchungstag";"absteigend"
 
 "Buchungstag";"Valuta";"Auftraggeber/Zahlungsempfänger";"Empfänger/Zahlungspflichtiger";"Konto-Nr.";"BLZ";"Vorgang/Verwendungszweck";"Währung";"Umsatz";" "
-"25.06.2010";"25.06.2010";"002183     1012        0102";"GA NR00007251 BLZ67090000 1";"1630124553";"67090000";"Lastschrift
-24.06/18.54UHR CITY N2
-EUR     200,00
-Gebührenerstattung  1,02 
-EUR durch Ihre PSD Bank";"EUR";"200,00";"S"
-"25.06.2010";"25.06.2010";"Mustermann, max";"billy";"1234566789";"46534543";"Dauerauftrag
-max Mustermann MIETE";"EUR";"283,41";"S"
-"24.06.2010";"24.06.2010";"max Mustermann";"billy";"1234566789";"46534543";"Überweisung
-STROM NACHZAHLUNG
-Verwendete TAN: 196851";"EUR";"46,00";"S"
-"24.06.2010";"23.06.2010";"Mustermann,max";"PSD BANK KARLSRUHE-NEUSTADT";"9937625900";"46534543";"Dividende
-GESCH.ANTEILKTO. 3611673799
-DIVIDENDE 2009";"EUR";"30,00";"H"
-"22.06.2010";"22.06.2010";"Mustermann max";"billy";"4724910";"54651240";"Dauerauftrag
-TELEFON";"EUR";"10,00";"H"
-"22.06.2010";"22.06.2010";"max Mustermann";"AMAZON SERVICES EUROPE SA";"1938073003";"30030880";"Lastschrift
-1863905405568002";"EUR";"18,00";"S"
-"18.06.2010";"18.06.2010";"5013193";"NETTO SAGT DANKE NMD 8181";"8957110";"30050000";"Lastschrift
-170618171013193101299981810
-ELV65317745 17.06 18.17 ME1";"EUR";"7,98";"S"
-"15.06.2010";"15.06.2010";"max Mustermann";"AMAZON SERVICES EUROPE SA";"1938073003";"30030880";"Lastschrift
-1265870456433126";"EUR";"55,87";"S"
-"14.06.2010";"14.06.2010";"5126846";"DM DROGERIEMARKT SAGT DANKE";"7402099997";"60050101";"Lastschrift
-100618351126846101207001130
-ELV65132016 10.06 18.35 ME1";"EUR";"16,90";"S"
-"14.06.2010";"14.06.2010";"1048556 EB379043 0024560031";"DANKE,IHR REAL,-LUDWIGSHAFE";"1558113";"30050000";"Lastschrift
-EC 65175006 11.06 15.28 CE1";"EUR";"38,10";"S"
-"14.06.2010";"14.06.2010";"max Mustermann";"max Mustermann";"3596418";"20041155";"Überweisung
+"03.09.2010";"03.09.2010";"5414";"HOAFEN";"7413";"30";"Lastschrift
+02091610005760
+ELV65227314 02.09 16.11 ME1";"EUR";"18,00";"S"
+"02.09.2010";"02.09.2010";"MAX MUSTERMANN";"MAX MUSTERMANN";"26765";"50010517";"Überweisung
 ÜBERTRAG
-Verwendete TAN: 303321";"EUR";"15,00";"S"
-"11.06.2010";"11.06.2010";"5077770";"ENGELHORN";"1982674";"54510067";"Lastschrift
-ELV61242615 10.06 18.17 ME1";"EUR";"20,00";"S"
-"11.06.2010";"11.06.2010";"005014     1012        0102";"GA NR00007251 BLZ67090000 1";"1630124553";"67090000";"Lastschrift
-10.06/17.41UHR CITY N2
-EUR     200,00
-Gebührenerstattung  1,02
-EUR durch Ihre PSD Bank";"EUR";"200,00";"S"
-"10.06.2010";"10.06.2010";"max Mustermann";"billy";"1234566789";"46534543";"Dauerauftrag
-ABSCHLAG MVV";"EUR";"18,25";"S"
+Verwendete TAN: 100";"EUR";"1.000,00";"S"
+"02.09.2010";"02.09.2010";"MUSTERMANN / MAXEMPTY DE";"MOA.";"1811";"50010900";"Lastschrift
+ZG. M02";"EUR";"50,00";"S"
+"01.09.2010";"01.09.2010";"MAX MUSTERMANN";"AG";"444166";"300";"Lastschrift
+702401339404 09/2010
+59,11
+HANG";"EUR";"59,11";"S"
+"01.09.2010";"01.09.2010";"MAX MUSTERMANN";"VO, 09.10";"300";"44037";"Lastschrift
+034025125 FONDS       51,83";"EUR";"51,83";"S"
+"01.09.2010";"01.09.2010";"MAX MUSTERMANN";"NUN";"46000";"712";"Lastschrift
+1023909081786 NER
+29,41   50881233012
+NLV LEBENSVERS.  01.09.10";"EUR";"29,41";"S"
+"01.09.2010";"01.09.2010";"MAX MUSTERMANN";"HL";"5100";"2011";"Dauerauftrag
+DSL FLAT UND TELEFON
+GRUNDGEBÜHR";"EUR";"10,00";"H"
+"01.09.2010";"01.09.2010";"MUSTERMANN, MAX";"A10";"9742";"3700";"Lastschrift
+ID 716372360 / 7151142
+LOS NR 832";"EUR";"12,00";"S"
+"31.08.2010";"31.08.2010";"MAX MUSTERMANN";"VH";"3902";"300";"Lastschrift
+ZAHLUNGSBELEG 138
+RE.KTO.NR. 813
+RE.NR.0039/21.08.10";"EUR";"38,95";"S"
+"31.08.2010";"31.08.2010";"MAX MUSTERMANN";"LH  5/424S";"510";"600";"Gutschr.öfftl.Kassen
+BEZUE18550/424S";"EUR";"732,34";"H"
+"30.08.2010";"30.08.2010";"MAX MUSTERMANN";"BH";"1700";"594";"Lohn/Gehalt/Rente
+LOHN/GEHALT 001008";"EUR";"1.435,22";"H"
+"25.08.2010";"25.08.2010";"MUSTERMANN, MAX";"MEEN";"366";"6600";"Dauerauftrag
+MAX MUSTERMANN MIETE";"EUR";"283,41";"S"
 
-
-"05.10.2009";;;;;;"EUR";"Anfangssaldo";"3.809,95";"H"
-"25.06.2010";;;;;;"EUR";"Endsaldo";"75,22";"H"
+"05.01.2010";;;;;;"EUR";"Anfangssaldo";"1.567,93";"H"
+"03.09.2010";;;;;;"EUR";"Endsaldo";"1.363,18";"H"

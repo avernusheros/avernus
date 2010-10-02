@@ -25,6 +25,13 @@ class Account(SQLiteEntity):
     def __iter__(self):
         return controller.getTransactionsForAccount(self).__iter__()
 
+    @property
+    def transaction_count(self):
+        count = 0
+        for ta in self:
+            count+=1
+        return count
+
     def get_transactions_in_period(self, start_date, end_date):
         res = []
         for trans in self:
