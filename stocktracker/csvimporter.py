@@ -117,7 +117,7 @@ class CsvImporter:
         elif decimal_separator == ',':
             amount_string = amount_string.replace('.','').replace(',','.')
         amount = float(amount_string)
-        if saldo_indicator in ['s','S','c','C']:
+        if saldo_indicator and saldo_indicator in ['s','S','c','C']:
             amount = -amount
         return amount
 
@@ -132,11 +132,18 @@ class CsvImporter:
                 if not first_line_skipped and profile['header']:
                     first_line_skipped = True
                     continue
+                if profile['saldo indicator']:
+                    amount = self._parse_amount(row[profile['amount column']], 
+                                           profile['decimal separator'], 
+                                           row[profile['saldo indicator']])
+                else:
+                    amount = self._parse_amount(row[profile['amount column']], 
+                                           profile['decimal separator'])
+                    
                 tran = [self._parse_date(row[profile['date column']], profile['date format']), 
                         ' - '.join([row[d] for d in profile['description column']]),
-                        self._parse_amount(row[profile['amount column']], 
-                                           profile['decimal separator'], 
-                                           profile['saldo indicator'])
+                        amount
+                        
                         ]    
                 result.append(tran)
             #If we find a blank line, assume we've hit the end of the transactions.

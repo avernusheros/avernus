@@ -68,7 +68,7 @@ class CsvImporterTest(unittest.TestCase):
         date, desc, amount = transactions[2]
         self.assertEqual(date, datetime.date(2010, 9, 2))
         self.assertEqual(desc, u'MUSTERMANN / MAXEMPTY DE - MOA. - 1811 - 50010900 - Lastschrift\r\nZG. M02 - EUR')
-        self.assertEqual(amount, 50.00) 
+        self.assertEqual(amount, -50.00) 
         
     def test_cortalconsors(self):
         filename = 'tests/data/csv/cortal_consors.csv'
