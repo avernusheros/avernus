@@ -59,25 +59,25 @@ class EditStockTable(gtk.Table):
         
         self.stock = stock
         
-        self.attach(gtk.Label(_('Name')),0,1,0,1)
+        self.attach(gtk.Label(_('Name')),0,1,0,1, yoptions=gtk.FILL)
         self.name_entry = gtk.Entry()
         self.name_entry.set_text(stock.name)
-        self.attach(self.name_entry,1,2,0,1)
+        self.attach(self.name_entry,1,2,0,1,yoptions=gtk.FILL)
 
-        self.attach(gtk.Label(_('ISIN')),0,1,1,2)
+        self.attach(gtk.Label(_('ISIN')),0,1,1,2, yoptions=gtk.FILL)
         self.isin_entry = gtk.Entry()
         self.isin_entry.set_text(stock.isin)
-        self.attach(self.isin_entry,1,2,1,2)
+        self.attach(self.isin_entry,1,2,1,2,yoptions=gtk.FILL)
         
-        self.attach(gtk.Label(_('Type')),0,1,2,3)
+        self.attach(gtk.Label(_('Type')),0,1,2,3, yoptions=gtk.FILL)
         self.types = {'fund':0, 'stock':1}
         self.type_cb = gtk.combo_box_new_text()
         for key, val in self.types.items():
             self.type_cb.append_text(key)
         self.type_cb.set_active(self.stock.type)
-        self.attach(self.type_cb, 1,2,2,3)
+        self.attach(self.type_cb, 1,2,2,3,  yoptions=gtk.FILL)
 
-        self.attach(gtk.Label(_('Sector')),0,1,3,4)
+        self.attach(gtk.Label(_('Sector')),0,1,3,4, yoptions=gtk.FILL)
         self.sector_cb = gtk.combo_box_new_text()
         self.sectors = {}
         current = 0
@@ -90,7 +90,7 @@ class EditStockTable(gtk.Table):
                 current = count
             count+=1
         self.sector_cb.set_active(current)
-        self.attach(self.sector_cb, 1,2,3,4)
+        self.attach(self.sector_cb, 1,2,3,4,  yoptions=gtk.FILL)
 
     def process_result(self, widget=None, response = gtk.RESPONSE_ACCEPT):
         if response == gtk.RESPONSE_ACCEPT:
@@ -128,6 +128,7 @@ class EditPositionTable(gtk.Table):
 
         self.attach(gtk.Label(_('Comment')),0,1,3,4)
         self.comment_entry = gtk.TextView()
+        self.comment_entry.set_size_request(50, 80)
         self.comment_entry.set_wrap_mode(gtk.WRAP_WORD)
         buffer = self.comment_entry.get_buffer()
         buffer.set_text(self.pos.comment)
