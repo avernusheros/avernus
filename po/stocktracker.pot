@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-08-17 18:05+0200\n"
+"POT-Creation-Date: 2010-08-22 13:57+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,7 +18,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #: ../stocktracker/gui/container_overview_tab.py:41
-#: ../stocktracker/gui/dialogs.py:62 ../stocktracker/gui/dialogs.py:165
+#: ../stocktracker/gui/dialogs.py:63 ../stocktracker/gui/dialogs.py:170
 #: ../stocktracker/gui/transactions_tab.py:31
 #: ../stocktracker/gui/indexpositions_tab.py:137
 #: ../stocktracker/gui/positions_tab.py:74
@@ -56,7 +56,7 @@ msgstr ""
 msgid "Delete selected dividend"
 msgstr ""
 
-#: ../stocktracker/gui/dividends_tab.py:44 ../stocktracker/gui/dialogs.py:21
+#: ../stocktracker/gui/dividends_tab.py:44 ../stocktracker/gui/dialogs.py:22
 msgid "Position"
 msgstr ""
 
@@ -93,116 +93,116 @@ msgstr ""
 msgid "Transaction costs: "
 msgstr ""
 
-#: ../stocktracker/gui/dialogs.py:12
+#: ../stocktracker/gui/dialogs.py:13
 #: ../stocktracker/gui/indexpositions_tab.py:110
 msgid "Edit position"
 msgstr ""
 
-#: ../stocktracker/gui/dialogs.py:22
+#: ../stocktracker/gui/dialogs.py:23
 msgid "Stock"
 msgstr ""
 
-#: ../stocktracker/gui/dialogs.py:37
+#: ../stocktracker/gui/dialogs.py:38
 msgid "Edit stock"
 msgstr ""
 
-#: ../stocktracker/gui/dialogs.py:67
+#: ../stocktracker/gui/dialogs.py:68
 msgid "ISIN"
 msgstr ""
 
-#: ../stocktracker/gui/dialogs.py:72 ../stocktracker/gui/dialogs.py:168
+#: ../stocktracker/gui/dialogs.py:73 ../stocktracker/gui/dialogs.py:173
 #: ../stocktracker/gui/positions_tab.py:75
 msgid "Type"
 msgstr ""
 
-#: ../stocktracker/gui/dialogs.py:80
+#: ../stocktracker/gui/dialogs.py:84
 msgid "Sector"
 msgstr ""
 
 #. shares entry
-#: ../stocktracker/gui/dialogs.py:113 ../stocktracker/gui/dialogs.py:300
+#: ../stocktracker/gui/dialogs.py:118 ../stocktracker/gui/dialogs.py:305
 #: ../stocktracker/gui/transactions_tab.py:33
 msgid "Shares"
 msgstr ""
 
-#: ../stocktracker/gui/dialogs.py:118
+#: ../stocktracker/gui/dialogs.py:123
 msgid "Buy price"
 msgstr ""
 
-#: ../stocktracker/gui/dialogs.py:123
+#: ../stocktracker/gui/dialogs.py:128
 msgid "Buy date"
 msgstr ""
 
-#: ../stocktracker/gui/dialogs.py:129
+#: ../stocktracker/gui/dialogs.py:134
 msgid "Comment"
 msgstr ""
 
-#: ../stocktracker/gui/dialogs.py:167
+#: ../stocktracker/gui/dialogs.py:172
 msgid "Currency"
 msgstr ""
 
-#: ../stocktracker/gui/dialogs.py:229
+#: ../stocktracker/gui/dialogs.py:234
 msgid "Sell a position"
 msgstr ""
 
-#: ../stocktracker/gui/dialogs.py:241
+#: ../stocktracker/gui/dialogs.py:246
 msgid "Shares:"
 msgstr ""
 
-#: ../stocktracker/gui/dialogs.py:248
+#: ../stocktracker/gui/dialogs.py:253
 msgid "Price:"
 msgstr ""
 
-#: ../stocktracker/gui/dialogs.py:281
+#: ../stocktracker/gui/dialogs.py:286
 msgid "Buy a position"
 msgstr ""
 
 #. price entry
-#: ../stocktracker/gui/dialogs.py:306
+#: ../stocktracker/gui/dialogs.py:311
 #: ../stocktracker/gui/transactions_tab.py:34
 msgid "Price"
 msgstr ""
 
 #. ta_costs entry
-#: ../stocktracker/gui/dialogs.py:312
+#: ../stocktracker/gui/dialogs.py:317
 #: ../stocktracker/gui/transactions_tab.py:35
 msgid "Transaction Costs"
 msgstr ""
 
 #. total
-#: ../stocktracker/gui/dialogs.py:318 ../stocktracker/gui/positions_tab.py:323
+#: ../stocktracker/gui/dialogs.py:323 ../stocktracker/gui/positions_tab.py:323
 msgid "Total"
 msgstr ""
 
-#: ../stocktracker/gui/dialogs.py:394
+#: ../stocktracker/gui/dialogs.py:399
 msgid "Add watchlist position"
 msgstr ""
 
-#: ../stocktracker/gui/dialogs.py:461
+#: ../stocktracker/gui/dialogs.py:466
 msgid "Split a position"
 msgstr ""
 
-#: ../stocktracker/gui/dialogs.py:464
+#: ../stocktracker/gui/dialogs.py:469
 msgid "Split"
 msgstr ""
 
-#: ../stocktracker/gui/dialogs.py:499
+#: ../stocktracker/gui/dialogs.py:504
 msgid "Merge two positions"
 msgstr ""
 
-#: ../stocktracker/gui/dialogs.py:507
+#: ../stocktracker/gui/dialogs.py:512
 msgid "Portfolio"
 msgstr ""
 
-#: ../stocktracker/gui/dialogs.py:512
+#: ../stocktracker/gui/dialogs.py:517
 msgid "First Position"
 msgstr ""
 
-#: ../stocktracker/gui/dialogs.py:517
+#: ../stocktracker/gui/dialogs.py:522
 msgid "Second Position"
 msgstr ""
 
-#: ../stocktracker/gui/dialogs.py:522
+#: ../stocktracker/gui/dialogs.py:527
 msgid ""
 "Only positions with identical stocks can be merged. This action can not be "
 "undone!"

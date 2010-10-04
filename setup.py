@@ -80,7 +80,7 @@ class InstallAndUpdateDataDirectory(DistUtilsExtra.auto.install_auto):
 
 DistUtilsExtra.auto.setup(
     name='stocktracker',
-    version='0.4.1',
+    version='0.4.1.1',
     license='GPL v3',
     author='stocktracker-heros',
     author_email='xyz@gmail.com',
