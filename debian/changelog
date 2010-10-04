@@ -4,6 +4,31 @@ stocktracker (0.5.0) maverick; urgency=low
 
  -- Wolfgang Steitz <wolfer@netbook>  Fri, 27 Aug 2010 09:56:44 +0200
 
+stocktracker (0.4.1.1) maverick; urgency=low
+
+  * New release.
+
+ -- Wolfgang Steitz <wolfer@netbook>  Sun, 22 Aug 2010 13:56:41 +0200
+
+stocktracker (0.4.1) maverick; urgency=low
+
+  * New release.
+
+ -- Wolfgang Steitz <wolfer@netbook>  Sun, 22 Aug 2010 13:52:18 +0200
+
+stocktracker (0.4.1) maverick; urgency=low
+
+  * New release.
+
+ -- Wolfgang Steitz <wolfer@franzi>  Tue, 17 Aug 2010 18:05:36 +0200
+
+stocktracker (0.4.1) maverick; urgency=low
+
+  * New release.
+
+ -- Wolfgang Steitz <wolfer@franzi>  Tue, 17 Aug 2010 14:01:08 +0200
+>>>>>>> MERGE-SOURCE
+
 stocktracker (0.4.1) maverick; urgency=low
 
   * New release.

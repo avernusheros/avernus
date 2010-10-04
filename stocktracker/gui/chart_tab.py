@@ -67,8 +67,8 @@ class ChartTab(gtk.ScrolledWindow):
         sum = {0:0.0, 1:0.0, 2:0.0}
         for pos in self.pf:
             sum[pos.stock.type] += pos.cvalue
-        data = {'fund':sum[0], 'stock':sum[1]}
-        if sum[0]+sum[1] == 0.0:
+        data = {'fund':sum[0], 'stock':sum[1], 'etf':sum[2]}
+        if sum[0]+sum[1]+sum[2] == 0.0:
             return gtk.Label(no_data_string)      
         plot = cairoplot.plots.PiePlot('gtk',
                                     data=data,
