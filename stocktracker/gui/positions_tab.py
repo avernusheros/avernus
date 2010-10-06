@@ -41,74 +41,68 @@ class PositionContextMenu(ContextMenu):
         
 
 class PositionsTree(Tree):
+    
+    COLS = {'obj':0,
+         'name':1, 
+         'start':2, 
+         'last_price':3, 
+         'change':4, 
+         'gain':5,
+         'shares':6, 
+         'buy_value':7,
+         'mkt_value':8,
+         'tags':9,
+         'days_gain':10,
+         'gain_percent':11,
+         'gain_icon':12, 
+         'change_percent':13,
+         'type': 14,
+         'pf_percent': 15
+          }
+
     def __init__(self, container, actiongroup):
         self.container = container
         self.actiongroup = actiongroup
         Tree.__init__(self)
-        self.cols = {'obj':0,
-                     'name':1, 
-                     'start':2, 
-                     'last_price':3, 
-                     'change':4, 
-                     'gain':5,
-                     'shares':6, 
-                     'buy_value':7,
-                     'mkt_value':8,
-                     'tags':9,
-                     'days_gain':10,
-                     'gain_percent':11,
-                     'gain_icon':12, 
-                     'change_percent':13,
-                     'type': 14,
-                     'pf_percent': 15
-                      }
-        
-        self.set_model(gtk.ListStore(object,str, float, float,float, float, float, float, float, str, float, float,str, float, str, float))
         
         self.watchlist = False
         if container.__name__ == 'Watchlist':
             self.watchlist = True
+        
+        self._init_widgets()    
+        self.load_positions()
+        self._connect_signals()
+        self.selected_item = None
+        self.on_unselect()
 
+    def _init_widgets(self):
+        self.set_model(gtk.ListStore(object,str, float, float,float, float, float, float, float, str, float, float,str, float, str, float))
+        
         if not self.watchlist:
-            self.create_column('#', self.cols['shares'], func=float_to_string)
-        self.create_column(_('Name'), self.cols['name'])
-        self.create_icon_column(_('Type'), self.cols['type'],size= gtk.ICON_SIZE_DND)
+            self.create_column('#', self.COLS['shares'], func=float_to_string)
+        self.create_column(_('Name'), self.COLS['name'])
+        self.create_icon_column(_('Type'), self.COLS['type'],size= gtk.ICON_SIZE_DND)
         if not self.watchlist:
-            self.create_column(_('Pf %'), self.cols['pf_percent'], func=float_to_string)
-        self.create_column(_('Start'), self.cols['start'], func=start_price_markup)
+            self.create_column(_('Pf %'), self.COLS['pf_percent'], func=float_to_string)
+        self.create_column(_('Start'), self.COLS['start'], func=start_price_markup)
         if not self.watchlist:
-            self.create_column(_('Buy value'), self.cols['buy_value'], func=float_to_string)
-        self.create_column(_('Last price'), self.cols['last_price'], func=current_price_markup)
-        self.create_column(_('Change'), self.cols['change'], func=float_to_red_green_string)
-        self.create_column('%', self.cols['change_percent'], func=float_to_red_green_string)
+            self.create_column(_('Buy value'), self.COLS['buy_value'], func=float_to_string)
+        self.create_column(_('Last price'), self.COLS['last_price'], func=current_price_markup)
+        self.create_column(_('Change'), self.COLS['change'], func=float_to_red_green_string)
+        self.create_column('%', self.COLS['change_percent'], func=float_to_red_green_string)
         if not self.watchlist:
-            self.create_column(_('Mkt value'), self.cols['mkt_value'], float_to_string)
-        self.create_column(_('Gain'), self.cols['gain'], float_to_red_green_string)
-        self.create_icon_text_column('%', self.cols['gain_icon'], self.cols['gain_percent'], func2=float_to_red_green_string)
+            self.create_column(_('Mkt value'), self.COLS['mkt_value'], float_to_string)
+        self.create_column(_('Gain'), self.COLS['gain'], float_to_red_green_string)
+        self.create_icon_text_column('%', self.COLS['gain_icon'], self.COLS['gain_percent'], func2=float_to_red_green_string)
         if not self.watchlist:
-            self.create_column(_('Today'), self.cols['days_gain'], float_to_red_green_string)
-        col, cell = self.create_column(_('Tags'), self.cols['tags'])
+            self.create_column(_('Today'), self.COLS['days_gain'], float_to_red_green_string)
+        col, cell = self.create_column(_('Tags'), self.COLS['tags'])
         cell.set_property('editable', True)
         cell.connect('edited', self.on_tag_edited)
-
         self.set_rules_hint(True)
-        self.load_positions()
-        
-        self.connect('button-press-event', self.on_button_press_event)
-        self.connect('cursor_changed', self.on_cursor_changed)
-        self.connect("destroy", self.on_destroy)
-        
-        self.subscriptions = (
-            ('stocks.updated', self.on_stocks_updated),
-            ('position.tags.changed', self.on_positon_tags_changed),
-            ('container.position.added', self.on_position_added)
-        )
-        for topic, callback in self.subscriptions:
-            pubsub.subscribe(topic, callback)
-            
-        self.selected_item = None
-        
-        actiongroup.add_actions([
+
+    def _connect_signals(self):
+        self.actiongroup.add_actions([
                 ('add',    gtk.STOCK_ADD,     'add',    None, _('Add new position'),         self.on_add),      
                 ('edit' ,  gtk.STOCK_EDIT,    'edit',   None, _('Edit selected position'),   self.on_edit),
                 ('remove', gtk.STOCK_DELETE,  'remove', None, _('Delete selected position'), self.on_remove),
@@ -117,13 +111,12 @@ class PositionsTree(Tree):
                 ('tag',    None,              'tag',    None, _('Tag selected position'),    self.on_tag),
                 ('update', gtk.STOCK_REFRESH, 'update', None, _('Update positions'),         lambda x: self.container.update_positions())
                                 ])
-        actiongroup.get_action('chart').set_icon_name('stocktracker')
-        actiongroup.get_action('tag').set_icon_name('tag')
+        self.actiongroup.get_action('chart').set_icon_name('stocktracker')
+        self.actiongroup.get_action('tag').set_icon_name('tag')
         accelgroup = gtk.AccelGroup()
-        for action in actiongroup.list_actions():
+        for action in self.actiongroup.list_actions():
             action.set_accel_group(accelgroup)
-        self.on_unselect()
-    
+            
     def on_button_press_event(self, widget, event):
         if event.button == 3:
             if self.selected_item is not None:
@@ -155,24 +148,24 @@ class PositionsTree(Tree):
     def on_positon_tags_changed(self, tags, item):
         row = self.find_position(item.id)
         if row:
-            row[self.cols['tags']] = item.tags_string
+            row[self.COLS['tags']] = item.tags_string
     
     def on_stocks_updated(self, container):
         if container.name == self.container.name:
             for row in self.get_model():
                 item = row[0]
                 gain, gain_percent = item.gain
-                row[self.cols['name']] = get_name_string(item.stock)
-                row[self.cols['last_price']] = item.stock.price
-                row[self.cols['change']] = item.current_change[0]
-                row[self.cols['change_percent']] = item.current_change[1]
-                row[self.cols['gain']] = gain
-                row[self.cols['gain_percent']] = gain_percent
-                row[self.cols['gain_icon']] = get_arrow_icon(gain_percent)
-                row[self.cols['days_gain']] = item.days_gain
-                row[self.cols['mkt_value']] = round(item.cvalue,2)
+                row[self.COLS['name']] = get_name_string(item.stock)
+                row[self.COLS['last_price']] = item.stock.price
+                row[self.COLS['change']] = item.current_change[0]
+                row[self.COLS['change_percent']] = item.current_change[1]
+                row[self.COLS['gain']] = gain
+                row[self.COLS['gain_percent']] = gain_percent
+                row[self.COLS['gain_icon']] = get_arrow_icon(gain_percent)
+                row[self.COLS['days_gain']] = item.days_gain
+                row[self.COLS['mkt_value']] = round(item.cvalue,2)
                 if not self.watchlist:
-                    row[self.cols['pf_percent']] = item.portfolio_fraction
+                    row[self.COLS['pf_percent']] = item.portfolio_fraction
                 
     def on_position_added(self, container, item):
         if container.id == self.container.id:
@@ -180,7 +173,7 @@ class PositionsTree(Tree):
             if not self.watchlist:
                 #update portfolio fractions
                 for row in self.get_model():
-                    row[self.cols['pf_percent']] = row[self.cols['obj']].portfolio_fraction
+                    row[self.COLS['pf_percent']] = row[self.COLS['obj']].portfolio_fraction
      
     def on_remove(self, widget):
         position, iter = self.selected_item
@@ -199,7 +192,7 @@ class PositionsTree(Tree):
                 if position.quantity == 0:
                     self.get_model().remove(iter)
                 else:
-                    self.get_model()[iter][self.cols['shares']] = position.quantity    
+                    self.get_model()[iter][self.COLS['shares']] = position.quantity    
     
     def on_add(self, widget):
         if self.watchlist:
