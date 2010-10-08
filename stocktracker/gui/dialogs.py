@@ -55,10 +55,10 @@ class EditStockDialog(gtk.Dialog):
 
 
 class EditStockTable(gtk.Table):
-    def __init__(self, current_stock):
+
+    def __init__(self, stock):
         gtk.Table.__init__(self)
-        
-        self.stock = current_stock
+        self.stock = stock
         
         self.attach(gtk.Label(_('Name')),0,1,0,1, yoptions=gtk.FILL)
         self.name_entry = gtk.Entry()
@@ -98,7 +98,7 @@ class EditStockTable(gtk.Table):
             self.stock.name = self.name_entry.get_text()
             self.stock.isin = self.isin_entry.get_text()
             active_iter = self.type_cb.get_active_iter()
-            self.stock.type = self.type_cb.get_model()[active_iter][1]
+            self.stock.type = self.types[self.type_cb.get_model()[active_iter][0]]
             if self.sector_cb.get_active() != 0:   
                 self.stock.sector = self.sectors[self.sector_cb.get_active()]
             else:
@@ -495,76 +495,6 @@ class SplitDialog(gtk.Dialog):
             val2 = self.val2.get_value()
             year, month, day = self.calendar.get_date()
             self.pos.split(val1, val2, datetime(year, month+1, day))
- 
-            
-class MergeDialog(gtk.Dialog):
-    def __init__(self):
-        gtk.Dialog.__init__(self, _("Merge two positions"), None
-                            , gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
-                     (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
-                      'Merge', gtk.RESPONSE_ACCEPT))
-        vbox = self.get_content_area()
-        table = gtk.Table(rows = 4, columns = 2)
-        vbox.pack_start(table)
-        
-        table.attach(gtk.Label(_('Portfolio')),0,1,0,1)
-        self.pf = PfSelector(model)
-        table.attach(self.pf,1,2,0,1)
-        self.pf.connect('changed', self.changed_pf)
-        
-        table.attach(gtk.Label(_('First Position')),0,1,1,2)
-        self.pos1 = PosSelector()
-        self.pos1.connect('changed', self.changed_pos, 0)
-        table.attach(self.pos1,1,2,1,2)
-        
-        table.attach(gtk.Label(_('Second Position')),0,1,2,3)
-        self.pos2 = PosSelector()
-        self.pos2.connect('changed', self.changed_pos, 1)
-        table.attach(self.pos2,1,2,2,3)
-        
-        table.attach(gtk.Label(_('Only positions with identical stocks can be merged. This action can not be undone!')),0,2,3,4)
-        
-        self.selected_pf = None
-        self.selected_pos = [None,None]
-        
-        self.set_response_sensitive(gtk.RESPONSE_ACCEPT, False)
-        self.show_all()
-        response = self.run()  
-        self.process_result(response)
-        
-        self.destroy()
-    
-    def changed_pf(self, combobox):
-        model = combobox.get_model()
-        index = combobox.get_active()
-        if index:
-            pass
-            #self.selected_pf = session['model'].portfolios[model[index][0]]
-        else:
-            self.selected_pf = None
-        self.pos1.on_pf_selection(self.selected_pf)
-        self.pos2.on_pf_selection(self.selected_pf)
-    
-    def changed_pos(self, combobox, pos_num):
-        model = combobox.get_model()
-        index = combobox.get_active()
-        if index:
-            self.selected_pos[pos_num] = self.selected_pf.positions[model[index][0]]
-        else:
-            self.selected_pos[pos_num] = None
-            
-        if self.selected_pos[1] is not None \
-                and self.selected_pos[0].stock_id == self.selected_pos[1].stock_id \
-                and self.selected_pos[0].id != self.selected_pos[1].id:
-            self.set_response_sensitive(gtk.RESPONSE_ACCEPT, True)
-        else:   
-            self.set_response_sensitive(gtk.RESPONSE_ACCEPT, False)
-        
-    def process_result(self, response):
-        if response == gtk.RESPONSE_ACCEPT:
-            self.selected_pf.merge_positions(self.selected_pos[0], self.selected_pos[1])
-        
-
 
 
 if __name__ == "__main__":

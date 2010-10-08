@@ -50,6 +50,12 @@ class Position(object):
             return "No Stock"
         return self.stock.name    
     
+    @property
+    def portfolio_fraction(self):
+        if self.portfolio.cvalue == 0:
+            return 0
+        else:
+            return 100 * self.cvalue / self.portfolio.cvalue 
 
    
 class PortfolioPosition(SQLiteEntity, Position):
@@ -114,13 +120,7 @@ class PortfolioPosition(SQLiteEntity, Position):
                         pass
             res.append((current, ta.quantity*price))    
         return res
-    
-    @property
-    def portfolio_fraction(self):
-        if self.portfolio.cvalue == 0:
-            return 0
-        else:
-            return 100 * self.cvalue / self.portfolio.cvalue  
+ 
 
 
 class WatchlistPosition(SQLiteEntity, Position):
@@ -138,3 +138,31 @@ class WatchlistPosition(SQLiteEntity, Position):
 
     quantity = 1
     tags_string =''
+
+
+class MetaPosition(Position):
+    
+    def __init__(self, position):
+        self.stock = position.stock
+        self.quantity = position.quantity
+        self.price = position.price
+        self.date = position.date    
+        self.portfolio = position.portfolio
+        self.positions = [position]
+
+    def add_position(self, position):
+        self.positions.append(position)
+        self._recalc_values_after_adding(position)
+    
+    def _recalc_values_after_adding(self, position):
+        amount = self.price*self.quantity + position.bvalue
+        self.quantity += position.quantity
+        self.price = amount / self.quantity
+        if position.date < self.date:
+            self.date = position.date
+        
+    def recalculate(self):
+        self.quantity = 0
+        self.date = self.positions[0].date
+        for position in self.positions:
+            self._recalc_values_after_adding(position)

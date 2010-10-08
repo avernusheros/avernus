@@ -61,7 +61,6 @@ class MenuBar(gtk.MenuBar):
              ('quit'          , gtk.STOCK_QUIT       , '_Quit'              , '<Control>q', None, parent.on_destroy),
              ('prefs'         , gtk.STOCK_PREFERENCES, '_Preferences'       , None        , None, parent.on_prefs),
              ('update'        , gtk.STOCK_REFRESH    , '_Update all stocks' , 'F5'        , None, lambda x: stocktracker.objects.controller.update_all()),
-             #('merge', _("Merge two positions"), gtk.STOCK_CONVERT, dialogs.MergeDialog),
              ('help'          , gtk.STOCK_HELP       , '_Help'              , 'F1'        , None, lambda x:web("https://answers.launchpad.net/stocktracker")),
              ('website'       , None                 , '_Website'           , None        , None, lambda x:web("https://launchpad.net/stocktracker")),
              ('feature'       , None                 , 'Request a _Feature' , None        , None, lambda x:web("https://blueprints.launchpad.net/stocktracker")),

@@ -6,7 +6,7 @@ from stocktracker.gui.plot import ChartWindow
 from stocktracker.gui.dialogs import SellDialog, NewWatchlistPositionDialog, SplitDialog, BuyDialog, EditPositionDialog
 from stocktracker.gui.gui_utils import Tree, ContextMenu, float_to_red_green_string, float_to_string, get_name_string, datetime_format
 from stocktracker.gui import gui_utils
-
+from stocktracker.objects.position import MetaPosition
 
 gain_thresholds = {
                    (-sys.maxint,-0.5):'arrow_down',
@@ -24,6 +24,8 @@ def get_arrow_icon(perc):
 def start_price_markup(column, cell, model, iter, user_data):
     pos = model.get_value(iter, 0)
     markup = gui_utils.get_string_from_float(model.get_value(iter, user_data)) +'\n' +'<small>'+gui_utils.get_datetime_string(pos.date)+'</small>'
+    if isinstance(pos, MetaPosition):
+        markup = unichr(8709) + " " + markup
     cell.set_property('markup', markup)
 
 def current_price_markup(column, cell, model, iter, user_data):
@@ -69,17 +71,22 @@ class PositionsTree(Tree):
         if container.__name__ == 'Watchlist':
             self.watchlist = True
         
-        self._init_widgets()    
+        self._init_widgets()
+        #to keep track of the stocks in the portfolio. if more than one
+        #position share the same stock, the positions are merged into 
+        #a metaposition
+        self.stock_cache = {}    
         self.load_positions()
         self._connect_signals()
         self.selected_item = None
         self.on_unselect()
 
     def _init_widgets(self):
-        self.set_model(gtk.ListStore(object,str, float, float,float, float, float, float, float, str, float, float,str, float, str, float))
+        self.model = gtk.TreeStore(object,str, float, float,float, float, str, float, float, str, float, float,str, float, str, float)
+        self.set_model(self.model)
         
         if not self.watchlist:
-            self.create_column('#', self.COLS['shares'], func=float_to_string)
+            self.create_column('#', self.COLS['shares'])
         self.create_column(_('Name'), self.COLS['name'])
         self.create_icon_column(_('Type'), self.COLS['type'],size= gtk.ICON_SIZE_DND)
         if not self.watchlist:
@@ -102,6 +109,17 @@ class PositionsTree(Tree):
         self.set_rules_hint(True)
 
     def _connect_signals(self):
+        self.connect('button-press-event', self.on_button_press_event)
+        self.connect('cursor_changed', self.on_cursor_changed)
+        self.connect("destroy", self.on_destroy)
+        self.subscriptions = (
+            ('stocks.updated', self.on_stocks_updated),
+            ('position.tags.changed', self.on_positon_tags_changed),
+            ('container.position.added', self.on_position_added)
+        )
+        for topic, callback in self.subscriptions:
+            pubsub.subscribe(topic, callback)
+            
         self.actiongroup.add_actions([
                 ('add',    gtk.STOCK_ADD,     'add',    None, _('Add new position'),         self.on_add),      
                 ('edit' ,  gtk.STOCK_EDIT,    'edit',   None, _('Edit selected position'),   self.on_edit),
@@ -146,14 +164,16 @@ class PositionsTree(Tree):
             pubsub.publish('position.newTag',position=obj,tagText=tag)
    
     def on_positon_tags_changed(self, tags, item):
-        row = self.find_position(item.id)
+        row = self.find_position(item)
         if row:
             row[self.COLS['tags']] = item.tags_string
     
     def on_stocks_updated(self, container):
         if container.name == self.container.name:
-            for row in self.get_model():
+            for row in self.model:
                 item = row[0]
+                if isinstance(item, MetaPosition):
+                    item.recalculate()
                 gain, gain_percent = item.gain
                 row[self.COLS['name']] = get_name_string(item.stock)
                 row[self.COLS['last_price']] = item.stock.price
@@ -185,14 +205,14 @@ class PositionsTree(Tree):
             dlg.destroy()
             if response == gtk.RESPONSE_OK:
                 position.delete()
-                self.get_model().remove(iter)
+                self.model.remove(iter)
         else:
             d = SellDialog(self.container, position)
             if d.response == gtk.RESPONSE_ACCEPT:
                 if position.quantity == 0:
-                    self.get_model().remove(iter)
+                    self.model.remove(iter)
                 else:
-                    self.get_model()[iter][self.COLS['shares']] = position.quantity    
+                    self.model[iter][self.COLS['shares']] = position.quantity    
     
     def on_add(self, widget):
         if self.watchlist:
@@ -212,13 +232,19 @@ class PositionsTree(Tree):
         EditPositionDialog(position)
         self.update_position_after_edit(position, iter)
     
-    def update_position_after_edit(self, pos, iter):
-        m = self.get_model()
-        row = m[iter]
+    def update_position_after_edit(self, pos, iter=None):
+        if iter is None:
+            iter = self.find_position(pos).iter
+        row = self.model[iter]
         col = 0
         for item in self._get_row(pos):
-            m.set_value(iter, col, item)    
+            self.model.set_value(iter, col, item)    
             col+=1
+        if not isinstance(pos, MetaPosition) and pos.stock.id in self.stock_cache:
+            item = self.stock_cache[pos.stock.id]
+            if isinstance(item, MetaPosition):
+                item.recalculate()
+                self.update_position_after_edit(item)            
         
     def on_cursor_changed(self, widget):
         #Get the current selection in the gtk.TreeView
@@ -245,7 +271,7 @@ class PositionsTree(Tree):
                stock.price, 
                c_change[0],
                gain[0],
-               position.quantity,
+               gui_utils.get_string_from_float(position.quantity),
                position.bvalue,
                position.cvalue,
                position.tagstring,
@@ -255,24 +281,49 @@ class PositionsTree(Tree):
                c_change[1],
                icons[position.stock.type],
                0]
+        
+        if isinstance(position, MetaPosition):
+            ret[self.COLS['shares']] = unichr(8721) + " "+ret[self.COLS['shares']]
         if not self.watchlist:
             ret[-1] = position.portfolio_fraction
         return ret
             
     def insert_position(self, position):
         if position.quantity != 0:
-            self.get_model().append(self._get_row(position))
+            tree_iter = None
+            if position.stock.id in self.stock_cache:
+                if isinstance(self.stock_cache[position.stock.id], MetaPosition):
+                    mp = self.stock_cache[position.stock.id]
+                    tree_iter = self.find_position(mp).iter
+                else:
+                    p1 = self.stock_cache[position.stock.id]
+                    mp = MetaPosition(p1)
+                    tree_iter = self.model.append(None, self._get_row(mp))
+                    self.stock_cache[position.stock.id] = mp
+                    self._move_position(p1, tree_iter)
+                mp.add_position(position)
+                self.update_position_after_edit(mp, tree_iter)
+            else:
+                self.stock_cache[position.stock.id] = position
+            self.model.append(tree_iter, self._get_row(position))
 
-    def find_position(self, pid):
+    def _move_position(self, position, parent=None):
+        row = self.find_position(position)
+        if row:
+            self.model.remove(row.iter)
+            self.model.append(parent, self._get_row(position))
+
+    def find_position(self, pos):
+        #search recursiv
         def search(rows):
             if not rows: return None
             for row in rows:
-                if row[0] == pid:
+                if row[0] == pos:
                     return row 
                 result = search(row.iterchildren())
                 if result: return result
             return None
-        return search(self.get_model())
+        return search(self.model)
         
 
 class InfoBar(gtk.HBox):
