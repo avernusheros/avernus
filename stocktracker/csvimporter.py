@@ -33,10 +33,15 @@ class CsvImporter:
 
         #row length
         t = [-1,-1,-1,-1]
+        maxlength = 0
+        # determine the maximum row length
         for row in UnicodeReader(csvdata, profile['dialect'], profile['encoding']):
-            #row with only 2 or less items are obviously no transactions
+            maxlength = max(maxlength, len(row))
+        csvdata.seek(0)
+        for row in UnicodeReader(csvdata, profile['dialect'], profile['encoding']):
+            # only rows with the maximum row length are transactions
             len_row = len(row)
-            if len_row < 3:
+            if len_row != maxlength:
                 continue
             t.append(len_row)
             if t[-1] == t[-2] == t[-3] == t[-4]:
@@ -94,6 +99,7 @@ class CsvImporter:
                 started = True
                 #remove newlines, caused sniffer to crash
                 row = map(lambda x: x.replace('\n', ''), row)
+                print row
                 writer.writerow(row)
             #If we find a blank line, assume we've hit the end of the transactions.
             if not row and started:
@@ -206,7 +212,7 @@ class UTF8Recoder:
     
     
 if __name__ == "__main__":
-    filename = '../data/csv/comdirect.csv'
+    filename = '../tests/data/csv/dkb.csv'
     importer = CsvImporter()
     profile = importer._sniff_csv(filename)
     print profile
