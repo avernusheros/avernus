@@ -1,5 +1,5 @@
 __appname__ = 'stocktracker'
-__version__ = '0.4'
+__version__ = '0.4.1.1'
 __description__ = 'A simple program to easily track your investments.'
 __url__='https://launchpad.net/stocktracker'
 __authors__ = ['Wolfgang Steitz', 'Bastian Kennel']

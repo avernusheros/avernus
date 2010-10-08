@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+# -*- Mode: Python; coding: utf-8; indent-tabs-mode: nil; tab-width: 4 -*-
 from BeautifulSoup import BeautifulSoup
 from urllib import urlopen
 import csv, pytz, re, os, pickle
