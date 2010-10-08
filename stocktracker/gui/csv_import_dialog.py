@@ -70,6 +70,13 @@ class CSVImportDialog(gtk.Dialog):
 
     def _on_refresh(self, *args):
         transactions = self.importer.get_transactions_from_csv(self.file)
+        if self.b_account:
+            account = self.account_cb.get_model()[self.account_cb.get_active()][0]
+            for trans in transactions:
+                if account.has_transaction({'date':trans[0],'amount':trans[2]}):
+                    # HOOK for duplicate processing. For now just ignore it
+                    print "Removing duplicate transaction ", trans
+                    transactions.remove(trans)
         self.tree.reload(transactions)
 
     def _on_file_set(self, button):
@@ -83,6 +90,7 @@ class CSVImportDialog(gtk.Dialog):
         self.b_account = True
         if self.b_file:
             self.import_button.set_sensitive(True)
+            self._on_refresh()
 
 
 class PreviewTree(gui_utils.Tree):
