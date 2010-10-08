@@ -1,0 +1,27 @@
+"Kontonummer:";"0815 / Internet-Konto";
+
+"Von:";"08.10.2009";
+"Bis:";"08.10.2010";
+"Kontostand vom:";"0.05 EUR";
+
+"Buchungstag";"Wertstellung";"Buchungstext";"Auftraggeber/Begünstigter";"Verwendungszweck";"Kontonummer";"BLZ";"Betrag (EUR)";
+"01.10.2010";"01.10.2010";"ZINSEN";"";"Abrechnung 30.09.2010 Information zur Abrechnung Kontostand am 30.09.2010               0,01 + Abrechnungszeitraum vom 01. 07.2010 bis 30.09.2010 Zinsen für Guthaben                0,06H  0,5000 v.H. Haben-Zins bis  30.09.2010 Kapitalertragsteuer  0,02S ";"";"";"0.04";
+"11.08.2010";"11.08.2010";"DAUERAUFTRAG";"Visa-Card Geldanlage";"08152 ";"08153";"08154";"-364.91";
+"05.08.2010";"05.08.2010";"UEBERWEISUNG";"DKB VISACARD";"08152 17.05 MAX MUSTERMANN DKB INTERNET BANKING DATUM 05.08.2010, 17.05 UHR 1.TAN 447359 ";"08153";"08154";"-323.00";
+"04.08.2010";"04.08.2010";"UEBERWEISUNGSGUTSCHRIFT";"BJOERN GOss";"UNICOMP MECHANICAL KEYBOARD ";"18106230";"67250020";"88.00";
+"02.08.2010";"02.08.2010";"UEBERWEISUNGSGUTSCHRIFT";"MAX MUSTERMANN";"UEBERTRAG ";"08155";"08156";"600.00";
+"01.07.2010";"01.07.2010";"ABSCHLUSS";"";"Abrechnung 30.06.2010 Information zur Abrechnung Kontostand am 30.06.2010               0,01 + Abrechnungszeitraum vom 01. 04.2010 bis 30.06.2010 Zinsen für Guthaben                0,03H  0,5000 v.H. Haben-Zins bis  30.06.2010 Kapitalertragsteuer  0,01S ";"";"";"-0.09";
+"11.06.2010";"11.06.2010";"DAUERAUFTRAG";"Visa-Card Geldanlage";"08152 ";"08153";"08154";"-118.93";
+"02.06.2010";"02.06.2010";"UEBERWEISUNGSGUTSCHRIFT";"MAX MUSTERMANN";"UEBERTRAG ";"08155";"08156";"200.00";
+"26.05.2010";"26.05.2010";"UEBERWEISUNG";"DKB VISACARD";"08152 20.26 MAX MUSTERMANN DKB INTERNET BANKING DATUM 25.05.2010, 20.27 UHR 1.TAN 053182 ";"08153";"08154";"-300.00";
+"26.05.2010";"26.05.2010";"SONSTIGER EINZUG";"KREDITKARTENABRECHNUNG";"VISA-ABR. 08152 ";"08158";"08154";"-81.14";
+"21.05.2010";"21.05.2010";"UEBERWEISUNGSGUTSCHRIFT";"MAX MUSTERMANN";"UEBERTRAG ";"08155";"08156";"300.00";
+"01.04.2010";"01.04.2010";"ZINSEN";"";"Abrechnung 31.03.2010 Information zur Abrechnung Kontostand am 31.03.2010               0,01 + Abrechnungszeitraum vom 01. 01.2010 bis 31.03.2010 Zinsen für Guthaben                0,09H  0,5000 v.H. Haben-Zins bis  30.03.2010 Kapitalertragsteuer  0,02S ";"";"";"0.07";
+"10.03.2010";"10.03.2010";"UEBERWEISUNG";"DKB VISACARD";"08152 20.12 MAX MUSTERMANN DKB INTERNET BANKING DATUM 09.03.2010, 20.12 UHR 1.TAN 873924 ";"08153";"08154";"-500.00";
+"02.03.2010";"02.03.2010";"UEBERWEISUNGSGUTSCHRIFT";"MAX MUSTERMANN";"UEBERTRAG ";"08155";"08156";"500.00";
+"11.01.2010";"11.01.2010";"DAUERAUFTRAG";"Visa-Card Geldanlage";"08152 ";"08153";"08154";"-242.02";
+"30.12.2009";"01.01.2010";"ABSCHLUSS";"";"Abrechnung 31.12.2009 Information zur Abrechnung Kontostand am 30.12.2009             242,07 + Abrechnungszeitraum vom 01. 10.2009 bis 31.12.2009 Zinsen für Guthaben                0,05H  0,5000 v.H. Haben-Zins bis  30.12.2009 Kapitalertragsteuer  0,01S ";"";"";"-0.04";
+"29.12.2009";"29.12.2009";"UEBERWEISUNGSGUTSCHRIFT";"MAX MUSTERMANN";"UEBERTRAG ";"08155";"08156";"600.00";
+"28.12.2009";"28.12.2009";"SONSTIGER EINZUG";"KREDITKARTENABRECHNUNG";"VISA-ABR. 08157 ";"08158";"08154";"-357.94";
+"11.12.2009";"11.12.2009";"DAUERAUFTRAG";"Visa-Card Geldanlage";"08152 ";"08153";"08154";"-500.16";
+"04.12.2009";"04.12.2009";"UEBERWEISUNGSGUTSCHRIFT";"MAX MUSTERMANN";"UEBERTRAG ";"08155";"08156";"500.00";
