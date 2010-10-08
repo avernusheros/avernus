@@ -19,14 +19,14 @@ class CsvImporter:
     
     def __init__(self):
         self.results = []
-
+        
     def _sniff_csv(self, filename):
         profile = {}
         #csv dialect
         csvdata = StringIO(open(filename, 'rb').read())
         profile['dialect'] = csv.Sniffer().sniff(csvdata.read(2048))
+        #profile['dialect'].quoting = csv.QUOTE_NONE
         csvdata.seek(0)
-        
         #encoding
         profile['encoding'] = chardet.detect(csvdata.read(2048))['encoding']
         csvdata.seek(0)
@@ -68,7 +68,7 @@ class CsvImporter:
                     continue
                 col_count = 0
                 for col in row:
-                    if re.match('[0-9]+[\.\-]*[0-9]*[\.\-][0-9]+', col ) is not None:
+                    if re.match('[0-9]+[\.\-]+[0-9]*[\.\-][0-9]+', col ) is not None:
                         profile['date column'] = col_count
                         profile['date format'] = self._detect_date_format(col)
                     elif re.match('-?[0-9]+[\.\,]*[0-9]*[\.\,]+[0-9]*', col) is not None:
@@ -97,9 +97,10 @@ class CsvImporter:
         for row in UTF8Reader(csvdata, profile['dialect'], profile['encoding']):
             if len(row) == profile['row length']:
                 started = True
-                #remove newlines, caused sniffer to crash
+                #remove newlines and commas, caused sniffer to crash
                 row = map(lambda x: x.replace('\n', ''), row)
-                print row
+                row = map(lambda x: x.replace(',', ''), row)
+                #print row
                 writer.writerow(row)
             #If we find a blank line, assume we've hit the end of the transactions.
             if not row and started:
@@ -215,7 +216,7 @@ if __name__ == "__main__":
     filename = '../tests/data/csv/dkb.csv'
     importer = CsvImporter()
     profile = importer._sniff_csv(filename)
-    print profile
+    #print profile
     trans = importer.get_transactions_from_csv(filename, profile)
     count = 1
     for t in trans:
