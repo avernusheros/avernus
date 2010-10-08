@@ -19,14 +19,14 @@ class CsvImporter:
     
     def __init__(self):
         self.results = []
-
+        
     def _sniff_csv(self, filename):
         profile = {}
         #csv dialect
         csvdata = StringIO(open(filename, 'rb').read())
         profile['dialect'] = csv.Sniffer().sniff(csvdata.read(2048))
+        profile['dialect'].quoting = csv.QUOTE_NONE
         csvdata.seek(0)
-        
         #encoding
         profile['encoding'] = chardet.detect(csvdata.read(2048))['encoding']
         csvdata.seek(0)
@@ -99,7 +99,7 @@ class CsvImporter:
                 started = True
                 #remove newlines, caused sniffer to crash
                 row = map(lambda x: x.replace('\n', ''), row)
-                print row
+                #print row
                 writer.writerow(row)
             #If we find a blank line, assume we've hit the end of the transactions.
             if not row and started:
