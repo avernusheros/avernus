@@ -40,9 +40,10 @@ class CsvImporterTest(unittest.TestCase):
         for key, val in profile.items():
             self.assertEqual(profile[key], new_profile[key])
 
-        transactions = self.importer.get_transactions_from_csv(filename)
+        self.importer.load_transactions_from_csv(filename)
+        transactions = self.importer.results
         self.assertEqual(len(transactions), 5)
-        date, desc, amount = transactions[2]
+        date, desc, amount, duplicate = transactions[2]
         self.assertEqual(date, datetime.date(2010, 3, 8))
         self.assertEqual(desc, 'Lastschrift Einzug - Auftraggeber: XYZ SAGT DANKE Buchungstext: XYZ SAGT DANKE EC 123456789 06.03 14.53 CE0 Ref. ABCDFER213456789/1480 ')
         self.assertEqual(amount, -32.27)   
@@ -63,9 +64,10 @@ class CsvImporterTest(unittest.TestCase):
         for key, val in profile.items():
             self.assertEqual(profile[key], new_profile[key])
 
-        transactions = self.importer.get_transactions_from_csv(filename)
+        self.importer.load_transactions_from_csv(filename)
+        transactions = self.importer.results
         self.assertEqual(len(transactions), 12)
-        date, desc, amount = transactions[2]
+        date, desc, amount, duplicate = transactions[2]
         self.assertEqual(date, datetime.date(2010, 9, 2))
         self.assertEqual(desc, u'MUSTERMANN / MAXEMPTY DE - MOA. - 1811 - 50010900 - Lastschrift\r\nZG. M02 - EUR')
         self.assertEqual(amount, -50.00) 
@@ -86,9 +88,10 @@ class CsvImporterTest(unittest.TestCase):
         for key, val in profile.items():
             self.assertEqual(profile[key], new_profile[key])
 
-        transactions = self.importer.get_transactions_from_csv(filename)
+        self.importer.load_transactions_from_csv(filename)
+        transactions = self.importer.results
         self.assertEqual(len(transactions), 4)
-        date, desc, amount = transactions[3]
+        date, desc, amount, duplicate = transactions[3]
         self.assertEqual(date, datetime.date(2010, 2, 1))
         self.assertEqual(desc,  u'\xdcberweisungsgutschrift -  - Mustermann,Max - ')
         self.assertEqual(amount, 2500.00) 
@@ -109,9 +112,10 @@ class CsvImporterTest(unittest.TestCase):
         for key, val in profile.items():
             self.assertEqual(profile[key], new_profile[key])
 
-        transactions = self.importer.get_transactions_from_csv(filename)
+        self.importer.load_transactions_from_csv(filename)
+        transactions = self.importer.results
         self.assertEqual(len(transactions), 20)
-        date, desc, amount = transactions[3]
+        date, desc, amount, duplicate = transactions[3]
         self.assertEqual(date, datetime.date(2010, 8, 4))
         self.assertEqual(desc,  u'UEBERWEISUNGSGUTSCHRIFT - BJOERN GOss - UNICOMP MECHANICAL KEYBOARD  - 18106230 - 67250020 - ')
         self.assertEqual(amount, 88.00) 

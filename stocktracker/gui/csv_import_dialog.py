@@ -68,29 +68,21 @@ class CSVImportDialog(gtk.Dialog):
             self.importer.create_transactions(account)
         self.destroy()  
 
-    def _on_refresh(self, *args):
-        transactions = self.importer.get_transactions_from_csv(self.file)
-        if self.b_account:
-            account = self.account_cb.get_model()[self.account_cb.get_active()][0]
-            for trans in transactions:
-                if account.has_transaction({'date':trans[0],'amount':trans[2]}):
-                    # HOOK for duplicate processing. For now just ignore it
-                    print "Removing duplicate transaction ", trans
-                    transactions.remove(trans)
-        self.tree.reload(transactions)
-
     def _on_file_set(self, button):
         self.b_file = True
         if self.b_account:
             self.import_button.set_sensitive(True)
         self.file = button.get_filename()
-        self._on_refresh()
+        self.importer.load_transactions_from_csv(self.file)
+        self.tree.reload(self.importer.results)
     
     def _on_account_changed(self, *args):
         self.b_account = True
         if self.b_file:
             self.import_button.set_sensitive(True)
-            self._on_refresh()
+            account = self.account_cb.get_model()[self.account_cb.get_active()][0]
+            self.importer.check_duplicates(account)
+            self.tree.reload(self.importer.results)
 
 
 class PreviewTree(gui_utils.Tree):
@@ -100,19 +92,29 @@ class PreviewTree(gui_utils.Tree):
         self.set_rules_hint(True)
         
         self.set_size_request(700,400)
-        self.model = gtk.ListStore(str, str, float)
+        self.model = gtk.ListStore(str, str, float, bool, str)
         self.set_model(self.model)
         
-        self.create_column('date', 0)
+        column, cell = self.create_column('date', 0)
+        column.add_attribute(cell, 'foreground', 4)
+        cell.set_property('foreground-set', True)
         column, cell = self.create_column('description', 1)
+        column.add_attribute(cell, 'foreground', 4)
+        cell.set_property('foreground-set', True)
         self.dynamicWrapColumn = column
         self.dynamicWrapCell = cell
         cell.props.wrap_mode = gtk.WRAP_WORD
-        self.create_column('amount', 2, func=gui_utils.float_to_string)
+        column, cell = self.create_column('amount', 2, func=gui_utils.float_to_string)
+        column.add_attribute(cell, 'foreground', 4)
+        cell.set_property('foreground-set', True)
     
     def reload(self, transactions):
         self.clear()
         model = self.get_model()
         for trans in transactions:
-            model.append(trans)
+            if trans[-1]:
+                color = 'red'
+            else:
+                color = 'black'
+            model.append(trans+[color])
 
