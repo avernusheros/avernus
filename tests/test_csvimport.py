@@ -92,3 +92,26 @@ class CsvImporterTest(unittest.TestCase):
         self.assertEqual(date, datetime.date(2010, 2, 1))
         self.assertEqual(desc,  u'\xdcberweisungsgutschrift -  - Mustermann,Max - ')
         self.assertEqual(amount, 2500.00) 
+
+    def test_dkb(self):
+        filename = 'tests/data/csv/dkb.csv'
+        profile = {'encoding':'windows-1252',
+                   'row length': 9,
+                   'saldo indicator': None,
+                   'description column': [2, 3, 4, 5, 6, 8],
+                   'amount column': 7,
+                   'header': True,
+                   'date format': '%d.%m.%Y',
+                   'date column': 1, 
+                   'decimal separator': '.'
+                   }
+        new_profile = self.importer._sniff_csv(filename)
+        for key, val in profile.items():
+            self.assertEqual(profile[key], new_profile[key])
+
+        transactions = self.importer.get_transactions_from_csv(filename)
+        self.assertEqual(len(transactions), 20)
+        date, desc, amount = transactions[3]
+        self.assertEqual(date, datetime.date(2010, 8, 4))
+        self.assertEqual(desc,  u'UEBERWEISUNGSGUTSCHRIFT - BJOERN GOss - UNICOMP MECHANICAL KEYBOARD  - 18106230 - 67250020 - ')
+        self.assertEqual(amount, 88.00) 

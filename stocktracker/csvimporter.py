@@ -183,6 +183,7 @@ class UnicodeReader:
     def __iter__(self):
         return self
 
+
 class UTF8Reader:
     def __init__(self, f, dialect=csv.excel, encoding="utf-8", **kwds):
         f = UTF8Recoder(f, encoding)
