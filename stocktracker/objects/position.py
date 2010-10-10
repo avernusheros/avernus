@@ -2,7 +2,7 @@ from stocktracker.objects.model import SQLiteEntity
 from stocktracker.objects.container import Portfolio, Watchlist, Tag
 from stocktracker.objects.stock import Stock
 import stocktracker.objects.controller
-from datetime import datetime
+import datetime
 
  
 class Position(object):
@@ -92,7 +92,7 @@ class PortfolioPosition(SQLiteEntity, Position):
     def hasTag(self, tag):
         return tag in self.tags
     
-    def get_value_over_time(self, start_day, end_day=datetime.today()):
+    def get_value_over_time(self, start_day, end_day=datetime.datetime.today()):
         #transactions on same day!
         #dividends?
         #transaction_costs?
@@ -117,6 +117,22 @@ class PortfolioPosition(SQLiteEntity, Position):
                         pass
             res.append((current, ta.quantity*price))    
         return res
+    
+    def get_value_at_date(self, t):
+        # this will on purpose ignore any transactions and assume the current
+        # quantity is the all-true one
+        quotations = stocktracker.objects.controller.getQuotationsFromStock(self.stock, self.date.date())
+        delta = datetime.timedelta(days = 2)
+        substitute = 0
+        for quot in quotations:
+            if t == quot.date:
+                return quot.close * self.quantity
+            elif abs(t-quot.date) < delta:
+                substitute = quot.close
+        if substitute == 0:
+            print "not found quotation in delta range ", self
+        return substitute * self.quantity
+            
     
     @property
     def portfolio_fraction(self):

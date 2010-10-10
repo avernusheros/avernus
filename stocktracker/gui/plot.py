@@ -18,7 +18,7 @@ class Chart(gtk.VBox):
     def __init__(self, stock):
         gtk.VBox.__init__(self)
         self.stock = stock
-        
+        self.NoDataLabel = False
         hbox = gtk.HBox()
         self.add(hbox)
         label = gtk.Label()
@@ -77,8 +77,10 @@ class Chart(gtk.VBox):
         
         data = controller.getQuotationsFromStock(self.stock, date2)
         if len(data) == 0:
-            self.add(gtk.Label('No historical data found!'))
-            self.show_all()
+            if not self.NoDataLabel:
+                self.NoDataLabel = True
+                self.add(gtk.Label('No historical data found!'))
+                self.show_all()
             return
         quotes = [d.close for d in data]
         y_min = 0.95*min(quotes)
