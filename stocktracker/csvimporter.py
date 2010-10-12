@@ -149,7 +149,7 @@ class CsvImporter:
                     
                 tran = [self._parse_date(row[profile['date column']], profile['date format']), 
                         ' - '.join([row[d] for d in profile['description column']]),
-                        amount, False
+                        amount, True
                         
                         ]    
                 result.append(tran)
@@ -161,11 +161,13 @@ class CsvImporter:
     def check_duplicates(self, account):
         for trans in self.results:
             if account.has_transaction({'date':trans[0],'amount':trans[2],'description':trans[1]}):
+                trans[-1] = False
+            else:
                 trans[-1] = True    
 
     def create_transactions(self, account):
         for result in self.results:
-            if not result[-1]:
+            if result[-1]:
                 ta = controller.newAccountTransaction(date=result[0], description=result[1], amount=result[2], account=account)
                 pubsub.publish('accountTransaction.created', ta)
        

@@ -55,6 +55,14 @@ class Tree(gtk.TreeView):
         if func2 is not None:
             column.set_cell_data_func(cell2, func2, attribute2)
         return column, cell2
+    
+    def create_check_column(self, name, attribute):
+        column = gtk.TreeViewColumn(name)
+        self.append_column(column)
+        cell = gtk.CellRendererToggle()
+        column.pack_start(cell, expand = True)
+        column.add_attribute(cell, 'active', attribute)
+        return column, cell    
         
     def find_item(self, id, type = None):
         def search(rows):

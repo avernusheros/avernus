@@ -26,7 +26,7 @@ class Account(SQLiteEntity):
         return controller.getTransactionsForAccount(self).__iter__()
     
     def has_transaction(self, transaction):
-        return controller.check_duplicate(AccountTransaction, **transaction)
+        return controller.check_duplicate(AccountTransaction, account=self.id, **transaction)
 
     @property
     def transaction_count(self):
@@ -154,7 +154,7 @@ class AccountTransaction(SQLiteEntity):
                    'account': Account,
                    'category': AccountCategory
                   }
-    __comparisonPositives__ = ['amount', 'date']
+    __comparisonPositives__ = ['amount', 'date', 'account']
 
     def isEarning(self):
         return self.amount >= 0

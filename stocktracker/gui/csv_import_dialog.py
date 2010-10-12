@@ -58,34 +58,34 @@ class CSVImportDialog(gtk.Dialog):
         
         sw.add(self.tree)
         vbox.pack_start(frame)
-        #table.attach(frame, 0,3,2,3)
         self.show_all()
 
     def process_result(self, widget=None, response = gtk.RESPONSE_ACCEPT):
         if response == gtk.RESPONSE_ACCEPT:
             model = self.account_cb.get_model()
-            account = model[self.account_cb.get_active()][0]
-            self.importer.create_transactions(account)
+            self.importer.create_transactions(self.account)
         self.destroy()  
 
     def _on_file_set(self, button):
         self.b_file = True
-        if self.b_account:
-            self.import_button.set_sensitive(True)
         self.file = button.get_filename()
         self.importer.load_transactions_from_csv(self.file)
+        if self.b_account:
+            self.import_button.set_sensitive(True)
+            self.importer.check_duplicates(self.account)
         self.tree.reload(self.importer.results)
     
     def _on_account_changed(self, *args):
         self.b_account = True
+        self.account = self.account_cb.get_model()[self.account_cb.get_active()][0]
         if self.b_file:
             self.import_button.set_sensitive(True)
-            account = self.account_cb.get_model()[self.account_cb.get_active()][0]
-            self.importer.check_duplicates(account)
+            self.importer.check_duplicates(self.account)
             self.tree.reload(self.importer.results)
 
 
 class PreviewTree(gui_utils.Tree):
+    COLOR_DUPLICATES = 'grey'
     
     def __init__(self):
         gui_utils.Tree.__init__(self)
@@ -95,6 +95,8 @@ class PreviewTree(gui_utils.Tree):
         self.model = gtk.ListStore(str, str, float, bool, str)
         self.set_model(self.model)
         
+        column, cell = self.create_check_column('import?', 3)
+        cell.connect("toggled", self.on_toggled)
         column, cell = self.create_column('date', 0)
         column.add_attribute(cell, 'foreground', 4)
         cell.set_property('foreground-set', True)
@@ -109,12 +111,15 @@ class PreviewTree(gui_utils.Tree):
         cell.set_property('foreground-set', True)
     
     def reload(self, transactions):
+        self.transactions = transactions
         self.clear()
         model = self.get_model()
         for trans in transactions:
             if trans[-1]:
-                color = 'red'
-            else:
                 color = 'black'
+            else:
+                color = self.COLOR_DUPLICATES
             model.append(trans+[color])
 
+    def on_toggled(self, cellrenderertoggle, path):
+        self.model[path][3] = self.transactions[int(path)][3] = not self.model[path][3]
