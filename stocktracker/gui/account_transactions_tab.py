@@ -465,10 +465,57 @@ class EditTransaction(gtk.Dialog):
         self.calendar.select_day(self.transaction.date.day)
         vbox.pack_start(self.calendar)
         
+        #transfer
+        text = "<b>Transfer<\b>: this transaction will not be shown in any of the graphs."
+        self.transfer_button = gtk.CheckButton(text)
+        if self.transaction.transfer:
+            self.transfer_button.set_active(True)
+        vbox.pack_start(self.transfer_button)
+
+        self.matching_transactions_tree = gui_utils.Tree()
+        model = gtk.ListStore(object, str, str, str)
+        self.matching_transactions_tree.set_model(model)
+        self.matching_transactions_tree.create_column(_('Account'), 1)
+        col, cell = self.matching_transactions_tree.create_column(_('Description'), 2)
+        cell.props.wrap_width = 200
+        cell.props.wrap_mode = gtk.WRAP_WORD
+        self.matching_transactions_tree.create_column(_('Date'), 3)
+        vbox.pack_end(self.matching_transactions_tree)
+        self.no_matches_label = gtk.Label('No matching transactions found. Continue only if you want to mark this as a tranfer anyway.')
+        vbox.pack_end(self.no_matches_label)
+        
+        #connect signals
+        self.transfer_button.connect("toggled", self.on_transfer_toggled)
+        self.matching_transactions_tree.connect('cursor_changed', self.on_transfer_transaction_selected)
+        
     def start(self):
         self.show_all()
+        self.matching_transactions_tree.hide()
+        self.no_matches_label.hide()
         return self.process_result(self.run())
 
+    def on_transfer_toggled(self, checkbutton):
+        if checkbutton.get_active():
+            found_one = False
+            for ta in controller.yield_matching_transfer_tranactions(self.transaction):
+                if found_one == False:
+                    self.matching_transactions_tree.clear()
+                    self.matching_transactions_tree.show()
+                    found_one = True
+                self.matching_transactions_tree.get_model().append([ta, ta.account.name, ta.description, ta.date])
+            self.transfer_transaction = self.transaction
+            if not found_one:
+                self.no_matches_label.show()
+        else:
+            self.matching_transactions_tree.hide()
+            self.no_matches_label.hide()
+    
+    def on_transfer_transaction_selected(self, widget):
+        selection = widget.get_selection()
+        treestore, selection_iter = selection.get_selected()
+        if (selection_iter and treestore):
+            self.transfer_transaction = treestore.get_value(selection_iter, 0)
+            
     def process_result(self, response):
         if response == gtk.RESPONSE_ACCEPT:
             buffer = self.description_entry.get_buffer()
@@ -481,5 +528,13 @@ class EditTransaction(gtk.Dialog):
                 self.transaction.category = None
             else:
                 self.transaction.category = self.combobox.get_model()[self.combobox.get_active_iter()][0]
+            if self.transfer_button.get_active():
+                self.transaction.transfer = self.transfer_transaction
+                self.transfer_transaction.transfer = self.transaction
+                print self.transfer_transaction, self.transfer_transaction.transfer
+            else:
+                if self.transaction.transfer is not None:
+                    self.transaction.transfer.transfer = None
+                    self.transaction.transfer = None
         self.destroy()
         return response == gtk.RESPONSE_ACCEPT, self.transaction

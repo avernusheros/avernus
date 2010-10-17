@@ -120,12 +120,12 @@ def newWatchlist(name, id=None, last_update = datetime.datetime.now(), comment="
     result.insert()
     return result
 
-def newAccount(name, id=None, amount=0, type=1):
-    result = Account(id=id, name=name, amount=amount, type=type)
+def newAccount(name, id=None, amount=0, accounttype=1):
+    result = Account(id=id, name=name, amount=amount, type=accounttype)
     result.insert()
     return result
 
-def newAccountTransaction(id=None, description='', amount=0.0, account=None, category=None, date=datetime.date.today(), detect_duplicates=False):
+def newAccountTransaction(id=None, description='', amount=0.0, account=None, category=None, date=datetime.date.today(), transferid=-1, detect_duplicates=False):
     
     if detect_duplicates:
         duplicates = check_duplicate(AccountTransaction,\
@@ -141,7 +141,7 @@ def newAccountTransaction(id=None, description='', amount=0.0, account=None, cat
                                 amount=amount, \
                                 date=date, \
                                 account=account, \
-                                category=category)
+                                category=category, transferid=transferid)
     result.insert()
     return result
 
@@ -374,7 +374,7 @@ def getAccountChangeInPeriodPerDay(account, start_date, end_date):
     for change, date in model.store.select(query, (account.id, end_date, start_date)):
         yield change, date
 
-def getEarningsOrSpendingsSummedInPeriod(account, start_date, end_date, earnings=True):
+def getEarningsOrSpendingsSummedInPeriod(account, start_date, end_date, earnings=True, transfers=False):
     if earnings: operator = '>'
     else: operator = '<'
     query = """
@@ -386,11 +386,19 @@ def getEarningsOrSpendingsSummedInPeriod(account, start_date, end_date, earnings
     AND trans.date <= ?
     AND trans.date >= ?
     """
+    if not transfers:
+        query+=' AND trans.transferid == -1'
     #ugly, but [0] does not work
     for row in model.store.select(query, (account.id, end_date, start_date)):
         if row[0] == None:
             return 0.0
         return row[0]
+        
+def yield_matching_transfer_tranactions(transaction):
+    for account in getAllAccount():
+        if account != transaction.account:
+            for ta in account.yield_matching_transfer_tranactions(transaction):
+                yield ta
     
 def deleteAllPortfolioTransaction(portfolio):
     for trans in getTransactionForPortfolio(portfolio):

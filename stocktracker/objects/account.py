@@ -4,6 +4,7 @@ import controller
 import datetime
 from dateutil.relativedelta import relativedelta
 
+
 class Account(SQLiteEntity):
 
     __primaryKey__ = 'id'
@@ -12,7 +13,7 @@ class Account(SQLiteEntity):
                    'id': 'INTEGER',
                    'name': 'VARCHAR',
                    'type': 'INTEGER',
-                   'amount': 'FLOAT'
+                   'amount': 'FLOAT',
                   }
                   
     def on_delete(self, **kwargs):
@@ -35,23 +36,33 @@ class Account(SQLiteEntity):
             count+=1
         return count
 
-    def get_transactions_in_period(self, start_date, end_date):
+    def yield_matching_transfer_tranactions(self, transaction):
+        for trans in self:
+            if transaction.amount == -trans.amount:
+                if trans.transfer is None or trans.transfer == transaction:
+                    threedays = datetime.timedelta(3)
+                    if transaction.date-threedays < trans.date and transaction.date+threedays > trans.date:
+                        yield trans
+            
+    def get_transactions_in_period(self, start_date, end_date, transfers=False):
         res = []
         for trans in self:
             if trans.date >= start_date and trans.date <= end_date:
                 res.append(trans)
         return res
 
-    def yield_earnings_in_period(self, start_date, end_date):
+    def yield_earnings_in_period(self, start_date, end_date, transfers=False):
         for trans in self:
-            if trans.date >= start_date and trans.date <= end_date and trans.amount >= 0.0:
-                yield trans
+            if transfers or trans.transfer is None:
+                if trans.date >= start_date and trans.date <= end_date and trans.amount >= 0.0: 
+                    yield trans
+        
+    def yield_spendings_in_period(self, start_date, end_date, transfers=False):
+        for trans in self:
+            if transfers or trans.transfer is None:
+                if trans.date >= start_date and trans.date <= end_date and trans.amount < 0.0:
+                    yield trans
     
-    def yield_spendings_in_period(self, start_date, end_date):
-        for trans in self:
-            if trans.date >= start_date and trans.date <= end_date and trans.amount < 0.0:
-                yield trans
-
     def get_balance_over_time(self, start_date):
         today = datetime.date.today()
         one_day = datetime.timedelta(days=1)
@@ -64,7 +75,7 @@ class Account(SQLiteEntity):
         res.reverse()
         return res
 
-    def get_sum_in_period_by_category(self, start_date, end_date, parent_category=None, b_earnings=False):
+    def get_sum_in_period_by_category(self, start_date, end_date, parent_category=None, b_earnings=False, transfers=False):
         #sum for all categories including subcategories
         if parent_category:
             parent_category_id = parent_category.id
@@ -92,19 +103,20 @@ class Account(SQLiteEntity):
         sums['None'] = 0.0
 
         for trans in self:
-            if trans.isEarning() == b_earnings:
-                for cat, subcats in cat_ids.items():
-                    if trans.category in subcats:
-                        sums[cat] += trans.amount
+            if transfers or trans.transfer is None:
+                if trans.isEarning() == b_earnings:
+                    for cat, subcats in cat_ids.items():
+                        if trans.category in subcats:
+                            sums[cat] += trans.amount
         return sums
 
-    def get_earnings_summed(self, end_date, start_date, period='month'):
+    def get_earnings_summed(self, end_date, start_date, period='month', transfers=False):
         return self._get_earnings_or_spendings_summed(start_date, end_date, period, earnings=True)
     
-    def get_spendings_summed(self, end_date, start_date, period='month'):
-        return self._get_earnings_or_spendings_summed(start_date, end_date, period, earnings=False)
+    def get_spendings_summed(self, end_date, start_date, period='month', transfers=False):
+        return self._get_earnings_or_spendings_summed(start_date, end_date, period, earnings=False, transfers=False)
 
-    def _get_earnings_or_spendings_summed(self, start_date, end_date, period='month', earnings=True):
+    def _get_earnings_or_spendings_summed(self, start_date, end_date, period='month', earnings=True, transfers=False):
         if period == 'month':
             delta = relativedelta(months=+1)
         elif period == 'year':
@@ -116,7 +128,7 @@ class Account(SQLiteEntity):
         ret = []
         while start_date < end_date:
             temp = start_date+delta
-            ret.append(controller.getEarningsOrSpendingsSummedInPeriod(self, start_date, temp, earnings=earnings))
+            ret.append(controller.getEarningsOrSpendingsSummedInPeriod(self, start_date, temp, earnings=earnings, transfers=transfers))
             start_date += delta
         return ret
 
@@ -152,9 +164,23 @@ class AccountTransaction(SQLiteEntity):
                    'amount': 'FLOAT',
                    'date' :'DATE',
                    'account': Account,
-                   'category': AccountCategory
+                   'category': AccountCategory,
+                   'transferid': 'INTEGER'
                   }
     __comparisonPositives__ = ['amount', 'date', 'account']
 
     def isEarning(self):
         return self.amount >= 0
+
+    def get_transfer(self):
+        if self.transferid != -1:
+            return self.getByPrimaryKey(self.transferid)
+        return None
+
+    def set_transfer(self, transaction):
+        if transaction:
+            self.transferid = transaction.id
+        else:
+            self.transferid = -1
+    
+    transfer = property(get_transfer, set_transfer)

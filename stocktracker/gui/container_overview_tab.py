@@ -65,7 +65,6 @@ class ContainerOverviewTree(Tree):
         col, cell = self.create_column(_('Change %'), self.cols['change_percent'])
         col.set_cell_data_func(cell, float_to_red_green_string, self.cols['change_percent'])
         
-        
         def sort_price(model, iter1, iter2):
             item1 = model.get_value(iter1, self.cols['obj'])
             item2 = model.get_value(iter2, self.cols['obj'])
