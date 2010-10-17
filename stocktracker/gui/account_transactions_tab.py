@@ -466,7 +466,7 @@ class EditTransaction(gtk.Dialog):
         vbox.pack_start(self.calendar)
         
         #transfer
-        text = "<b>Transfer<\b>: this transaction will not be shown in any of the graphs."
+        text = "Transfer: this transaction will not be shown in any of the graphs."
         self.transfer_button = gtk.CheckButton(text)
         if self.transaction.transfer:
             self.transfer_button.set_active(True)
