@@ -321,7 +321,7 @@ class CategoriesTree(gui_utils.Tree):
     
     def on_cell_edited(self, cellrenderertext, path, new_text):
         m = self.get_model()
-        m[path][0].name = m[path][1] = new_text
+        m[path][0].name = m[path][1] = unicode(new_text)
 
     def on_cursor_changed(self, widget):
         #Get the current selection in the gtk.TreeView
