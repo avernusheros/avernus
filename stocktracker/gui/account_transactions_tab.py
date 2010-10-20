@@ -95,7 +95,7 @@ class TransactionsTree(gui_utils.Tree):
         self.actiongroup = actiongroup
         self.searchstring = ''
         gui_utils.Tree.__init__(self)
-        self.model = gtk.ListStore(object, str, int, str, str)
+        self.model = gtk.ListStore(object, str, float, str, str)
         self.modelfilter = self.model.filter_new()
         self.set_model(self.modelfilter)
         self.modelfilter.set_visible_func(self.visible_cb)
@@ -105,7 +105,7 @@ class TransactionsTree(gui_utils.Tree):
         self.dynamicWrapColumn = col
         self.dynamicWrapCell = cell
         cell.props.wrap_mode = gtk.WRAP_WORD
-        self.create_column(_('Amount'), self.AMOUNT)
+        self.create_column(_('Amount'), self.AMOUNT, func=gui_utils.float_format)
         self.create_column(_('Category'), self.CATEGORY)
         self.set_rules_hint(True)
         self.get_selection().set_mode(gtk.SELECTION_MULTIPLE)

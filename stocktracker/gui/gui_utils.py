@@ -103,6 +103,10 @@ class ContextMenu(gtk.Menu):
             self.add(item)
             return item 
 
+def float_format(column, cell_renderer, tree_model, iter, user_data):
+     number = tree_model.get_value(iter, user_data)
+     cell_renderer.set_property('text', get_string_from_float(number))
+     return
 
 def get_string_from_float(number):
     return locale.format('%g', round(number,2), grouping=True, monetary=True)
