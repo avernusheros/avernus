@@ -96,9 +96,11 @@ class TransactionsTree(gui_utils.Tree):
         self.actiongroup = actiongroup
         self.searchstring = ''
         gui_utils.Tree.__init__(self)
+        
         self.model = gtk.ListStore(object, str, float, str, str)
         self.modelfilter = self.model.filter_new()
-        self.set_model(self.modelfilter)
+        sorter = gtk.TreeModelSort(self.modelfilter)
+        self.set_model(sorter)
         self.modelfilter.set_visible_func(self.visible_cb)
         
         self.create_column(_('Date'), self.DATE)
