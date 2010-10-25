@@ -163,26 +163,55 @@ class Onvista():
                                  'Leider stehen zu diesem Fonds keine Informationen zur Verfügung.']
 
     def search(self, searchstring):
-        page = opener.open("http://www.onvista.de/suche.html", urllib.urlencode({"TARGET": "kurse", "SEARCH_VALUE": searchstring,'ID_TOOL':'FUN' }))
-        soup = BeautifulSoup(page.read())
-        linkTagsFonds = soup.findAll(attrs={'href' : re.compile('http://fonds\\.onvista\\.de/kurse\\.html\?ID_INSTRUMENT=\d+')})
-        linkTagsETF = soup.findAll(attrs={'href' : re.compile('http://etf\\.onvista\\.de/kurse\\.html\?ID_INSTRUMENT=\d+')})
-        filePara = FileDownloadParalyzer([tag['href'] for tag in linkTagsFonds])
-        pages = filePara.perform()
-        for kursPage in pages:
-            for item in self._parse_kurse_html(kursPage):
-                yield (item, self)
-        print "finished fonds"
-        filePara = FileDownloadParalyzer([tag['href'] for tag in linkTagsETF])
-        pages = filePara.perform()
-        print "got Pages: ", pages
-        for kursPage in pages:
-            for item in self._parse_kurse_html(kursPage, tdInd=etfTDS, stockType=stock.ETF):
-                yield (item, self)
-        print "fertig ganz"
+        Log.debug("Starting search for " + searchstring)
+        #http://www.onvista.de/suche.html?TARGET=kurse&SEARCH_VALUE=&ID_TOOL=FUN
+        search_url = "http://www.onvista.de/suche.html"
+        page = opener.open(search_url, urllib.urlencode({"TARGET": "kurse", "SEARCH_VALUE": searchstring,'ID_TOOL':'FUN' }))
+        received_url = page.geturl()
+        #print "received url ", received_url
+        # single result http://www.onvista.de/etf/kurse.html?ID_INSTRUMENT=16353286&SEARCH_VALUE=DBX0AE
+        # result page http://www.onvista.de/suche.html
+        # now check if we got a single result or a result page
+        # if we get a result page, the url doesn't change
+        if received_url == search_url:
+            Log.debug("Received result page")
+            # we have a result page
+            soup = BeautifulSoup(page.read())
+            #print soup
+            linkTagsFonds = soup.findAll(attrs={'href' : re.compile('http://fonds\\.onvista\\.de/kurse\\.html\?ID_INSTRUMENT=\d+')})
+            etfRegex = re.compile("http://www\\.onvista\\.de/etf/.+?") #re.compile('http://etf\\.onvista\\.de/kurse\\.html\?ID_INSTRUMENT=\d+')
+            linkTagsETF = soup.findAll(attrs={'href' : etfRegex})
+            filePara = FileDownloadParalyzer([tag['href'] for tag in linkTagsFonds])
+            pages = filePara.perform()
+            for kursPage in pages:
+                Log.debug("Parsing fonds result page")
+                for item in self._parse_kurse_html(kursPage):
+                    yield (item, self)
+            Log.debug("Finished Fonds")
+            # enhance the /kurse suffix to the links
+            etflinks = [tag['href'] for tag in linkTagsETF]
+            etflinks = [link + "/kurse" for link in etflinks]
+            filePara = FileDownloadParalyzer(etflinks)
+            pages = filePara.perform()
+            for kursPage in pages:
+                Log.debug("Parsing ETF result page")
+                for item in self._parse_kurse_html(kursPage, tdInd=etfTDS, stockType=stock.ETF):
+                    yield (item, self)
+        else:
+            Log.debug("Received a Single result page")
+            # we have a single page
+            for item in self._parse_kurse_html(page.read(), tdInd=etfTDS, stockType=stock.ETF):
+                    yield (item, self)
+        Log.debug("Finished Searching " + searchstring)
         
     def _parse_kurse_html(self, kursPage, tdInd=fondTDS, stockType = stock.FUND):
         base = BeautifulSoup(kursPage).find('div', 'content')
+        #print base
+        regex404 = re.compile("http://www\\.onvista\\.de/404\\.html")
+        if regex404.search(str(base)):
+            Log.info("Encountered 404 while Searching")
+            print "Ditching 404"
+            return
         name = unicode(base.h1.contents[0])
         isin = str(base.findAll('tr','hgrau2')[1].findAll('td')[1].contents[0].replace('&nbsp;',''))
         try:
@@ -299,10 +328,10 @@ if __name__ == "__main__":
         print s2.price, s2.change, s2.date
 
     def test_search():
-        for res in  plugin.search('dws performance'):
+        for res in  plugin.search('carmignac'):
             print res
-        for res in plugin.search('etflab'):
-            print res
+        #for res in plugin.search('ishares'):
+        #    print res
 
     def test_historicals():
         print "los"
@@ -328,9 +357,9 @@ if __name__ == "__main__":
     s1 = Stock('LU0136412771', ex, stock.FUND)
     s2 = Stock('LU0103598305', ex, stock.FUND)
     s3 = Stock('LU0382362290', ex, stock.ETF)
-    #test_search()
+    test_search()
     #print plugin.search_kurse(s1)
     #print plugin.search_kurse(s3)
-    test_parse_kurse()
+    #test_parse_kurse()
     #test_update()
     #test_historicals()
