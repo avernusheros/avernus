@@ -82,30 +82,30 @@ class Account(SQLiteEntity):
         else:
             parent_category_id = None
         hierarchy = controller.getAllAccountCategoriesHierarchical()
-        cat_ids = {}
+        cats = {}
         sums = {}
         
         def get_child_categories(parent):
-            if parent.id in hierarchy:
+            if parent in hierarchy:
                 res = []
-                for cat in hierarchy[parent.id]:
+                for cat in hierarchy[parent]:
                     res.append(cat)
                     res += get_child_categories(cat)
                 return res
             return []
         
-        if parent_category_id in hierarchy:
-            for cat in hierarchy[parent_category_id]:
-                cat_ids[cat] = [cat] + get_child_categories(cat)
+        if parent_category in hierarchy:
+            for cat in hierarchy[parent_category]:
+                cats[cat] = [cat] + get_child_categories(cat)
                 sums[cat] = 0.0
         
-        cat_ids['None'] = [parent_category]
+        cats['None'] = [parent_category]
         sums['None'] = 0.0
 
         for trans in self:
             if transfers or trans.transfer is None:
                 if trans.isEarning() == b_earnings:
-                    for cat, subcats in cat_ids.items():
+                    for cat, subcats in cats.items():
                         if trans.category in subcats:
                             sums[cat] += trans.amount
         return sums
@@ -151,8 +151,22 @@ class AccountCategory(SQLiteEntity):
     __columns__ = {
                    'id': 'INTEGER',
                    'name': 'VARCHAR',
-                   'parent': 'INTEGER'
+                   'parentid': 'INTEGER'
                   }
+
+    def get_parent(self):
+        if self.parentid != -1:
+            return self.getByPrimaryKey(self.parentid)
+        return None
+
+    def set_parent(self, parent):
+        if parent:
+            self.parentid = parent.id
+        else:
+            self.parentid = -1
+    
+    parent = property(get_parent, set_parent)
+
 
 
 class AccountTransaction(SQLiteEntity):

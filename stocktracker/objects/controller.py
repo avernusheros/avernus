@@ -145,8 +145,12 @@ def newAccountTransaction(id=None, description='', amount=0.0, account=None, cat
     result.insert()
     return result
 
-def newAccountCategory(name='', cid=None, parent=-1):
-    result = AccountCategory(id=cid, name=name, parent=parent)
+def newAccountCategory(name='', cid=None, parent=None):
+    if parent is None:
+        parentid =-1
+    else:
+        parentid = parent.id
+    result = AccountCategory(id=cid, name=name, parentid=parentid)
     result.insert()
     return result
 
@@ -290,7 +294,7 @@ def getAllAccountCategories():
 def getAllAccountCategoriesHierarchical():
     hierarchy = {None:[]}
     for cat in getAllAccountCategories():
-        if cat.parent == -1:
+        if cat.parent is None:
             hierarchy[None].append(cat)
         elif cat.parent in hierarchy: 
             hierarchy[cat.parent].append(cat)

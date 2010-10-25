@@ -47,7 +47,7 @@ class Debug(object):
         self.debugging_mode = False
 
     def __init_logger(self):
-        Debug.__logger = logging.getLogger('gtg_logger')
+        Debug.__logger = logging.getLogger('stocktracker')
         # set a stream handler for debugging
         ch = logging.StreamHandler()
         ch.setLevel(logging.DEBUG)

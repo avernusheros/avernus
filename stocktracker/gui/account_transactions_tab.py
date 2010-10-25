@@ -5,6 +5,7 @@ from stocktracker.gui import gui_utils
 import stocktracker.objects
 from stocktracker.objects import controller
 from stocktracker import pubsub
+from stocktracker.logger import Log
 
 
 class AccountTransactionTab(gtk.VBox):
@@ -278,26 +279,44 @@ class CategoriesTree(gui_utils.Tree):
                                     
         self.connect('drag_data_received', self.on_drag_data_received)
         self.connect('cursor_changed', self.on_cursor_changed)
+        self.connect('button_press_event', self.on_button_press)
         
     def load_categories(self):
         def insert_recursive(cat, parent):
             new_iter = model.append(parent, [cat, cat.name])
-            if cat.id in hierarchy:
-                for child_cat in hierarchy[cat.id]:
+            if cat in hierarchy:
+                for child_cat in hierarchy[cat]:
                     insert_recursive(child_cat, new_iter)
         model = self.get_model()
         hierarchy = controller.getAllAccountCategoriesHierarchical()
         for cat in hierarchy[None]: #start with root categories
             insert_recursive(cat, None)
     
-    def insert_item(self, cat):
-        return self.get_model().append(None, [cat, cat.name])
+    def insert_item(self, cat, parent=None):
+        return self.get_model().append(parent, [cat, cat.name])
+    
+    def get_selected_category(self):
+        selection = self.get_selection()
+        treestore, selection_iter = selection.get_selected()
+        if treestore and selection_iter:
+            return treestore[selection_iter][0], selection_iter 
+        return None, None
+    
+    def show_context_menu(self, event):
+        category, iter = self.get_selected_category()
+        if category:            
+            context_menu = gui_utils.ContextMenu()
+            for action in self.actiongroup.list_actions():
+                context_menu.add(action.create_menu_item())
+            context_menu.show(event)
     
     def on_add(self, widget=None):
-        item = controller.newAccountCategory('new category')
-        iterator = self.insert_item(item)
+        parent, selection_iter = self.get_selected_category()      
+        item = controller.newAccountCategory('new category', parent=parent)
+        iterator = self.insert_item(item, parent = selection_iter)
         model = self.get_model()
-        #self.expand_row( model.get_path(parent_iter), True)
+        if selection_iter:
+            self.expand_row( model.get_path(selection_iter), True)
         self.set_cursor(model.get_path(iterator), focus_column = self.get_column(0), start_editing=True)
 
     def on_edit(self, widget=None):
@@ -322,6 +341,10 @@ class CategoriesTree(gui_utils.Tree):
     def on_cell_edited(self, cellrenderertext, path, new_text):
         m = self.get_model()
         m[path][0].name = m[path][1] = unicode(new_text)
+
+    def on_button_press(self, widget, event):
+        if event.button == 3:
+            self.show_context_menu(event)
 
     def on_cursor_changed(self, widget):
         #Get the current selection in the gtk.TreeView
@@ -400,7 +423,7 @@ class CategoriesTree(gui_utils.Tree):
                     transaction = controller.AccountTransaction.getByPrimaryKey(int(id))
                     transaction.category = cat
             else:
-                print "NO CATEGORY"
+                Log.debug("NO CATEGORY")
         return
            
            
@@ -531,7 +554,7 @@ class EditTransaction(gtk.Dialog):
             if self.transfer_button.get_active():
                 self.transaction.transfer = self.transfer_transaction
                 self.transfer_transaction.transfer = self.transaction
-                print self.transfer_transaction, self.transfer_transaction.transfer
+                #print self.transfer_transaction, self.transfer_transaction.transfer
             else:
                 if self.transaction.transfer is not None:
                     self.transaction.transfer.transfer = None
