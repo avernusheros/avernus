@@ -198,11 +198,17 @@ class TransactionsTree(gui_utils.Tree):
         dlg.destroy()
         if response == gtk.RESPONSE_OK:
             trans.delete()
-            self.model.remove(iterator)
+            child_iter = self._get_child_iter(iterator)
+            self.model.remove(child_iter)
+    
+    def _get_child_iter(self, iterator):
+        child_iter = self.get_model().convert_iter_to_child_iter(None, iterator)
+        return self.modelfilter.convert_iter_to_child_iter(child_iter)
     
     def on_set_transaction_category(self, category = None):
         trans, iterator = self._get_selected_transaction()
         trans.category = category
+        self.get_model()[iterator] = self.get_item_to_insert(trans)
         self.model[iterator] = self.get_item_to_insert(trans)
 
     def show_context_menu(self, event):
@@ -218,14 +224,14 @@ class TransactionsTree(gui_utils.Tree):
             def insert_recursive(cat, menu):
                 item = gtk.MenuItem(cat.name)
                 menu.append(item)
-                if cat.id in hierarchy:
+                if cat in hierarchy:
                     new_menu = gtk.Menu()
                     item.set_submenu(new_menu)
                     item = gtk.MenuItem(cat.name)
                     new_menu.append(item)
                     item.connect('activate', lambda widget: self.on_set_transaction_category(cat))
                     new_menu.append(gtk.SeparatorMenuItem())
-                    for child_cat in hierarchy[cat.id]:
+                    for child_cat in hierarchy[cat]:
                         insert_recursive(child_cat, new_menu)
                 else:
                     item.connect('activate', lambda widget: self.on_set_transaction_category(cat))
