@@ -173,7 +173,7 @@ class Onvista():
         # result page http://www.onvista.de/suche.html
         # now check if we got a single result or a result page
         # if we get a result page, the url doesn't change
-        if received_url == search_url:
+        if received_url == search_url or received_url.startswith(search_url):
             Log.debug("Received result page")
             # we have a result page
             soup = BeautifulSoup(page.read())
@@ -200,7 +200,18 @@ class Onvista():
         else:
             Log.debug("Received a Single result page")
             # we have a single page
-            for item in self._parse_kurse_html(page.read(), tdInd=etfTDS, stockType=stock.ETF):
+            # determine whether its an etf or a fonds
+            html = page.read()
+            if received_url.find("etf")>-1:
+                # etf
+                print "found ETF-onepage"
+                for item in self._parse_kurse_html(html, tdInd=etfTDS, stockType=stock.ETF):
+                    print "Yield ", item
+                    yield (item, self)
+            else:
+                # aktive fonds
+                print "found aktiveFonds-onepage"
+                for item in self._parse_kurse_html(html):
                     yield (item, self)
         Log.debug("Finished Searching " + searchstring)
         
@@ -316,6 +327,7 @@ if __name__ == "__main__":
             self.type = type
             self.exchange = ex
             self.currency = 'EUR'
+            self.date = datetime(2008,5,1)
 
     ex = Exchange()
     s1 = Stock('DE0008474248', ex, stock.FUND)
@@ -323,15 +335,15 @@ if __name__ == "__main__":
 
     def test_update():
 
-        plugin.update_stocks([s1, s2])
+        plugin.update_stocks([s1])
         print s1.price, s1.change, s1.date
-        print s2.price, s2.change, s2.date
+        #print s2.price, s2.change, s2.date
 
     def test_search():
-        for res in  plugin.search('carmignac'):
+        for res in  plugin.search('A0F5G9'):
             print res
-        #for res in plugin.search('ishares'):
-        #    print res
+        for res in plugin.search('DBX0AE'):
+            print res
 
     def test_historicals():
         print "los"
@@ -354,7 +366,7 @@ if __name__ == "__main__":
         
     plugin = Onvista()
     ex = Exchange()
-    s1 = Stock('LU0136412771', ex, stock.FUND)
+    s1 = Stock('DE000A0F5G98', ex, stock.FUND)
     s2 = Stock('LU0103598305', ex, stock.FUND)
     s3 = Stock('LU0382362290', ex, stock.ETF)
     test_search()
