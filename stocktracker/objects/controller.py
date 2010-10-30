@@ -29,7 +29,7 @@ modelClasses = [Portfolio, Transaction, Tag, Watchlist, Index, Dividend,
 initialLoadingClasses = [Portfolio,Transaction,Tag,Watchlist,Index,Dividend,Sector,
                          PortfolioPosition, WatchlistPosition,Account,  Meta, Stock, AccountTransaction, AccountCategory]
 
-version = 1
+VERSION = 2
 datasource_manager = None
 
 def initialLoading():
@@ -86,14 +86,28 @@ def createTables():
     for cl in modelClasses:
         cl.createTable()
     if model.store.new:
-        m = Meta(version=version)
-        m.insert()
+        set_db_version(VERSION)
         load_fixtures()
     else:
         db_version = Meta.getByPrimaryKey(1).version
-        if db_version < version:
+        if db_version < VERSION:
+            print "Need to upgrade the database..."
             upgrade_db(db_version)
 
+def upgrade_db(db_version):
+    if db_version==1:
+        print "Updating database v.1 to v.2!"
+        db_version+=1
+        set_db_version(db_version)
+    if db_version==VERSION:
+        print "Successfully updated your database to the current version!"
+    if db_version>VERSION:
+        print "ERROR: unknown db version"
+
+def set_db_version(version):
+    m = Meta.getByPrimaryKey(1)
+    m.version = 2
+        
 def load_fixtures():
     for sname in ['Basic Materials','Conglomerates','Consumer Goods','Energy','Financial','Healthcare','Industrial Goods','Services','Technology','Transportation','Utilities']:
         newSector(sname)

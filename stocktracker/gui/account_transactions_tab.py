@@ -82,6 +82,10 @@ class AccountTransactionTab(gtk.VBox):
         self.category_tree.clear()
         self.category_tree.load_categories()
 
+def desc_markup(column, cell, model, iter, user_data):
+        text = model.get_value(iter, user_data)
+        markup =  '<span size="small">'+ text + '</span>'
+        cell.set_property('markup', markup)
 
 class TransactionsTree(gui_utils.Tree):
     
@@ -104,7 +108,7 @@ class TransactionsTree(gui_utils.Tree):
         self.modelfilter.set_visible_func(self.visible_cb)
         
         self.create_column(_('Date'), self.DATE)
-        col, cell = self.create_column(_('Description'), self.DESCRIPTION)
+        col, cell = self.create_column(_('Description'), self.DESCRIPTION, func=desc_markup)
         self.dynamicWrapColumn = col
         self.dynamicWrapCell = cell
         cell.props.wrap_mode = gtk.WRAP_WORD
@@ -120,7 +124,9 @@ class TransactionsTree(gui_utils.Tree):
         self.connect('button_press_event', self.on_button_press)
         self.connect('button_release_event', self.on_button_release)
         search_entry.connect('changed', self.on_search_entry_changed)
-        pubsub.subscribe('accountTransaction.created', self.on_transaction_created)        
+        pubsub.subscribe('accountTransaction.created', self.on_transaction_created)
+        
+    
 
     def visible_cb(self, model, iter):
         #transaction = model[iter][0]
@@ -198,11 +204,17 @@ class TransactionsTree(gui_utils.Tree):
         dlg.destroy()
         if response == gtk.RESPONSE_OK:
             trans.delete()
-            self.model.remove(iterator)
+            child_iter = self._get_child_iter(iterator)
+            self.model.remove(child_iter)
+    
+    def _get_child_iter(self, iterator):
+        child_iter = self.get_model().convert_iter_to_child_iter(None, iterator)
+        return self.modelfilter.convert_iter_to_child_iter(child_iter)
     
     def on_set_transaction_category(self, category = None):
         trans, iterator = self._get_selected_transaction()
         trans.category = category
+        self.get_model()[iterator] = self.get_item_to_insert(trans)
         self.model[iterator] = self.get_item_to_insert(trans)
 
     def show_context_menu(self, event):
@@ -218,14 +230,14 @@ class TransactionsTree(gui_utils.Tree):
             def insert_recursive(cat, menu):
                 item = gtk.MenuItem(cat.name)
                 menu.append(item)
-                if cat.id in hierarchy:
+                if cat in hierarchy:
                     new_menu = gtk.Menu()
                     item.set_submenu(new_menu)
                     item = gtk.MenuItem(cat.name)
                     new_menu.append(item)
                     item.connect('activate', lambda widget: self.on_set_transaction_category(cat))
                     new_menu.append(gtk.SeparatorMenuItem())
-                    for child_cat in hierarchy[cat.id]:
+                    for child_cat in hierarchy[cat]:
                         insert_recursive(child_cat, new_menu)
                 else:
                     item.connect('activate', lambda widget: self.on_set_transaction_category(cat))
@@ -328,7 +340,7 @@ class CategoriesTree(gui_utils.Tree):
         self.set_cursor(model.get_path(selection_iter), focus_column = self.get_column(0), start_editing=True)
     
     def on_remove(self, widget=None):
-        obj, iterator = self.selected_item
+        obj, iterator = self.get_selected_category()
         dlg = gtk.MessageDialog(None,
              gtk.DIALOG_DESTROY_WITH_PARENT, gtk.MESSAGE_QUESTION,
              gtk.BUTTONS_OK_CANCEL)
@@ -349,19 +361,11 @@ class CategoriesTree(gui_utils.Tree):
             self.show_context_menu(event)
 
     def on_cursor_changed(self, widget):
-        #Get the current selection in the gtk.TreeView
-        selection = widget.get_selection()
-        # Get the selection iter
-        treestore, selection_iter = selection.get_selected()
-        if (selection_iter and treestore):
-            #Something is selected so get the object
-            obj = treestore.get_value(selection_iter, 0)
-            if self.selected_item is None or self.selected_item[0] != obj:
-                self.selected_item = obj, selection_iter
-                self.on_select(obj)  
-            return 
-        self.selected_item = None
-        self.on_unselect()
+        cat, iterator = self.get_selected_category()
+        if cat is not None:
+            self.on_select(cat)
+        else:
+            self.on_unselect()
   
     def on_unselect(self):
         for action in ['remove', 'edit']:
@@ -377,16 +381,16 @@ class CategoriesTree(gui_utils.Tree):
         source_category = source_row[0]
         if drop_position is None:
             model.append(None, row=source_row)
-            source_category.parent = -1
+            source_category.parent = None
         else:
             target_category = model[target][0]
             if drop_position == gtk.TREE_VIEW_DROP_INTO_OR_BEFORE:
                 new_iter = model.prepend(parent=target, row=source_row)
-                source_category.parent = target_category.id
+                source_category.parent = target_category
                 self.expand_row(model.get_path(target), False)
             elif drop_position == gtk.TREE_VIEW_DROP_INTO_OR_AFTER:
                 new_iter = model.append(parent=target, row=source_row)
-                source_category.parent = target_category.id
+                source_category.parent = target_category
                 self.expand_row(model.get_path(target), False)
             elif drop_position == gtk.TREE_VIEW_DROP_BEFORE:
                 new_iter = model.insert_before(
@@ -399,7 +403,7 @@ class CategoriesTree(gui_utils.Tree):
         # Copy any children of the source row.
         for n in range(model.iter_n_children(source)):
             child = model.iter_nth_child(source, n)
-            self._copy_row(child, new_iter, gtk.TREE_VIEW_DROP_INTO_OR_BEFORE)  
+            self._move_row(child, new_iter, gtk.TREE_VIEW_DROP_INTO_OR_BEFORE)  
         # If the source row is expanded, expand the newly copied row
         if self.row_expanded(model.get_path(source)):
             self.expand_row(model.get_path(new_iter), False)
@@ -411,10 +415,13 @@ class CategoriesTree(gui_utils.Tree):
             if drop_info:
                 target_path, drop_position = drop_info
                 target_iter = model.get_iter(target_path)
-                self._move_row(source_iter, target_iter, drop_position)
+                #dont allow dragging cats on themselves
+                if model[source_iter][0]!=model[target_iter][0]:
+                    self._move_row(source_iter, target_iter, drop_position)
+                    context.finish(True, True, etime)
             else:
                 self._move_row(source_iter, None, None)
-            context.finish(True, True, etime)
+                context.finish(True, True, etime)
         else: #drop from other widget
             if drop_info:
                 model = self.get_model()
@@ -472,8 +479,8 @@ class EditTransaction(gtk.Dialog):
             new_iter = treestore.append(parent, [cat, cat.name])
             if cat == self.transaction.category:
                 self.combobox.set_active_iter(new_iter)
-            if cat.id in hierarchy:
-                for child_cat in hierarchy[cat.id]:
+            if cat in hierarchy:
+                for child_cat in hierarchy[cat]:
                     insert_recursive(child_cat, new_iter)
         new_iter = treestore.append(None, [None, 'None'])
         self.combobox.set_active_iter(new_iter)
