@@ -4,6 +4,7 @@ import sqlite3
 import os
 from Queue import Queue
 from threading import Thread
+import shutil, time
 
 class Store(Thread):
 
@@ -55,6 +56,11 @@ class Store(Thread):
             
     def close(self):
         self.execute('--close--')
+        
+    def backup(self):
+        backup_file = self.db+'.backup'+time.strftime(".%Y%m%d-%H%M")
+        shutil.copyfile ( self.db, backup_file ) 
+        
     
 if __name__ == "__main__":
     sql = Store(":memory:")

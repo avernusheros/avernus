@@ -83,16 +83,17 @@ def detectDuplicate(tp,**kwargs):
     return new
 
 def createTables():
+    db_version = Meta.getByPrimaryKey(1).version
+    if not model.store.new:
+        if db_version < VERSION:
+            print "Need to upgrade the database..."
+            model.store.backup()
+            upgrade_db(db_version)
     for cl in modelClasses:
         cl.createTable()
     if model.store.new:
         set_db_version(VERSION)
-        load_fixtures()
-    else:
-        db_version = Meta.getByPrimaryKey(1).version
-        if db_version < VERSION:
-            print "Need to upgrade the database..."
-            upgrade_db(db_version)
+        load_fixtures()        
 
 def upgrade_db(db_version):
     if db_version==1:
