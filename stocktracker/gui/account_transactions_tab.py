@@ -82,6 +82,10 @@ class AccountTransactionTab(gtk.VBox):
         self.category_tree.clear()
         self.category_tree.load_categories()
 
+def desc_markup(column, cell, model, iter, user_data):
+        text = model.get_value(iter, user_data)
+        markup =  '<span size="small">'+ text + '</span>'
+        cell.set_property('markup', markup)
 
 class TransactionsTree(gui_utils.Tree):
     
@@ -104,7 +108,7 @@ class TransactionsTree(gui_utils.Tree):
         self.modelfilter.set_visible_func(self.visible_cb)
         
         self.create_column(_('Date'), self.DATE)
-        col, cell = self.create_column(_('Description'), self.DESCRIPTION)
+        col, cell = self.create_column(_('Description'), self.DESCRIPTION, func=desc_markup)
         self.dynamicWrapColumn = col
         self.dynamicWrapCell = cell
         cell.props.wrap_mode = gtk.WRAP_WORD
@@ -120,7 +124,9 @@ class TransactionsTree(gui_utils.Tree):
         self.connect('button_press_event', self.on_button_press)
         self.connect('button_release_event', self.on_button_release)
         search_entry.connect('changed', self.on_search_entry_changed)
-        pubsub.subscribe('accountTransaction.created', self.on_transaction_created)        
+        pubsub.subscribe('accountTransaction.created', self.on_transaction_created)
+        
+    
 
     def visible_cb(self, model, iter):
         #transaction = model[iter][0]
