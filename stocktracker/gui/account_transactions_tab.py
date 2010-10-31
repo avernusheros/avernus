@@ -283,8 +283,9 @@ class CategoriesTree(gui_utils.Tree):
         self.actiongroup = actiongroup
         self.set_model(gtk.TreeStore(object, str))
         col, cell = self.create_column(_('Categories'), 1)
-        cell.set_property('editable', True)
-        cell.connect('edited', self.on_cell_edited)        
+        # setting the cell editable interfers with drag and drop
+        #cell.set_property('editable', True)
+        #cell.connect('edited', self.on_cell_edited)        
         self.enable_model_drag_dest(self.TARGETS, gtk.gdk.ACTION_DEFAULT)
         # Allow enable drag and drop of rows including row move
         self.enable_model_drag_source( gtk.gdk.BUTTON1_MASK,
