@@ -283,6 +283,7 @@ class CategoriesTree(gui_utils.Tree):
         self.actiongroup = actiongroup
         self.set_model(gtk.TreeStore(object, str))
         col, cell = self.create_column(_('Categories'), 1)
+        self.get_model().set_sort_column_id(1, gtk.SORT_ASCENDING)
         # setting the cell editable interfers with drag and drop
         #cell.set_property('editable', True)
         #cell.connect('edited', self.on_cell_edited)        
