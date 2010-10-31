@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   height="48"
+   id="svg3249"
+   inkscape:version="0.48.0 r9654"
+   sodipodi:docname="account.svg"
+   sodipodi:version="0.32"
+   width="48"
+   version="1.1">
+  <metadata
+     id="metadata3">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:title>AIGA_Symbol_Signs</dc:title>
+        <dc:description>EPS converted from  http://aiga.org</dc:description>
+        <dc:subject>
+          <rdf:Bag>
+            <rdf:li>symbol</rdf:li>
+            <rdf:li>mapsym</rdf:li>
+          </rdf:Bag>
+        </dc:subject>
+        <dc:publisher>
+          <cc:Agent
+             rdf:about="http://www.openclipart.org/">
+            <dc:title>Open Clip Art Library</dc:title>
+          </cc:Agent>
+        </dc:publisher>
+        <dc:creator>
+          <cc:Agent>
+            <dc:title>Jean-Victor Balin</dc:title>
+          </cc:Agent>
+        </dc:creator>
+        <dc:rights>
+          <cc:Agent>
+            <dc:title>Jean-Victor Balin</dc:title>
+          </cc:Agent>
+        </dc:rights>
+        <dc:date />
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <cc:license
+           rdf:resource="http://web.resource.org/cc/PublicDomain" />
+        <dc:language>en</dc:language>
+      </cc:Work>
+      <cc:License
+         rdf:about="http://web.resource.org/cc/PublicDomain">
+        <cc:permits
+           rdf:resource="http://web.resource.org/cc/Reproduction" />
+        <cc:permits
+           rdf:resource="http://web.resource.org/cc/Distribution" />
+        <cc:permits
+           rdf:resource="http://web.resource.org/cc/DerivativeWorks" />
+      </cc:License>
+    </rdf:RDF>
+  </metadata>
+  <sodipodi:namedview
+     bordercolor="#666666"
+     borderopacity="1.0"
+     id="base"
+     inkscape:current-layer="g3259"
+     inkscape:cx="18.364446"
+     inkscape:cy="1.8600977"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:window-height="939"
+     inkscape:window-width="1280"
+     inkscape:window-x="0"
+     inkscape:window-y="1"
+     inkscape:zoom="1"
+     pagecolor="#ffffff"
+     showgrid="false"
+     inkscape:window-maximized="1" />
+  <defs
+     id="defs3251">
+    <marker
+       id="ArrowEnd"
+       markerHeight="3"
+       markerUnits="strokeWidth"
+       markerWidth="4"
+       orient="auto"
+       refX="0"
+       refY="5"
+       viewBox="0 0 10 10">
+      <path
+         d="M 0,0 10,5 0,10 z"
+         id="path3254"
+         inkscape:connector-curvature="0" />
+    </marker>
+    <marker
+       id="ArrowStart"
+       markerHeight="3"
+       markerUnits="strokeWidth"
+       markerWidth="4"
+       orient="auto"
+       refX="10"
+       refY="5"
+       viewBox="0 0 10 10">
+      <path
+         d="M 10,0 0,5 10,10 z"
+         id="path3257"
+         inkscape:connector-curvature="0" />
+    </marker>
+  </defs>
+  <g
+     id="g3259"
+     transform="matrix(0.08123491,0,0,0.08123491,-48.582671,-100.39904)">
+    <path
+       inkscape:connector-curvature="0"
+       style="fill:#eeeeee;fill-opacity:1;stroke:#c0c0c0;stroke-width:36.92993546000000293;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="path3263"
+       d="m 896.84025,1790.4493 c -140.13066,0 -253.73196,-113.6012 -253.73196,-253.7319 0,-140.1359 113.6013,-253.7359 253.73196,-253.7359 140.13585,0 253.73565,113.6 253.73565,253.7359 0,140.1307 -113.5998,253.7319 -253.73565,253.7319 z" />
+    <path
+       d="m 764.37405,1581.2371 61.64325,0 c 3.89851,17.8564 9.03156,39.4555 37.10733,47.4695 l -0.0715,-70.1575 c -38.45101,-5.5477 -93.92032,-22.4815 -93.92032,-84.5783 0,-69.8028 76.90202,-91.5695 93.99179,-91.5695 l 0,-42.2052 57.97865,0 0,42.2052 c 39.08777,2.2741 95.82155,35.0866 95.82155,97.4628 l -61.03254,0 c -1.54901,-18.518 -15.84354,-36.711 -34.17954,-38.0105 l 0,64.3255 c 46.60019,4.7977 101.31458,22.6607 101.31458,85.5385 0,54.9001 -54.9288,94.9391 -101.31458,97.4055 l 0,42.3118 -58.58812,0 0,-42.929 c -33.56877,-4.9329 -94.93523,-37.4322 -98.75057,-107.2688 z"
+       id="path3267"
+       style="fill:#565656;stroke:none;fill-opacity:1"
+       inkscape:connector-curvature="0" />
+    <g
+       id="g3269"
+       transform="matrix(1.2995035,0,0,1.2995035,297.70804,937.58125)">
+      <path
+         d="m 435.335,388.54 0,41.01 c -31.788,-0.5 -32.406,-35.317 0,-41.01 z"
+         id="path3271"
+         style="fill:#ffffff;stroke:none"
+         inkscape:connector-curvature="0" />
+      <g
+         id="g3273">
+        <path
+           d="m 480.71,485.55 c 39.337,1 43.712,40.25 -0.044,46.527"
+           id="path3275"
+           style="fill:#ffffff;stroke:none"
+           inkscape:connector-curvature="0" />
+        <path
+           d="M 480.666,532.077 480.71,485.55"
+           id="path3277"
+           style="fill:#ffffff;stroke:none"
+           inkscape:connector-curvature="0" />
+      </g>
+    </g>
+  </g>
+</svg>

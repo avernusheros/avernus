@@ -91,7 +91,7 @@ class MainTree(Tree):
         self.pf_iter = self.get_model().append(None, [Category('Portfolios'),'portfolios', _("<b>Portfolios</b>")])
         self.wl_iter = self.get_model().append(None, [Category('Watchlists'),'watchlists', _("<b>Watchlists</b>")])
         self.tag_iter = self.get_model().append(None, [Category('Tags'),'tags', _("<b>Tags</b>")])
-        self.accounts_iter = self.get_model().append(None, [Category('Accounts'),'account', _("<b>Accounts</b>")])
+        self.accounts_iter = self.get_model().append(None, [Category('Accounts'),'accounts', _("<b>Accounts</b>")])
         #self.index_iter = self.get_model().append(None, [Category('Indices'),'indices', _("<b>Indices</b>")])
 
     def insert_watchlist(self, item):
