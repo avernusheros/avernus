@@ -167,6 +167,14 @@ class AccountCategory(SQLiteEntity):
     
     parent = property(get_parent, set_parent)
 
+    def is_parent(self, category):
+        if category == self:
+            return True
+        if self.parent == category:
+            return True
+        if self.parent is not None:
+            return self.parent.is_parent(category)
+        return False
 
 
 class AccountTransaction(SQLiteEntity):

@@ -282,11 +282,11 @@ class CategoriesTree(gui_utils.Tree):
         gui_utils.Tree.__init__(self)
         self.actiongroup = actiongroup
         self.set_model(gtk.TreeStore(object, str))
-        col, cell = self.create_column(_('Categories'), 1)
+        col, self.cell = self.create_column(_('Categories'), 1)
         self.get_model().set_sort_column_id(1, gtk.SORT_ASCENDING)
         # setting the cell editable interfers with drag and drop
-        #cell.set_property('editable', True)
-        #cell.connect('edited', self.on_cell_edited)        
+        #self.cell.set_property('editable', True)
+        self.cell.connect('edited', self.on_cell_edited)        
         self.enable_model_drag_dest(self.TARGETS, gtk.gdk.ACTION_DEFAULT)
         # Allow enable drag and drop of rows including row move
         self.enable_model_drag_source( gtk.gdk.BUTTON1_MASK,
@@ -333,13 +333,13 @@ class CategoriesTree(gui_utils.Tree):
         model = self.get_model()
         if selection_iter:
             self.expand_row( model.get_path(selection_iter), True)
+        self.cell.set_property('editable', True)
         self.set_cursor(model.get_path(iterator), focus_column = self.get_column(0), start_editing=True)
 
     def on_edit(self, widget=None):
-        selection = self.get_selection()
-        treestore, selection_iter = selection.get_selected()
-        model = self.get_model()
-        self.set_cursor(model.get_path(selection_iter), focus_column = self.get_column(0), start_editing=True)
+        cat, selection_iter = self.get_selected_category()    
+        self.cell.set_property('editable', True)
+        self.set_cursor(self.get_model().get_path(selection_iter), focus_column = self.get_column(0), start_editing=True)
     
     def on_remove(self, widget=None):
         obj, iterator = self.get_selected_category()
@@ -357,6 +357,7 @@ class CategoriesTree(gui_utils.Tree):
     def on_cell_edited(self, cellrenderertext, path, new_text):
         m = self.get_model()
         m[path][0].name = m[path][1] = unicode(new_text)
+        cellrenderertext.set_property('editable', False)
 
     def on_button_press(self, widget, event):
         if event.button == 3:
@@ -382,7 +383,7 @@ class CategoriesTree(gui_utils.Tree):
         source_row = model[source]
         source_category = source_row[0]
         if drop_position is None:
-            model.append(None, row=source_row)
+            new_iter = model.append(None, row=source_row)
             source_category.parent = None
         else:
             target_category = model[target][0]
@@ -418,7 +419,7 @@ class CategoriesTree(gui_utils.Tree):
                 target_path, drop_position = drop_info
                 target_iter = model.get_iter(target_path)
                 #dont allow dragging cats on themselves
-                if model[source_iter][0]!=model[target_iter][0]:
+                if not model[target_iter][0].is_parent(model[source_iter][0]):
                     self._move_row(source_iter, target_iter, drop_position)
                     context.finish(True, True, etime)
             else:
