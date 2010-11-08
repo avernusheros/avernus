@@ -57,12 +57,12 @@ def check_duplicate(tp, **kwargs):
     sqlArgs = {}
     for req in tp.__comparisonPositives__:
         sqlArgs[req] = kwargs[req]
-    present = tp.getByColumns(sqlArgs,operator=" AND ",create=True)  
+    present = tp.getByColumns(sqlArgs,operator=" AND ",create=True)
     if present:
         return present
     return None
-    
-      
+
+
 def detectDuplicate(tp,**kwargs):
     #print tp, kwargs
     sqlArgs = {}
@@ -83,8 +83,8 @@ def detectDuplicate(tp,**kwargs):
     return new
 
 def createTables():
-    db_version = Meta.getByPrimaryKey(1).version
     if not model.store.new:
+        db_version = Meta.getByPrimaryKey(1).version
         if db_version < VERSION:
             print "Need to upgrade the database..."
             model.store.backup()
@@ -92,8 +92,9 @@ def createTables():
     for cl in modelClasses:
         cl.createTable()
     if model.store.new:
-        set_db_version(VERSION)
-        load_fixtures()        
+        m = Meta(id=1, version=VERSION)
+        m.insert()
+        load_fixtures()
 
 def upgrade_db(db_version):
     if db_version==1:
@@ -107,8 +108,8 @@ def upgrade_db(db_version):
 
 def set_db_version(version):
     m = Meta.getByPrimaryKey(1)
-    m.version = 2
-        
+    m.version = version
+
 def load_fixtures():
     for sname in ['Basic Materials','Conglomerates','Consumer Goods','Energy','Financial','Healthcare','Industrial Goods','Services','Technology','Transportation','Utilities']:
         newSector(sname)
@@ -129,7 +130,7 @@ def newPortfolio(name, id=None, last_update = datetime.datetime.now(), comment="
     result = Portfolio(id=id, name=name,last_update=last_update,comment=comment,cash=cash)
     result.insert()
     return result
-    
+
 def newWatchlist(name, id=None, last_update = datetime.datetime.now(), comment=""):
     result = Watchlist(id=id, name=name,last_update=last_update,comment=comment)
     result.insert()
@@ -141,7 +142,7 @@ def newAccount(name, id=None, amount=0, accounttype=1):
     return result
 
 def newAccountTransaction(id=None, description='', amount=0.0, account=None, category=None, date=datetime.date.today(), transferid=-1, detect_duplicates=False):
-    
+
     if detect_duplicates:
         duplicates = check_duplicate(AccountTransaction,\
                                description=description, \
@@ -191,7 +192,7 @@ def newTransaction(date=datetime.datetime.now(),\
                          costs=costs)
     result.insert()
     return result
-    
+
 
 def newIndex(name='', isin='', currency='', date=datetime.datetime.now(), exchange='', yahoo_symbol=''):
     result = Index(id=None, name=name, currency=currency, isin=isin, date=date, exchange=exchange, yahoo_symbol=yahoo_symbol, price=0, change=0)
@@ -214,7 +215,7 @@ def newPortfolioPosition(price=0,\
                                comment=comment\
                                )
     result.insert()
-    return result   
+    return result
 
 
 def newWatchlistPosition(price=0,\
@@ -232,7 +233,7 @@ def newWatchlistPosition(price=0,\
                                comment=comment\
                                )
     result.insert()
-    return result 
+    return result
 
 
 def newTag(name):
@@ -245,7 +246,7 @@ def newSector(name):
     result = Sector(name=name)
     result.insert()
     return result
- 
+
 def newStock(insert=True, **kwargs):
     result = Stock(**kwargs)
     if insert:
@@ -283,7 +284,7 @@ def newQuotation(date=datetime.date.today(),\
                            volume=vol)
         result.insert()
         return result
-        
+
 
 def getAllPortfolio():
     return Portfolio.getAll()
@@ -311,7 +312,7 @@ def getAllAccountCategoriesHierarchical():
     for cat in getAllAccountCategories():
         if cat.parent is None:
             hierarchy[None].append(cat)
-        elif cat.parent in hierarchy: 
+        elif cat.parent in hierarchy:
             hierarchy[cat.parent].append(cat)
         else:
             hierarchy[cat.parent] = [cat]
@@ -322,7 +323,7 @@ def getAllSector():
 
 def getAllTag():
     return Tag.getAll()
-    
+
 def getAllStock():
     return Stock.getAll()
 
@@ -336,12 +337,12 @@ def deleteAllPortfolioPosition(portfolio):
     for pos in getPositionForPortfolio(portfolio):
         #print "deleting ",pos
         pos.delete()
- 
+
 def deleteSectorFromStock(sector):
     for stock in getAllStock():
         if stock.sector == sector:
             stock.sector = None
-        
+
 def getTransactionForPosition(position):
     key = position.getPrimaryKey()
     erg = Transaction.getAllFromOneColumn("position", key)
@@ -350,7 +351,7 @@ def getTransactionForPosition(position):
 def deleteAllPositionTransaction(position):
     for trans in getTransactionForPosition(position):
         trans.delete()
-    
+
 def getPositionForWatchlist(watchlist):
     key = watchlist.getPrimaryKey()
     return WatchlistPosition.getAllFromOneColumn("watchlist",key)
@@ -383,7 +384,7 @@ def getAccountChangeInPeriodPerDay(account, start_date, end_date):
     query = """
     SELECT sum(trans.amount), trans.date
     FROM accounttransaction as trans, account
-    WHERE account.id == ? 
+    WHERE account.id == ?
     AND account.id == trans.account
     AND trans.date <= ?
     AND trans.date >= ?
@@ -399,7 +400,7 @@ def getEarningsOrSpendingsSummedInPeriod(account, start_date, end_date, earnings
     query = """
     SELECT abs(sum(trans.amount))
     FROM accounttransaction as trans, account
-    WHERE account.id == ? 
+    WHERE account.id == ?
     AND account.id == trans.account
     AND trans.amount"""+operator+"""0.0
     AND trans.date <= ?
@@ -412,16 +413,16 @@ def getEarningsOrSpendingsSummedInPeriod(account, start_date, end_date, earnings
         if row[0] == None:
             return 0.0
         return row[0]
-        
+
 def yield_matching_transfer_tranactions(transaction):
     for account in getAllAccount():
         if account != transaction.account:
             for ta in account.yield_matching_transfer_tranactions(transaction):
                 yield ta
-    
+
 def deleteAllPortfolioTransaction(portfolio):
     for trans in getTransactionForPortfolio(portfolio):
-        trans.delete() 
+        trans.delete()
 
 def deleteAllAccountTransaction(account):
     for trans in getTransactionsForAccount(account):
@@ -447,13 +448,13 @@ def getNewestQuotation(stock):
         return None
     else:
         return erg[0].date
-    
+
 def getBuyTransaction(portfolio_position):
     key = portfolio_position.getPrimaryKey()
     for ta in Transaction.getAllFromOneColumn('position', key):
         if ta.type == 1:
-            return ta    
-    
+            return ta
+
 def onPositionNewTag(position=None,tagText=None):
     if not position or not tagText:
         Log.error("Malformed onPositionNewTag Call (position,tagText)" + str((position,tagText)))
@@ -465,13 +466,13 @@ pubsub.subscribe('position.newTag', onPositionNewTag)
 class GeneratorTask(object):
     """
     http://unpythonic.blogspot.com/2007/08/using-threads-in-pygtk.html
-    Thanks!    
+    Thanks!
     """
     def __init__(self, generator, loop_callback, complete_callback=None):
         self.generator = generator
         self.loop_callback = loop_callback
         self.complete_callback = complete_callback
-        
+
     def _start(self, *args, **kwargs):
         self._stopped = False
         for ret in self.generator(*args, **kwargs):
