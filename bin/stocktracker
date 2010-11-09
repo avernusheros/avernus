@@ -73,14 +73,14 @@ def init_icons():
     'stocktracker','tags','tag','watchlists','watchlist','portfolio',
     'portfolios', 'index', 'indices','arrow_down','arrow_med_down',
     'arrow_up','arrow_med_up','arrow_right','A','F','plugin','fund','stock',
-    'etf','accounts','account'
+    'etf','accounts','account','bullbear'
     ]
     for name in iconNames:
         icons.add_icon_name_from_directory(name, path)
     #icons.add_icon_name_from_directory('tag', path)
     #icons.add_icon_name_from_directory('tags', path)
     #icons.add_stock_from_directory('stocktracker-chart', path)
-    gtk.window_set_default_icon_name('stocktracker')    
+    gtk.window_set_default_icon_name('bullbear')    
 
 
 def init_plugin_engine(api):
