@@ -279,7 +279,7 @@ class Onvista():
                     st.change = item['change']
                     st.volume = item['volume']
                     st.updated = True
-                    break
+                    #break
 
     def update_historical_prices(self, st, start_date, end_date):
         delta = relativedelta(start_date, end_date)
@@ -369,9 +369,9 @@ if __name__ == "__main__":
     s1 = Stock('DE000A0F5G98', ex, stock.FUND)
     s2 = Stock('LU0103598305', ex, stock.FUND)
     s3 = Stock('LU0382362290', ex, stock.ETF)
-    test_search()
+    #test_search()
     #print plugin.search_kurse(s1)
     #print plugin.search_kurse(s3)
     #test_parse_kurse()
-    #test_update()
+    test_update()
     #test_historicals()

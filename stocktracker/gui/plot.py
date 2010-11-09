@@ -34,6 +34,7 @@ class Chart(gtk.VBox):
         combobox.set_active(3)
         combobox.connect('changed', self.on_zoom_change)
         hbox.add(combobox)
+        self.noDataLabelShown = False
         self.current_chart = gtk.Label('Fetching data...')
         self.add(self.current_chart)
         self.current_zoom = 'YTD'
@@ -77,8 +78,10 @@ class Chart(gtk.VBox):
         
         data = controller.getQuotationsFromStock(self.stock, date2)
         if len(data) == 0:
-            self.add(gtk.Label('No historical data found!'))
-            self.show_all()
+            if not self.noDataLabelShown:
+                self.noDataLabelShown = True
+                self.add(gtk.Label('No historical data found!'))
+                self.show_all()
             return
         quotes = [d.close for d in data]
         y_min = 0.95*min(quotes)
