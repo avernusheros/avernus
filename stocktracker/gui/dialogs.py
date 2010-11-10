@@ -5,7 +5,6 @@ from stocktracker import pubsub, config
 from datetime import datetime
 from stocktracker.objects import controller, stock
 from stocktracker.gui import gui_utils
-from stocktracker.gui.gui_utils import resize_wrap
 
 
 class EditPositionDialog(gtk.Dialog):
@@ -172,7 +171,7 @@ class StockSelector(gtk.VBox):
         self.result_tree.create_icon_column(_('Type'), 5,size= gtk.ICON_SIZE_DND)
         self.result_tree.set_size_request(600,300)
         sw.connect_after('size-allocate', 
-                         resize_wrap, 
+                         gui_utils.resize_wrap, 
                          self.result_tree, 
                          col, 
                          cell)
@@ -319,7 +318,7 @@ class BuyDialog(gtk.Dialog):
         
         #total
         table.attach(gtk.Label(_('Total')),1,2,4,5,xoptions=gtk.SHRINK,yoptions=gtk.SHRINK)
-        self.total = gtk.Label('0.0')
+        self.total = gtk.Label(gui_utils.get_string_from_float(0.0))
         table.attach(self.total,2,3,4,5,xoptions=gtk.SHRINK,yoptions=gtk.SHRINK)
         
         #date 
@@ -358,7 +357,7 @@ class BuyDialog(gtk.Dialog):
 
     def on_change(self, widget):
         total = self.shares_entry.get_value() * self.price_entry.get_value() + self.tacosts_entry.get_value()
-        self.total.set_text(str(total))
+        self.total.set_text(gui_utils.get_string_from_float(total))
 
     def on_stock_selection(self, *args):
         self.stock_ok = True

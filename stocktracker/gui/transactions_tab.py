@@ -2,6 +2,7 @@
 
 import gtk
 from stocktracker import pubsub
+from stocktracker.gui import gui_utils
 from stocktracker.gui.gui_utils import Tree, get_datetime_string, get_name_string
 import stocktracker.objects
 from stocktracker.objects import controller
@@ -20,29 +21,31 @@ class TransactionsTab(gtk.ScrolledWindow):
         self.transactions_tree.clear()
         self.transactions_tree.load_transactions()
 
+
 class TransactionsTree(Tree):
+    
     def __init__(self, portfolio):
         self.portfolio = portfolio
         Tree.__init__(self)
         #object, name, price, change
-        self.set_model(gtk.TreeStore(object,str, str, str,str, str, str))
+        self.set_model(gtk.TreeStore(object,str, str, str,float, float, float))
         
         self.create_column(_('Action'), 1)
         self.create_column(_('Name'), 2)
         self.create_column(_('Date'), 3)
-        self.create_column(_('Shares'), 4)
-        self.create_column(_('Price'), 5)
-        self.create_column(_('Transaction Costs'), 6)
+        self.create_column(_('Shares'), 4, func=gui_utils.float_to_string)
+        self.create_column(_('Price'), 5, func=gui_utils.float_to_string)
+        self.create_column(_('Transaction Costs'), 6, func=gui_utils.float_to_string)
         
         pubsub.subscribe('transaction.added', self.on_transaction_created)
         
     def load_transactions(self):
-        list = []
+        items = []
         if isinstance(self.portfolio, stocktracker.objects.container.Portfolio):
-            list = [self.portfolio]
+            items = [self.portfolio]
         else:
-            list = self.portfolio
-        for port in list:
+            items = self.portfolio
+        for port in items:
             for ta in controller.getTransactionForPortfolio(port):
                 self.insert_transaction(ta)
       
@@ -54,16 +57,16 @@ class TransactionsTree(Tree):
         if portfolio.id == self.portfolio.id:
             self.insert_transaction(ta)    
     
-    def get_action_string(self, type):
-        if type == 1:
+    def get_action_string(self, ta_type):
+        if ta_type == 1:
             return 'BUY'
-        elif type == 0:
+        elif ta_type == 0:
             return 'SELL'
-        elif type == 2:
+        elif ta_type == 2:
             return 'SPLIT'
-        elif type == 3:
+        elif ta_type == 3:
             return 'DEPOSIT'
-        elif type == 4:
+        elif ta_type == 4:
             return 'WITHDRAW'
         else:
             return ''
@@ -75,4 +78,3 @@ class TransactionsTree(Tree):
                 model.append(None, [ta, self.get_action_string(ta.type), '', get_datetime_string(ta.date), ta.quantity, ta.price, ta.costs])
             else:
                 model.append(None, [ta, self.get_action_string(ta.type), get_name_string(ta.position.stock), get_datetime_string(ta.date), ta.quantity, ta.price, ta.costs])
-
