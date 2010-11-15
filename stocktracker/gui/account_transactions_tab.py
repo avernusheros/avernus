@@ -346,12 +346,16 @@ class CategoriesTree(gui_utils.Tree):
         dlg = gtk.MessageDialog(None,
              gtk.DIALOG_DESTROY_WITH_PARENT, gtk.MESSAGE_QUESTION,
              gtk.BUTTONS_OK_CANCEL)
-        dlg.set_markup(_("Permanently delete category <b>")+obj.name+'</b>?')
+        msg = _("Permanently delete category <b>")+obj.name+'</b>?'
+        model = self.get_model()
+        if model.iter_has_child(iterator):
+                msg += _("\nWill also delete subcategories")
+        dlg.set_markup(_(msg))
         response = dlg.run()
         dlg.destroy()
         if response == gtk.RESPONSE_OK:
             queue = [(iterator, obj)]
-            model = self.get_model()
+            
             removeQueue = []
             while len(queue) > 0:
                 print queue
