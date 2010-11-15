@@ -350,8 +350,22 @@ class CategoriesTree(gui_utils.Tree):
         response = dlg.run()
         dlg.destroy()
         if response == gtk.RESPONSE_OK:
-            obj.delete()
-            self.get_model().remove(iterator)
+            queue = [(iterator, obj)]
+            model = self.get_model()
+            removeQueue = []
+            while len(queue) > 0:
+                print queue
+                currIter, currObj = queue.pop()
+                #print "deleting from model ", currObj
+                currObj.delete()
+                if model.iter_has_child(currIter):
+                    for i in range(0,model.iter_n_children(currIter)):
+                        newIter = model.iter_nth_child(currIter, i)
+                        queue.append((newIter, model[newIter][0]))
+                removeQueue.insert(0,currIter)
+            for toRemove in removeQueue:
+                #print "removing from tree ", currIter
+                model.remove(toRemove)
             self.on_unselect()
     
     def on_cell_edited(self, cellrenderertext, path, new_text):
