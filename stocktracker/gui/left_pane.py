@@ -171,6 +171,8 @@ class MainTree(Tree):
             EditPortfolio(obj)
         elif obj.__name__ == 'Watchlist':
             EditWatchlist(obj)
+        elif obj.__name__ == 'Account':
+            EditAccount(obj)
 
     def on_cell_edited(self,  cellrenderertext, path, new_text):
         m = self.get_model()
@@ -224,6 +226,37 @@ class EditWatchlist(gtk.Dialog):
         if response == gtk.RESPONSE_ACCEPT:
             self.wl.name = self.name_entry.get_text()
             pubsub.publish("container.edited", self.wl)
+        self.destroy()
+        
+class EditAccount(gtk.Dialog):
+    
+    def __init__(self, acc):
+        gtk.Dialog.__init__(self, _("Edit..."), None,
+                            gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
+                     (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
+                      gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
+        
+        self.acc = acc
+        vbox = self.get_content_area()
+        table = gtk.Table()
+        vbox.pack_start(table)
+        
+        label = gtk.Label(_("Name:"))
+        table.attach(label, 0,1,0,1)
+        self.name_entry = gtk.Entry()
+        self.name_entry.set_text(acc.name)
+        table.attach(self.name_entry, 1,2,0,1)
+        
+        self.show_all()
+        
+        self.name_entry.connect("activate", self.process_result)
+        response = self.run()
+        self.process_result(response = response)
+
+    def process_result(self, widget=None, response = gtk.RESPONSE_ACCEPT):
+        if response == gtk.RESPONSE_ACCEPT:
+            self.acc.name = self.name_entry.get_text()
+            pubsub.publish("container.edited", self.acc)
         self.destroy()
 
 
