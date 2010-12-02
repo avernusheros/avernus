@@ -4,7 +4,6 @@
 from datetime import datetime, date
 import codecs, csv, re
 from cStringIO import StringIO
-import tempfile
 import chardet
 
 from stocktracker.objects import controller
@@ -13,6 +12,8 @@ from stocktracker import pubsub
 
 FORMATS = ['%Y-%m-%d',
            '%d.%m.%Y']
+
+
 
 
 class CsvImporter:
@@ -47,14 +48,10 @@ class CsvImporter:
             if t[-1] == t[-2] == t[-3] == t[-4]:
                 profile['row length'] = t[-1]
                 break
-        csvdata.seek(0)  
-             
+        
         #detect header
-        temp_file = self._create_temp_csv(csvdata, profile)
-        temp_file.seek(0)
-        temp_csvdata = StringIO(temp_file.read())
-        temp_csvdata.seek(0)
-        profile['header'] = csv.Sniffer().has_header(temp_csvdata.read(2048))
+        csvdata.seek(0)  
+        profile['header'] = self._has_header(csvdata, profile)
         
         #columns
         profile['saldo indicator'] = None
@@ -68,7 +65,9 @@ class CsvImporter:
                     continue
                 col_count = 0
                 for col in row:
-                    if re.match('[0-9]+[\.\-]+[0-9]*[\.\-][0-9]+', col ) is not None:
+                    #strip whitespace
+                    col = col.strip(' ')
+                    if re.match('^[0-9]+[\.\-]+[0-9]*[\.\-][0-9]+$', col ) is not None:
                         profile['date column'] = col_count
                         profile['date format'] = self._detect_date_format(col)
                     elif re.match('-?[0-9]+[\.\,]*[0-9]*[\.\,]+[0-9]*', col) is not None:
@@ -86,26 +85,81 @@ class CsvImporter:
                         profile['description column'].append(col_count)
                     col_count+=1
                 break
-        for key, val in profile.iteritems():
-            print key,": ", val
         return profile
 
-    def _create_temp_csv(self, csvdata, profile):
-        temp_file = tempfile.TemporaryFile()
-        writer = csv.writer(temp_file)
+    def _has_header(self, csvdata, profile):
+        """
+        taken from csv
+        """
+        # Creates a dictionary of types of data in each column. If any
+        # column is of a single type (say, integers), *except* for the first
+        # row, then the first row is presumed to be labels. If the type
+        # can't be determined, it is assumed to be a string in which case
+        # the length of the string is the determining factor: if all of the
+        # rows except for the first are the same length, it's a header.
+        # Finally, a 'vote' is taken at the end for each column, adding or
+        # subtracting from the likelihood of the first row being a header.
         started = False
+        checked = 0
         for row in UTF8Reader(csvdata, profile['dialect'], profile['encoding']):
             if len(row) == profile['row length']:
-                started = True
+                if not started:
+                    started = True
+                    header = row
+                    columns = len(header)
+                    columnTypes = {}
+                    for i in range(columns): columnTypes[i] = None
+                    continue
                 #remove newlines and commas, caused sniffer to crash
                 row = map(lambda x: x.replace('\n', ''), row)
                 row = map(lambda x: x.replace(',', ''), row)
-                #print row
-                writer.writerow(row)
+                checked += 1
+
+                for col in columnTypes.keys():
+                    
+                    for thisType in [int, long, float, complex]:
+                        try:
+                            thisType(row[col])
+                            break
+                        except (ValueError, OverflowError):
+                            pass
+                    else:
+                        # fallback to length of string
+                        thisType = len(row[col])
+                    # treat longs as ints
+                    if thisType == long:
+                        thisType = int
+    
+                    if thisType != columnTypes[col]:
+                        if columnTypes[col] is None: # add new column type
+                            columnTypes[col] = thisType
+                        else:
+                            # type is inconsistent, remove column from
+                            # consideration
+                            del columnTypes[col]
+                    
             #If we find a blank line, assume we've hit the end of the transactions.
-            if not row and started:
+            if checked > 20 or (not row and started):
                 break
-        return temp_file
+
+        # finally, compare results against first row and "vote"
+        # on whether it's a header
+        hasHeader = 0
+        for col, colType in columnTypes.items():
+            if type(colType) == type(0): # it's a length
+                if len(header[col]) != colType:
+                    hasHeader += 1
+                else:
+                    hasHeader -= 1
+            else: # attempt typecast
+                try:
+                    colType(header[col])
+                except (ValueError, TypeError):
+                    hasHeader += 1
+                else:
+                    hasHeader -= 1
+
+        return hasHeader > 0
 
     def _detect_date_format(self, datestring):
         for format in FORMATS:
@@ -114,7 +168,7 @@ class CsvImporter:
                 return format
             except:
                 pass
-
+         
     def _parse_date(self, datestring, dateformat):
         return datetime.strptime(datestring, dateformat).date()
 
@@ -147,7 +201,7 @@ class CsvImporter:
                     amount = self._parse_amount(row[profile['amount column']], 
                                            profile['decimal separator'])
                     
-                tran = [self._parse_date(row[profile['date column']], profile['date format']), 
+                tran = [self._parse_date(row[profile['date column']].strip(' '), profile['date format']), 
                         ' - '.join([row[d] for d in profile['description column']]),
                         amount, True
                         
@@ -220,13 +274,12 @@ class UTF8Recoder:
     
     
 if __name__ == "__main__":
-    filename = '../tests/data/csv/dkb.csv'
+    import sys
+    if len(sys.argv[:])>1 and sys.argv[1]:
+        filename = sys.argv[1]
+    else:
+        filename = '../tests/data/csv/dkb.csv'
     importer = CsvImporter()
     profile = importer._sniff_csv(filename)
-    #print profile
-    trans = importer.get_transactions_from_csv(filename, profile)
-    count = 1
-    for t in trans:
-        print count 
-        count += 1
-        print t
+    for key, val in profile.iteritems():
+        print key,": ", val

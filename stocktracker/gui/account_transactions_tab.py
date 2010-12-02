@@ -87,6 +87,7 @@ def desc_markup(column, cell, model, iter, user_data):
         markup =  '<span size="small">'+ text + '</span>'
         cell.set_property('markup', markup)
 
+
 class TransactionsTree(gui_utils.Tree):
     
     OBJECT = 0
@@ -296,6 +297,7 @@ class CategoriesTree(gui_utils.Tree):
         self.connect('drag_data_received', self.on_drag_data_received)
         self.connect('cursor_changed', self.on_cursor_changed)
         self.connect('button_press_event', self.on_button_press)
+        self.connect('key_press_event', self.on_key_press)
         
     def load_categories(self):
         def insert_recursive(cat, parent):
@@ -343,6 +345,8 @@ class CategoriesTree(gui_utils.Tree):
     
     def on_remove(self, widget=None):
         obj, iterator = self.get_selected_category()
+        if obj is None:
+            return False
         dlg = gtk.MessageDialog(None,
              gtk.DIALOG_DESTROY_WITH_PARENT, gtk.MESSAGE_QUESTION,
              gtk.BUTTONS_OK_CANCEL)
@@ -380,6 +384,12 @@ class CategoriesTree(gui_utils.Tree):
     def on_button_press(self, widget, event):
         if event.button == 3:
             self.show_context_menu(event)
+
+    def on_key_press(self, widget, event):
+        if gtk.gdk.keyval_name(event.keyval) == 'Delete':
+            self.on_remove()
+            return True
+        return False
 
     def on_cursor_changed(self, widget):
         cat, iterator = self.get_selected_category()
