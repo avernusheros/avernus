@@ -25,6 +25,8 @@ Depends: ${misc:Depends},
  python-cairo,
  python-apport,
  python-gobject,
+ python-launchpad-integration,
+ python-distutils-extra,
  python-gtk2
 Description: A lightweight program to easily track your investments.
  portfolios, watchlists, tags... stocktracker utilizes online data

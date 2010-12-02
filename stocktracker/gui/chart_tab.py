@@ -35,6 +35,10 @@ class ChartTab(gtk.ScrolledWindow):
         table.attach(gtk.Label(_('Sectors')),1,2,2,3)
         table.attach(self.sector_pie(),1,2,3,4)
         
+        table.attach(gtk.Label(_('Portfolio Value')), 0,1, 4,5)
+        table.attach(self.portfolio_value_chart(), 0,1,5,6)
+        
+        #FIXME countries not supported yet
         #table.attach(gtk.Label(_('Countries')),0,1,6,7)
         #table.attach(self.country_pie(),0,1,7,8)
         
@@ -62,6 +66,25 @@ class ChartTab(gtk.ScrolledWindow):
                                     gradient=True
                                     )        
         return plot.handler
+
+
+	 def portfolio_value_chart(self):
+        start = self.pf.birthday()
+        end = date.today()
+        delta = end - start
+        step = delta // 100
+        print "Step: ",step
+        data = []
+        x_labels = []
+        current = start
+        while current < end:
+            data.append(self.pf.get_value_at_date(current))
+            x_labels.append(str(current))
+            current += step
+        chart = gtk_dot_line_plot()
+        print "Data: ", data
+        chart.set_args({'data':data, "x_labels":x_labels})
+        return chart
 
     def types_chart(self):
         sum = {0:0.0, 1:0.0, 2:0.0}
@@ -135,7 +158,7 @@ class ChartTab(gtk.ScrolledWindow):
         return plot.handler
 
     def cash_chart(self):
-        #stufenchart?
+        #FIXME stufenchart?
         cot = self.pf.get_cash_over_time()
         cot.reverse()
         

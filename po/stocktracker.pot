@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-08-22 13:57+0200\n"
+"POT-Creation-Date: 2010-10-09 09:37+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -234,6 +234,10 @@ msgstr ""
 
 #: ../stocktracker/gui/chart_tab.py:37
 msgid "Sectors"
+msgstr ""
+
+#: ../stocktracker/gui/chart_tab.py:40
+msgid "Portfolio Value"
 msgstr ""
 
 #: ../stocktracker/gui/left_pane.py:26

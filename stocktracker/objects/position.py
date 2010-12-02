@@ -35,9 +35,6 @@ class Position(object):
     def bvalue(self):
         return self.quantity * self.price
     
-    def split(self, val1, val2, date):
-        pass
-    
     @property
     def cvalue(self):
         if not self.stock:
@@ -121,6 +118,20 @@ class PortfolioPosition(SQLiteEntity, Position):
             res.append((current, ta.quantity*price))    
         return res
  
+	def get_value_at_date(self, t):
+        # this will on purpose ignore any transactions and assume the current
+        # quantity is the all-true one
+        quotations = stocktracker.objects.controller.getQuotationsFromStock(self.stock, self.date.date())
+        delta = datetime.timedelta(days = 2)
+        substitute = 0
+        for quot in quotations:
+            if t == quot.date:
+                return quot.close * self.quantity
+            elif abs(t-quot.date) < delta:
+                substitute = quot.close
+        if substitute == 0:
+            print "not found quotation in delta range ", self
+        return substitute * self.quantity
 
 
 class WatchlistPosition(SQLiteEntity, Position):

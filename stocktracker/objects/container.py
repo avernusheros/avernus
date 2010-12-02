@@ -75,11 +75,11 @@ class Portfolio(SQLiteEntity, Container):
     __primaryKey__ = "id"
     __tableName__ = 'portfolio'
     __columns__ = {
-                   "id"  : "INTEGER",
-                   "name": "VARCHAR",
-                   "last_update": "TIMESTAMP",
-                   "comment": "TEXT",
-                   "cash": "FLOAT",
+                   "id"  :          "INTEGER",
+                   "name":          "VARCHAR",
+                   "last_update":   "TIMESTAMP",
+                   "comment":       "TEXT",
+                   "cash":          "FLOAT",
                    }
     
     def __iter__(self):
@@ -99,11 +99,25 @@ class Portfolio(SQLiteEntity, Container):
             last_date = self.transactions[-1].date
             #should be last day - 1 day
             res.append((date(last_date.year, last_date.month, 1) , cash))
-        return res   
+        return res
+    
+    def get_value_at_date(self, t):
+        erg = 0
+        for po in stocktracker.objects.controller.getPositionForPortfolio(self):
+            if t > po.date.date():
+                erg += po.get_value_at_date(t)
+        return erg
     
     @property
     def transactions(self):
         return stocktracker.objects.controller.getTransactionForPortfolio(self)
+        
+    def birthday(self):
+        current = date.today()
+        for ta in self.transactions:
+            if ta.date.date() < current:
+                current = ta.date.date()
+        return current
         
     def onUpdate(self, **kwargs):
         pubsub.publish('container.updated', self)
