@@ -36,7 +36,8 @@ class ChartTab(gtk.ScrolledWindow):
         table.attach(self.sector_pie(),1,2,3,4)
         
         table.attach(gtk.Label(_('Portfolio Value')), 0,1, 4,5)
-        table.attach(self.portfolio_value_chart(), 0,1,5,6)
+        #FIXME
+        #table.attach(self.portfolio_value_chart(), 0,1,5,6)
         
         #FIXME countries not supported yet
         #table.attach(gtk.Label(_('Countries')),0,1,6,7)
@@ -68,7 +69,7 @@ class ChartTab(gtk.ScrolledWindow):
         return plot.handler
 
 
-	 def portfolio_value_chart(self):
+    def portfolio_value_chart(self):
         start = self.pf.birthday()
         end = date.today()
         delta = end - start

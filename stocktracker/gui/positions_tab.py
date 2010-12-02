@@ -62,9 +62,10 @@ class PositionsTree(Tree):
          'pf_percent': 15
           }
 
-    def __init__(self, container, actiongroup):
+    def __init__(self, container, actiongroup, use_metapositions=True):
         self.container = container
         self.actiongroup = actiongroup
+        self.use_metapositions = use_metapositions
         Tree.__init__(self)
         
         self.watchlist = False
@@ -291,7 +292,7 @@ class PositionsTree(Tree):
     def insert_position(self, position):
         if position.quantity != 0:
             tree_iter = None
-            if position.stock.id in self.stock_cache:
+            if self.use_metapositions and position.stock.id in self.stock_cache:
                 if isinstance(self.stock_cache[position.stock.id], MetaPosition):
                     mp = self.stock_cache[position.stock.id]
                     tree_iter = self.find_position(mp).iter
@@ -386,7 +387,7 @@ class PositionsTab(gtk.VBox):
     def __init__(self, container):
         gtk.VBox.__init__(self)
         actiongroup = gtk.ActionGroup('position_tab')
-        positions_tree = PositionsTree(container, actiongroup)
+        positions_tree = PositionsTree(container, actiongroup, use_metapositions = container.__name__ == 'Portfolio')
         hbox = gtk.HBox()
         
         tb = gtk.Toolbar()

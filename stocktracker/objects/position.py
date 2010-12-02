@@ -118,7 +118,7 @@ class PortfolioPosition(SQLiteEntity, Position):
             res.append((current, ta.quantity*price))    
         return res
  
-	def get_value_at_date(self, t):
+    def get_value_at_date(self, t):
         # this will on purpose ignore any transactions and assume the current
         # quantity is the all-true one
         quotations = stocktracker.objects.controller.getQuotationsFromStock(self.stock, self.date.date())
