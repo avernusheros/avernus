@@ -29,10 +29,10 @@ class CSVImportDialog(gtk.Dialog):
         fileBox = gtk.HBox()
         vbox.pack_start(fileBox, fill=False, expand=False)
         fileBox.pack_start(gtk.Label('File to import'), fill=False, expand=False)
-        fcbutton = gtk.FileChooserButton('File to import')
+        self.fcbutton = gtk.FileChooserButton('File to import')
         self.file = None
-        fcbutton.connect('file-set', self._on_file_set)
-        fileBox.pack_start(fcbutton, fill=True)
+        self.fcbutton.connect('file-set', self._on_file_set)
+        fileBox.pack_start(self.fcbutton, fill=True)
         accBox = gtk.HBox()
         vbox.pack_start(accBox, fill=False, expand=False)
         accBox.pack_start(gtk.Label('Target account'), fill=False, expand=False)
@@ -69,6 +69,7 @@ class CSVImportDialog(gtk.Dialog):
     def _on_file_set(self, button):
         self.b_file = True
         self.file = button.get_filename()
+        self.fcbutton.set_current_folder(button.get_current_folder())
         self.importer.load_transactions_from_csv(self.file)
         if self.b_account:
             self.import_button.set_sensitive(True)
