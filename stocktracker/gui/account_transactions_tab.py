@@ -127,8 +127,6 @@ class TransactionsTree(gui_utils.Tree):
         search_entry.connect('changed', self.on_search_entry_changed)
         pubsub.subscribe('accountTransaction.created', self.on_transaction_created)
         
-    
-
     def visible_cb(self, model, iter):
         #transaction = model[iter][0]
         transaction = model[iter][0]
@@ -166,9 +164,9 @@ class TransactionsTree(gui_utils.Tree):
         
     def get_item_to_insert(self, ta):
         if ta.category:
-            return [ta, ta.description, ta.amount, ta.category.name, str(ta.date)]
+            return [ta, ta.description, ta.amount, ta.category.name, gui_utils.get_date_string(ta.date)]
         else:    
-            return [ta, ta.description, ta.amount, '', str(ta.date)]
+            return [ta, ta.description, ta.amount, '', gui_utils.get_date_string(ta.date)]
         
     def load_transactions(self):
         for ta in controller.getTransactionsForAccount(self.account):

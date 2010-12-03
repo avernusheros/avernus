@@ -27,15 +27,16 @@ class TransactionsTree(Tree):
     def __init__(self, portfolio):
         self.portfolio = portfolio
         Tree.__init__(self)
-        #object, name, price, change
-        self.set_model(gtk.TreeStore(object,str, str, str,float, float, float))
+
+        self.set_model(gtk.TreeStore(object,str, str, str,float, float, float, float))
         
-        self.create_column(_('Action'), 1)
-        self.create_column(_('Name'), 2)
         self.create_column(_('Date'), 3)
+        self.create_column(_('Type'), 1)
+        self.create_column(_('Name'), 2)
         self.create_column(_('Shares'), 4, func=gui_utils.float_to_string)
         self.create_column(_('Price'), 5, func=gui_utils.float_to_string)
         self.create_column(_('Transaction Costs'), 6, func=gui_utils.float_to_string)
+        self.create_column(_('Total'), 7, func=gui_utils.float_to_red_green_string)
         
         pubsub.subscribe('transaction.added', self.on_transaction_created)
         
@@ -57,24 +58,10 @@ class TransactionsTree(Tree):
         if portfolio.id == self.portfolio.id:
             self.insert_transaction(ta)    
     
-    def get_action_string(self, ta_type):
-        if ta_type == 1:
-            return 'BUY'
-        elif ta_type == 0:
-            return 'SELL'
-        elif ta_type == 2:
-            return 'SPLIT'
-        elif ta_type == 3:
-            return 'DEPOSIT'
-        elif ta_type == 4:
-            return 'WITHDRAW'
-        else:
-            return ''
-        
     def insert_transaction(self, ta):
         model = self.get_model()
         if model:
             if ta.position is None: #a portfolio related transaction
-                model.append(None, [ta, self.get_action_string(ta.type), '', get_datetime_string(ta.date), ta.quantity, ta.price, ta.costs])
+                model.append(None, [ta, ta.type_string, '', get_datetime_string(ta.date), ta.quantity, ta.price, ta.costs, ta.total])
             else:
-                model.append(None, [ta, self.get_action_string(ta.type), get_name_string(ta.position.stock), get_datetime_string(ta.date), ta.quantity, ta.price, ta.costs])
+                model.append(None, [ta, ta.type_string, get_name_string(ta.position.stock), get_datetime_string(ta.date), ta.quantity, ta.price, ta.costs, ta.total])

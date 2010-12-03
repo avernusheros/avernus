@@ -159,13 +159,15 @@ def datetime_format(date, nl = True):
             return date.strftime("%d.%m.%Y %I:%M%p")
     return 'never'
 
+def get_date_string(date):
+    return date.strftime("%d.%m.%Y")
 
-def get_datetime_string(date):
-    if date is not None:
-        if date.hour == 0 and date.minute == 0 and date.second == 0:
-            return date.strftime("%d.%m.%Y")
+def get_datetime_string(datetime):
+    if datetime is not None:
+        if datetime.hour == 0 and datetime.minute == 0 and datetime.second == 0:
+            return get_date_string(datetime)
         else:
-            return datetime_format(to_local_time(date))
+            return datetime_format(to_local_time(datetime))
     return ''
 
 def resize_wrap(scroll, allocation, treeview, column, cell):
