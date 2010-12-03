@@ -64,11 +64,11 @@ class Tree(gtk.TreeView):
         column.add_attribute(cell, 'active', attribute)
         return column, cell    
         
-    def find_item(self, id, type = None):
+    def find_item(self, row0, type = None):
         def search(rows):
             if not rows: return None
             for row in rows:
-                if row[0] == id and (type is None or type == row[1].type):
+                if row[0] == row0 and (type is None or type == row[1].type):
                     return row 
                 result = search(row.iterchildren())
                 if result: return result

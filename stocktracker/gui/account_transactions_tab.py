@@ -204,6 +204,7 @@ class TransactionsTree(gui_utils.Tree):
         response = dlg.run()
         dlg.destroy()
         if response == gtk.RESPONSE_OK:
+            trans.account.amount -= trans.amount
             trans.delete()
             child_iter = self._get_child_iter(iterator)
             self.model.remove(child_iter)

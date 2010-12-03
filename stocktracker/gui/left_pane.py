@@ -3,7 +3,7 @@
 import gtk
 from datetime import datetime
 from stocktracker import pubsub
-from stocktracker.gui.gui_utils import ContextMenu, Tree
+from stocktracker.gui import gui_utils 
 from stocktracker.objects import controller
 from stocktracker.gui import progress_manager
 
@@ -41,31 +41,18 @@ class MainTreeBox(gtk.VBox):
         progress_manager.box = vbox
 
 
-class MainTree(Tree):
+class MainTree(gui_utils.Tree):
     def __init__(self, actiongroup):
-        Tree.__init__(self)
+        gui_utils.Tree.__init__(self)
         self.actiongroup = actiongroup
-
-        #object, icon, name
-        self.set_model(gtk.TreeStore(object,str, str))
-        self.set_headers_visible(False)
-        col, cell = self.create_icon_text_column('', 1,2)
-        cell.set_property('editable', True)
-        cell.connect('edited', self.on_cell_edited)
-
-        self.insert_categories()
         self.selected_item = None
+        
+        self._init_widgets()
+        self.insert_categories()
+        self._subscribe()
+        self._load_items()
 
-        self.connect('button-press-event', self.on_button_press_event)
-        self.connect('cursor_changed', self.on_cursor_changed)
-        self.subscriptions = (
-                    ("container.edited", self.on_updated),
-                    ("tag.created", self.insert_tag),
-                    ("tag.updated", self.on_updated),
-                )
-        for topic, callback in self.subscriptions:
-            pubsub.subscribe(topic, callback)
-
+    def _load_items(self):
         #loading portfolios...
         for pf in controller.getAllPortfolio():
             self.insert_portfolio(pf)
@@ -77,6 +64,27 @@ class MainTree(Tree):
             self.insert_account(account)
         self.expand_all()
 
+    def _subscribe(self):
+        self.connect('button-press-event', self.on_button_press_event)
+        self.connect('cursor_changed', self.on_cursor_changed)
+        self.subscriptions = (
+                    ("container.edited", self.on_updated),
+                    ("tag.created", self.insert_tag),
+                    ("tag.updated", self.on_updated),
+                    ('account.updated', self.on_account_updated)
+                )
+        for topic, callback in self.subscriptions:
+            pubsub.subscribe(topic, callback)
+
+    def _init_widgets(self):
+        #object, icon, name
+        self.set_model(gtk.TreeStore(object,str, str, str))
+        self.set_headers_visible(False)
+        col, cell = self.create_icon_text_column('', 1,2)
+        cell.set_property('editable', True)
+        cell.connect('edited', self.on_cell_edited)
+        self.create_column('', 3)
+        
     def on_button_press_event(self, widget, event):
         target = self.get_path_at_pos(int(event.x), int(event.y))
         if target and event.type == gtk.gdk.BUTTON_PRESS:
@@ -88,23 +96,23 @@ class MainTree(Tree):
                 return True
 
     def insert_categories(self):
-        self.pf_iter = self.get_model().append(None, [Category('Portfolios'),'portfolios', _("<b>Portfolios</b>")])
-        self.wl_iter = self.get_model().append(None, [Category('Watchlists'),'watchlists', _("<b>Watchlists</b>")])
-        self.tag_iter = self.get_model().append(None, [Category('Tags'),'tags', _("<b>Tags</b>")])
-        self.accounts_iter = self.get_model().append(None, [Category('Accounts'),'accounts', _("<b>Accounts</b>")])
-        #self.index_iter = self.get_model().append(None, [Category('Indices'),'indices', _("<b>Indices</b>")])
+        self.pf_iter = self.get_model().append(None, [Category('Portfolios'),'portfolios', _("<b>Portfolios</b>"),''])
+        self.wl_iter = self.get_model().append(None, [Category('Watchlists'),'watchlists', _("<b>Watchlists</b>"),''])
+        self.tag_iter = self.get_model().append(None, [Category('Tags'),'tags', _("<b>Tags</b>"),None])
+        self.accounts_iter = self.get_model().append(None, [Category('Accounts'),'accounts', _("<b>Accounts</b>"),''])
+        #self.index_iter = self.get_model().append(None, [Category('Indices'),'indices', _("<b>Indices</b>"),''])
 
     def insert_watchlist(self, item):
-        self.get_model().append(self.wl_iter, [item, 'watchlist', item.name])
+        self.get_model().append(self.wl_iter, [item, 'watchlist', item.name, ''])
     
     def insert_account(self, item):
-        self.get_model().append(self.accounts_iter, [item, 'account', item.name])
+        self.get_model().append(self.accounts_iter, [item, 'account', item.name, gui_utils.get_string_from_float(item.amount)])
     
     def insert_portfolio(self, item):
-        self.get_model().append(self.pf_iter, [item, 'portfolio', item.name])
+        self.get_model().append(self.pf_iter, [item, 'portfolio', item.name, gui_utils.get_string_from_float(item.cvalue)])
 
     def insert_tag(self, item):
-        self.get_model().append(self.tag_iter, [item, 'tag', item.name])
+        self.get_model().append(self.tag_iter, [item, 'tag', item.name, ''])
 
     def on_remove(self, widget=None):
         if self.selected_item is None:
@@ -122,6 +130,9 @@ class MainTree(Tree):
                 self.get_model().remove(iter)
                 pubsub.publish('maintree.unselect')
 
+    def on_account_updated(self, account):
+        self.find_item(account)[3] = account.amount 
+        
     def on_updated(self, item):
         obj, iter = self.selected_item
         row = self.get_model()[iter]
@@ -231,7 +242,7 @@ class EditWatchlist(gtk.Dialog):
 class EditAccount(gtk.Dialog):
     
     def __init__(self, acc):
-        gtk.Dialog.__init__(self, _("Edit..."), None,
+        gtk.Dialog.__init__(self, _("Edit Account"), None,
                             gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
                      (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
                       gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
@@ -247,6 +258,12 @@ class EditAccount(gtk.Dialog):
         self.name_entry.set_text(acc.name)
         table.attach(self.name_entry, 1,2,0,1)
         
+        #cash entry
+        label = gtk.Label(_('Current balance:'))
+        table.attach(label, 0,1,1,2)
+        self.cash_entry = gtk.SpinButton(gtk.Adjustment(lower=-999999999, upper=999999999,step_incr=10, value = acc.amount), digits=2)
+        table.attach(self.cash_entry,1,2,1,2)
+        
         self.show_all()
         
         self.name_entry.connect("activate", self.process_result)
@@ -256,6 +273,7 @@ class EditAccount(gtk.Dialog):
     def process_result(self, widget=None, response = gtk.RESPONSE_ACCEPT):
         if response == gtk.RESPONSE_ACCEPT:
             self.acc.name = self.name_entry.get_text()
+            self.acc.amount = self.cash_entry.get_value()
             pubsub.publish("container.edited", self.acc)
         self.destroy()
 
@@ -298,9 +316,9 @@ class EditPortfolio(gtk.Dialog):
         self.destroy()
 
 
-class ContainerContextMenu(ContextMenu):
+class ContainerContextMenu(gui_utils.ContextMenu):
     def __init__(self, container, actiongroup):
-        ContextMenu.__init__(self)
+        gui_utils.ContextMenu.__init__(self)
 
         for action in ['edit', 'remove']:
             self.add(actiongroup.get_action(action).create_menu_item())

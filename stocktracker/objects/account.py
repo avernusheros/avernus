@@ -19,8 +19,12 @@ class Account(SQLiteEntity):
     def on_delete(self, **kwargs):
         controller.deleteAllAccountTransaction(self)
                   
+    def on_update(self, **kwargs):
+        pubsub.publish('account.updated', self)    
+                  
     __callbacks__ = {
                      'onDelete':on_delete,
+                     'onUpdate':on_update,
                     }
                   
     def __iter__(self):

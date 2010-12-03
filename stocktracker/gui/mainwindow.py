@@ -121,7 +121,7 @@ class MainWindow(gtk.Window):
         vbox.pack_start(self.main_menu, expand=False, fill=False)
         
         hpaned = gtk.HPaned()
-        hpaned.set_position(int(width*0.15))
+        hpaned.set_position(int(width*0.25))
         vbox.pack_start(hpaned)
         
         hpaned.pack1(MainTreeBox())

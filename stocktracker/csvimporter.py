@@ -223,6 +223,7 @@ class CsvImporter:
         for result in self.results:
             if result[-1]:
                 ta = controller.newAccountTransaction(date=result[0], description=result[1], amount=result[2], account=account)
+                account.amount += result[2]
                 pubsub.publish('accountTransaction.created', ta)
        
 
