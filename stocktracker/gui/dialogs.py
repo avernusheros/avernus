@@ -236,24 +236,44 @@ class SellDialog(gtk.Dialog):
         self.pos = pos
         
         vbox = self.get_content_area()
-
+        table = gtk.Table()
+        table.set_row_spacings(4)
+        table.set_col_spacings(4)
+        vbox.pack_end(table)
+        
+        #name
+        label = gtk.Label()
+        label.set_markup(gui_utils.get_name_string(pos.stock))
+        label.set_alignment(xalign=0.0, yalign=0.5)
+        table.attach(label, 0,2,0,1,xoptions=gtk.FILL, yoptions=0)
+        
         #shares entry
-        hbox = gtk.HBox()
-        vbox.pack_start(hbox)
-        hbox.pack_start(gtk.Label(_('Shares:')))
+        table.attach(gtk.Label(_('Shares')),1,2,1,2)
         self.shares_entry = gtk.SpinButton(gtk.Adjustment(lower=0, upper=pos.quantity,step_incr=1, value = 0), digits=2)
-        hbox.pack_start(self.shares_entry)
+        self.shares_entry.connect("value-changed", self.on_change)
+        table.attach(self.shares_entry, 2,3,1,2,xoptions=gtk.SHRINK,yoptions=gtk.SHRINK)
         
         #price entry
-        hbox = gtk.HBox()
-        vbox.pack_start(hbox)
-        hbox.pack_start(gtk.Label(_('Price:')))
+        table.attach(gtk.Label(_('Price:')),1,2,2,3)
         self.price_entry = gtk.SpinButton(gtk.Adjustment(lower=0, upper=100000,step_incr=0.1, value = 1.0), digits=2)
-        hbox.pack_start(self.price_entry)
+        self.price_entry.connect("value-changed", self.on_change)
+        table.attach(self.price_entry, 2,3,2,3,xoptions=gtk.SHRINK,yoptions=gtk.SHRINK)
+        
+        #ta_costs entry
+        table.attach(gtk.Label(_('Transaction Costs')),1,2,3,4,xoptions=gtk.SHRINK,yoptions=gtk.SHRINK)
+        self.tacosts_entry = gtk.SpinButton(gtk.Adjustment(lower=0, upper=100000,step_incr=0.1, value = 0.0), digits=2)
+        self.tacosts_entry.connect("value-changed", self.on_change)
+        table.attach(self.tacosts_entry,2,3,3,4,xoptions=gtk.SHRINK,yoptions=gtk.SHRINK)
+        
+        #total
+        table.attach(gtk.Label(_('Total')),1,2,4,5,xoptions=gtk.SHRINK,yoptions=gtk.SHRINK)
+        self.total = gtk.Label()
+        self.total.set_markup('<b>'+gui_utils.get_string_from_float(0.0)+'</b>')
+        table.attach(self.total,2,3,4,5,xoptions=gtk.SHRINK,yoptions=gtk.SHRINK)
         
         #date 
         self.calendar = gtk.Calendar()
-        vbox.pack_start(self.calendar)
+        table.attach(self.calendar, 0,1,1,5)
         
         self.show_all()
         self.response = self.run()  
@@ -266,16 +286,20 @@ class SellDialog(gtk.Dialog):
             shares = self.shares_entry.get_value()
             if shares == 0.0:
                 return
-            price = float(self.price_entry.get_text())
+            price = self.price_entry.get_value()
             year, month, day = self.calendar.get_date()
             date = datetime(year, month+1, day)
-            ta_costs = 0.0
+            ta_costs = self.tacosts_entry.get_value()
 
             self.pos.quantity -= shares
             ta = controller.newTransaction(portfolio=self.pf, position=self.pos, type=0, date=date, quantity=shares, price=price, costs=ta_costs)              
             pubsub.publish('transaction.added', ta)
             self.pf.cash += shares*price - ta_costs
             
+    def on_change(self, widget):
+        total = self.shares_entry.get_value() * self.price_entry.get_value() + self.tacosts_entry.get_value()
+        self.total.set_markup('<b>'+gui_utils.get_string_from_float(total)+'</b>')
+ 
  
 class BuyDialog(gtk.Dialog):
 
@@ -318,7 +342,8 @@ class BuyDialog(gtk.Dialog):
         
         #total
         table.attach(gtk.Label(_('Total')),1,2,4,5,xoptions=gtk.SHRINK,yoptions=gtk.SHRINK)
-        self.total = gtk.Label(gui_utils.get_string_from_float(0.0))
+        self.total = gtk.Label()
+        self.total.set_markup('<b>'+gui_utils.get_string_from_float(0.0)+'</b>')
         table.attach(self.total,2,3,4,5,xoptions=gtk.SHRINK,yoptions=gtk.SHRINK)
         
         #date 
@@ -357,7 +382,7 @@ class BuyDialog(gtk.Dialog):
 
     def on_change(self, widget):
         total = self.shares_entry.get_value() * self.price_entry.get_value() + self.tacosts_entry.get_value()
-        self.total.set_text(gui_utils.get_string_from_float(total))
+        self.total.set_markup('<b>'+gui_utils.get_string_from_float(total)+'</b>')
 
     def on_stock_selection(self, *args):
         self.stock_ok = True
