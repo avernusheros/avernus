@@ -208,7 +208,7 @@ class PositionsTree(Tree):
                 position.delete()
                 self.model.remove(iter)
         else:
-            d = SellDialog(self.container, position)
+            d = SellDialog(position)
             if d.response == gtk.RESPONSE_ACCEPT:
                 if position.quantity == 0:
                     self.model.remove(iter)

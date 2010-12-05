@@ -312,15 +312,8 @@ class CategoriesTree(gui_utils.Tree):
     def insert_item(self, cat, parent=None):
         return self.get_model().append(parent, [cat, cat.name])
     
-    def get_selected_category(self):
-        selection = self.get_selection()
-        treestore, selection_iter = selection.get_selected()
-        if treestore and selection_iter:
-            return treestore[selection_iter][0], selection_iter 
-        return None, None
-    
     def show_context_menu(self, event):
-        category, iter = self.get_selected_category()
+        category, iter = self.get_selected_item()
         if category:            
             context_menu = gui_utils.ContextMenu()
             for action in self.actiongroup.list_actions():
@@ -328,7 +321,7 @@ class CategoriesTree(gui_utils.Tree):
             context_menu.show(event)
     
     def on_add(self, widget=None):
-        parent, selection_iter = self.get_selected_category()      
+        parent, selection_iter = self.get_selected_item()      
         item = controller.newAccountCategory('new category', parent=parent)
         iterator = self.insert_item(item, parent = selection_iter)
         model = self.get_model()
@@ -338,12 +331,12 @@ class CategoriesTree(gui_utils.Tree):
         self.set_cursor(model.get_path(iterator), focus_column = self.get_column(0), start_editing=True)
 
     def on_edit(self, widget=None):
-        cat, selection_iter = self.get_selected_category()    
+        cat, selection_iter = self.get_selected_item()    
         self.cell.set_property('editable', True)
         self.set_cursor(self.get_model().get_path(selection_iter), focus_column = self.get_column(0), start_editing=True)
     
     def on_remove(self, widget=None):
-        obj, iterator = self.get_selected_category()
+        obj, iterator = self.get_selected_item()
         if obj is None:
             return False
         dlg = gtk.MessageDialog(None,
@@ -391,7 +384,7 @@ class CategoriesTree(gui_utils.Tree):
         return False
 
     def on_cursor_changed(self, widget):
-        cat, iterator = self.get_selected_category()
+        cat, iterator = self.get_selected_item()
         if cat is not None:
             self.on_select(cat)
         else:

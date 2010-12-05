@@ -225,15 +225,20 @@ class StockSelector(gtk.VBox):
                                        icons[stock.type]
                                        ])
 
-
 class SellDialog(gtk.Dialog):
-    def __init__(self, pf, pos):
-        gtk.Dialog.__init__(self, _("Sell a position"), None
+    def __init__(self, pos, transaction = None):
+        if transaction is None:
+            title = _('Sell position')
+            max_quantity = pos.quantity
+        else:
+            title = _('Edit position')
+            max_quantity = pos.quantity + transaction.quantity
+        gtk.Dialog.__init__(self, title, None
                             , gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
                      (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
                       gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
-        self.pf = pf              
         self.pos = pos
+        self.transaction = transaction
         
         vbox = self.get_content_area()
         table = gtk.Table()
@@ -248,8 +253,9 @@ class SellDialog(gtk.Dialog):
         table.attach(label, 0,2,0,1,xoptions=gtk.FILL, yoptions=0)
         
         #shares entry
+        
         table.attach(gtk.Label(_('Shares')),1,2,1,2)
-        self.shares_entry = gtk.SpinButton(gtk.Adjustment(lower=0, upper=pos.quantity,step_incr=1, value = 0), digits=2)
+        self.shares_entry = gtk.SpinButton(gtk.Adjustment(lower=0, upper=max_quantity,step_incr=1, value = 0), digits=2)
         self.shares_entry.connect("value-changed", self.on_change)
         table.attach(self.shares_entry, 2,3,1,2,xoptions=gtk.SHRINK,yoptions=gtk.SHRINK)
         
@@ -275,6 +281,14 @@ class SellDialog(gtk.Dialog):
         self.calendar = gtk.Calendar()
         table.attach(self.calendar, 0,1,1,5)
         
+        if self.transaction is not None:
+            self.shares_entry.set_value(self.transaction.quantity)
+            self.price_entry.set_value(self.transaction.price)
+            self.tacosts_entry.set_value(self.transaction.costs)
+            self.calendar.select_month(self.transaction.date.month-1, self.transaction.date.year)
+            self.calendar.select_day(self.transaction.date.day)
+            self.on_change()
+        
         self.show_all()
         self.response = self.run()  
         self.process_result()
@@ -284,43 +298,118 @@ class SellDialog(gtk.Dialog):
     def process_result(self):
         if self.response == gtk.RESPONSE_ACCEPT:
             shares = self.shares_entry.get_value()
-            if shares == 0.0:
-                return
             price = self.price_entry.get_value()
             year, month, day = self.calendar.get_date()
             date = datetime(year, month+1, day)
             ta_costs = self.tacosts_entry.get_value()
 
-            self.pos.quantity -= shares
-            ta = controller.newTransaction(portfolio=self.pf, position=self.pos, type=0, date=date, quantity=shares, price=price, costs=ta_costs)              
-            pubsub.publish('transaction.added', ta)
-            self.pf.cash += shares*price - ta_costs
+            if self.transaction is None:
+                if shares == 0.0:
+                    return
+                self.pos.quantity -= shares
+                self.pos.portfolio.cash += shares*price - ta_costs    
+                ta = controller.newTransaction(portfolio=self.pos.portfolio, position=self.pos, type=0, date=date, quantity=shares, price=price, costs=ta_costs) 
+                pubsub.publish('transaction.added', ta)             
+            else:
+                diff = self.transaction.quantity - shares
+                self.pos.quantity += diff
+                self.pos.portfolio.cash -= self.transaction.quantity*self.transaction.price - self.transaction.costs
+                self.pos.portfolio.cash += shares*price - ta_costs 
+                self.transaction.price=price
+                self.transaction.date = date
+                self.transaction.costs = ta_costs
+                self.transaction.quantity = shares
             
-    def on_change(self, widget):
+    def on_change(self, widget=None):
         total = self.shares_entry.get_value() * self.price_entry.get_value() + self.tacosts_entry.get_value()
         self.total.set_markup('<b>'+gui_utils.get_string_from_float(total)+'</b>')
+
+class CashDialog(gtk.Dialog):
+    def __init__(self, pf, type = 0, transaction=None):  #0 deposit, 1 withdraw
+        self.action_type = type
+        self.transaction = transaction
+        if type == 0:
+            text = _("Deposit cash")
+        else: text = _("Withdraw cash")
+        gtk.Dialog.__init__(self, text, None
+                            , gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
+                     (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
+                      gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
+
+        self.pf = pf
+        vbox = self.get_content_area()
+
+        hbox = gtk.HBox()
+        vbox.pack_start(hbox)
+        hbox.pack_start(gtk.Label(_('Amount:')))
+        self.amount_entry = gtk.SpinButton(gtk.Adjustment(lower=0, upper=100000,step_incr=0.1, value = 1.0), digits=2)
+        hbox.pack_start(self.amount_entry)
+
+        self.calendar = gtk.Calendar()
+        vbox.pack_start(self.calendar)
+
+        if self.transaction is not None:
+            self.amount_entry.set_value(self.transaction.price)
+            self.calendar.select_month(self.transaction.date.month-1, self.transaction.date.year)
+            self.calendar.select_day(self.transaction.date.day)
+        
+        self.show_all()
+        response = self.run()
+        self.process_result(response = response)
+        self.destroy()
+
+    def process_result(self, widget=None, response = gtk.RESPONSE_ACCEPT):
+        if response == gtk.RESPONSE_ACCEPT:
+            amount = self.amount_entry.get_value()
+            year, month, day = self.calendar.get_date()
+            date = datetime(year, month+1, day)
+            if self.transaction is None:
+                if self.action_type == 0:
+                    ta = controller.newTransaction(date=date, portfolio=self.pf, type=3, price=amount, quantity=1, costs=0.0)
+                else:
+                    ta = controller.newTransaction(date=date, portfolio=self.pf, type=4, price=amount, quantity=1, costs=0.0)
+                pubsub.publish('transaction.added', ta)
+            else:
+                self.transaction.date = date
+                self.transaction.price = amount
+            if self.action_type == 0:
+                self.pf.cash += amount
+            else:
+                self.pf.cash -= amount
  
  
 class BuyDialog(gtk.Dialog):
 
-    def __init__(self, pf):
+    def __init__(self, pf, transaction=None):
         gtk.Dialog.__init__(self, _("Buy a position"), None
                             , gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
                      (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
                       gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
         self.pf = pf
+        self.transaction = transaction
+        if transaction is None:
+            self.b_new = True
+        else:
+            self.b_new = False
+        
         
         vbox = self.get_content_area()
         table = gtk.Table()
         table.set_row_spacings(4)
         table.set_col_spacings(4)
         vbox.pack_end(table)
-        #stock entry
-        self.stock_selector = StockSelector()
-        table.attach(self.stock_selector,0,3,0,1)
-        self.stock_selector.result_tree.connect('cursor-changed', self.on_stock_selection)
-        self.stock_selector.result_tree.get_model().connect('row-deleted', self.on_stock_deselection)
-        self.stock_ok = False
+        if self.b_new:
+            #stock entry
+            self.stock_selector = StockSelector()
+            table.attach(self.stock_selector,0,3,0,1)
+            self.stock_selector.result_tree.connect('cursor-changed', self.on_stock_selection)
+            self.stock_selector.result_tree.get_model().connect('row-deleted', self.on_stock_deselection)
+            self.stock_ok = False
+        else:
+            label = gtk.Label()
+            label.set_markup(gui_utils.get_name_string(self.transaction.position.stock))
+            label.set_alignment(xalign=0.0, yalign=0.5)
+            table.attach(label, 0,3,0,1,xoptions=gtk.FILL, yoptions=0)
 
         #shares entry
         table.attach(gtk.Label(_('Shares')),1,2,1,2,xoptions=gtk.SHRINK,yoptions=gtk.SHRINK)
@@ -355,6 +444,15 @@ class BuyDialog(gtk.Dialog):
         self.infobar = gtk.InfoBar()
         self.infobar.set_message_type(gtk.MESSAGE_WARNING)
         
+        if not self.b_new:
+            self.stock_ok = True
+            self.shares_entry.set_value(self.transaction.quantity)
+            self.price_entry.set_value(self.transaction.price)
+            self.tacosts_entry.set_value(self.transaction.costs)
+            self.calendar.select_month(self.transaction.date.month-1, self.transaction.date.year)
+            self.calendar.select_day(self.transaction.date.day)
+            self.on_change()
+        
         content = self.infobar.get_content_area()
         label = gtk.Label('Date cannot be in the future!')
         image = gtk.Image()
@@ -363,7 +461,8 @@ class BuyDialog(gtk.Dialog):
         content.pack_start(label)
         vbox.pack_start(self.infobar)
         
-        self.set_response_sensitive(gtk.RESPONSE_ACCEPT, False)
+        if self.b_new:
+            self.set_response_sensitive(gtk.RESPONSE_ACCEPT, False)
         table.show_all()
         response = self.run()  
         self.process_result(response)
@@ -380,7 +479,7 @@ class BuyDialog(gtk.Dialog):
             self.date_ok = True
         self.set_response_sensitivity()
 
-    def on_change(self, widget):
+    def on_change(self, widget=None):
         total = self.shares_entry.get_value() * self.price_entry.get_value() + self.tacosts_entry.get_value()
         self.total.set_markup('<b>'+gui_utils.get_string_from_float(total)+'</b>')
 
@@ -399,21 +498,36 @@ class BuyDialog(gtk.Dialog):
             self.set_response_sensitive(gtk.RESPONSE_ACCEPT, False)  
 
     def process_result(self, response):
-        self.stock_selector.stop_search()
+        if self.b_new:
+            self.stock_selector.stop_search()
         if response == gtk.RESPONSE_ACCEPT:
-            stock = self.stock_selector.get_stock()
-            stock.update_price()
-            shares = self.shares_entry.get_value()
-            if shares == 0.0:
-                return
             price = self.price_entry.get_value()
             year, month, day = self.calendar.get_date()
             date = datetime(year, month+1, day)
             ta_costs = self.tacosts_entry.get_value()
-            pos = controller.newPortfolioPosition(price=price, date=date, quantity=shares, portfolio=self.pf, stock = stock)
-            ta = controller.newTransaction(type=1, date=date,quantity=shares,price=price,costs=ta_costs, position=pos, portfolio=self.pf)
-            pubsub.publish('container.position.added', self.pf, pos)
-            pubsub.publish('transaction.added', ta)
+            shares = self.shares_entry.get_value()
+            
+            if self.b_new:
+                stock = self.stock_selector.get_stock()
+                stock.update_price()
+                if shares == 0.0:
+                    return
+                pos = controller.newPortfolioPosition(price=price, date=date, quantity=shares, portfolio=self.pf, stock = stock)
+                self.pf.cash -= shares*price - ta_costs 
+                ta = controller.newTransaction(type=1, date=date,quantity=shares,price=price,costs=ta_costs, position=pos, portfolio=self.pf)
+                #FIXME trigger publish in container.py and transaction.py
+                pubsub.publish('container.position.added', self.pf, pos)
+                pubsub.publish('transaction.added', ta)
+            else:
+                diff = self.transaction.quantity - shares
+                self.transaction.position.quantity -= diff
+                self.pf.cash += self.transaction.quantity*self.transaction.price - self.transaction.costs
+                self.pf.cash -= shares*price - ta_costs 
+                self.transaction.price = price
+                self.transaction.date = date
+                self.transaction.costs = ta_costs
+                self.transaction.quantity = shares
+                
 
 
 class NewWatchlistPositionDialog(gtk.Dialog):

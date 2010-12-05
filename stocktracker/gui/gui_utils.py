@@ -14,11 +14,9 @@ class Tree(gtk.TreeView):
         # Get the selection iter
         treestore, selection_iter = selection.get_selected()
         if (selection_iter and treestore):
-            #Something is selected so get the object
-            obj = treestore.get_value(selection_iter, 0)
-            return obj, selection_iter 
+            return treestore[selection_iter][0], selection_iter 
         return None, None
-    
+        
     def create_column(self, name, attribute, func=None):
         column = gtk.TreeViewColumn(name)
         self.append_column(column)

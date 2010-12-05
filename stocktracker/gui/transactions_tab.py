@@ -2,7 +2,7 @@
 
 import gtk
 from stocktracker import pubsub
-from stocktracker.gui import gui_utils
+from stocktracker.gui import gui_utils, dialogs
 from stocktracker.gui.gui_utils import Tree, get_datetime_string, get_name_string
 import stocktracker.objects
 from stocktracker.objects import controller
@@ -38,7 +38,12 @@ class TransactionsTree(Tree):
         self.create_column(_('Transaction Costs'), 6, func=gui_utils.float_to_string)
         self.create_column(_('Total'), 7, func=gui_utils.float_to_red_green_string)
         
+        self.actiongroup = gtk.ActionGroup('portfolio_transactions')
+        self.actiongroup.add_actions([
+                ('edit' ,  gtk.STOCK_EDIT, 'edit transaction',   None, _('Edit selected transaction'),   self.on_edit),
+                                ])
         pubsub.subscribe('transaction.added', self.on_transaction_created)
+        self.connect('button_press_event', self.on_button_press)
         
     def load_transactions(self):
         items = []
@@ -56,7 +61,24 @@ class TransactionsTree(Tree):
         else:
             portfolio = ta.portfolio
         if portfolio.id == self.portfolio.id:
-            self.insert_transaction(ta)    
+            self.insert_transaction(ta)  
+            
+    def on_button_press(self, widget, event):
+        if event.button == 3:
+            self.show_context_menu(event)  
+            
+    def on_edit(self, widget):
+        transaction, iter = self.get_selected_item()
+        if transaction.type == 0: #SELL
+            dialogs.SellDialog(transaction.position, transaction)
+        elif transaction.type == 1: #Buy
+            dialogs.BuyDialog(transaction.portfolio, transaction)
+        elif transaction.type == 3:
+            dialogs.CashDialog(transaction.portfolio, 0, transaction)
+        elif transaction.type == 4:
+            dialogs.CashDialog(transaction.portfolio, 1, transaction)
+        else:   
+            print "TODO edit transaction"
     
     def insert_transaction(self, ta):
         model = self.get_model()
@@ -65,3 +87,11 @@ class TransactionsTree(Tree):
                 model.append(None, [ta, ta.type_string, '', get_datetime_string(ta.date), ta.quantity, ta.price, ta.costs, ta.total])
             else:
                 model.append(None, [ta, ta.type_string, get_name_string(ta.position.stock), get_datetime_string(ta.date), ta.quantity, ta.price, ta.costs, ta.total])
+
+    def show_context_menu(self, event):
+        transaction, iter = self.get_selected_item()
+        if transaction:            
+            context_menu = gui_utils.ContextMenu()
+            for action in self.actiongroup.list_actions():
+                context_menu.add(action.create_menu_item())
+            context_menu.show(event)
