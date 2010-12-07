@@ -37,7 +37,7 @@ from stocktracker.logger import Log
 
 def init_translations():
     import locale
-    locale.setlocale(locale.LC_ALL, '')
+    #locale.setlocale(locale.LC_ALL, '')
     import gettext
     from os.path import pardir, abspath, dirname, join
 

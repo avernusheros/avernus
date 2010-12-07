@@ -130,7 +130,9 @@ class MainTree(gui_utils.Tree):
                 pubsub.publish('maintree.unselect')
 
     def on_account_updated(self, account):
-        self.find_item(account)[3] = account.amount 
+        row = self.find_item(account)
+        if row:
+            self.find_item(account)[3] = account.amount 
         
     def on_updated(self, item):
         obj, iter = self.selected_item
@@ -203,7 +205,7 @@ class MainTree(gui_utils.Tree):
             cat_type = 'account'
             parent_iter = self.accounts_iter
             item = controller.newAccount('new '+cat_type)
-        iterator = model.append(parent_iter, [item, cat_type, item.name])
+        iterator = model.append(parent_iter, [item, cat_type, item.name, ''])
         self.expand_row( model.get_path(parent_iter), True)
         self.set_cursor(model.get_path(iterator), focus_column = self.get_column(0), start_editing=True)
 

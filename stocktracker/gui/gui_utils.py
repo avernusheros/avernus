@@ -2,6 +2,7 @@ import gtk, pytz
 from stocktracker import config, pubsub
 import locale
 
+
 class Tree(gtk.TreeView):
     def __init__(self):
         self.selected_item = None
@@ -77,8 +78,6 @@ class Tree(gtk.TreeView):
         self.get_model().clear()
 
 
-
-
 class ContextMenu(gtk.Menu):
     def __init__(self):
         gtk.Menu.__init__(self)
@@ -135,10 +134,8 @@ def to_local_time(date):
         date = date.astimezone(pytz.timezone(config.timezone))
         return date.replace(tzinfo = None)
 
-    
 def get_name_string(stock):
-    return '<b>'+stock.name+'</b>' + '\n' + '<small>'+stock.isin+'</small>' + '\n' + '<small>'+stock.exchange+'</small>'
- 
+    return '<b>'+stock.name+'</b>' + '\n' + '<small>'+stock.isin+'</small>' + '\n' + '<small>'+stock.exchange+'</small>' 
 
 def get_green_red_string(num, string = None):
     if string is None:
@@ -149,16 +146,16 @@ def get_green_red_string(num, string = None):
         text = '<span foreground="dark green">'+ string + '</span>'
     return text
     
-def datetime_format(date, nl = True):
-    if date is not None:
-        if nl:
-            return date.strftime("%d.%m.%Y\n%I:%M%p")
+def datetime_format(datetime, nl = True):
+    if datetime is not None:
+        if not nl:
+            return datetime.strftime(locale.nl_langinfo(locale.D_T_FMT))
         else: 
-            return date.strftime("%d.%m.%Y %I:%M%p")
+            return get_date_string(datetime.date())+'\n'+datetime.time().strftime(locale.nl_langinfo(locale.T_FMT))
     return 'never'
 
 def get_date_string(date):
-    return date.strftime("%d.%m.%Y")
+    return date.strftime(locale.nl_langinfo(locale.D_FMT))
 
 def get_datetime_string(datetime):
     if datetime is not None:

@@ -15,9 +15,12 @@ class DBusNetwork(object):
     def __init__(self):
         dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
         self.bus = dbus.SystemBus()
-        self.nm = dbus.Interface(self.bus.get_object('org.freedesktop.NetworkManager','/org/freedesktop/NetworkManager'),'org.freedesktop.NetworkManager')
-        pubsub.publish("network", self.is_online())
-        self.bus.add_signal_receiver(self.signal_device_active, signal_name=None, dbus_interface="org.freedesktop.NetworkManager.Connection.Active")
+        try:
+            self.nm = dbus.Interface(self.bus.get_object('org.freedesktop.NetworkManager','/org/freedesktop/NetworkManager'),'org.freedesktop.NetworkManager')
+            pubsub.publish("network", self.is_online())
+            self.bus.add_signal_receiver(self.signal_device_active, signal_name=None, dbus_interface="org.freedesktop.NetworkManager.Connection.Active")
+        except:
+            pubsub.publish("network", True)
 
     def signal_device_active(self, data=None):
         if data is not None and data[dbus.String("State")] == NM_STATE_CONNECTING: 
@@ -31,7 +34,6 @@ class DBusNetwork(object):
         return False
 
 if __name__ == '__main__':
-    DBusNetwork()
+    d = DBusNetwork()
     import gtk
     gtk.main()
-
