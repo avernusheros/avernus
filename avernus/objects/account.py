@@ -1,6 +1,5 @@
 from avernus.objects.model import SQLiteEntity
 from avernus import pubsub
-import controller
 import datetime
 from dateutil.relativedelta import relativedelta
 
@@ -17,7 +16,7 @@ class Account(SQLiteEntity):
                   }
                   
     def on_delete(self, **kwargs):
-        controller.deleteAllAccountTransaction(self)
+        self.controller.deleteAllAccountTransaction(self)
                   
     def on_update(self, **kwargs):
         pubsub.publish('account.updated', self)    
@@ -28,10 +27,10 @@ class Account(SQLiteEntity):
                     }
                   
     def __iter__(self):
-        return controller.getTransactionsForAccount(self).__iter__()
+        return self.controller.getTransactionsForAccount(self).__iter__()
     
     def has_transaction(self, transaction):
-        return controller.check_duplicate(AccountTransaction, account=self.id, **transaction)
+        return self.controller.check_duplicate(AccountTransaction, account=self.id, **transaction)
 
     @property
     def transaction_count(self):
@@ -72,7 +71,7 @@ class Account(SQLiteEntity):
         one_day = datetime.timedelta(days=1)
         amount = self.amount
         res = [(today, amount)]
-        for change, date in controller.getAccountChangeInPeriodPerDay(self, start_date, today):
+        for change, date in self.controller.getAccountChangeInPeriodPerDay(self, start_date, today):
             #print date, change
             res.append((date, amount)) 
             amount -= change
@@ -85,7 +84,7 @@ class Account(SQLiteEntity):
             parent_category_id = parent_category.id
         else:
             parent_category_id = None
-        hierarchy = controller.getAllAccountCategoriesHierarchical()
+        hierarchy = self.controller.getAllAccountCategoriesHierarchical()
         cats = {}
         sums = {}
         
@@ -132,7 +131,7 @@ class Account(SQLiteEntity):
         ret = []
         while start_date < end_date:
             temp = start_date+delta
-            ret.append(controller.getEarningsOrSpendingsSummedInPeriod(self, start_date, temp, earnings=earnings, transfers=transfers))
+            ret.append(self.controller.getEarningsOrSpendingsSummedInPeriod(self, start_date, temp, earnings=earnings, transfers=transfers))
             start_date += delta
         return ret
 

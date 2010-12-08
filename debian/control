@@ -1,4 +1,4 @@
-Source: stocktracker
+Source: avernus
 Section: python
 Priority: extra
 Build-Depends: cdbs (>= 0.4.43),
@@ -6,11 +6,11 @@ Build-Depends: cdbs (>= 0.4.43),
  python,
  python-support (>= 0.6.4),
  python-distutils-extra (>= 2.10)
-Maintainer: stocktracker-heros <xyz@gmail.com>
+Maintainer: avernus-heros <xyz@gmail.com>
 Standards-Version: 3.8.3
 XS-Python-Version: current
 
-Package: stocktracker
+Package: avernus
 Architecture: all
 XB-Python-Version: ${python:Versions}
 Depends: ${misc:Depends},
@@ -28,7 +28,6 @@ Depends: ${misc:Depends},
  python-launchpad-integration,
  python-distutils-extra,
  python-gtk2
-Description: A lightweight program to easily track your investments.
- portfolios, watchlists, tags... stocktracker utilizes online data
- sources for updating its quotations. You can view charts and other
- diagrams
+Description: A simple program to easily track your investments.
+ portfolios, watchlists, tags... avernus utilizes online data sources for
+ updating its quotations. You can view charts and other diagrams

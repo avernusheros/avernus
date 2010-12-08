@@ -1,6 +1,5 @@
 from avernus.objects.model import SQLiteEntity
 from avernus.objects.stock import Stock
-import avernus.objects.controller
 from avernus import pubsub
 
 from datetime import datetime, date
@@ -65,7 +64,7 @@ class Container(object):
         return change, percent 
      
     def update_positions(self):
-        avernus.objects.controller.datasource_manager.update_stocks([pos.stock for pos in self])
+        self.controller.datasource_manager.update_stocks([pos.stock for pos in self])
         self.last_update = datetime.now()
         pubsub.publish("stocks.updated", self)
 
@@ -83,7 +82,7 @@ class Portfolio(SQLiteEntity, Container):
                    }
     
     def __iter__(self):
-        return avernus.objects.controller.getPositionForPortfolio(self).__iter__()
+        return self.controller.getPositionForPortfolio(self).__iter__()
     
     def get_cash_over_time(self):
         cash = self.cash
@@ -103,14 +102,14 @@ class Portfolio(SQLiteEntity, Container):
     
     def get_value_at_date(self, t):
         erg = 0
-        for po in avernus.objects.controller.getPositionForPortfolio(self):
+        for po in self:
             if t > po.date.date():
                 erg += po.get_value_at_date(t)
         return erg
     
     @property
     def transactions(self):
-        return avernus.objects.controller.getTransactionForPortfolio(self)
+        return self.controller.getTransactionForPortfolio(self)
         
     def birthday(self):
         current = date.today()
@@ -126,8 +125,10 @@ class Portfolio(SQLiteEntity, Container):
         pass
         
     def onDelete(self, **kwargs):
-        avernus.objects.controller.deleteAllPortfolioPosition(self)
-        avernus.objects.controller.deleteAllPortfolioTransaction(self)
+        for trans in self.transactions:
+            trans.delete()
+        for pos in self:
+            pos.delete()
         
     def onRemoveRelationEntry(self, **kwargs):
         pass
@@ -160,10 +161,11 @@ class Watchlist(SQLiteEntity, Container):
                   }
     
     def __iter__(self):
-        return avernus.objects.controller.getPositionForWatchlist(self).__iter__()
+        return self.controller.getPositionForWatchlist(self).__iter__()
     
     def onDelete(self, **kwargs):
-        avernus.objects.controller.deleteAllWatchlistPosition(self)
+        for pos in self:
+            pos.delete()
         
     __callbacks__ = {
                      'onDelete':onDelete,
@@ -234,7 +236,7 @@ class Tag(SQLiteEntity, Container):
     __callbacks__ = {'onInit':onInit}
     
     def __iter__(self):
-        return avernus.objects.controller.getPositionForTag(self).__iter__()
+        return self.controller.getPositionForTag(self).__iter__()
 
     @property
     def date(self):

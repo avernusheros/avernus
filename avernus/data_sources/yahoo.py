@@ -19,6 +19,7 @@ class Yahoo():
     def __request(self, searchstring):
         try:
             url = 'http://de.finsearch.yahoo.com/de/index.php?nm='+searchstring+'&tp=*&r=*&sub=Suchen'
+            print url
             Log.info(url)
             return urlopen(url)
         except:
@@ -116,6 +117,7 @@ class Yahoo():
     def search(self, searchstring):
         doc = self.__request(searchstring)
         if doc is None:
+            print "doc is none"
             return
         #1. beatifull soup does not like this part of the html file
         #2. remove newlines
@@ -174,7 +176,6 @@ class Yahoo():
         res['volume']                 = int(item[9].replace(",", ""))
         return res
     
-    
     def __load_yahoo_ids(self):
         path = os.path.join(config.config_path, 'yahoo_ids')
         if os.path.isfile(path):
@@ -189,10 +190,3 @@ class Yahoo():
         path = os.path.join(config.config_path, 'yahoo_ids')
         with open(path, 'wb') as file:
             pickle.dump(self.yahoo_ids, file)
-
-
-if __name__ == '__main__':
-    y = Yahoo()
-    for item in y.search('yahoo'):
-        print item
-        break

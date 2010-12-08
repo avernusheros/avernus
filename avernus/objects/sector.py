@@ -1,6 +1,4 @@
 from avernus.objects.model import SQLiteEntity
-import avernus.objects.controller
-
 
 class Sector(SQLiteEntity):
 
@@ -12,7 +10,7 @@ class Sector(SQLiteEntity):
                   }
 
     def onDelete(self, **kwargs):
-        avernus.objects.controller.deleteSectorFromStock(self)
+        self.controller.deleteSectorFromStock(self)
         
     __callbacks__ = {
                      'onDelete':onDelete

@@ -1,8 +1,11 @@
 stocktracker (0.5.0) maverick; urgency=low
 
+  [ Wolfgang Steitz ]
   * New release.
 
- -- Wolfgang Steitz <wolfer@netbook>  Fri, 27 Aug 2010 09:56:44 +0200
+  [ wolfgang steitz ]
+
+ -- wolfgang steitz <wolfer@IBWKA1>  Wed, 08 Dec 2010 13:44:21 +0100
 
 stocktracker (0.4.1.1) maverick; urgency=low
 

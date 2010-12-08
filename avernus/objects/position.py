@@ -1,7 +1,6 @@
 from avernus.objects.model import SQLiteEntity
 from avernus.objects.container import Portfolio, Watchlist, Tag
 from avernus.objects.stock import Stock
-import avernus.objects.controller
 from datetime import datetime
 
  
@@ -73,7 +72,7 @@ class PortfolioPosition(SQLiteEntity, Position):
                     }
 
     def onDelete(self, **kwargs):
-        avernus.objects.controller.deleteAllPositionTransaction(self)
+        self.controller.deleteAllPositionTransaction(self)
         
     __callbacks__ = {
                      'onDelete':onDelete
@@ -81,7 +80,7 @@ class PortfolioPosition(SQLiteEntity, Position):
 
     @property
     def dividends(self):
-        for div in avernus.objects.controller.getDividendForPosition(self):
+        for div in self.controller.getDividendForPosition(self):
             yield div
 
     @property
@@ -121,7 +120,7 @@ class PortfolioPosition(SQLiteEntity, Position):
     def get_value_at_date(self, t):
         # this will on purpose ignore any transactions and assume the current
         # quantity is the all-true one
-        quotations = avernus.objects.controller.getQuotationsFromStock(self.stock, self.date.date())
+        quotations = self.controller.getQuotationsFromStock(self.stock, self.date.date())
         delta = datetime.timedelta(days = 2)
         substitute = 0
         for quot in quotations:

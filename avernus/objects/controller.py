@@ -17,6 +17,7 @@ import datetime
 import gobject
 import threading, thread
 import time
+import sys
 
 
 modelClasses = [Portfolio, Transaction, Tag, Watchlist, Index, Dividend,
@@ -32,6 +33,9 @@ initialLoadingClasses = [Portfolio,Transaction,Tag,Watchlist,Index,Dividend,Sect
 VERSION = 2
 datasource_manager = None
 
+#FIXME very hackish, but allows to remove the circular controller imports in the objects
+controller = sys.modules[__name__] 
+
 def initialLoading():
     #first load all the objects from the database so that they are cached
     for cl in initialLoadingClasses:
@@ -41,6 +45,7 @@ def initialLoading():
     for cl in initialLoadingClasses:
         #this will now be much faster as everything is in the cache
         for obj in cl.getAll():
+            obj.controller = controller
             Log.debug("Loading Composites of Objekt: " + str(obj))
             obj.retrieveAllComposite()
 
@@ -129,6 +134,7 @@ def load_stocks():
 def newPortfolio(name, id=None, last_update = datetime.datetime.now(), comment="",cash=0.0):
     result = Portfolio(id=id, name=name,last_update=last_update,comment=comment,cash=cash)
     result.insert()
+    result.controller = controller
     return result
 
 def newWatchlist(name, id=None, last_update = datetime.datetime.now(), comment=""):
@@ -138,6 +144,7 @@ def newWatchlist(name, id=None, last_update = datetime.datetime.now(), comment="
 
 def newAccount(name, id=None, amount=0, accounttype=1):
     result = Account(id=id, name=name, amount=amount, type=accounttype)
+    result.controller = controller
     result.insert()
     return result
 
@@ -214,6 +221,7 @@ def newPortfolioPosition(price=0,\
                                stock = stock,\
                                comment=comment\
                                )
+    result.controller = controller
     result.insert()
     return result
 
@@ -244,11 +252,13 @@ def newTag(name):
 
 def newSector(name):
     result = Sector(name=name)
+    result.controller = controller
     result.insert()
     return result
 
 def newStock(insert=True, **kwargs):
     result = Stock(**kwargs)
+    result.controller = controller
     if insert:
         result.insert()
     return result
@@ -332,12 +342,6 @@ def getPositionForPortfolio(portfolio):
     erg = PortfolioPosition.getAllFromOneColumn("portfolio",key)
     return erg
 
-def deleteAllPortfolioPosition(portfolio):
-    #print "in deleteAllPortfolioPosition"
-    for pos in getPositionForPortfolio(portfolio):
-        #print "deleting ",pos
-        pos.delete()
-
 def deleteSectorFromStock(sector):
     for stock in getAllStock():
         if stock.sector == sector:
@@ -419,10 +423,6 @@ def yield_matching_transfer_tranactions(transaction):
         if account != transaction.account:
             for ta in account.yield_matching_transfer_tranactions(transaction):
                 yield ta
-
-def deleteAllPortfolioTransaction(portfolio):
-    for trans in getTransactionForPortfolio(portfolio):
-        trans.delete()
 
 def deleteAllAccountTransaction(account):
     for trans in getTransactionsForAccount(account):

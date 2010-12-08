@@ -8,7 +8,6 @@ STOCK = 1
 ETF   = 2
 
 
-
 class Stock(SQLiteEntity):
     __primaryKey__ = 'id'
     __tableName__ = "stock"
@@ -54,5 +53,4 @@ class Stock(SQLiteEntity):
         return self.name +' | '+self.isin+' | '+self.exchange
 
     def update_price(self):
-        from avernus.objects import controller
-        controller.datasource_manager.update_stock(self)
+        self.controller.datasource_manager.update_stock(self)

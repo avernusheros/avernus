@@ -1,4 +1,4 @@
-﻿import plots
+﻿from avernus.cairoplot import plots
 
 
 HORZ = 0
@@ -369,4 +369,3 @@ def stream_chart(name,
                        grid, series_legend, x_labels, x_bounds, y_bounds, colors)
     plot.render()
     plot.commit()
-
