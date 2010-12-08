@@ -1,18 +1,13 @@
-'''
-Created on Apr 24, 2010
-
-@author: bastian
-'''
 import unittest
-import stocktracker.objects.store as store
-import stocktracker.objects.model as model
-import stocktracker.objects.controller as controller
-import stocktracker.objects.container as container
-from stocktracker.objects.position import PortfolioPosition as Position
-#from stocktracker.objects.stock import Stock
+import avernus.objects.store as store
+import avernus.objects.model as model
+import avernus.objects.controller as controller
+import avernus.objects.container as container
+from avernus.objects.position import PortfolioPosition as Position
+#from avernus.objects.stock import Stock
 import datetime
 
-#dbfile = "stocktracker/tests/stockmodel.db"
+#dbfile = "avernus/tests/stockmodel.db"
 dbfile = ":memory:"
 create = True
 

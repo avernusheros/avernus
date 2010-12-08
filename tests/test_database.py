@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import unittest
-from stocktracker.objects import model, store, controller
+from avernus.objects import model, store, controller
 
 class A(model.SQLiteEntity):
     __primaryKey__ = "name"

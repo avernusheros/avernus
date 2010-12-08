@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import unittest, datetime
-from stocktracker.csvimporter import CsvImporter
+from avernus.csvimporter import CsvImporter
 
 class CsvImporterTest(unittest.TestCase):
     def setUp(self):
