@@ -36,6 +36,25 @@ datasource_manager = None
 #FIXME very hackish, but allows to remove the circular controller imports in the objects
 controller = sys.modules[__name__]
 
+# SAMPLE DATA
+SECTORS = ['Basic Materials','Conglomerates','Consumer Goods','Energy','Financial','Healthcare','Industrial Goods','Services','Technology','Transportation','Utilities']
+CATEGORIES = {
+    _('Utilities'): [_('Gas'),_('Phone'), _('Water'), _('Electricity')],
+    _('Entertainment'): [_('Books'),_('Movies'), _('Music'), _('Amusement')],
+    _('Fees'):[],
+    _('Gifts'):[],
+    _('Health care'): [_('Doctor'),_('Pharmacy'), _('Health insurance')],
+    _('Food'): [_('Groceries'),_('Restaurants'), _('Coffee')],
+    _('Transport'): [_('Car'),_('Train'), _('Fuel')],
+    _('Services'): [_('Shipping')],
+    _('Home'): [_('Rent'), _('Home improvements')],
+    _('Personal care'): [],
+    _('Taxes'): [],
+    _('Income'): [],
+    _('Shopping'): [_('Clothes'),_('Electronics'),_('Hobbies'),_('Sporting Goods')],
+    _('Travel'): [_('Lodging'), _('Transportation')]
+}
+
 def initialLoading():
     #first load all the objects from the database so that they are cached
     for cl in initialLoadingClasses:
@@ -99,7 +118,7 @@ def createTables():
     if model.store.new:
         m = Meta(id=1, version=VERSION)
         m.insert()
-        load_fixtures()
+        load_sample_data()
 
 def upgrade_db(db_version):
     if db_version==1:
@@ -115,9 +134,13 @@ def set_db_version(version):
     m = Meta.getByPrimaryKey(1)
     m.version = version
 
-def load_fixtures():
-    for sname in ['Basic Materials','Conglomerates','Consumer Goods','Energy','Financial','Healthcare','Industrial Goods','Services','Technology','Transportation','Utilities']:
+def load_sample_data():
+    for sname in SECTORS:
         newSector(sname)
+    for cat, subcats in CATEGORIES.iteritems():
+        parent = newAccountCategory(name=cat)
+        for subcat in subcats:
+            newAccountCategory(name=subcat, parent=parent)
 
 def update_all():
     datasource_manager.update_stocks(getAllStock()+getAllIndex())
