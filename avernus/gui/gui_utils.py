@@ -119,6 +119,18 @@ def float_to_red_green_string(column, cell, model, iter, user_data):
         markup =  text
     cell.set_property('markup', markup)
 
+def sort_by_time(model, iter1, iter2, data=None):
+    d1 = model.get_value(iter1, data)
+    d2 = model.get_value(iter2, data)
+    if d1 < d2:
+        return -1
+    elif d1 > d2:
+        return 1
+    return 0
+
+def date_to_string(column, cell, model, iter, user_data):
+    item = model.get_value(iter, user_data)
+    cell.set_property('text', get_date_string(item))
 
 def float_to_string(column, cell, model, iter, user_data):
     cell.set_property('text', get_string_from_float(model.get_value(iter, user_data)))

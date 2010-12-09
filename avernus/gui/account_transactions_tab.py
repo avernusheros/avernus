@@ -83,9 +83,9 @@ class AccountTransactionTab(gtk.VBox):
         self.category_tree.load_categories()
 
 def desc_markup(column, cell, model, iter, user_data):
-        text = model.get_value(iter, user_data)
-        markup =  '<span size="small">'+ text + '</span>'
-        cell.set_property('markup', markup)
+    text = model.get_value(iter, user_data)
+    markup =  '<span size="small">'+ text + '</span>'
+    cell.set_property('markup', markup)
 
 
 class TransactionsTree(gui_utils.Tree):
@@ -102,13 +102,14 @@ class TransactionsTree(gui_utils.Tree):
         self.searchstring = ''
         gui_utils.Tree.__init__(self)
         
-        self.model = gtk.ListStore(object, str, float, str, str)
+        self.model = gtk.ListStore(object, str, float, str, object)
         self.modelfilter = self.model.filter_new()
         sorter = gtk.TreeModelSort(self.modelfilter)
         self.set_model(sorter)
         self.modelfilter.set_visible_func(self.visible_cb)
         
-        self.create_column(_('Date'), self.DATE)
+        self.create_column(_('Date'), self.DATE, func=gui_utils.date_to_string)
+        sorter.set_sort_func(self.DATE, gui_utils.sort_by_time, self.DATE)
         col, cell = self.create_column(_('Description'), self.DESCRIPTION, func=desc_markup)
         self.dynamicWrapColumn = col
         self.dynamicWrapCell = cell
@@ -164,9 +165,9 @@ class TransactionsTree(gui_utils.Tree):
         
     def get_item_to_insert(self, ta):
         if ta.category:
-            return [ta, ta.description, ta.amount, ta.category.name, gui_utils.get_date_string(ta.date)]
+            return [ta, ta.description, ta.amount, ta.category.name, ta.date]
         else:    
-            return [ta, ta.description, ta.amount, '', gui_utils.get_date_string(ta.date)]
+            return [ta, ta.description, ta.amount, '', ta.date]
         
     def load_transactions(self):
         for ta in controller.getTransactionsForAccount(self.account):

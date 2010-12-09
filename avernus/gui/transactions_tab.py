@@ -27,10 +27,11 @@ class TransactionsTree(Tree):
     def __init__(self, portfolio):
         self.portfolio = portfolio
         Tree.__init__(self)
-
-        self.set_model(gtk.TreeStore(object,str, str, str,float, float, float, float))
+        self.model = gtk.TreeStore(object,str, str, object,float, float, float, float)
+        self.set_model(self.model)
         
-        self.create_column(_('Date'), 3)
+        self.create_column(_('Date'), 3, func=gui_utils.date_to_string)
+        self.model.set_sort_func(3, gui_utils.sort_by_time, 3)
         self.create_column(_('Type'), 1)
         self.create_column(_('Name'), 2)
         self.create_column(_('Shares'), 4, func=gui_utils.float_to_string)
@@ -84,9 +85,9 @@ class TransactionsTree(Tree):
         model = self.get_model()
         if model:
             if ta.position is None: #a portfolio related transaction
-                model.append(None, [ta, ta.type_string, '', get_datetime_string(ta.date), ta.quantity, ta.price, ta.costs, ta.total])
+                model.append(None, [ta, ta.type_string, '', ta.date.date(), ta.quantity, ta.price, ta.costs, ta.total])
             else:
-                model.append(None, [ta, ta.type_string, get_name_string(ta.position.stock), get_datetime_string(ta.date), ta.quantity, ta.price, ta.costs, ta.total])
+                model.append(None, [ta, ta.type_string, get_name_string(ta.position.stock), ta.date.date(), ta.quantity, ta.price, ta.costs, ta.total])
 
     def show_context_menu(self, event):
         transaction, iter = self.get_selected_item()
