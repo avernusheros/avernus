@@ -1,14 +1,11 @@
 #!/usr/bin/python
 # -*- Mode: Python; coding: utf-8; indent-tabs-mode: nil; tab-width: 4 -*-
-### BEGIN LICENSE
-# This file is in the public domain
-### END LICENSE
 
 import sys
 import os
 import gtk
 import optparse
-    
+
 
 # optional Launchpad integration
 # this shouldn't crash if not found as it is simply used for bug reporting
@@ -45,20 +42,20 @@ def init_translations():
     LOCALE_PATH = abspath(join(dirname(__file__), pardir, 'locales'))
     if not os.path.isdir(LOCALE_PATH):
         LOCALE_PATH = '/usr/share/locale'
-    
+
     # setup translation
     languages_used = []
-    
+
     lc, encoding = locale.getdefaultlocale()
     if lc:
         languages_used = [lc]
     lang_in_env = os.environ.get('LANGUAGE', None)
     if lang_in_env:
         languages_used.extend(lang_in_env.split())
-    
+
     gettext.bindtextdomain(GETTEXT_DOMAIN, LOCALE_PATH)
     gettext.textdomain(GETTEXT_DOMAIN)
-    
+
     translation = gettext.translation(GETTEXT_DOMAIN, LOCALE_PATH,
                                       languages=languages_used,
                                       fallback=True)
@@ -80,7 +77,7 @@ def init_icons():
     #icons.add_icon_name_from_directory('tag', path)
     #icons.add_icon_name_from_directory('tags', path)
     #icons.add_stock_from_directory('avernus-chart', path)
-    gtk.window_set_default_icon_name('bullbear')    
+    gtk.window_set_default_icon_name('bullbear')
 
 
 def init_plugin_engine(api):
@@ -92,17 +89,17 @@ def init_plugin_engine(api):
 
 def start(db_file = None):
     init_icons()
-    
+
     if db_file == None:
         from avernus import config
         configs = config.avernusConfig()
         db_file = configs.get_option('database file')
-    
+
     from avernus.objects import model, controller, store
     model.store = store.Store(db_file)
     controller.createTables()
     controller.initialLoading()
-    
+
     from avernus.gui.mainwindow import MainWindow
     from avernus.datasource_manager import DatasourceManager
     dsm = DatasourceManager()
@@ -110,7 +107,7 @@ def start(db_file = None):
     api = PluginAPI(window, dsm)
     window.pengine = init_plugin_engine(api)
     controller.datasource_manager = dsm
-    
+
     from avernus.network_manager import DBusNetwork
     DBusNetwork()
     gtk.main()

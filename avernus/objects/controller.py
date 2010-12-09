@@ -34,7 +34,7 @@ VERSION = 2
 datasource_manager = None
 
 #FIXME very hackish, but allows to remove the circular controller imports in the objects
-controller = sys.modules[__name__] 
+controller = sys.modules[__name__]
 
 def initialLoading():
     #first load all the objects from the database so that they are cached
@@ -133,8 +133,8 @@ def load_stocks():
 
 def newPortfolio(name, id=None, last_update = datetime.datetime.now(), comment="",cash=0.0):
     result = Portfolio(id=id, name=name,last_update=last_update,comment=comment,cash=cash)
-    result.insert()
     result.controller = controller
+    result.insert()
     return result
 
 def newWatchlist(name, id=None, last_update = datetime.datetime.now(), comment=""):

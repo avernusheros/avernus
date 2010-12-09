@@ -4,12 +4,12 @@ import gtk
 from avernus.gui import gui_utils
 from avernus.logger import Log
 from avernus.objects import controller
-           
+
 class PrefDialog(gtk.Dialog):
-    
+
     DEFAULT_WIDTH = 200
     DEFAULT_HEIGHT = 300
-    
+
     def __init__(self, pengine):
         gtk.Dialog.__init__(self, "Preferences", None,
                             gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
@@ -27,36 +27,37 @@ class PrefDialog(gtk.Dialog):
         self.destroy()
         Log.debug("PrefDialog destroyed")
 
-      
+
 class SectorList(gtk.VBox):
-    
+
     OBJECT = 0
     NAME = 1
-    
+
     def __init__(self):
         gtk.VBox.__init__(self)
         self.tree = gui_utils.Tree()
+        self.tree.set_headers_visible(False)
         self.model = gtk.ListStore(object, str)
         self.tree.set_model(self.model)
         col, cell = self.tree.create_column('Sectors', self.NAME)
         cell.set_property('editable', True)
-        cell.connect('edited', self.on_cell_edited) 
+        cell.connect('edited', self.on_cell_edited)
         sw = gtk.ScrolledWindow()
         sw.set_property('hscrollbar-policy', gtk.POLICY_AUTOMATIC)
-        sw.set_property('vscrollbar-policy', gtk.POLICY_AUTOMATIC)   
+        sw.set_property('vscrollbar-policy', gtk.POLICY_AUTOMATIC)
         self.pack_start(sw, expand=True, fill=True)
         sw.add(self.tree)
         for sector in controller.getAllSector():
             self.model.append([sector, sector.name])
         actiongroup = gtk.ActionGroup('sectors')
         actiongroup.add_actions([
-                ('add',     gtk.STOCK_ADD,    'new sector',      None, _('Add new sector'), self.on_add),      
+                ('add',     gtk.STOCK_ADD,    'new sector',      None, _('Add new sector'), self.on_add),
                 ('rename',  gtk.STOCK_EDIT,   'rename sector',   None, _('Rename selected sector'), self.on_edit),
                 ('remove',  gtk.STOCK_DELETE, 'remove sector',   None, _('Remove selected sector'), self.on_remove)
                      ])
         toolbar = gtk.Toolbar()
         self.conditioned = ['rename', 'edit']
-        
+
         for action in actiongroup.list_actions():
             button = action.create_tool_item()
             toolbar.insert(button, -1)
@@ -67,13 +68,13 @@ class SectorList(gtk.VBox):
         iterator = self.model.append([sector, sector.name])
         #self.expand_row( model.get_path(parent_iter), True)
         self.tree.set_cursor(self.model.get_path(iterator), focus_column = self.tree.get_column(0), start_editing=True)
-    
+
     def on_edit(self, widget):
         selection = self.tree.get_selection()
         model, selection_iter = selection.get_selected()
         if selection_iter:
             self.tree.set_cursor(model.get_path(selection_iter), focus_column = self.tree.get_column(0), start_editing=True)
-    
+
     def on_remove(self, widget):
         selection = self.tree.get_selection()
         model, selection_iter = selection.get_selected()
@@ -86,33 +87,33 @@ class SectorList(gtk.VBox):
 
 
 class PluginManager(gtk.VBox):
-    
+
     def __init__(self, pengine):
         gtk.VBox.__init__(self)
-        
+
         self.pengine = pengine
         self.plugins = pengine.plugins
-        
+
         self.tree = gui_utils.Tree()
         self.tree.set_model(gtk.ListStore(object, bool, str, str, bool))
         self.tree.set_rules_hint(True)
-        
+
         cell = gtk.CellRendererToggle()
         cell.connect("toggled", self.on_toggled)
-        column = gtk.TreeViewColumn(None,cell, activatable=4) 
+        column = gtk.TreeViewColumn(None,cell, activatable=4)
         column.add_attribute(cell, "active", 1)
         self.tree.append_column(column)
-        
+
         self.tree.create_icon_text_column('', 2,3, self._plugin_markup, self._plugin_markup)
-        
+
         self.tree.set_headers_visible(False)
         self.tree.connect('cursor-changed', self.on_cursor_changed)
         self.pack_start(self.tree, expand = True)
         self._insert_plugins()
-        
+
         buttonbox = gtk.HButtonBox()
         buttonbox.set_layout(gtk.BUTTONBOX_END)
-        self.pack_start(buttonbox, expand = False) 
+        self.pack_start(buttonbox, expand = False)
         button = gtk.Button('About')
         button.connect('clicked', self.on_about_clicked)
         buttonbox.add(button)
@@ -123,11 +124,11 @@ class PluginManager(gtk.VBox):
         path = 0
         self.tree.set_cursor(path)
         self.selected_obj = self.tree.get_model()[path][0]
-        self.on_selection(self.selected_obj)        
+        self.on_selection(self.selected_obj)
 
     def _plugin_markup(self, column, cell, store, iter, user_data):
-        cell.set_property('sensitive', store.get_value(iter,4))        
-        
+        cell.set_property('sensitive', store.get_value(iter,4))
+
     def _insert_plugins(self):
         self.tree.clear()
         m = self.tree.get_model()
@@ -136,11 +137,11 @@ class PluginManager(gtk.VBox):
             if plugin.error:
                 text+='\nMissing dependencies: ' +\
                 "<small><b>%s</b></small>" % ', '.join(plugin.missing_modules)
-            iter = m.append([plugin, plugin.enabled, plugin.icon, text, not plugin.error])   
-    
+            iter = m.append([plugin, plugin.enabled, plugin.icon, text, not plugin.error])
+
     def on_prefs_clicked(self, *args, **kwargs):
-        self.selected_obj.instance.configure()            
-    
+        self.selected_obj.instance.configure()
+
     def on_about_clicked(self, *args, **kwargs):
         pl = self.selected_obj
         d = gtk.AboutDialog()
@@ -155,7 +156,7 @@ class PluginManager(gtk.VBox):
         #d.set_license()
         d.set_authors([pl.authors])
         #d.set_website(pl.url)
-        #d.set_logo_icon_name('avernus')        
+        #d.set_logo_icon_name('avernus')
         d.run()
         d.hide()
 
@@ -170,7 +171,7 @@ class PluginManager(gtk.VBox):
             else:
                 plugin.enabled = False
                 self.pengine.deactivate_plugins([plugin])
-    
+
     def on_cursor_changed(self, widget):
         selection = self.tree.get_selection()
         # Get the selection iter
@@ -179,6 +180,6 @@ class PluginManager(gtk.VBox):
             #Something is selected so get the object
             self.selected_obj = treestore.get_value(selection_iter, 0)
             self.on_selection(self.selected_obj)
-            
+
     def on_selection(self, plugin):
-        self.pref_button.set_sensitive(plugin.configurable)        
+        self.pref_button.set_sensitive(plugin.configurable)
