@@ -28,7 +28,7 @@ modelClasses = [Portfolio, Transaction, Tag, Watchlist, Index, Dividend,
 #relations. therefore it is important that the list is complete in the sense
 #that there are no classes holding composite keys to classes outside the list
 initialLoadingClasses = [Portfolio,Transaction,Tag,Watchlist,Index,Dividend,Sector,
-                         PortfolioPosition, WatchlistPosition,Account,  Meta, Stock, AccountTransaction, AccountCategory]
+                         PortfolioPosition, WatchlistPosition,Account, Meta, Stock, AccountTransaction, AccountCategory]
 
 VERSION = 2
 datasource_manager = None
@@ -141,6 +141,11 @@ def load_sample_data():
         parent = newAccountCategory(name=cat)
         for subcat in subcats:
             newAccountCategory(name=subcat, parent=parent)
+    acc = newAccount(_('sample account'))
+    newAccountTransaction(account=acc, description='this is a sample transaction', amount=99.99, date=datetime.date.today())
+    newAccountTransaction(account=acc, description='another sample transaction', amount=-33.90, date=datetime.date.today())
+    pf = newPortfolio(_('sample portfolio'))
+    wl = newWatchlist(_('sample watchlist'))
 
 def update_all():
     datasource_manager.update_stocks(getAllStock()+getAllIndex())
@@ -172,7 +177,6 @@ def newAccount(name, id=None, amount=0, accounttype=1):
     return result
 
 def newAccountTransaction(id=None, description='', amount=0.0, account=None, category=None, date=datetime.date.today(), transferid=-1, detect_duplicates=False):
-
     if detect_duplicates:
         duplicates = check_duplicate(AccountTransaction,\
                                description=description, \
@@ -189,6 +193,7 @@ def newAccountTransaction(id=None, description='', amount=0.0, account=None, cat
                                 account=account, \
                                 category=category, transferid=transferid)
     result.insert()
+    account.amount += amount
     return result
 
 def newAccountCategory(name='', cid=None, parent=None):
