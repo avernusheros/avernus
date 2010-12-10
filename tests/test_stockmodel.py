@@ -21,49 +21,35 @@ class Test(unittest.TestCase):
         controller.createTables()
         print "Tables created"
         if create:
-            self.portfolios.append(container.Portfolio(name="erstesPort",
-                                                       last_update=datetime.datetime.now(),
-                                                       comment="einKommentar",
-                                                       cash=0.0
-                                                       ))
-            self.portfolios.append(container.Portfolio(name="zweitesPort",
-                                                       last_update=datetime.datetime.now(),
-                                                       comment="WhoCommentsAPortfolio?",
-                                                       cash=5.0
-                                                       ))
-            self.positions.append(Position(date=datetime.datetime.now(),
-                                           price=1.58,
-                                           quantity=152,
-                                           portfolio=self.portfolios[0],
-                                           stock=None,
-                                           comment="allesKommentieren"
-                                  ))
-            self.positions.append(Position(date=datetime.datetime.now(),
-                                           price=1.85,
-                                           quantity=125,
-                                           portfolio=self.portfolios[0],
-                                           stock=None,
-                                           comment="allesKommentieren2"
-                                  ))
-            self.positions.append(Position(date=datetime.datetime.now(),
-                                           price=14.5,
-                                           quantity=512,
-                                           portfolio=self.portfolios[0],
-                                           stock=None,
-                                           comment="allesKommentieren3"
-                                  ))
-            self.positions.append(Position(date=datetime.datetime.now(),
-                                           price=11.5,
-                                           quantity=142,
-                                           portfolio=self.portfolios[1],
-                                           stock=None,
-                                           comment="allesKommentieren4"
-                                  ))
-            for el in self.portfolios:
-                el.insert()
-            #print self.portfolios
-            for el in self.positions:
-                el.insert()
+            pf_a =controller.newPortfolio(name="erstesPort",
+                                       last_update=datetime.datetime.now(),
+                                       comment="einKommentar",
+                                       cash=0.0
+                                       )
+            s1 = controller.newPortfolioPosition(
+                                   date=datetime.datetime.now(),
+                                   price=1.58,
+                                   quantity=152,
+                                   portfolio=pf_a,
+                                   stock=None,
+                                   comment="allesKommentieren"
+                                  )
+            s2 = controller.newPortfolioPosition(
+                                    date=datetime.datetime.now(),
+                                   price=1.85,
+                                   quantity=125,
+                                   portfolio=pf_a,
+                                   stock=None,
+                                   comment="allesKommentieren2"
+                                  )
+            s3 = controller.newPortfolioPosition(
+                                date=datetime.datetime.now(),
+                               price=14.5,
+                               quantity=512,
+                               portfolio=pf_a,
+                               stock=None,
+                               comment="allesKommentieren3"
+                                  )
             print "Data Created"
         self.portfolios = controller.getAllPortfolio()
         self.positions = controller.getAllPosition()
@@ -75,10 +61,12 @@ class Test(unittest.TestCase):
 
     def testControllerFunctions(self):
         port0pos = controller.getPositionForPortfolio(self.portfolios[0])
+        count = 0
         for port in self.portfolios:
             for pos in port:
+                count+=1
                 print pos
-        self.assertEquals(len(port0pos),3)
+        self.assertEquals(count,3)
         for pos in port0pos:
             print pos.portfolio, self.portfolios[0]
             self.assertEquals(pos.portfolio,self.portfolios[0])

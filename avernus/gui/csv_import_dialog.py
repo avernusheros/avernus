@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import gtk
+import gtk, os
 from avernus.gui import gui_utils
 from avernus import csvimporter, config
 from avernus.objects import controller
@@ -8,8 +8,10 @@ from avernus.objects import controller
 
 class CSVImportDialog(gtk.Dialog):
     
+    TITLE = _("Import CSV")
+    
     def __init__(self, *args):
-        gtk.Dialog.__init__(self, _("Import CSV"), None
+        gtk.Dialog.__init__(self, self.TITLE, None
                             , gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
                      (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,))
         
@@ -73,6 +75,7 @@ class CSVImportDialog(gtk.Dialog):
     def _on_file_set(self, button):
         self.b_file = True
         self.file = button.get_filename()
+        self.set_title(self.TITLE+' - '+os.path.basename(self.file))
         self.config.set_option('last_csv_folder', button.get_current_folder())
         self.fcbutton.set_current_folder(button.get_current_folder())
         self.importer.load_transactions_from_csv(self.file)

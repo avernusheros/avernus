@@ -15,7 +15,6 @@ FORMATS = ['%Y-%m-%d',
 
 
 
-
 class CsvImporter:
     
     def __init__(self):
@@ -25,7 +24,7 @@ class CsvImporter:
         profile = {}
         #csv dialect
         csvdata = StringIO(open(filename, 'rb').read())
-        profile['dialect'] = csv.Sniffer().sniff(csvdata.read(2048))
+        profile['dialect'] = csv.Sniffer().sniff(csvdata.read(2048), delimiters=',;')
         #profile['dialect'].quoting = csv.QUOTE_NONE
         csvdata.seek(0)
         #encoding
@@ -70,7 +69,7 @@ class CsvImporter:
                     if re.match('^[0-9]+[\.\-]+[0-9]*[\.\-][0-9]+$', col ) is not None:
                         profile['date column'] = col_count
                         profile['date format'] = self._detect_date_format(col)
-                    elif re.match('-?[0-9]+[\.\,]*[0-9]*[\.\,]+[0-9]*', col) is not None:
+                    elif re.match('^-?[0-9]+[\.\,]+[0-9]*[\.\,]?[0-9]*$', col) is not None:
                         profile['amount column'] = col_count
                         for s in reversed(col):
                             if s == '.':
@@ -84,7 +83,15 @@ class CsvImporter:
                     else:
                         profile['description column'].append(col_count)
                     col_count+=1
-                break
+                
+                #check if profile contains the required info, otherwise check the next row   
+                required = ['description column', 'date column', 'amount column']
+                complete = True
+                for req in required:
+                    if req not in profile:
+                        complete = False
+                if complete:
+                    break
         return profile
 
     def _has_header(self, csvdata, profile):
@@ -283,3 +290,6 @@ if __name__ == "__main__":
     profile = importer._sniff_csv(filename)
     for key, val in profile.iteritems():
         print key,": ", val
+    importer.load_transactions_from_csv(filename)
+    for res in importer.results:
+        print res

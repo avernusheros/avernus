@@ -1,6 +1,6 @@
 __appname__ = 'avernus'
-__version__ = '0.5.0'
-__description__ = 'A simple program to easily track your investments.'
+__version__ = '0.6.0'
+__description__ = 'A simple program to easily manage your investments.'
 __url__='https://launchpad.net/avernus'
 __authors__ = ['Wolfgang Steitz', 'Bastian Kennel']
 __mail__ = 'wsteitz(at)gmail.com'
@@ -18,8 +18,6 @@ This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 '''
-
-
 
 
 FUND = 0
