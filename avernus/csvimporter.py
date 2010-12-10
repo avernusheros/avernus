@@ -209,7 +209,7 @@ class CsvImporter:
                                            profile['decimal separator'])
                     
                 tran = [self._parse_date(row[profile['date column']].strip(' '), profile['date format']), 
-                        ' - '.join([row[d] for d in profile['description column']]),
+                        ' - '.join([row[d] for d in profile['description column'] if len(row[d])>0]),
                         amount, True
                         
                         ]    
