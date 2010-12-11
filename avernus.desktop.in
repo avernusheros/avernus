@@ -1,8 +1,8 @@
 [Desktop Entry]
-Name=Stocktracker
-Comment=Stocktracker application
+Name=avernus
+Comment=avernus finance application
 Categories=GNOME;Office;
-Exec=stocktracker
+Exec=avernus
 Icon=/usr/share/avernus/images/icon.png
 Terminal=false
 Type=Application
