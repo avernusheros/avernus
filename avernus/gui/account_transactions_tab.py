@@ -95,6 +95,7 @@ class TransactionsTree(gui_utils.Tree):
     AMOUNT = 2
     CATEGORY = 3
     DATE = 4
+    ICON = 5
     
     def __init__(self, account, actiongroup, search_entry):
         self.account = account
@@ -102,12 +103,12 @@ class TransactionsTree(gui_utils.Tree):
         self.searchstring = ''
         gui_utils.Tree.__init__(self)
         
-        self.model = gtk.ListStore(object, str, float, str, object)
+        self.model = gtk.ListStore(object, str, float, str, object, str)
         self.modelfilter = self.model.filter_new()
         sorter = gtk.TreeModelSort(self.modelfilter)
         self.set_model(sorter)
         self.modelfilter.set_visible_func(self.visible_cb)
-        
+        self.create_icon_column('', self.ICON)
         self.create_column(_('Date'), self.DATE, func=gui_utils.date_to_string)
         sorter.set_sort_func(self.DATE, gui_utils.sort_by_time, self.DATE)
         col, cell = self.create_column(_('Description'), self.DESCRIPTION, func=desc_markup)
@@ -165,9 +166,14 @@ class TransactionsTree(gui_utils.Tree):
         
     def get_item_to_insert(self, ta):
         if ta.category:
-            return [ta, ta.description, ta.amount, ta.category.name, ta.date]
-        else:    
-            return [ta, ta.description, ta.amount, '', ta.date]
+            cat = ta.category.name
+        else:
+            cat = ''
+        if ta.is_transfer():
+            icon = 'gtk-convert'
+        else:
+            icon = ''
+        return [ta, ta.description, ta.amount, cat, ta.date, icon]
         
     def load_transactions(self):
         for ta in controller.getTransactionsForAccount(self.account):

@@ -208,4 +208,7 @@ class AccountTransaction(SQLiteEntity):
         else:
             self.transferid = -1
     
+    def is_transfer(self):
+        return (self.transfer is not None)
+    
     transfer = property(get_transfer, set_transfer)
