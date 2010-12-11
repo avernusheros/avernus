@@ -152,13 +152,6 @@ def update_all():
     for container in getAllPortfolio()+getAllWatchlist()+getAllIndex():
         container.last_update = datetime.datetime.now()
 
-def load_stocks():
-    from avernus import yahoo
-    from avernus.gui.progress_manager import add_monitor
-    indices = ['^GDAXI', '^TECDAX', '^STOXX50E', '^DJI', '^IXIC']
-    monitor = add_monitor(1, 'loading stocks...', 'gtk-refresh')
-    GeneratorTask(yahoo.get_indices, monitor.progress_update, monitor.stop).start(indices)
-
 def newPortfolio(name, id=None, last_update = datetime.datetime.now(), comment="",cash=0.0):
     result = Portfolio(id=id, name=name,last_update=last_update,comment=comment,cash=cash)
     result.controller = controller

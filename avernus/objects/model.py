@@ -269,6 +269,9 @@ class SQLiteEntity(object):
         if not checkTableExistence(cls.__tableName__):
             Log.error("Table not existent: "+cls.__tableName__)
             return None
+        #FIXME somehow I got a char here and the app crashed.
+        primary = int(primary)
+        #print cls, primary, cache.isCached(cls, primary)
         if cache.isCached(cls, primary):
             return cache.get(cls, primary)
         erg = "SELECT * FROM " + cls.__tableName__ + " WHERE "
