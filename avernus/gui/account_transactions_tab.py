@@ -190,15 +190,18 @@ class TransactionsTree(gui_utils.Tree):
         return None, None
 
     def on_add(self, widget=None):
-        dlg = EditTransaction()
+        dlg = EditTransaction(self.account)
         b_change, transaction = dlg.start()
+        self.account.amount += transaction.amount
         self.insert_transaction(transaction)
         
     def on_edit(self, widget=None):
         transaction, iterator = self._get_selected_transaction()
-        dlg = EditTransaction(transaction)
+        old_amount = transaction.amount
+        dlg = EditTransaction(self.account, transaction)
         b_change, transaction = dlg.start()
         if b_change:
+            self.account.amount = self.account.amount - old_amount + transaction.amount
             self.get_model()[iterator] = self.get_item_to_insert(transaction)
     
     def on_remove(self, widget=None):
@@ -226,8 +229,8 @@ class TransactionsTree(gui_utils.Tree):
 
     def show_context_menu(self, event):
         trans, iter = self._get_selected_transaction()
+        context_menu = gui_utils.ContextMenu()
         if trans:            
-            context_menu = gui_utils.ContextMenu()
             for action in self.actiongroup.list_actions():
                 context_menu.add(action.create_menu_item())
             if trans.category:
@@ -256,7 +259,9 @@ class TransactionsTree(gui_utils.Tree):
                 item.set_submenu(category_menu)
                 for cat in hierarchy[None]:
                     insert_recursive(cat, category_menu)
-            context_menu.show(event)
+        else:
+            context_menu.add(self.actiongroup.get_action('add').create_menu_item())
+        context_menu.show(event)
 
     def on_button_press(self, widget, event):
         if event.button == 3:
@@ -467,7 +472,7 @@ class CategoriesTree(gui_utils.Tree):
            
            
 class EditTransaction(gtk.Dialog):
-    def __init__(self, transaction = None):
+    def __init__(self, account, transaction = None):
         gtk.Dialog.__init__(self, _("Edit transaction"), None
                             , gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
                      (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
@@ -476,7 +481,7 @@ class EditTransaction(gtk.Dialog):
         vbox = self.get_content_area()
         
         if self.transaction is None:
-            self.transaction = controller.newAccountTransaction()
+            self.transaction = controller.newAccountTransaction(account=account)
         
         #description 
         frame = gtk.Frame('Description')

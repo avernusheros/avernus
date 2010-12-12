@@ -43,8 +43,8 @@ class Account(SQLiteEntity):
         for trans in self:
             if transaction.amount == -trans.amount:
                 if trans.transfer is None or trans.transfer == transaction:
-                    threedays = datetime.timedelta(3)
-                    if transaction.date-threedays < trans.date and transaction.date+threedays > trans.date:
+                    fivedays = datetime.timedelta(5)
+                    if transaction.date-fivedays < trans.date and transaction.date+fivedays > trans.date:
                         yield trans
             
     def get_transactions_in_period(self, start_date, end_date, transfers=False):

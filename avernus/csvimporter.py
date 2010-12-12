@@ -24,7 +24,7 @@ class CsvImporter:
         profile = {}
         #csv dialect
         csvdata = StringIO(open(filename, 'rb').read())
-        profile['dialect'] = csv.Sniffer().sniff(csvdata.read(2048), delimiters=',;')
+        profile['dialect'] = csv.Sniffer().sniff(csvdata.read(2048), delimiters=';,')
         #profile['dialect'].quoting = csv.QUOTE_NONE
         csvdata.seek(0)
         #encoding

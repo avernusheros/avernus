@@ -115,7 +115,7 @@ class PreviewTree(gui_utils.Tree):
         self.dynamicWrapColumn = column
         self.dynamicWrapCell = cell
         cell.props.wrap_mode = gtk.WRAP_WORD
-        column, cell = self.create_column('amount', 2, func=gui_utils.float_to_string)
+        column, cell = self.create_column('amount', 2, func=gui_utils.currency_format)
         column.add_attribute(cell, 'foreground', 4)
         cell.set_property('foreground-set', True)
     
