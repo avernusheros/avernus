@@ -8,7 +8,7 @@ from avernus import date_utils
 from dateutil.relativedelta import relativedelta
 
 
-no_data_string = '\nNo Data!\nAdd transactions first.\n\n'
+no_data_string = _('\nNo Data!\nAdd transactions first.\n\n')
 MONTHS = {
         '1m':1,
         '3m':3,
@@ -62,6 +62,7 @@ class AccountChartTab(gtk.ScrolledWindow):
         self._calc_start_date()
         combobox.connect('changed', self.on_zoom_change)
         self.table.attach(combobox, 0,1,0,1)
+        
         #FIXME macht das step einstellen wirklich sinn? alternative ist automatische einstellung 
         #oder manuelle einstellung erlauben, aber sachen vorgeben, zb 1y und month
         self.steps = ['day','week','month','year']
@@ -73,10 +74,7 @@ class AccountChartTab(gtk.ScrolledWindow):
         self.current_step = self.steps[active]
         combobox.connect('changed', self.on_step_change)
         self.table.attach(combobox,1,2,0,1)
-        markup = '<span weight="bold" color="blue">Earnings</span>'+' vs '+'<span weight="bold" color="darkgreen">Spendings</span>'
-        label = gtk.Label()
-        label.set_markup(markup)
-        self.table.attach(label, 0,2,1,2)
+        
         self.charts = []
         chart = EarningsVsSpendingsChart(self.account, self.start_date, self.end_date, self.current_step)
         self.charts.append(chart)
@@ -178,6 +176,23 @@ class EarningsVsSpendingsChart(gtk.VBox, Chart):
         self.start_date = start_date
         self.end_date = end_date
         self.step = step
+        hbox = gtk.HBox()
+        markup = '<span weight="bold" color="blue">Earnings</span>'+' vs '+'<span weight="bold" color="darkgreen">Spendings</span>'
+        label = gtk.Label()
+        label.set_markup(markup)
+        hbox.pack_start(label)
+        self.type_cb = gtk.combo_box_new_text()
+        for chart_type in ['line chart', 'bar chart']:
+            self.type_cb.append_text(chart_type)
+        self.type_cb.set_active(0)
+        self.type_cb.connect('changed', self.on_type_change)
+        hbox.pack_start(self.type_cb)
+        
+        self.pack_start(hbox)
+        self._draw_chart()
+    
+    def on_type_change(self, widget):
+        self.remove(self.chart)
         self._draw_chart()
     
     def on_step_change(self, step):
@@ -186,10 +201,12 @@ class EarningsVsSpendingsChart(gtk.VBox, Chart):
         self._draw_chart()
     
     def _draw_chart(self):
+        chart_type = self.type_cb.get_active_text()
         earnings = self.account.get_earnings_summed(self.end_date, self.start_date, self.step)
         spendings = self.account.get_spendings_summed(self.end_date, self.start_date, self.step)
         legend = get_legend(self.start_date, self.end_date, self.step)
-        plot = cairoplot.plots.DotLinePlot('gtk', 
+        if chart_type == 'line chart':
+            plot = cairoplot.plots.DotLinePlot('gtk', 
                                 data=[earnings, spendings],
                                 width=600,
                                 height=300,
@@ -200,7 +217,21 @@ class EarningsVsSpendingsChart(gtk.VBox, Chart):
                                 dots=2,
                                 series_colors=['blue','green'],
                                 dash=False)
+        else:
+            plot = cairoplot.plots.VerticalBarPlot('gtk', 
+                                data=[[earnings[i], spendings[i]] for i in range(len(earnings))],
+                                width=600,
+                                height=300,
+                                series_labels = ['earnings', 'spendings'],
+                                x_labels=legend,
+                                #display_values=True,
+                                #y_title='Amount',
+                                background="white light_gray",
+                                grid=True,
+                                series_colors=['blue','green'],
+                                )
         self.chart = plot.handler
+        self.chart.show()
         self.pack_start(self.chart)
 
 
