@@ -267,6 +267,10 @@ class TransactionsTree(gui_utils.Tree):
         if event.button == 3:
             self.show_context_menu(event)
         else:
+            #edit on doubleclick
+            #if event.type == gtk.gdk._2BUTTON_PRESS: # 'double click'
+            #    self.on_edit()
+            #    return 
             # Here we intercept mouse clicks on selected items so that we can
             # drag multiple items without the click selecting only one
             target = self.get_path_at_pos(int(event.x), int(event.y))
@@ -486,7 +490,7 @@ class EditTransaction(gtk.Dialog):
         #description 
         frame = gtk.Frame('Description')
         self.description_entry = gtk.TextView()
-        self.description_entry.set_wrap_mode(pango.WRAP_WORD)
+        self.description_entry.set_wrap_mode(gtk.WRAP_WORD)
         entry_buffer = self.description_entry.get_buffer()
         entry_buffer.set_text(self.transaction.description)
         frame.add(self.description_entry)
@@ -540,13 +544,13 @@ class EditTransaction(gtk.Dialog):
         vbox.pack_start(self.transfer_button)
 
         self.matching_transactions_tree = gui_utils.Tree()
-        model = gtk.ListStore(object, str, str, str)
+        model = gtk.ListStore(object, str, str, object)
         self.matching_transactions_tree.set_model(model)
         self.matching_transactions_tree.create_column(_('Account'), 1)
         col, cell = self.matching_transactions_tree.create_column(_('Description'), 2)
         cell.props.wrap_width = 200
         cell.props.wrap_mode = pango.WRAP_WORD
-        self.matching_transactions_tree.create_column(_('Date'), 3)
+        self.matching_transactions_tree.create_column(_('Date'), 3, func=gui_utils.date_to_string)
         vbox.pack_end(self.matching_transactions_tree)
         self.no_matches_label = gtk.Label('No matching transactions found. Continue only if you want to mark this as a tranfer anyway.')
         vbox.pack_end(self.no_matches_label)

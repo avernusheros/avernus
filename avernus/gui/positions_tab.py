@@ -37,7 +37,6 @@ def current_price_markup(column, cell, model, iter, user_data):
 class PositionContextMenu(ContextMenu):
     def __init__(self, actiongroup):
         ContextMenu.__init__(self)
-        
         for action in ['edit', 'chart', 'remove']:
             self.add(actiongroup.get_action(action).create_menu_item())
         
