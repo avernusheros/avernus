@@ -115,7 +115,7 @@ class TransactionsTree(gui_utils.Tree):
         self.dynamicWrapColumn = col
         self.dynamicWrapCell = cell
         cell.props.wrap_mode = gtk.WRAP_WORD
-        self.create_column(_('Amount'), self.AMOUNT, func=gui_utils.float_format)
+        self.create_column(_('Amount'), self.AMOUNT, func=gui_utils.currency_format)
         self.create_column(_('Category'), self.CATEGORY)
         self.set_rules_hint(True)
         self.get_selection().set_mode(gtk.SELECTION_MULTIPLE)

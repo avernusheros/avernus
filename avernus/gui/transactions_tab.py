@@ -34,10 +34,10 @@ class TransactionsTree(Tree):
         self.model.set_sort_func(3, gui_utils.sort_by_time, 3)
         self.create_column(_('Type'), 1)
         self.create_column(_('Name'), 2)
-        self.create_column(_('Shares'), 4, func=gui_utils.float_to_string)
-        self.create_column(_('Price'), 5, func=gui_utils.float_to_string)
-        self.create_column(_('Transaction Costs'), 6, func=gui_utils.float_to_string)
-        self.create_column(_('Total'), 7, func=gui_utils.float_to_red_green_string)
+        self.create_column(_('Shares'), 4, func=gui_utils.float_format)
+        self.create_column(_('Price'), 5, func=gui_utils.currency_format)
+        self.create_column(_('Transaction Costs'), 6, func=gui_utils.currency_format)
+        self.create_column(_('Total'), 7, func=gui_utils.float_to_red_green_string_currency)
         
         self.actiongroup = gtk.ActionGroup('portfolio_transactions')
         self.actiongroup.add_actions([

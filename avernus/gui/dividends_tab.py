@@ -2,9 +2,10 @@
 
 import gtk
 from datetime import datetime
-from avernus.gui.gui_utils import Tree, get_datetime_string, get_name_string,float_to_string
+from avernus.gui.gui_utils import Tree, get_datetime_string, get_name_string
 from avernus.gui.dialogs import PosSelector
 from avernus.objects import controller
+from avernus.gui import gui_utils
 
 
 class DividendsTab(gtk.VBox):
@@ -43,8 +44,8 @@ class DividendsTree(Tree):
         self.set_model(gtk.TreeStore(object, str, str, float, float))
         self.create_column(_('Position'), 1)
         self.create_column(_('Date'), 2)
-        self.create_column(_('Amount'), 3, func=float_to_string)
-        self.create_column(_('Transaction costs'), 4, func=float_to_string)
+        self.create_column(_('Amount'), 3, func=gui_utils.float_format)
+        self.create_column(_('Transaction costs'), 4, func=gui_utils.float_format)
         
     def on_cursor_changed(self, widget):
         obj, iterator = self.get_selected_item()

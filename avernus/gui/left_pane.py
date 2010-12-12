@@ -105,10 +105,10 @@ class MainTree(gui_utils.Tree):
         self.get_model().append(self.wl_iter, [item, 'watchlist', item.name, ''])
     
     def insert_account(self, item):
-        self.get_model().append(self.accounts_iter, [item, 'account', item.name, gui_utils.get_string_from_float(item.amount)])
+        self.get_model().append(self.accounts_iter, [item, 'account', item.name, gui_utils.get_currency_format_from_float(item.amount)])
     
     def insert_portfolio(self, item):
-        self.get_model().append(self.pf_iter, [item, 'portfolio', item.name, gui_utils.get_string_from_float(item.cvalue)])
+        self.get_model().append(self.pf_iter, [item, 'portfolio', item.name, gui_utils.get_currency_format_from_float(item.cvalue)])
 
     def insert_tag(self, item):
         self.get_model().append(self.tag_iter, [item, 'tag', item.name, ''])
@@ -132,7 +132,7 @@ class MainTree(gui_utils.Tree):
     def on_account_updated(self, account):
         row = self.find_item(account)
         if row:
-            self.find_item(account)[3] = account.amount 
+            self.find_item(account)[3] = gui_utils.get_currency_format_from_float(account.amount)
         
     def on_updated(self, item):
         obj, iter = self.selected_item
@@ -140,6 +140,8 @@ class MainTree(gui_utils.Tree):
         if row:
             #row[1] = item
             row[2] = item.name
+            row[3] = gui_utils.get_currency_format_from_float(item.amount)
+        
 
     def on_cursor_changed(self, widget):
         #Get the current selection in the gtk.TreeView

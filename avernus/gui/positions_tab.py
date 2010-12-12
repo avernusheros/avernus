@@ -4,7 +4,7 @@ import gtk,sys
 from avernus import pubsub
 from avernus.gui.plot import ChartWindow
 from avernus.gui.dialogs import SellDialog, NewWatchlistPositionDialog, SplitDialog, BuyDialog, EditPositionDialog
-from avernus.gui.gui_utils import Tree, ContextMenu, float_to_red_green_string, float_to_string, get_name_string, datetime_format
+from avernus.gui.gui_utils import Tree, ContextMenu, get_name_string, datetime_format
 from avernus.gui import gui_utils
 from avernus.objects.position import MetaPosition
 
@@ -23,14 +23,14 @@ def get_arrow_icon(perc):
 
 def start_price_markup(column, cell, model, iter, user_data):
     pos = model.get_value(iter, 0)
-    markup = gui_utils.get_string_from_float(model.get_value(iter, user_data)) +'\n' +'<small>'+gui_utils.get_datetime_string(pos.date)+'</small>'
+    markup = gui_utils.get_currency_format_from_float(model.get_value(iter, user_data)) +'\n' +'<small>'+gui_utils.get_datetime_string(pos.date)+'</small>'
     if isinstance(pos, MetaPosition):
         markup = unichr(8709) + " " + markup
     cell.set_property('markup', markup)
 
 def current_price_markup(column, cell, model, iter, user_data):
     stock = model.get_value(iter, 0).stock
-    markup = gui_utils.get_string_from_float(model.get_value(iter, user_data)) +'\n' +'<small>'+gui_utils.get_datetime_string(stock.date)+'</small>'
+    markup = gui_utils.get_currency_format_from_float(model.get_value(iter, user_data)) +'\n' +'<small>'+gui_utils.get_datetime_string(stock.date)+'</small>'
     cell.set_property('markup', markup)
 
 
@@ -91,19 +91,19 @@ class PositionsTree(Tree):
         self.create_column(_('Name'), self.COLS['name'])
         self.create_icon_column(_('Type'), self.COLS['type'],size= gtk.ICON_SIZE_DND)
         if not self.watchlist:
-            self.create_column(_('Pf %'), self.COLS['pf_percent'], func=float_to_string)
+            self.create_column(_('Pf %'), self.COLS['pf_percent'], func=gui_utils.float_format)
         self.create_column(_('Start'), self.COLS['start'], func=start_price_markup)
         if not self.watchlist:
-            self.create_column(_('Buy value'), self.COLS['buy_value'], func=float_to_string)
+            self.create_column(_('Buy value'), self.COLS['buy_value'], func=gui_utils.currency_format)
         self.create_column(_('Last price'), self.COLS['last_price'], func=current_price_markup)
-        self.create_column(_('Change'), self.COLS['change'], func=float_to_red_green_string)
-        self.create_column('%', self.COLS['change_percent'], func=float_to_red_green_string)
+        self.create_column(_('Change'), self.COLS['change'], func=gui_utils.float_to_red_green_string_currency)
+        self.create_column('%', self.COLS['change_percent'], func=gui_utils.float_to_red_green_string)
         if not self.watchlist:
-            self.create_column(_('Mkt value'), self.COLS['mkt_value'], float_to_string)
-        self.create_column(_('Gain'), self.COLS['gain'], float_to_red_green_string)
-        self.create_icon_text_column('%', self.COLS['gain_icon'], self.COLS['gain_percent'], func2=float_to_red_green_string)
+            self.create_column(_('Mkt value'), self.COLS['mkt_value'], gui_utils.currency_format)
+        self.create_column(_('Gain'), self.COLS['gain'], gui_utils.float_to_red_green_string_currency)
+        self.create_icon_text_column('%', self.COLS['gain_icon'], self.COLS['gain_percent'], func2=gui_utils.float_to_red_green_string)
         if not self.watchlist:
-            self.create_column(_('Today'), self.COLS['days_gain'], float_to_red_green_string)
+            self.create_column(_('Today'), self.COLS['days_gain'], gui_utils.float_to_red_green_string_currency)
         col, cell = self.create_column(_('Tags'), self.COLS['tags'])
         cell.set_property('editable', True)
         cell.connect('edited', self.on_tag_edited)
@@ -360,11 +360,11 @@ class InfoBar(gtk.HBox):
             self.overall_label.set_markup(text)
             
             if container.__name__ == 'Portfolio':
-                text = '<b>'+_('Investments')+'</b> :'+str(round(self.container.cvalue,2))
-                text += '\n<b>'+_('Cash')+'</b> :'+str(round(self.container.cash,2))
+                text = '<b>'+_('Investments')+'</b> :'+gui_utils.get_currency_format_from_float(container.cvalue)
+                text += '\n<b>'+_('Cash')+'</b> :'+gui_utils.get_currency_format_from_float(container.cash)
                 self.total_label.set_markup(text)
             else:
-                text = '<b>'+_('Total')+'</b>\n'+str(round(self.container.cvalue,2))
+                text = '<b>'+_('Total')+'</b>\n'+gui_utils.get_currency_format_from_float(container.cvalue)
                 self.total_label.set_markup(text)
             
             if container.__name__ == 'Portfolio' or container.__name__ == 'Watchlist':
@@ -375,7 +375,7 @@ class InfoBar(gtk.HBox):
         change, percent = item
         if change is None:
             return 'n/a'
-        text = gui_utils.get_string_from_float(percent) + '%' + ' | ' + gui_utils.get_string_from_float(change)
+        text = gui_utils.get_string_from_float(percent) + '%' + ' | ' + gui_utils.get_currency_format_from_float(change)
         if change < 0.0:
             text = '<span foreground="red">'+ text + '</span>'
         else:
