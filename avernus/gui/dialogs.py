@@ -70,12 +70,15 @@ class EditStockTable(gtk.Table):
         self.attach(self.isin_entry,1,2,1,2,yoptions=gtk.FILL)
 
         self.attach(gtk.Label(_('Type')),0,1,2,3, yoptions=gtk.FILL)
-        self.types = {'fund':0, 'stock':1}
-        self.type_cb = gtk.combo_box_new_text()
-        for key, val in self.types.items():
-            self.type_cb.append_text(key)
-        self.type_cb.set_active(self.stock.type)
-        self.attach(self.type_cb, 1,2,2,3,  yoptions=gtk.FILL)
+        liststore = gtk.ListStore(str, int)
+        for key, val in [('fund',0), ('stock',1), ('etf',2)]:
+            liststore.append([key, val])
+        self.type_cb = cb = gtk.ComboBox(liststore)
+        cell = gtk.CellRendererText()
+        cb.pack_start(cell, True)
+        cb.add_attribute(cell, 'text', 0)  
+        cb.set_active(self.stock.type)
+        self.attach(cb, 1,2,2,3,  yoptions=gtk.FILL)
 
         self.attach(gtk.Label(_('Sector')),0,1,3,4, yoptions=gtk.FILL)
         self.sector_cb = gtk.combo_box_new_text()
@@ -97,7 +100,7 @@ class EditStockTable(gtk.Table):
             self.stock.name = self.name_entry.get_text()
             self.stock.isin = self.isin_entry.get_text()
             active_iter = self.type_cb.get_active_iter()
-            self.stock.type = self.types[self.type_cb.get_model()[active_iter][0]]
+            self.stock.type = self.type_cb.get_model()[active_iter][1]
             if self.sector_cb.get_active() != 0:   
                 self.stock.sector = self.sectors[self.sector_cb.get_active()]
             else:
