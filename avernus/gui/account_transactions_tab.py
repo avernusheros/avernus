@@ -17,11 +17,11 @@ class AccountTransactionTab(gtk.VBox):
     def __init__(self, item):
         gtk.VBox.__init__(self)
         
-        search_entry = gtk.Entry()
-        self.pack_start(search_entry, expand=False, fill=False)
-        search_entry.set_icon_from_stock(1, gtk.STOCK_CLEAR)
-        search_entry.set_property('secondary-icon-tooltip-text', 'Clear search')
-        search_entry.connect('icon-press', lambda entry, icon_pos, event: search_entry.set_text(''))
+        self.search_entry = gtk.Entry()
+        self.pack_start(self.search_entry, expand=False, fill=False)
+        self.search_entry.set_icon_from_stock(1, gtk.STOCK_CLEAR)
+        self.search_entry.set_property('secondary-icon-tooltip-text', 'Clear search')
+        self.search_entry.connect('icon-press', self.on_clear_search)
         
         hpaned = gtk.HPaned()
         self.pack_start(hpaned)
@@ -30,7 +30,7 @@ class AccountTransactionTab(gtk.VBox):
         sw.set_property('hscrollbar-policy', gtk.POLICY_AUTOMATIC)
         sw.set_property('vscrollbar-policy', gtk.POLICY_AUTOMATIC)
         actiongroup = gtk.ActionGroup('transactions')
-        self.transactions_tree = TransactionsTree(item, actiongroup, search_entry)
+        self.transactions_tree = TransactionsTree(item, actiongroup, self.search_entry)
         actiongroup.add_actions([
                 ('add',    gtk.STOCK_ADD,    'new transaction',    None, _('Add new transaction'), self.transactions_tree.on_add),      
                 ('edit' ,  gtk.STOCK_EDIT,   'edit transaction',   None, _('Edit selected transaction'),   self.transactions_tree.on_edit),
@@ -75,6 +75,9 @@ class AccountTransactionTab(gtk.VBox):
         vbox.pack_start(toolbar, expand=False, fill=False)
         
         self.show_all()
+    
+    def on_clear_search(self, entry, icon_pos, event):
+        self.search_entry.set_text('')
     
     def show(self):
         self.transactions_tree.clear()
