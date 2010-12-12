@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import gtk, datetime
+import gtk, datetime, pango
 from avernus.gui import gui_utils
 import avernus.objects
 from avernus.objects import controller
@@ -114,7 +114,7 @@ class TransactionsTree(gui_utils.Tree):
         col, cell = self.create_column(_('Description'), self.DESCRIPTION, func=desc_markup)
         self.dynamicWrapColumn = col
         self.dynamicWrapCell = cell
-        cell.props.wrap_mode = gtk.WRAP_WORD
+        cell.props.wrap_mode = pango.WRAP_WORD
         self.create_column(_('Amount'), self.AMOUNT, func=gui_utils.currency_format)
         self.create_column(_('Category'), self.CATEGORY)
         self.set_rules_hint(True)
@@ -486,7 +486,7 @@ class EditTransaction(gtk.Dialog):
         #description 
         frame = gtk.Frame('Description')
         self.description_entry = gtk.TextView()
-        self.description_entry.set_wrap_mode(gtk.WRAP_WORD)
+        self.description_entry.set_wrap_mode(pango.WRAP_WORD)
         entry_buffer = self.description_entry.get_buffer()
         entry_buffer.set_text(self.transaction.description)
         frame.add(self.description_entry)
@@ -545,7 +545,7 @@ class EditTransaction(gtk.Dialog):
         self.matching_transactions_tree.create_column(_('Account'), 1)
         col, cell = self.matching_transactions_tree.create_column(_('Description'), 2)
         cell.props.wrap_width = 200
-        cell.props.wrap_mode = gtk.WRAP_WORD
+        cell.props.wrap_mode = pango.WRAP_WORD
         self.matching_transactions_tree.create_column(_('Date'), 3)
         vbox.pack_end(self.matching_transactions_tree)
         self.no_matches_label = gtk.Label('No matching transactions found. Continue only if you want to mark this as a tranfer anyway.')

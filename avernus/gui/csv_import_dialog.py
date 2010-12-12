@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import gtk, os
+import gtk, os, pango
 from avernus.gui import gui_utils
 from avernus import csvimporter, config
 from avernus.objects import controller
@@ -114,7 +114,7 @@ class PreviewTree(gui_utils.Tree):
         cell.set_property('foreground-set', True)
         self.dynamicWrapColumn = column
         self.dynamicWrapCell = cell
-        cell.props.wrap_mode = gtk.WRAP_WORD
+        cell.props.wrap_mode = pango.WRAP_WORD
         column, cell = self.create_column('amount', 2, func=gui_utils.currency_format)
         column.add_attribute(cell, 'foreground', 4)
         cell.set_property('foreground-set', True)

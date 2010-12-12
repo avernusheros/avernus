@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import gtk
+import gtk, pango
 from avernus import pubsub, config
 from datetime import datetime
 from avernus.objects import controller, stock
@@ -133,7 +133,7 @@ class EditPositionTable(gtk.Table):
         self.attach(gtk.Label(_('Comment')),0,1,3,4)
         self.comment_entry = gtk.TextView()
         self.comment_entry.set_size_request(50, 80)
-        self.comment_entry.set_wrap_mode(gtk.WRAP_WORD)
+        self.comment_entry.set_wrap_mode(pango.WRAP_WORD)
         buffer = self.comment_entry.get_buffer()
         buffer.set_text(self.pos.comment)
         self.attach(self.comment_entry, 1,2,3,4)
