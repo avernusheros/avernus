@@ -8,7 +8,7 @@ except:
 
 if __name__ == '__main__':
     import sys
-    sys.path.append('..') 
+    sys.path.append('..')
 
 import gtk,os #, gobject
 from avernus import pubsub, config
@@ -31,7 +31,7 @@ from avernus.objects import model
 class AboutDialog(gtk.AboutDialog):
     def __init__(self, *arg, **args):
         gtk.AboutDialog.__init__(self)
-        
+
         self.set_name(avernus.__appname__)
         self.set_version(avernus.__version__)
         self.set_copyright(avernus.__copyright__)
@@ -40,7 +40,7 @@ class AboutDialog(gtk.AboutDialog):
         self.set_authors(avernus.__authors__)
         self.set_website(avernus.__url__)
         self.set_logo_icon_name('avernus')
-        
+
         self.run()
         self.hide()
 
@@ -49,7 +49,7 @@ class MenuBar(gtk.MenuBar):
     def __init__(self, parent, actiongroup, accelgroup):
         self.actiongroup = actiongroup
         gtk.MenuBar.__init__(self)
-        
+
         # Create actions
         #item: name, stockid, label, accel, tooltip, callback
         actiongroup.add_actions(
@@ -67,15 +67,15 @@ class MenuBar(gtk.MenuBar):
              ('bug'           , None                 , 'Report a _Bug'      , None        , None, lambda x:web("https://bugs.launchpad.net/avernus")),
              ('about'         , gtk.STOCK_ABOUT      , '_About'             , None        , None, AboutDialog),
              ])
-        
+
         for action in actiongroup.list_actions():
             action.set_accel_group(accelgroup)
-            
-        file_menu_items  = ['import','---','quit']                  
+
+        file_menu_items  = ['import','---','quit']
         edit_menu_items = ['prefs']
         tools_menu_items = ['update']
         help_menu_items  = ['help', 'website', 'feature', 'bug', '---', 'about']
-        
+
         self._create_menu('avernus', file_menu_items)
         self._create_menu('Edit', edit_menu_items)
         self._create_menu('Tools', tools_menu_items)
@@ -92,14 +92,14 @@ class MenuBar(gtk.MenuBar):
                 menu.append(gtk.SeparatorMenuItem())
             else:
                 menu.append(self.actiongroup.get_action(item).create_menu_item())
-        
+
 
 class MainWindow(gtk.Window):
     def __init__(self):
         gtk.Window.__init__(self)
         self.config = config.avernusConfig()
         #self.set_title(__appname__)
-        
+
         #set min size
         screen = self.get_screen()
         monitor = screen.get_monitor_geometry(0)
@@ -107,9 +107,13 @@ class MainWindow(gtk.Window):
         height = int(monitor.height * 0.66)
         self.set_size_request(width, height)
 
+        #config entries are strings...
+        if self.config.get_option('maximize', section='Gui') == 'True':
+            self.maximize()
+
         vbox = gtk.VBox()
         self.add(vbox)
-        
+
         # Create an accelerator group
         accelgroup = gtk.AccelGroup()
         # Add the accelerator group to the toplevel window
@@ -119,24 +123,25 @@ class MainWindow(gtk.Window):
 
         self.main_menu = MenuBar(self, actiongroup, accelgroup)
         vbox.pack_start(self.main_menu, expand=False, fill=False)
-        
+
         hpaned = gtk.HPaned()
         hpaned.set_position(int(width*0.25))
         vbox.pack_start(hpaned)
-        
+
         hpaned.pack1(MainTreeBox())
-        
+
         self.notebook = gtk.Notebook()
         hpaned.pack2(self.notebook)
-        
+
         self.notebook.connect('switch-page', self.on_notebook_selection)
         self.connect("destroy", self.on_destroy)
         self.connect('size_allocate', self.on_size_allocate)
+        self.connect('window-state-event', self.on_window_state_event)
         pubsub.subscribe('maintree.select', self.on_maintree_select)
         pubsub.subscribe('maintree.unselect', self.on_maintree_unselect)
-        
+
         self.tabs = {}
-        self.tabs['Portfolio'] = [(PositionsTab, 'Positions'), 
+        self.tabs['Portfolio'] = [(PositionsTab, 'Positions'),
                                   (TransactionsTab, 'Transactions'),
                                   (DividendsTab, 'Dividends'),
                                   (chart_tab.ChartTab, 'Charts')]
@@ -145,35 +150,40 @@ class MainWindow(gtk.Window):
                                   (TransactionsTab, 'Transactions'),
                                   (chart_tab.ChartTab, 'Charts')]
         self.tabs['Index']     = [(IndexPositionsTab, 'Positions')]
-        self.tabs['Category']  = [(ContainerOverviewTab, 'Overview')]    
+        self.tabs['Category']  = [(ContainerOverviewTab, 'Overview')]
         self.tabs['Account']   = [(AccountTransactionTab, 'Transactions'),
                                   (AccountChartTab, 'Charts')]
 
         size = self.config.get_option('size', section='Gui')
         if size is not None:
             size = eval(size)
-            self.resize(size[0], size[1])        
+            self.resize(size[0], size[1])
         #display everything
         self.show_all()
-    
+
     def on_size_allocate(self, widget = None, data = None):
         self.width, self.height = self.get_size()
-        
+
+    def on_window_state_event(self, widget, event):
+        if event.new_window_state == gtk.gdk.WINDOW_STATE_MAXIMIZED:
+            self.config.set_option('maximize', True, section='Gui')
+        else:
+            self.config.set_option('maximize', False, section='Gui')
+
     def on_destroy(self, widget, data=None):
         """on_destroy - called when the avernusWindow is closed. """
-        #clean up code for saving application state should be added here
         #save db on quit
         model.store.close()
         gtk.main_quit()
-    
+
     def clear_notebook(self):
         for child in self.notebook.get_children():
             self.notebook.remove_page(-1)
             child.destroy()
-    
+
     def on_notebook_selection(self, notebook, page, page_num):
         notebook.get_nth_page(page_num).show()
-            
+
     def on_maintree_select(self, item):
         self.clear_notebook()
         for tab, name in self.tabs[item.__name__]:
