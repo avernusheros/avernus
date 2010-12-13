@@ -14,21 +14,21 @@ class Account(SQLiteEntity):
                    'type': 'INTEGER',
                    'amount': 'FLOAT',
                   }
-                  
+
     def on_delete(self, **kwargs):
         self.controller.deleteAllAccountTransaction(self)
-                  
+
     def on_update(self, **kwargs):
-        pubsub.publish('account.updated', self)    
-                  
+        pubsub.publish('account.updated', self)
+
     __callbacks__ = {
                      'onDelete':on_delete,
                      'onUpdate':on_update,
                     }
-                  
+
     def __iter__(self):
         return self.controller.getTransactionsForAccount(self).__iter__()
-    
+
     def has_transaction(self, transaction):
         return self.controller.check_duplicate(AccountTransaction, account=self.id, **transaction)
 
@@ -46,7 +46,7 @@ class Account(SQLiteEntity):
                     fivedays = datetime.timedelta(5)
                     if transaction.date-fivedays < trans.date and transaction.date+fivedays > trans.date:
                         yield trans
-            
+
     def get_transactions_in_period(self, start_date, end_date, transfers=False):
         res = []
         for trans in self:
@@ -57,15 +57,15 @@ class Account(SQLiteEntity):
     def yield_earnings_in_period(self, start_date, end_date, transfers=False):
         for trans in self:
             if transfers or trans.transfer is None:
-                if trans.date >= start_date and trans.date <= end_date and trans.amount >= 0.0: 
+                if trans.date >= start_date and trans.date <= end_date and trans.amount >= 0.0:
                     yield trans
-        
+
     def yield_spendings_in_period(self, start_date, end_date, transfers=False):
         for trans in self:
             if transfers or trans.transfer is None:
                 if trans.date >= start_date and trans.date <= end_date and trans.amount < 0.0:
                     yield trans
-    
+
     def get_balance_over_time(self, start_date):
         today = datetime.date.today()
         one_day = datetime.timedelta(days=1)
@@ -73,7 +73,7 @@ class Account(SQLiteEntity):
         res = [(today, amount)]
         for change, date in self.controller.getAccountChangeInPeriodPerDay(self, start_date, today):
             #print date, change
-            res.append((date, amount)) 
+            res.append((date, amount))
             amount -= change
         res.reverse()
         return res
@@ -87,7 +87,7 @@ class Account(SQLiteEntity):
         hierarchy = self.controller.getAllAccountCategoriesHierarchical()
         cats = {}
         sums = {}
-        
+
         def get_child_categories(parent):
             if parent in hierarchy:
                 res = []
@@ -96,12 +96,12 @@ class Account(SQLiteEntity):
                     res += get_child_categories(cat)
                 return res
             return []
-        
+
         if parent_category in hierarchy:
             for cat in hierarchy[parent_category]:
                 cats[cat] = [cat] + get_child_categories(cat)
                 sums[cat] = 0.0
-        
+
         cats['None'] = [parent_category]
         sums['None'] = 0.0
 
@@ -115,7 +115,7 @@ class Account(SQLiteEntity):
 
     def get_earnings_summed(self, end_date, start_date, period='month', transfers=False):
         return self._get_earnings_or_spendings_summed(start_date, end_date, period, earnings=True)
-    
+
     def get_spendings_summed(self, end_date, start_date, period='month', transfers=False):
         return self._get_earnings_or_spendings_summed(start_date, end_date, period, earnings=False, transfers=False)
 
@@ -135,17 +135,13 @@ class Account(SQLiteEntity):
             start_date += delta
         return ret
 
+    @property
     def birthday(self):
-        if not 'birthday_cache' in dir(self):
-            self.birthday_cache = None
-        if self.birthday_cache:
-            return self.birthday_cache
-        else:
-            birthday = datetime.date.today()
-            for t in self:
-                birthday = min(t.date, birthday)
-            self.birthday_cache = birthday
-            return birthday
+        return min(t.date for t in self)
+
+    @property
+    def lastday(self):
+        return max(t.date for t in self)
 
 
 class AccountCategory(SQLiteEntity):
@@ -167,7 +163,7 @@ class AccountCategory(SQLiteEntity):
             self.parentid = parent.id
         else:
             self.parentid = -1
-    
+
     parent = property(get_parent, set_parent)
 
     def is_parent(self, category):
@@ -207,8 +203,8 @@ class AccountTransaction(SQLiteEntity):
             self.transferid = transaction.id
         else:
             self.transferid = -1
-    
+
     def is_transfer(self):
         return (self.transfer is not None)
-    
+
     transfer = property(get_transfer, set_transfer)

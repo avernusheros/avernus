@@ -2,12 +2,13 @@
 
 import gtk
 from avernus import pubsub
-from avernus.gui.gui_utils import Tree, float_to_red_green_string, get_price_string, get_name_string, ContextMenu   
+from avernus.gui.gui_utils import Tree, float_to_red_green_string, get_price_string, get_name_string, ContextMenu
 from avernus.objects import controller
+from avernus.gui import gui_utils
 
 
 class ContainerOverviewTab(gtk.VBox):
-    
+
     def __init__(self, item):
         gtk.VBox.__init__(self)
         if item.name == 'Accounts':
@@ -18,53 +19,57 @@ class ContainerOverviewTab(gtk.VBox):
         sw.set_property('hscrollbar-policy', gtk.POLICY_AUTOMATIC)
         sw.set_property('vscrollbar-policy', gtk.POLICY_AUTOMATIC)
         sw.add(tree)
-        
+
         self.pack_start(sw)
         self.show_all()
-        
+
 
 class AccountOverviewTree(Tree):
-    
+
     def __init__(self):
         Tree.__init__(self)
         self.set_rules_hint(True)
-        self.model = gtk.ListStore(object, str, float, int)
+        self.model = gtk.ListStore(object, str, float, int, object, object)
         self.set_model(self.model)
         self.create_column(_('Name'), 1)
         self.create_column(_('Amount'), 2)
         self.create_column(_('# Transactions'), 3)
+        self.create_column(_('First transaction'), 4, func = gui_utils.date_to_string)
+        self.create_column(_('Last transaction'), 5, func = gui_utils.date_to_string)
         self._load_accounts()
-    
+
     def _load_accounts(self):
         for acc in controller.getAllAccount():
-            self.model.append([acc, 
-                               acc.name,  
-                               acc.amount, 
-                               acc.transaction_count])
-        
+            self.model.append([acc,
+                               acc.name,
+                               acc.amount,
+                               acc.transaction_count,
+                               acc.birthday,
+                               acc.lastday])
+
 
 class ContainerOverviewTree(Tree):
-    
+
     def __init__(self, container):
         self.container = container
-        
+
         Tree.__init__(self)
         self.cols = {'obj':0,
-                     'name':1, 
-                     'last_price':2, 
-                     'change':3, 
+                     'name':1,
+                     'last_price':2,
+                     'change':3,
                      'change_percent':4,
                       }
-        
+
         self.set_model(gtk.ListStore(object,str, str,float, float))
-        
+
         self.create_column(_('Name'), self.cols['name'])
         self.create_column(_('Last price'), self.cols['last_price'])
         col, cell = self.create_column(_('Change'), self.cols['change'])
         col.set_cell_data_func(cell, float_to_red_green_string, self.cols['change'])
         col, cell = self.create_column(_('Change %'), self.cols['change_percent'])
         col.set_cell_data_func(cell, float_to_red_green_string, self.cols['change_percent'])
-        
+
         def sort_price(model, iter1, iter2):
             item1 = model.get_value(iter1, self.cols['obj'])
             item2 = model.get_value(iter2, self.cols['obj'])
@@ -74,7 +79,7 @@ class ContainerOverviewTree(Tree):
 
         self.get_model().set_sort_func(self.cols['last_price'], sort_price)
 
-        self.set_rules_hint(True)    
+        self.set_rules_hint(True)
         self.load_items()
         self.connect("destroy", self.on_destroy)
         self.connect("row-activated", self.on_row_activated)
@@ -84,7 +89,7 @@ class ContainerOverviewTree(Tree):
         )
         for topic, callback in self.subscriptions:
             pubsub.subscribe(topic, callback)
-            
+
         self.selected_item = None
 
     def on_update(self):
@@ -118,10 +123,10 @@ class ContainerOverviewTree(Tree):
                 row[self.cols['last_price']] = get_price_string(item)
                 row[self.cols['change']] = item.change
                 row[self.cols['change_percent']] = item.percent
-        
+
     def insert_item(self, item):
-        self.get_model().append([item, 
-                               item.name,  
-                               get_price_string(item), 
+        self.get_model().append([item,
+                               item.name,
+                               get_price_string(item),
                                item.change,
                                item.percent])
