@@ -1,7 +1,7 @@
 from avernus.objects.model import SQLiteEntity
 from avernus import pubsub
-import datetime
-from dateutil.relativedelta import relativedelta
+import datetime, calendar
+from dateutil.rrule import *
 
 
 class Account(SQLiteEntity):
@@ -120,19 +120,19 @@ class Account(SQLiteEntity):
         return self._get_earnings_or_spendings_summed(start_date, end_date, period, earnings=False, transfers=False)
 
     def _get_earnings_or_spendings_summed(self, start_date, end_date, period='month', earnings=True, transfers=False):
-        if period == 'month':
-            delta = relativedelta(months=+1)
+        if period == 'month': 
+            #last day of month
+            days = list(rrule(MONTHLY, dtstart = start_date, until = end_date, bymonthday=-1))
         elif period == 'year':
-            delta = relativedelta(years=+1)
+            days = list(rrule(YEARLY, dtstart = start_date, until = end_date, bymonthday=-1, bymonth=12))
         elif period == 'day':
-            delta = relativedelta(days=+1)
+            days = list(rrule(DAILY, dtstart = start_date, until = end_date))
         elif period == 'week':
-            delta = relativedelta(weeks=+1)
+            days = list(rrule(WEEKLY, dtstart = start_date, until = end_date, byweekday=SU))
         ret = []
-        while start_date < end_date:
-            temp = start_date+delta
-            ret.append(self.controller.getEarningsOrSpendingsSummedInPeriod(self, start_date, temp, earnings=earnings, transfers=transfers))
-            start_date += delta
+        for day in days+[end_date]:
+            ret.append(self.controller.getEarningsOrSpendingsSummedInPeriod(self, start_date, day, earnings=earnings, transfers=transfers))
+            start_date = day
         return ret
 
     @property

@@ -108,15 +108,15 @@ class AccountChartTab(gtk.ScrolledWindow):
             self.zoom = zoom
             self._calc_start_date()
             for chart in self.charts:
-                chart.on_zoom_change(self.start_date, self.end_date)
+                chart.on_zoom_change(self.start_date)
             self.show_all()
 
     def on_step_change(self, cb):
         step = self.steps[cb.get_active()]
         if step != self.current_step:
             self.current_step = step
-            #ugly
-            self.charts[0].on_step_change(step)
+            for chart in self.charts:
+                chart.on_step_change(step)
             self.show_all()
 
     def _calc_start_date(self):
@@ -132,12 +132,13 @@ class AccountChartTab(gtk.ScrolledWindow):
 
 class Chart(object):
 
-    def on_zoom_change(self, start_date, end_date):
+    def on_zoom_change(self, start_date):
         self.start_date = start_date
-        self.end_date = end_date
         self.remove(self.chart)
         self._draw_chart()
 
+    def on_step_change(self, step):
+        pass
 
 class BalanceChart(gtk.VBox, Chart):
 
@@ -222,7 +223,7 @@ class EarningsVsSpendingsChart(gtk.VBox, Chart):
                                 data=[[earnings[i], spendings[i]] for i in range(len(earnings))],
                                 width=600,
                                 height=300,
-                                series_labels = ['earnings', 'spendings'],
+                                #series_labels = ['earnings', 'spendings'],
                                 x_labels=legend,
                                 y_labels=['0', str(max(max(earnings),max(spendings)))],
                                 #display_values=True,
