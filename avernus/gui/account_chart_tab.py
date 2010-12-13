@@ -5,8 +5,8 @@ import gtk
 from avernus.objects import controller
 import datetime
 from avernus import date_utils
+from avernus.gui import gui_utils
 from dateutil.relativedelta import relativedelta
-
 
 no_data_string = _('\nNo Data!\nAdd transactions first.\n\n')
 MONTHS = {
@@ -160,6 +160,7 @@ class BalanceChart(gtk.VBox, Chart):
                                 width=600,
                                 height=300,
                                 x_labels=legend,
+                                y_formatter=gui_utils.get_currency_format_from_float,
                                 y_title='Amount',
                                 background="white light_gray",
                                 grid=True,
@@ -213,6 +214,7 @@ class EarningsVsSpendingsChart(gtk.VBox, Chart):
                                 height=300,
                                 x_labels=legend,
                                 y_title='Amount',
+                                y_formatter=gui_utils.get_currency_format_from_float,
                                 background="white light_gray",
                                 grid=True,
                                 dots=2,

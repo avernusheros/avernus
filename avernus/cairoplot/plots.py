@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# -*- Mode: Python; coding: utf-8; indent-tabs-mode: nil; tab-width: 4 -*-
+# -*- coding: utf-8 -*-
 
 # CairoPlot.py
 #
@@ -34,9 +34,9 @@ __version__ = 1.1
 import cairo
 import math
 import random
-from avernus.cairoplot.series import Series, Group, Data
-from avernus.cairoplot import handlers
+from series import Series, Group, Data
 
+import handlers
 HORZ = 0
 VERT = 1
 NORM = 2
@@ -292,6 +292,8 @@ class ScatterPlot( Plot ):
                  series_legend = False,
                  x_labels = None,
                  y_labels = None,
+                 x_formatter = None,
+                 y_formatter = None,
                  x_bounds = None,
                  y_bounds = None,
                  z_bounds = None,
@@ -307,6 +309,9 @@ class ScatterPlot( Plot ):
         self.titles = {}
         self.titles[HORZ] = x_title
         self.titles[VERT] = y_title
+        self.label_formatters = {}
+        self.label_formatters[HORZ] = x_formatter
+        self.label_formatters[VERT] = y_formatter
         self.max_value = {}
         self.axis = axis
         self.discrete = discrete
@@ -400,18 +405,16 @@ class ScatterPlot( Plot ):
             self.errors[VERT] = [errory]
 
     def calc_labels(self):
-        if not self.labels[HORZ]:
-            amplitude = self.bounds[HORZ][1] - self.bounds[HORZ][0]
-            if amplitude % 10: #if horizontal labels need floating points
-                self.labels[HORZ] = ["%.2lf" % (float(self.bounds[HORZ][0] + (amplitude * i / 10.0))) for i in range(11) ]
-            else:
-                self.labels[HORZ] = ["%d" % (int(self.bounds[HORZ][0] + (amplitude * i / 10.0))) for i in range(11) ]
-        if not self.labels[VERT]:
-            amplitude = self.bounds[VERT][1] - self.bounds[VERT][0]
-            if amplitude % 10: #if vertical labels need floating points
-                self.labels[VERT] = ["%.2lf" % (float(self.bounds[VERT][0] + (amplitude * i / 10.0))) for i in range(11) ]
-            else:
-                self.labels[VERT] = ["%d" % (int(self.bounds[VERT][0] + (amplitude * i / 10.0))) for i in range(11) ]
+        for key in (HORZ, VERT):
+            if not self.labels[key]:
+                amplitude = self.bounds[key][1] - self.bounds[key][0]
+                labels = (self.bounds[key][0] + (amplitude * i / 10.0) for i in range(11))
+                if self.label_formatters[key]:
+                    self.labels[key] = [self.label_formatters[key](label) for label in labels]
+                elif amplitude % 10: #if horizontal labels need floating points
+                    self.labels[key] = ["%.2lf" % float(label) for label in labels]
+                else:
+                    self.labels[key] = ["%d" % int(label) for label in labels]
 
     def calc_extents(self, direction):
         self.context.set_font_size(self.font_size * 0.8)
@@ -520,7 +523,7 @@ class ScatterPlot( Plot ):
             cr.rotate( math.pi/2 )
             cr.show_text( self.titles[VERT] )
             cr.restore()
-        
+
     def render_grid(self):
         cr = self.context
         horizontal_step = float( self.plot_height ) / ( len( self.labels[VERT] ) - 1 )
@@ -552,7 +555,7 @@ class ScatterPlot( Plot ):
         step = float( self.plot_width ) / ( len( self.labels[HORZ] ) - 1 )
         x = self.borders[HORZ]
         y = self.dimensions[VERT] - self.borders[VERT] + 5
-        
+
         # store rotation matrix from the initial state
         rotation_matrix = cr.get_matrix()
         rotation_matrix.rotate(self.x_label_angle)
@@ -746,6 +749,8 @@ class DotLinePlot(ScatterPlot):
                  series_legend = False,
                  x_labels = None,
                  y_labels = None,
+                 x_formatter = None,
+                 y_formatter = None,
                  x_bounds = None,
                  y_bounds = None,
                  x_title  = None,
@@ -754,6 +759,7 @@ class DotLinePlot(ScatterPlot):
 
         ScatterPlot.__init__(self, surface, data, None, None, width, height, background, border,
                              axis, dash, False, dots, grid, series_legend, x_labels, y_labels,
+                             x_formatter, y_formatter,
                              x_bounds, y_bounds, None, x_title, y_title, series_colors, None )
 
 
@@ -801,6 +807,7 @@ class FunctionPlot(ScatterPlot):
 
         ScatterPlot.__init__(self, surface, data, None, None, width, height, background, border,
                              axis, False, discrete, dots, grid, series_legend, x_labels, y_labels,
+                             None, None,
                              x_bounds, y_bounds, None, x_title, y_title, series_colors, None )
 
     def load_series(self, data, x_labels = None, y_labels = None, series_colors=None):
@@ -827,44 +834,37 @@ class FunctionPlot(ScatterPlot):
         if isinstance(function, Group) or isinstance(function, Data):
             function = Series(function)
 
-        # is already a Series
-        # overwrite any bounds passed by the function
+        # If is instance of Series
         if isinstance(function, Series):
+            # Overwrite any bounds passed by the function
             x_bounds = (function.range[0],function.range[-1])
 
-        # no bounds are provided
+        #if no bounds are provided
         if x_bounds == None:
             x_bounds = (0,10)
 
-        # convert a single function into a "group"
-        def convert_function(singlefunction, group):
-            """Converts function into usable data.
-
-            Math bounds errors correspond to nan values."""
-
-            def trygetpoint(inx):
-                """Attempt to evaluate point, returns nan on errors"""
-                try:
-                    return singlefunction(inx)
-                except (ValueError, ZeroDivisionError, OverflowError):
-                    return float("nan")
-
-            i = x_bounds[0]
-            while i <= x_bounds[1]:
-                group.add_data(trygetpoint(i))
-                i += self.step
 
         # TODO: Finish the dict translation
         if hasattr(function, "keys"): #dictionary:
             for key in function.keys():
                 group = Group(name=key)
-                convert_function(function[key], group)
+                #data[ key ] = []
+                i = x_bounds[0]
+                while i <= x_bounds[1] :
+                    group.add_data(function[ key ](i))
+                    #data[ key ].append( function[ key ](i) )
+                    i += self.step
                 series.add_group(group)
 
         elif hasattr(function, "__delitem__"): #list of functions
-            for f in function:
+            for index,f in enumerate( function ) :
                 group = Group()
-                convert_function(f, group)
+                #data.append( [] )
+                i = x_bounds[0]
+                while i <= x_bounds[1] :
+                    group.add_data(f(i))
+                    #data[ index ].append( f(i) )
+                    i += self.step
                 series.add_group(group)
 
         elif isinstance(function, Series): # instance of Series
@@ -872,36 +872,23 @@ class FunctionPlot(ScatterPlot):
 
         else: # function
             group = Group()
-            convert_function(function, group)
+            i = x_bounds[0]
+            while i <= x_bounds[1] :
+                group.add_data(function(i))
+                i += self.step
             series.add_group(group)
+
 
         return series, x_bounds
 
 
     def calc_labels(self):
-        """Create labels from bounds"""
-
-        boundrange = float(self.bounds[HORZ][1] - self.bounds[HORZ][0])
-
-        # based on range, change number of decimals displayed
-        digits = 0
-        if 0 < boundrange < 10:
-            digits = -math.floor(math.log10(boundrange))
-            digits += 1
-        labelformat = "%%.%df" % digits
-
-        # make 10 labels (must be > 0)
-        boundstep = boundrange / 10
-        if boundstep <= 0:
-            boundstep = 1
-
-        # create string for each label
         if not self.labels[HORZ]:
             self.labels[HORZ] = []
             i = self.bounds[HORZ][0]
             while i<=self.bounds[HORZ][1]:
-                self.labels[HORZ].append(labelformat % i)
-                i += boundstep
+                self.labels[HORZ].append(str(i))
+                i += float(self.bounds[HORZ][1] - self.bounds[HORZ][0])/10
         ScatterPlot.calc_labels(self)
 
 
@@ -1343,12 +1330,14 @@ class VerticalBarPlot(BarPlot):
                  y_labels = None,
                  x_bounds = None,
                  y_bounds = None,
-                 series_colors = None):
+                 series_colors = None,
+                 value_formatter = None):
 
         BarPlot.__init__(self, surface, data, width, height, background, border,
                          display_values, grid, rounded_corners, stack, three_dimension,
                          x_labels, y_labels, x_bounds, y_bounds, series_colors, VERT)
         self.series_labels = series_labels
+        self.value_formatter = value_formatter or str
 
     def calc_vert_extents(self):
         self.calc_extents(VERT)
@@ -1446,19 +1435,21 @@ class VerticalBarPlot(BarPlot):
         if self.stack:
             for i,group in enumerate(self.series):
                 value = sum(group.to_list())
-                width = self.context.text_extents(str(value))[2]
+                strvalue = self.value_formatter(value)
+                width = self.context.text_extents(strvalue)[2]
                 x = self.borders[HORZ] + (i+0.5)*self.steps[HORZ] + (i+1)*self.space - width/2
                 y = value*self.steps[VERT] + 2
                 self.context.move_to(x, self.plot_top-y)
-                self.context.show_text(str(value))
+                self.context.show_text(strvalue)
         else:
             for i,group in enumerate(self.series):
                 inner_step = self.steps[HORZ]/len(group)
                 x0 = self.borders[HORZ] + i*self.steps[HORZ] + (i+1)*self.space
                 for number,data in enumerate(group):
-                    width = self.context.text_extents(str(data.content))[2]
+                    strvalue = self.value_formatter(data.content)
+                    width = self.context.text_extents(strvalue)[2]
                     self.context.move_to(x0 + 0.5*inner_step - width/2, self.plot_top - data.content*self.steps[VERT] - 2)
-                    self.context.show_text(str(data.content))
+                    self.context.show_text(strvalue)
                     x0 += inner_step
 
     def render_plot(self):
@@ -2020,187 +2011,7 @@ class GanttChart (Plot) :
                                       self.borders[VERT] + index*self.vertical_step + 3.0*self.vertical_step/4.0,
                                       self.series_colors[index])
 
-# Function definition
 
-def scatter_plot(name,
-                 data   = None,
-                 errorx = None,
-                 errory = None,
-                 width  = 640,
-                 height = 480,
-                 background = "white light_gray",
-                 border = 0,
-                 axis = False,
-                 dash = False,
-                 discrete = False,
-                 dots = False,
-                 grid = False,
-                 series_legend = False,
-                 x_labels = None,
-                 y_labels = None,
-                 x_bounds = None,
-                 y_bounds = None,
-                 z_bounds = None,
-                 x_title  = None,
-                 y_title  = None,
-                 series_colors = None,
-                 circle_colors = None):
-
-    """
-        - Function to plot scatter data.
-
-        - Parameters
-
-        data - The values to be ploted might be passed in a two basic:
-               list of points:       [(0,0), (0,1), (0,2)] or [(0,0,1), (0,1,4), (0,2,1)]
-               lists of coordinates: [ [0,0,0] , [0,1,2] ] or [ [0,0,0] , [0,1,2] , [1,4,1] ]
-               Notice that these kinds of that can be grouped in order to form more complex data
-               using lists of lists or dictionaries;
-        series_colors - Define color values for each of the series
-        circle_colors - Define a lower and an upper bound for the circle colors for variable radius
-                        (3 dimensions) series
-    """
-
-    plot = ScatterPlot( name, data, errorx, errory, width, height, background, border,
-                        axis, dash, discrete, dots, grid, series_legend, x_labels, y_labels,
-                        x_bounds, y_bounds, z_bounds, x_title, y_title, series_colors, circle_colors )
-    plot.render()
-    plot.commit()
-
-def dot_line_plot(name,
-                  data,
-                  width,
-                  height,
-                  background = "white light_gray",
-                  border = 0,
-                  axis = False,
-                  dash = False,
-                  dots = False,
-                  grid = False,
-                  series_legend = False,
-                  x_labels = None,
-                  y_labels = None,
-                  x_bounds = None,
-                  y_bounds = None,
-                  x_title  = None,
-                  y_title  = None,
-                  series_colors = None):
-    """
-        - Function to plot graphics using dots and lines.
-
-        dot_line_plot (name, data, width, height, background = "white light_gray", border = 0, axis = False, grid = False, x_labels = None, y_labels = None, x_bounds = None, y_bounds = None)
-
-        - Parameters
-
-        name - Name of the desired output file, no need to input the .svg as it will be added at runtim;
-        data - The list, list of lists or dictionary holding the data to be plotted;
-        width, height - Dimensions of the output image;
-        background - A 3 element tuple representing the rgb color expected for the background or a new cairo linear gradient.
-                     If left None, a gray to white gradient will be generated;
-        border - Distance in pixels of a square border into which the graphics will be drawn;
-        axis - Whether or not the axis are to be drawn;
-        dash - Boolean or a list or a dictionary of booleans indicating whether or not the associated series should be drawn in dashed mode;
-        dots - Whether or not dots should be drawn on each point;
-        grid - Whether or not the gris is to be drawn;
-        series_legend - Whether or not the legend is to be drawn;
-        x_labels, y_labels - lists of strings containing the horizontal and vertical labels for the axis;
-        x_bounds, y_bounds - tuples containing the lower and upper value bounds for the data to be plotted;
-        x_title - Whether or not to plot a title over the x axis.
-        y_title - Whether or not to plot a title over the y axis.
-
-        - Examples of use
-
-        data = [0, 1, 3, 8, 9, 0, 10, 10, 2, 1]
-        CairoPlot.dot_line_plot('teste', data, 400, 300)
-
-        data = { "john" : [10, 10, 10, 10, 30], "mary" : [0, 0, 3, 5, 15], "philip" : [13, 32, 11, 25, 2] }
-        x_labels = ["jan/2008", "feb/2008", "mar/2008", "apr/2008", "may/2008" ]
-        CairoPlot.dot_line_plot( 'test', data, 400, 300, axis = True, grid = True,
-                                  series_legend = True, x_labels = x_labels )
-    """
-    plot = DotLinePlot( name, data, width, height, background, border,
-                        axis, dash, dots, grid, series_legend, x_labels, y_labels,
-                        x_bounds, y_bounds, x_title, y_title, series_colors )
-    plot.render()
-    plot.commit()
-
-def function_plot(name,
-                  data,
-                  width,
-                  height,
-                  background = "white light_gray",
-                  border = 0,
-                  axis = True,
-                  dots = False,
-                  discrete = False,
-                  grid = False,
-                  series_legend = False,
-                  x_labels = None,
-                  y_labels = None,
-                  x_bounds = None,
-                  y_bounds = None,
-                  x_title  = None,
-                  y_title  = None,
-                  series_colors = None,
-                  step = 1):
-
-    """
-        - Function to plot functions.
-
-        function_plot(name, data, width, height, background = "white light_gray", border = 0, axis = True, grid = False, dots = False, x_labels = None, y_labels = None, x_bounds = None, y_bounds = None, step = 1, discrete = False)
-
-        - Parameters
-
-        name - Name of the desired output file, no need to input the .svg as it will be added at runtim;
-        data - The list, list of lists or dictionary holding the data to be plotted;
-        width, height - Dimensions of the output image;
-        background - A 3 element tuple representing the rgb color expected for the background or a new cairo linear gradient.
-                     If left None, a gray to white gradient will be generated;
-        border - Distance in pixels of a square border into which the graphics will be drawn;
-        axis - Whether or not the axis are to be drawn;
-        grid - Whether or not the gris is to be drawn;
-        dots - Whether or not dots should be shown at each point;
-        x_labels, y_labels - lists of strings containing the horizontal and vertical labels for the axis;
-        x_bounds, y_bounds - tuples containing the lower and upper value bounds for the data to be plotted;
-        step - the horizontal distance from one point to the other. The smaller, the smoother the curve will be;
-        discrete - whether or not the function should be plotted in discrete format.
-
-        - Example of use
-
-        data = lambda x : x**2
-        CairoPlot.function_plot('function4', data, 400, 300, grid = True, x_bounds=(-10,10), step = 0.1)
-    """
-
-    plot = FunctionPlot( name, data, width, height, background, border,
-                         axis, discrete, dots, grid, series_legend, x_labels, y_labels,
-                         x_bounds, y_bounds, x_title, y_title, series_colors, step )
-    plot.render()
-    plot.commit()
-
-def pie_plot( name, data, width, height, background = "white light_gray", gradient = False, shadow = False, colors = None ):
-
-    """
-        - Function to plot pie graphics.
-
-        pie_plot(name, data, width, height, background = "white light_gray", gradient = False, colors = None)
-
-        - Parameters
-
-        name - Name of the desired output file, no need to input the .svg as it will be added at runtim;
-        data - The list, list of lists or dictionary holding the data to be plotted;
-        width, height - Dimensions of the output image;
-        background - A 3 element tuple representing the rgb color expected for the background or a new cairo linear gradient.
-                     If left None, a gray to white gradient will be generated;
-        gradient - Whether or not the pie color will be painted with a gradient;
-        shadow - Whether or not there will be a shadow behind the pie;
-        colors - List of slices colors.
-
-        - Example of use
-
-        teste_data = {"john" : 123, "mary" : 489, "philip" : 890 , "suzy" : 235}
-        CairoPlot.pie_plot("pie_teste", teste_data, 500, 500)
-    """
-
-    plot = PiePlot( name, data, width, height, background, gradient, shadow, colors )
-    plot.render()
-    plot.commit()
+if __name__ == "__main__":
+    import tests
+    import seriestests

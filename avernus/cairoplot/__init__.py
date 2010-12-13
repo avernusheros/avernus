@@ -1,4 +1,4 @@
-﻿from avernus.cairoplot import plots
+﻿import plots
 
 
 HORZ = 0
@@ -23,6 +23,8 @@ def scatter_plot(name,
                  series_legend = False,
                  x_labels = None,
                  y_labels = None,
+                 x_formatter = None,
+                 y_formatter = None,
                  x_bounds = None,
                  y_bounds = None,
                  z_bounds = None,
@@ -48,6 +50,7 @@ def scatter_plot(name,
 
     plot = plots.ScatterPlot( name, data, errorx, errory, width, height, background, border,
                         axis, dash, discrete, dots, grid, series_legend, x_labels, y_labels,
+                        x_formatter, y_formatter,
                         x_bounds, y_bounds, z_bounds, x_title, y_title, series_colors, circle_colors )
     plot.render()
     plot.commit()
@@ -63,6 +66,8 @@ def dot_line_plot(name,
                   dots = False,
                   grid = False,
                   series_legend = False,
+                  x_formatter = None,
+                  y_formatter = None,
                   x_labels = None,
                   y_labels = None,
                   x_bounds = None,
@@ -105,6 +110,7 @@ def dot_line_plot(name,
     """
     plot = plots.DotLinePlot( name, data, width, height, background, border,
                         axis, dash, dots, grid, series_legend, x_labels, y_labels,
+                        x_formatter, y_formatter,
                         x_bounds, y_bounds, x_title, y_title, series_colors )
     plot.render()
     plot.commit()
