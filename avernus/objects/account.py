@@ -154,6 +154,8 @@ class AccountCategory(SQLiteEntity):
                   }
 
     def __cmp__(self, other):
+        if other is None:
+            return 1
         if self.name < other.name:
             return -1
         return 1

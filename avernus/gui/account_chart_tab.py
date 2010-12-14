@@ -270,13 +270,13 @@ class CategoryPie(gtk.VBox, Chart):
                           self.end_date, self.category, self.b_earnings)
         data = {}
         for cat, amount in sums.items():
-            if cat == 'None':
+            if type(cat) == str:
                 name = cat
             else:
                 name = cat.name
             if amount != 0:
                 data[name] = amount
-                if cat != 'None':
+                if type(cat) != str:
                     self.liststore.append([cat, name])
         plot = cairoplot.plots.PiePlot('gtk',
                                 data=data,
