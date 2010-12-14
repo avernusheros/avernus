@@ -153,7 +153,7 @@ class BalanceChart(gtk.VBox, Chart):
         balance = self.account.get_balance_over_time(self.start_date)
         #ugly line of code
         #selects every 20. date for the legend
-        legend = [str(balance[int(len(balance)/20 *i)][0]) for i in range(20)]
+        legend = [gui_utils.get_date_string(balance[int(len(balance)/20 *i)][0]) for i in range(20)]
 
         plot = cairoplot.plots.DotLinePlot('gtk',
                                 data=[item[1] for item in balance],
