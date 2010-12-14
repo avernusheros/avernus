@@ -153,6 +153,11 @@ class AccountCategory(SQLiteEntity):
                    'parentid': 'INTEGER'
                   }
 
+    def __cmp__(self, other):
+        if self.name < other.name:
+            return -1
+        return 1
+    
     def get_parent(self):
         if self.parentid != -1:
             return self.getByPrimaryKey(self.parentid)

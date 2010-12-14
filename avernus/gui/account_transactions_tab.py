@@ -268,7 +268,7 @@ class TransactionsTree(gui_utils.Tree):
                     new_menu.append(item)
                     item.connect('activate', lambda widget: self.on_set_transaction_category(cat))
                     new_menu.append(gtk.SeparatorMenuItem())
-                    for child_cat in hierarchy[cat]:
+                    for child_cat in sorted(hierarchy[cat]):
                         insert_recursive(child_cat, new_menu)
                 else:
                     item.connect('activate', lambda widget: self.on_set_transaction_category(cat))
@@ -278,7 +278,7 @@ class TransactionsTree(gui_utils.Tree):
                 context_menu.add(item)
                 category_menu = gtk.Menu()
                 item.set_submenu(category_menu)
-                for cat in hierarchy[None]:
+                for cat in sorted(hierarchy[None]):
                     insert_recursive(cat, category_menu)
         else:
             context_menu.add(self.actiongroup.get_action('add').create_menu_item())
