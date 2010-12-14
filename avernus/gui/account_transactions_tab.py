@@ -17,11 +17,22 @@ class AccountTransactionTab(gtk.VBox):
     def __init__(self, item):
         gtk.VBox.__init__(self)
         
+        hbox = gtk.HBox()
+        uncategorized_button = gtk.ToggleButton(_('uncategorized'))
+        hbox.pack_start(uncategorized_button, expand=False, fill=False)
+        
+        transfer_button = gtk.ToggleButton()
+        image = gtk.Image()
+        image.set_from_stock('gtk-convert', gtk.ICON_SIZE_BUTTON)
+        transfer_button.add(image)
+        hbox.pack_start(transfer_button, expand=False, fill=False)
+        
         self.search_entry = gtk.Entry()
-        self.pack_start(self.search_entry, expand=False, fill=False)
+        hbox.pack_start(self.search_entry)
         self.search_entry.set_icon_from_stock(1, gtk.STOCK_CLEAR)
         self.search_entry.set_property('secondary-icon-tooltip-text', 'Clear search')
         self.search_entry.connect('icon-press', self.on_clear_search)
+        self.pack_start(hbox, expand=False, fill=False)
         
         hpaned = gtk.HPaned()
         self.pack_start(hpaned)
@@ -46,6 +57,9 @@ class AccountTransactionTab(gtk.VBox):
         frame.add(sw)
         frame.set_shadow_type(gtk.SHADOW_IN)
         hpaned.pack1(frame, shrink=True, resize=True)
+        
+        uncategorized_button.connect('toggled', self.transactions_tree.on_toggle_uncategorized)
+        transfer_button.connect('toggled', self.transactions_tree.on_toggle_transfer)
         
         vbox = gtk.VBox()
         frame = gtk.Frame()
@@ -104,6 +118,8 @@ class TransactionsTree(gui_utils.Tree):
         self.account = account
         self.actiongroup = actiongroup
         self.searchstring = ''
+        self.only_transfer = False
+        self.only_uncategorized = False
         gui_utils.Tree.__init__(self)
         
         self.model = gtk.ListStore(object, str, float, str, object, str)
@@ -139,7 +155,9 @@ class TransactionsTree(gui_utils.Tree):
                 self.searchstring in transaction.description.lower() \
                 or self.searchstring in str(transaction.amount) \
                 or (transaction.category and self.searchstring in transaction.category.name.lower())
-                ):
+                )\
+                and (not self.only_transfer or transaction.is_transfer())\
+                and (not self.only_uncategorized or not transaction.has_category()):
             return True
         return False
 
@@ -288,6 +306,20 @@ class TransactionsTree(gui_utils.Tree):
         # re-enable selection
         self.get_selection().set_select_function(lambda *ignore: True)        
 
+    def on_toggle_uncategorized(self, button):
+        if button.get_active():
+            self.only_uncategorized=True
+        else:
+            self.only_uncategorized=False
+        self.modelfilter.refilter()
+    
+    def on_toggle_transfer(self, button):
+        if button.get_active():
+            self.only_transfer=True
+        else:
+            self.only_transfer=False
+        self.modelfilter.refilter()
+    
     def clear(self):
         self.model.clear()
 

@@ -127,7 +127,7 @@ class AccountChartTab(gtk.ScrolledWindow):
         elif self.zoom == 'YTD':
             self.start_date = date_utils.get_ytd_first()
         elif self.zoom == 'all':
-            self.start_date = self.account.birthday()
+            self.start_date = self.account.birthday
 
 
 class Chart(object):
