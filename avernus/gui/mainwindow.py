@@ -98,18 +98,7 @@ class MainWindow(gtk.Window):
     def __init__(self):
         gtk.Window.__init__(self)
         self.config = config.avernusConfig()
-        #self.set_title(__appname__)
-
-        #set min size
-        screen = self.get_screen()
-        monitor = screen.get_monitor_geometry(0)
-        width = int(monitor.width * 0.66)
-        height = int(monitor.height * 0.66)
-        self.set_size_request(width, height)
-
-        #config entries are strings...
-        if self.config.get_option('maximize', section='Gui') == 'True':
-            self.maximize()
+        self.set_title(avernus.__appname__)
 
         vbox = gtk.VBox()
         self.add(vbox)
@@ -124,14 +113,13 @@ class MainWindow(gtk.Window):
         self.main_menu = MenuBar(self, actiongroup, accelgroup)
         vbox.pack_start(self.main_menu, expand=False, fill=False)
 
-        hpaned = gtk.HPaned()
-        hpaned.set_position(int(width*0.25))
-        vbox.pack_start(hpaned)
+        self.hpaned = gtk.HPaned()
+        vbox.pack_start(self.hpaned)
 
-        hpaned.pack1(MainTreeBox())
+        self.hpaned.pack1(MainTreeBox())
 
         self.notebook = gtk.Notebook()
-        hpaned.pack2(self.notebook)
+        self.hpaned.pack2(self.notebook)
 
         self.notebook.connect('switch-page', self.on_notebook_selection)
         self.connect("destroy", self.on_destroy)
@@ -154,25 +142,49 @@ class MainWindow(gtk.Window):
         self.tabs['Account']   = [(AccountTransactionTab, 'Transactions'),
                                   (AccountChartTab, 'Charts')]
 
+        #set min size
+        screen = self.get_screen()
+        monitor = screen.get_monitor_geometry(0)
+        width = int(monitor.width * 0.66)
+        height = int(monitor.height * 0.66)
+        self.set_size_request(width, height)
+
         size = self.config.get_option('size', section='Gui')
         if size is not None:
-            size = eval(size)
-            self.resize(size[0], size[1])
+            width, height = eval(size)
+            self.resize(width, height)
+
+        pos = self.config.get_option('hpaned position', 'Gui')
+        if pos is None:
+            pos = width*0.25
+        self.hpaned.set_position(int(pos))
+
+        #config entries are strings...
+        if self.config.get_option('maximize', section='Gui') == 'True':
+            self.maximize()
+            self.maximized = True
+        else:
+            self.maximized = False
+
         #display everything
         self.show_all()
 
     def on_size_allocate(self, widget = None, data = None):
-        self.width, self.height = self.get_size()
+        if not self.maximized:
+            self.config.set_option('size', self.get_size(), 'Gui')
 
     def on_window_state_event(self, widget, event):
         if event.new_window_state == gtk.gdk.WINDOW_STATE_MAXIMIZED:
+            self.maximized = True
             self.config.set_option('maximize', True, section='Gui')
         else:
+            self.maximized = False
             self.config.set_option('maximize', False, section='Gui')
 
     def on_destroy(self, widget, data=None):
         """on_destroy - called when the avernusWindow is closed. """
         #save db on quit
+        self.config.set_option('hpaned position', self.hpaned.get_position(), 'Gui')
         model.store.close()
         gtk.main_quit()
 
