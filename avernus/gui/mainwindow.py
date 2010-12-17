@@ -20,6 +20,7 @@ from avernus.gui.dividends_tab import DividendsTab
 from avernus.gui.transactions_tab import TransactionsTab
 from avernus.gui.indexpositions_tab import IndexPositionsTab
 from avernus.gui.container_overview_tab import ContainerOverviewTab
+from avernus.gui.closed_positions_tab import ClosedPositionsTab
 from avernus.gui.preferences import PrefDialog
 from avernus.gui.account_transactions_tab import AccountTransactionTab
 from avernus.gui.account_chart_tab import AccountChartTab
@@ -132,6 +133,7 @@ class MainWindow(gtk.Window):
         self.tabs['Portfolio'] = [(PositionsTab, 'Positions'),
                                   (TransactionsTab, 'Transactions'),
                                   (DividendsTab, 'Dividends'),
+                                  (ClosedPositionsTab, 'Closed positions'),
                                   (chart_tab.ChartTab, 'Charts')]
         self.tabs['Watchlist'] = [(PositionsTab, 'Positions')]
         self.tabs['Tag']       = [(PositionsTab, 'Positions'),

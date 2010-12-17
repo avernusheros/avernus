@@ -64,7 +64,7 @@ class Container(object):
         return change, percent 
      
     def update_positions(self):
-        self.controller.datasource_manager.update_stocks([pos.stock for pos in self])
+        self.controller.datasource_manager.update_stocks([pos.stock for pos in self if pos.quantity>0])
         self.last_update = datetime.now()
         pubsub.publish("stocks.updated", self)
 
@@ -111,12 +111,15 @@ class Portfolio(SQLiteEntity, Container):
     def transactions(self):
         return self.controller.getTransactionForPortfolio(self)
         
+    @property
+    def closed_positions(self):
+        for tran in self.transactions:
+            if tran.is_sell():
+                yield ClosedPosition(tran)
+    
+    @property
     def birthday(self):
-        current = date.today()
-        for ta in self.transactions:
-            if ta.date.date() < current:
-                current = ta.date.date()
-        return current
+        return min(t.date for t in self.transactions)
         
     def onUpdate(self, **kwargs):
         pubsub.publish('container.updated', self)
@@ -241,3 +244,24 @@ class Tag(SQLiteEntity, Container):
     @property
     def date(self):
         return None
+
+
+class ClosedPosition(object):
+    
+    def __init__(self, sell_transaction):
+        position = sell_transaction.position
+        buy_transaction = position.buy_transaction
+        self.quantity = sell_transaction.quantity
+        self.buy_date = buy_transaction.date
+        self.buy_price = buy_transaction.price
+        self.buy_costs = buy_transaction.costs * self.quantity / buy_transaction.quantity
+        self.buy_total = self.quantity*self.buy_price + self.buy_costs
+        self.sell_date = sell_transaction.date
+        self.sell_price = sell_transaction.price
+        self.sell_costs = sell_transaction.costs
+        self.sell_total = sell_transaction.total
+        self.gain = self.sell_total - self.buy_total
+        self.gain_percent = round(self.gain*100 / self.buy_total, 2)
+        self.name = position.name
+        self.type = sell_transaction.type
+        self.stock = position.stock

@@ -79,6 +79,10 @@ class PortfolioPosition(SQLiteEntity, Position):
                      }
 
     @property
+    def buy_transaction(self):
+        return self.controller.getBuyTransaction(self)
+
+    @property
     def dividends(self):
         for div in self.controller.getDividendForPosition(self):
             yield div

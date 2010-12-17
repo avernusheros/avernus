@@ -5,7 +5,6 @@ from avernus import pubsub
 from avernus.gui import gui_utils, dialogs
 from avernus.gui.gui_utils import Tree, get_datetime_string, get_name_string
 import avernus.objects
-from avernus.objects import controller
 
 
 class TransactionsTab(gtk.ScrolledWindow):
@@ -53,7 +52,7 @@ class TransactionsTree(Tree):
         else:
             items = self.portfolio
         for port in items:
-            for ta in controller.getTransactionForPortfolio(port):
+            for ta in port.transactions:
                 self.insert_transaction(ta)
       
     def on_transaction_created(self, ta):

@@ -72,7 +72,7 @@ class ChartTab(gtk.ScrolledWindow):
 
 
     def portfolio_value_chart(self):
-        start = self.pf.birthday()
+        start = self.pf.birthday
         end = date.today()
         delta = end - start
         step = delta // 100

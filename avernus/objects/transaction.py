@@ -43,3 +43,6 @@ class Transaction(SQLiteEntity):
         if self.type in TYPES:
             return TYPES[self.type]
         return ''
+
+    def is_sell(self):
+        return self.type == SELL

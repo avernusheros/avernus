@@ -140,7 +140,7 @@ class EditPositionTable(gtk.Table):
 
     def process_result(self, widget=None, response = gtk.RESPONSE_ACCEPT):
         if response == gtk.RESPONSE_ACCEPT:
-            ta = controller.getBuyTransaction(self.pos)
+            ta = self.pos.buy_transaction
             
             ta.quantity = self.pos.quantity = self.shares_entry.get_value() 
             ta.price = self.pos.price = self.price_entry.get_value()
@@ -314,14 +314,12 @@ class SellDialog(gtk.Dialog):
                 ta = controller.newTransaction(portfolio=self.pos.portfolio, position=self.pos, type=0, date=date, quantity=shares, price=price, costs=ta_costs) 
                 pubsub.publish('transaction.added', ta)             
             else:
-                diff = self.transaction.quantity - shares
-                self.pos.quantity += diff
                 self.pos.portfolio.cash -= self.transaction.quantity*self.transaction.price - self.transaction.costs
                 self.pos.portfolio.cash += shares*price - ta_costs 
-                self.transaction.price=price
-                self.transaction.date = date
+                self.pos.price = self.transaction.price=price
+                self.pos.date = self.transaction.date = date
                 self.transaction.costs = ta_costs
-                self.transaction.quantity = shares
+                self.pos.quantity = self.transaction.quantity = shares
             
     def on_change(self, widget=None):
         total = self.shares_entry.get_value() * self.price_entry.get_value() + self.tacosts_entry.get_value()
@@ -522,15 +520,12 @@ class BuyDialog(gtk.Dialog):
                 pubsub.publish('container.position.added', self.pf, pos)
                 pubsub.publish('transaction.added', ta)
             else:
-                diff = self.transaction.quantity - shares
-                self.transaction.position.quantity -= diff
                 self.pf.cash += self.transaction.quantity*self.transaction.price - self.transaction.costs
                 self.pf.cash -= shares*price - ta_costs 
-                self.transaction.price = price
-                self.transaction.date = date
+                self.transaction.position.price = self.transaction.price = price
+                self.transaction.position.date = self.transaction.date = date
                 self.transaction.costs = ta_costs
-                self.transaction.quantity = shares
-                
+                self.transaction.position.quantity = self.transaction.quantity = shares
 
 
 class NewWatchlistPositionDialog(gtk.Dialog):
