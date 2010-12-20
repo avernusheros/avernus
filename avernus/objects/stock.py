@@ -1,5 +1,6 @@
 from avernus.objects.model import SQLiteEntity
 from avernus.objects.sector import Sector
+from avernus.objects.region import Region
 
 import datetime
 
@@ -17,6 +18,7 @@ class Stock(SQLiteEntity):
                    'type': 'INTEGER',
                    'name': 'VARCHAR',
                    'sector': Sector,
+                   'region': Region,
                    'exchange': 'VARCHAR',
                    'currency': 'VARCHAR',
                    'price': 'FLOAT',
@@ -34,6 +36,7 @@ class Stock(SQLiteEntity):
                          'type':1,
                          'name':'',
                          'sector':None,
+                         'region':None,
                          'isin':''
                          }
 

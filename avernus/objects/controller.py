@@ -9,6 +9,7 @@ from avernus.objects.stock import Stock
 from avernus.objects.dividend import Dividend
 from avernus.objects.quotation import Quotation
 from avernus.objects.sector import Sector
+from avernus.objects.region import Region
 from avernus import pubsub
 from avernus.objects.account import Account, AccountTransaction, AccountCategory
 from avernus.logger import Log
@@ -22,7 +23,8 @@ import sys
 
 modelClasses = [Portfolio, Transaction, Tag, Watchlist, Index, Dividend,
                 PortfolioPosition, WatchlistPosition, AccountCategory,
-                Quotation, Stock, Meta, Sector, Account, AccountTransaction]
+                Quotation, Stock, Meta, Sector, Account, AccountTransaction,
+                Region]
 
 #these classes will be loaded with one single call and will also load composite
 #relations. therefore it is important that the list is complete in the sense
@@ -30,7 +32,7 @@ modelClasses = [Portfolio, Transaction, Tag, Watchlist, Index, Dividend,
 initialLoadingClasses = [Portfolio,Transaction,Tag,Watchlist,Index,Dividend,Sector,
                          PortfolioPosition, WatchlistPosition,Account, Meta, Stock, AccountTransaction, AccountCategory]
 
-VERSION = 2
+VERSION = 3
 datasource_manager = None
 
 #FIXME very hackish, but allows to remove the circular controller imports in the objects
@@ -38,6 +40,7 @@ controller = sys.modules[__name__]
 
 # SAMPLE DATA
 SECTORS = ['Basic Materials','Conglomerates','Consumer Goods','Energy','Financial','Healthcare','Industrial Goods','Services','Technology','Transportation','Utilities']
+REGIONS = ['Emerging Markets', 'Europe', 'America', 'Worldwide']
 CATEGORIES = {
     _('Utilities'): [_('Gas'),_('Phone'), _('Water'), _('Electricity')],
     _('Entertainment'): [_('Books'),_('Movies'), _('Music'), _('Amusement')],
@@ -124,8 +127,14 @@ def upgrade_db(db_version):
     if db_version==1:
         print "Updating database v.1 to v.2!"
         db_version+=1
-        set_db_version(db_version)
+    if db_version==2:
+        print "Updating db to version 3..."
+        model.store.execute('ALTER TABLE stock ADD COLUMN region INTEGER')
+        for rname in REGIONS:
+            newRegion(rname)
+        db_version+=1
     if db_version==VERSION:
+        set_db_version(db_version)
         print "Successfully updated your database to the current version!"
     if db_version>VERSION:
         print "ERROR: unknown db version"
@@ -137,6 +146,8 @@ def set_db_version(version):
 def load_sample_data():
     for sname in SECTORS:
         newSector(sname)
+    for rname in REGIONS:
+        newRegion(rname)
     for cat, subcats in CATEGORIES.iteritems():
         parent = newAccountCategory(name=cat)
         for subcat in subcats:
@@ -277,6 +288,12 @@ def newSector(name):
     result.insert()
     return result
 
+def newRegion(name):
+    result = Region(name=name)
+    result.controller = controller
+    result.insert()
+    return result
+
 def newStock(insert=True, **kwargs):
     result = Stock(**kwargs)
     result.controller = controller
@@ -352,6 +369,9 @@ def getAllAccountCategoriesHierarchical():
 def getAllSector():
     return Sector.getAll()
 
+def getAllRegion():
+    return Region.getAll()
+
 def getAllTag():
     return Tag.getAll()
 
@@ -367,6 +387,11 @@ def deleteSectorFromStock(sector):
     for stock in getAllStock():
         if stock.sector == sector:
             stock.sector = None
+
+def deleteRegionFromStock(sector):
+    for stock in getAllStock():
+        if stock.region == region:
+            stock.region = None
 
 def getTransactionForPosition(position):
     key = position.getPrimaryKey()

@@ -5,7 +5,7 @@ import gtk
 from avernus.objects import controller
 from avernus.gui import gui_utils
 
-no_data_string = '\nNo Data!\nAdd positions to portfolio first.\n\n'
+NO_DATA_STRING = '\nNo Data!\nAdd positions to portfolio first.\n\n'
 
 
 class ChartTab(gtk.ScrolledWindow):
@@ -24,26 +24,34 @@ class ChartTab(gtk.ScrolledWindow):
         #table.attach(gtk.Label(_('Cash over time')), 0,2,0,1)
         #table.attach(self.cash_chart(),0,2,1,2)
 
-        table.attach(gtk.Label(_('Market value')), 0, 1, 0, 1)
+        label = gtk.Label()
+        label.set_markup(_('<b>Market value</b>'))
+        table.attach(label, 0, 1, 0, 1)
         table.attach(self.current_pie(),0,1,1,2)
 
-        table.attach(gtk.Label(_('Investment types')),1,2,0,1)
+        label = gtk.Label()
+        label.set_markup(_('<b>Investment types</b>'))
+        table.attach(label,1,2,0,1)
         table.attach(self.types_chart(),1,2,1,2)
-        #table.attach(self.types_chart('vertical_bars'),1,2,3,4)
 
-        table.attach(gtk.Label(_('Tags')),0,1,2,3)
+        label = gtk.Label()
+        label.set_markup(_('<b>Tags</b>'))
+        table.attach(label,0,1,2,3)
         table.attach(self.tags_pie(),0,1,3,4)
 
-        table.attach(gtk.Label(_('Sectors')),1,2,2,3)
-        table.attach(self.sector_pie(),1,2,3,4)
+        label = gtk.Label()
+        label.set_markup(_('<b>Sectors</b>'))
+        table.attach(label,1,2,2,3)
+        table.attach(Pie(self.pf, 'sector'),1,2,3,4)
 
-        table.attach(gtk.Label(_('Portfolio Value')), 0,1, 4,5)
+        label = gtk.Label()
+        label.set_markup(_('<b>Region</b>'))
+        table.attach(label,0,1,4,5)
+        table.attach(Pie(self.pf, 'region'),0,1,5,6)
+
+        #table.attach(gtk.Label(_('Portfolio Value')), 0,1, 4,5)
         #FIXME
         #table.attach(self.portfolio_value_chart(), 0,1,5,6)
-
-        #FIXME countries not supported yet
-        #table.attach(gtk.Label(_('Countries')),0,1,6,7)
-        #table.attach(self.country_pie(),0,1,7,8)
 
         self.add_with_viewport(table)
         self.show_all()
@@ -61,7 +69,7 @@ class ChartTab(gtk.ScrolledWindow):
                 except:
                     data[pos.name] = pos.cvalue
         if len(data) == 0:
-            return gtk.Label(no_data_string)
+            return gtk.Label(NO_DATA_STRING)
         plot = cairoplot.plots.PiePlot('gtk',
                                     data=data,
                                     width=300,
@@ -95,7 +103,7 @@ class ChartTab(gtk.ScrolledWindow):
             sum[pos.stock.type] += pos.cvalue
         data = {'fund':sum[0], 'stock':sum[1], 'etf':sum[2]}
         if sum[0]+sum[1]+sum[2] == 0.0:
-            return gtk.Label(no_data_string)
+            return gtk.Label(NO_DATA_STRING)
         plot = cairoplot.plots.PiePlot('gtk',
                                     data=data,
                                     width=300,
@@ -113,45 +121,7 @@ class ChartTab(gtk.ScrolledWindow):
                 except:
                     data[tag] = pos.cvalue
         if len(data) == 0:
-            return gtk.Label(no_data_string)
-        plot = cairoplot.plots.PiePlot('gtk',
-                                    data=data,
-                                    width=300,
-                                    height=300,
-                                    gradient=True
-                                    )
-        return plot.handler
-
-    def country_pie(self):
-        data = {}
-        for pos in self.pf:
-            try:
-                data[pos.stock.country] += pos.cvalue
-            except:
-                data[pos.stock.country] = pos.cvalue
-        if len(data) == 0:
-            return gtk.Label(no_data_string)
-        plot = cairoplot.plots.PiePlot('gtk',
-                                    data=data,
-                                    width=300,
-                                    height=300,
-                                    gradient=True
-                                    )
-        return plot.handler
-
-    def sector_pie(self):
-        data = {'None':0.0}
-        for pos in self.pf:
-            if pos.stock.sector is None:
-                data['None'] += pos.cvalue
-            else:
-                sector = pos.stock.sector.name
-                if sector in data:
-                    data[sector] += pos.cvalue
-                else:
-                    data[sector] = pos.cvalue
-        if sum(data.values()) == 0:
-            return gtk.Label(no_data_string)
+            return gtk.Label(NO_DATA_STRING)
         plot = cairoplot.plots.PiePlot('gtk',
                                     data=data,
                                     width=300,
@@ -179,3 +149,33 @@ class ChartTab(gtk.ScrolledWindow):
                      'y_formatters':gui_utils.get_string_from_float
                      })
         return chart
+
+
+class Pie(gtk.VBox):
+
+    def __init__(self, portfolio, attribute):
+        gtk.VBox.__init__(self)
+        self.portfolio = portfolio
+
+        data = {'None':0.0}
+        for pos in self.portfolio:
+            if getattr(pos.stock, attribute) is None:
+                data['None'] += pos.cvalue
+            else:
+                item = getattr(pos.stock, attribute).name
+                if item in data:
+                    data[item] += pos.cvalue
+                else:
+                    data[item] = pos.cvalue
+        if sum(data.values()) == 0:
+            self.pack_start(gtk.Label(NO_DATA_STRING))
+        else:
+            plot = cairoplot.plots.PiePlot('gtk',
+                                        data=data,
+                                        width=300,
+                                        height=300,
+                                        gradient=True
+                                        )
+            self.chart = plot.handler
+            self.chart.show()
+            self.pack_start(self.chart)
