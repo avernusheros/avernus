@@ -8,6 +8,7 @@ class Sector(SQLiteEntity):
                    'id': 'INTEGER',
                    'name': 'VARCHAR'                   
                   }
+    __comparisonPositives__ = ['name']
 
     def onDelete(self, **kwargs):
         self.controller.deleteSectorFromStock(self)
@@ -15,3 +16,6 @@ class Sector(SQLiteEntity):
     __callbacks__ = {
                      'onDelete':onDelete
                      }
+
+    def __str__(self):
+        return self.name

@@ -8,37 +8,37 @@ from datetime import datetime, date
 class Container(object):
 
     tagstring = ''
-    
+
     @property
     def bvalue(self):
         value = 0.0
         for pos in self:
             value += pos.bvalue
         return value
-    
+
     @property
     def cvalue(self):
         value = 0.0
         for pos in self:
             value += pos.cvalue
         return value
-    
+
     @property
     def price(self):
         return self.cvalue
-    
+
     @property
     def date(self):
         return self.last_update
-        
+
     @property
     def change(self):
-        return self.current_change[0]    
-    
+        return self.current_change[0]
+
     @property
     def percent(self):
         return self.current_change[1]
-    
+
     @property
     def overall_change(self):
         end = self.cvalue
@@ -48,8 +48,8 @@ class Container(object):
             percent = 0
         else:
             percent = round(100.0 / start * absolute,2)
-        return absolute, percent 
-    
+        return absolute, percent
+
     @property
     def current_change(self):
         change = 0.0
@@ -61,8 +61,8 @@ class Container(object):
             percent = 0
         else:
             percent = round(100.0 / start * change,2)
-        return change, percent 
-     
+        return change, percent
+
     def update_positions(self):
         self.controller.datasource_manager.update_stocks([pos.stock for pos in self if pos.quantity>0])
         self.last_update = datetime.now()
@@ -80,10 +80,10 @@ class Portfolio(SQLiteEntity, Container):
                    "comment":       "TEXT",
                    "cash":          "FLOAT",
                    }
-    
+
     def __iter__(self):
         return self.controller.getPositionForPortfolio(self).__iter__()
-    
+
     def get_cash_over_time(self):
         cash = self.cash
         res = []
@@ -99,49 +99,49 @@ class Portfolio(SQLiteEntity, Container):
             #should be last day - 1 day
             res.append((date(last_date.year, last_date.month, 1) , cash))
         return res
-    
+
     def get_value_at_date(self, t):
         erg = 0
         for po in self:
             if t > po.date.date():
                 erg += po.get_value_at_date(t)
         return erg
-    
+
     @property
     def transactions(self):
         return self.controller.getTransactionForPortfolio(self)
-        
+
     @property
     def closed_positions(self):
         for tran in self.transactions:
             if tran.is_sell():
                 yield ClosedPosition(tran)
-    
+
     @property
     def birthday(self):
         return min(t.date for t in self.transactions)
-        
+
     def onUpdate(self, **kwargs):
         pubsub.publish('container.updated', self)
-        
+
     def onInsert(self, **kwargs):
         pass
-        
+
     def onDelete(self, **kwargs):
         for trans in self.transactions:
             trans.delete()
         for pos in self:
             pos.delete()
-        
+
     def onRemoveRelationEntry(self, **kwargs):
         pass
-        
+
     def onAddRelationEntry(self, **kwargs):
         pass
-        
+
     def onRetrieveComposite(self, **kwargs):
         pass
-    
+
     __callbacks__ = {
                      'onUpdate':onUpdate,
                      'onInsert':onInsert,
@@ -150,8 +150,8 @@ class Portfolio(SQLiteEntity, Container):
                      'onAddRelationEntry':onAddRelationEntry,
                      'onRetrieveComposite':onRetrieveComposite,
                      }
-                    
-                   
+
+
 class Watchlist(SQLiteEntity, Container):
 
     __primaryKey__ = 'id'
@@ -162,14 +162,14 @@ class Watchlist(SQLiteEntity, Container):
                    'last_update':'TIMESTAMP',
                    'comment':'TEXT',
                   }
-    
+
     def __iter__(self):
         return self.controller.getPositionForWatchlist(self).__iter__()
-    
+
     def onDelete(self, **kwargs):
         for pos in self:
             pos.delete()
-        
+
     __callbacks__ = {
                      'onDelete':onDelete,
                      }
@@ -190,7 +190,7 @@ class Index(SQLiteEntity):
                    'yahoo_symbol': 'VARCHAR',
                    'currency': 'VARCHAR'
                   }
-    
+
     __relations__ = {
                     'positions': Stock,
                     }
@@ -201,20 +201,20 @@ class Index(SQLiteEntity):
                          'change':0.0,
                          'price':0.0,
                          }
-    
+
     def update_positions(self):
         #update stocks and index
-        updater.update_stocks(self.positions+[self]) 
+        updater.update_stocks(self.positions+[self])
         self.last_update = datetime.now()
         pubsub.publish("stocks.updated", self)
-   
+
     def onInit(self, **kwargs):
         pubsub.publish('index.created', self)
     __callbacks__ = {'onInit':onInit}
-   
-    @property      
+
+    @property
     def percent(self):
-        try: 
+        try:
             return round(self.change * 100 / (self.price - self.change),2)
         except:
             return 0
@@ -222,7 +222,7 @@ class Index(SQLiteEntity):
     def __iter__(self):
         for pos in self.positions:
             yield pos
-    
+
 
 class Tag(SQLiteEntity, Container):
 
@@ -237,7 +237,7 @@ class Tag(SQLiteEntity, Container):
     def onInit(self, **kwargs):
         pubsub.publish('tag.created', self)
     __callbacks__ = {'onInit':onInit}
-    
+
     def __iter__(self):
         return self.controller.getPositionForTag(self).__iter__()
 
@@ -247,7 +247,7 @@ class Tag(SQLiteEntity, Container):
 
 
 class ClosedPosition(object):
-    
+
     def __init__(self, sell_transaction):
         position = sell_transaction.position
         buy_transaction = position.buy_transaction

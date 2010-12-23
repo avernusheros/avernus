@@ -8,9 +8,9 @@ from avernus.gui import gui_utils
 
 
 class EditPositionDialog(gtk.Dialog):
-    
+
     def __init__(self, position):
-        gtk.Dialog.__init__(self, _("Edit position"), None
+        gtk.Dialog.__init__(self, _("Edit position - ")+position.name, None
                             , gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
                      (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
                       gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
@@ -56,10 +56,10 @@ class EditStockDialog(gtk.Dialog):
 
 
 class MyComboBoxEntry(gtk.ComboBoxEntry):
-    
+
     COL_OBJ  = 0
     COL_TEXT = 1
-    
+
     def __init__(self, items, creator, current=None):
         self.creator = creator
         liststore = gtk.ListStore(object, str)
@@ -84,7 +84,7 @@ class MyComboBoxEntry(gtk.ComboBoxEntry):
                 return None
             return self.creator(name=name)
         return self.get_model()[iterator][self.COL_OBJ]
-            
+
 
 class EditStockTable(gtk.Table):
 
@@ -117,7 +117,7 @@ class EditStockTable(gtk.Table):
         sectors = [(None, 'None'),]+[(sector, sector.name) for sector in controller.getAllSector()]
         self.sector_cb = MyComboBoxEntry(sectors, controller.newSector, self.stock.sector)
         self.attach(self.sector_cb, 1,2,3,4,  yoptions=gtk.FILL)
-        
+
         self.attach(gtk.Label(_('Region')),0,1,4,5, yoptions=gtk.FILL)
         regions = [(None, 'None'),]+[(regions, regions.name) for regions in controller.getAllRegion()]
         self.region_cb = MyComboBoxEntry(regions, controller.newRegion, self.stock.region)
@@ -303,7 +303,7 @@ class SellDialog(gtk.Dialog):
         #total
         table.attach(gtk.Label(_('Total')),1,2,4,5,xoptions=gtk.SHRINK,yoptions=gtk.SHRINK)
         self.total = gtk.Label()
-        self.total.set_markup('<b>'+gui_utils.get_string_from_float(0.0)+'</b>')
+        self.total.set_markup('<b>'+gui_utils.get_currency_format_from_float(0.0)+'</b>')
         table.attach(self.total,2,3,4,5,xoptions=gtk.SHRINK,yoptions=gtk.SHRINK)
 
         #date
@@ -349,7 +349,8 @@ class SellDialog(gtk.Dialog):
 
     def on_change(self, widget=None):
         total = self.shares_entry.get_value() * self.price_entry.get_value() + self.tacosts_entry.get_value()
-        self.total.set_markup('<b>'+gui_utils.get_string_from_float(total)+'</b>')
+        self.total.set_markup('<b>'+gui_utils.get_currency_format_from_float(total)+'</b>')
+
 
 class CashDialog(gtk.Dialog):
     def __init__(self, pf, type = 0, transaction=None):  #0 deposit, 1 withdraw
@@ -459,7 +460,7 @@ class BuyDialog(gtk.Dialog):
         #total
         table.attach(gtk.Label(_('Total')),1,2,4,5,xoptions=gtk.SHRINK,yoptions=gtk.SHRINK)
         self.total = gtk.Label()
-        self.total.set_markup('<b>'+gui_utils.get_string_from_float(0.0)+'</b>')
+        self.total.set_markup('<b>'+gui_utils.get_currency_format_from_float(0.0)+'</b>')
         table.attach(self.total,2,3,4,5,xoptions=gtk.SHRINK,yoptions=gtk.SHRINK)
 
         #date
@@ -508,7 +509,7 @@ class BuyDialog(gtk.Dialog):
 
     def on_change(self, widget=None):
         total = self.shares_entry.get_value() * self.price_entry.get_value() + self.tacosts_entry.get_value()
-        self.total.set_markup('<b>'+gui_utils.get_string_from_float(total)+'</b>')
+        self.total.set_markup('<b>'+gui_utils.get_currency_format_from_float(total)+'</b>')
 
     def on_stock_selection(self, *args):
         self.stock_ok = True
@@ -589,20 +590,9 @@ class NewWatchlistPositionDialog(gtk.Dialog):
             pubsub.publish('container.position.added', self.wl, pos)
 
 
-class PfSelector(gtk.ComboBox):
-    def __init__(self, model):
-        liststore = gtk.ListStore(int, str)
-        liststore.append([-1, 'Select a portfolio'])
-        for id, pf in model.portfolios.items():
-            liststore.append([id, pf.name])
-        gtk.ComboBox.__init__(self, liststore)
-        cell = gtk.CellRendererText()
-        self.pack_start(cell, True)
-        self.add_attribute(cell, 'text', 1)
-        self.set_active(0)
-
 class PosSelector(gtk.ComboBox):
-    def __init__(self):
+    
+    def __init__(self, pf):
         gtk.ComboBox.__init__(self)
         cell = gtk.CellRendererText()
         self.pack_start(cell, True)
@@ -610,14 +600,17 @@ class PosSelector(gtk.ComboBox):
         self.set_active(0)
         self.set_button_sensitivity(gtk.SENSITIVITY_AUTO)
 
-    def on_pf_selection(self, pf):
-        if pf is None:
-            self.set_model()
-            return
         liststore = gtk.ListStore(object, str)
         liststore.append([-1, 'Select a position'])
-        for pos in pf:
-            liststore.append([pos, str(pos.quantity) +' ' +pos.name])
+        if pf is not None:
+            for pos in pf:
+                if pos.quantity > 0:
+                    liststore.append([pos, str(pos.quantity) +' ' +pos.name])
+        else:
+            for pf in controller.getAllPortfolio():
+                for pos in pf:
+                    if pos.quantity > 0:
+                        liststore.append([pos, pos.portfolio.name+": "+str(pos.quantity) +' ' +pos.name])
         self.set_model(liststore)
 
 
@@ -657,3 +650,77 @@ class SplitDialog(gtk.Dialog):
             val2 = self.val2.get_value()
             year, month, day = self.calendar.get_date()
             self.pos.split(val1, val2, datetime(year, month+1, day))
+
+
+class AddDividendDialog(gtk.Dialog):
+    def __init__(self, pf=None, tree=None, date=None, price=None):
+        gtk.Dialog.__init__(self, _("Add dividend"), None
+                            , gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
+                     (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
+                      'Add', gtk.RESPONSE_ACCEPT))
+        self.tree = tree
+        vbox = self.get_content_area()
+        table = gtk.Table()
+        vbox.pack_start(table)
+
+        table.attach(gtk.Label(_('Position')),0,1,0,1)
+        self.pos_selector = PosSelector(pf)
+        self.pos_selector.connect('changed', self.on_changed_pos)
+        table.attach(self.pos_selector,1,2,0,1)
+
+        self.selected_pos = None
+
+        table.attach(gtk.Label(_('Amount')),0,1,1,2)
+        self.value_entry = gtk.SpinButton(gtk.Adjustment(lower=0, upper=100000,step_incr=0.1, value = 1.0), digits=2)
+        self.value_entry.connect("value-changed", self.on_change)
+        table.attach(self.value_entry, 1,2,1,2)
+
+        table.attach(gtk.Label(_('Transaction costs')),0,1,2,3)
+        self.tacosts_entry = gtk.SpinButton(gtk.Adjustment(lower=0, upper=100000,step_incr=0.1, value = 0.0), digits=2)
+        self.tacosts_entry.connect("value-changed", self.on_change)
+        table.attach(self.tacosts_entry, 1,2,2,3)
+
+        table.attach(gtk.Label(_('Total')),0,1,3,4)
+        self.total = gtk.Label()
+        self.total.set_markup('<b>'+gui_utils.get_currency_format_from_float(0.0)+'</b>')
+        table.attach(self.total,1,2,3,4,xoptions=gtk.SHRINK,yoptions=gtk.SHRINK)
+
+        self.calendar = gtk.Calendar()
+        table.attach(self.calendar, 0,2,4,5)
+
+        if date is not None:
+            self.calendar.select_month(date.month-1, date.year)
+            self.calendar.select_day(date.day)
+        if price is not None:
+            self.value_entry.set_value(price)
+            self.on_change()
+
+        self.set_response_sensitive(gtk.RESPONSE_ACCEPT, False)
+        self.show_all()
+        response = self.run()
+        self.process_result(response)
+        self.destroy()
+
+    def on_change(self, widget=None):
+        total = self.value_entry.get_value() - self.tacosts_entry.get_value()
+        self.total.set_markup('<b>'+gui_utils.get_currency_format_from_float(total)+'</b>')
+
+    def on_changed_pos(self, combobox):
+        model = combobox.get_model()
+        index = combobox.get_active()
+        if index:
+            self.selected_pos = model[index][0]
+            self.set_response_sensitive(gtk.RESPONSE_ACCEPT, True)
+        else:
+            self.selected_pos = None
+            self.set_response_sensitive(gtk.RESPONSE_ACCEPT, False)
+
+    def process_result(self, response):
+        if response == gtk.RESPONSE_ACCEPT:
+            year, month, day = self.calendar.get_date()
+            date = datetime(year, month+1, day)
+            value = self.value_entry.get_value()
+            ta_costs = self.tacosts_entry.get_value()
+            div = controller.newDividend(price=value, date=date, costs=ta_costs, position=self.selected_pos, shares=self.selected_pos.quantity)
+            if self.tree is not None:
+                self.tree.insert_dividend(div)

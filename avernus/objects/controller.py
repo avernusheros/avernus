@@ -110,14 +110,14 @@ def detectDuplicate(tp,**kwargs):
     return new
 
 def createTables():
+    for cl in modelClasses:
+        cl.createTable()
     if not model.store.new:
         db_version = Meta.getByPrimaryKey(1).version
         if db_version < VERSION:
             print "Need to upgrade the database..."
             model.store.backup()
             upgrade_db(db_version)
-    for cl in modelClasses:
-        cl.createTable()
     if model.store.new:
         m = Meta(id=1, version=VERSION)
         m.insert()
@@ -283,16 +283,10 @@ def newTag(name):
     return result
 
 def newSector(name):
-    result = Sector(name=name)
-    result.controller = controller
-    result.insert()
-    return result
+    return detectDuplicate(Sector, name=name)
 
 def newRegion(name):
-    result = Region(name=name)
-    result.controller = controller
-    result.insert()
-    return result
+    return detectDuplicate(Region, name=name)
 
 def newStock(insert=True, **kwargs):
     result = Stock(**kwargs)

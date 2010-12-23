@@ -66,7 +66,7 @@ class AccountChartTab(gtk.ScrolledWindow):
         #FIXME macht das step einstellen wirklich sinn? alternative ist automatische einstellung
         #oder manuelle einstellung erlauben, aber sachen vorgeben, zb 1y und month
         self.steps = ['day','week','month','year']
-        active = 1
+        active = 2
         combobox = gtk.combo_box_new_text()
         for st in self.steps:
             combobox.append_text(st)
@@ -184,7 +184,7 @@ class EarningsVsSpendingsChart(gtk.VBox, Chart):
         label.set_markup(markup)
         hbox.pack_start(label)
         self.type_cb = gtk.combo_box_new_text()
-        for chart_type in ['line chart', 'bar chart']:
+        for chart_type in ['bar chart', 'line chart']:
             self.type_cb.append_text(chart_type)
         self.type_cb.set_active(0)
         self.type_cb.connect('changed', self.on_type_change)

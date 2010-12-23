@@ -8,6 +8,11 @@ FUND  = 0
 STOCK = 1
 ETF   = 2
 
+TYPES = {FUND: 'FUND',
+         STOCK: 'STOCK',
+         ETF: 'ETF'
+         }  
+
 
 class Stock(SQLiteEntity):
     __primaryKey__ = 'id'
@@ -52,6 +57,12 @@ class Stock(SQLiteEntity):
         except:
             return 0
 
+    @property
+    def type_string(self):
+        if self.type in TYPES:
+            return TYPES[self.type]
+        return ''
+        
     def __str__(self):
         return self.name +' | '+self.isin+' | '+self.exchange
 

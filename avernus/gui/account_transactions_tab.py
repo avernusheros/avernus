@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import gtk, datetime, pango
-from avernus.gui import gui_utils
+from avernus.gui import gui_utils, dialogs
 import avernus.objects
 from avernus.objects import controller
 from avernus import pubsub
@@ -45,7 +45,8 @@ class AccountTransactionTab(gtk.VBox):
         actiongroup.add_actions([
                 ('add',    gtk.STOCK_ADD,    'new transaction',    None, _('Add new transaction'), self.transactions_tree.on_add),      
                 ('edit' ,  gtk.STOCK_EDIT,   'edit transaction',   None, _('Edit selected transaction'),   self.transactions_tree.on_edit),
-                ('remove', gtk.STOCK_DELETE, 'remove transaction', None, _('Remove selected transaction'), self.transactions_tree.on_remove)
+                ('remove', gtk.STOCK_DELETE, 'remove transaction', None, _('Remove selected transaction'), self.transactions_tree.on_remove),
+                ('dividend', gtk.STOCK_CONVERT, 'dividend payment', None, _('Create dividend from transaction'), self.transactions_tree.on_dividend)
                                 ])
         sw.add(self.transactions_tree)
         sw.connect_after('size-allocate', 
@@ -224,6 +225,10 @@ class TransactionsTree(gui_utils.Tree):
         if b_change:
             self.account.amount = self.account.amount - old_amount + transaction.amount
             self.get_model()[iterator] = self.get_item_to_insert(transaction)
+    
+    def on_dividend(self, widget=None):
+        trans, iterator = self._get_selected_transaction()
+        dlg = dialogs.AddDividendDialog(date=trans.date, price=trans.amount)
     
     def on_remove(self, widget=None):
         trans, iterator = self._get_selected_transaction()
@@ -637,7 +642,6 @@ class EditTransaction(gtk.Dialog):
             if self.transfer_button.get_active():
                 self.transaction.transfer = self.transfer_transaction
                 self.transfer_transaction.transfer = self.transaction
-                #print self.transfer_transaction, self.transfer_transaction.transfer
             else:
                 if self.transaction.transfer is not None:
                     self.transaction.transfer.transfer = None

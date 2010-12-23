@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from avernus import cairoplot
+from avernus import cairoplot, date_utils
 import gtk
 from avernus.objects import controller
 from avernus.gui import gui_utils
@@ -26,13 +26,13 @@ class ChartTab(gtk.ScrolledWindow):
 
         label = gtk.Label()
         label.set_markup(_('<b>Market value</b>'))
-        table.attach(label, 0, 1, 0, 1)
-        table.attach(self.current_pie(),0,1,1,2)
+        table.attach(label, 0,1,0,1)
+        table.attach(Pie(self.pf, 'name'),0,1,1,2)
 
         label = gtk.Label()
         label.set_markup(_('<b>Investment types</b>'))
         table.attach(label,1,2,0,1)
-        table.attach(self.types_chart(),1,2,1,2)
+        table.attach(Pie(self.pf, 'type_string'),1,2,1,2)
 
         label = gtk.Label()
         label.set_markup(_('<b>Tags</b>'))
@@ -45,7 +45,7 @@ class ChartTab(gtk.ScrolledWindow):
         table.attach(Pie(self.pf, 'sector'),1,2,3,4)
 
         label = gtk.Label()
-        label.set_markup(_('<b>Region</b>'))
+        label.set_markup(_('<b>Regions</b>'))
         table.attach(label,0,1,4,5)
         table.attach(Pie(self.pf, 'region'),0,1,5,6)
 
@@ -53,31 +53,22 @@ class ChartTab(gtk.ScrolledWindow):
         #FIXME
         #table.attach(self.portfolio_value_chart(), 0,1,5,6)
 
+        label = gtk.Label()
+        label.set_markup(_('<b>Dividends</b>'))
+        table.attach(label,0,1,6,7)
+        table.attach(DividendsChart(self.pf), 0,1,7,8)
+        
+        label = gtk.Label()
+        label.set_markup(_('<b>Dividends per Year</b>'))
+        table.attach(label,1,2,6,7)
+        table.attach(DividendsPerYearChart(self.pf), 1,2,7,8)
+
         self.add_with_viewport(table)
         self.show_all()
 
     def clear(self):
         for child in self.get_children():
             self.remove(child)
-
-    def current_pie(self):
-        data = {}
-        for pos in self.pf:
-            if pos.cvalue != 0:
-                try:
-                    data[pos.name] += pos.cvalue
-                except:
-                    data[pos.name] = pos.cvalue
-        if len(data) == 0:
-            return gtk.Label(NO_DATA_STRING)
-        plot = cairoplot.plots.PiePlot('gtk',
-                                    data=data,
-                                    width=300,
-                                    height=300,
-                                    gradient=True
-                                    )
-        return plot.handler
-
 
     def portfolio_value_chart(self):
         start = self.pf.birthday
@@ -96,21 +87,6 @@ class ChartTab(gtk.ScrolledWindow):
         print "Data: ", data
         chart.set_args({'data':data, "x_labels":x_labels})
         return chart
-
-    def types_chart(self):
-        sum = {0:0.0, 1:0.0, 2:0.0}
-        for pos in self.pf:
-            sum[pos.stock.type] += pos.cvalue
-        data = {'fund':sum[0], 'stock':sum[1], 'etf':sum[2]}
-        if sum[0]+sum[1]+sum[2] == 0.0:
-            return gtk.Label(NO_DATA_STRING)
-        plot = cairoplot.plots.PiePlot('gtk',
-                                    data=data,
-                                    width=300,
-                                    height=300,
-                                    gradient=True
-                                    )
-        return plot.handler
 
     def tags_pie(self):
         data = {}
@@ -151,21 +127,77 @@ class ChartTab(gtk.ScrolledWindow):
         return chart
 
 
+class DividendsPerYearChart(gtk.VBox):
+
+    def __init__(self, portfolio):
+        gtk.VBox.__init__(self)
+        data = {}
+        for year in date_utils.get_years(portfolio.birthday):
+            data[str(year)] = 0.0
+        for pos in portfolio:
+            for div in pos.dividends:
+                data[str(div.date.year)]+=div.total
+        plot = cairoplot.plots.VerticalBarPlot('gtk',
+                                        data=data,
+                                        width=300,
+                                        height=300,
+                                        x_labels=data.keys(),
+                                        display_values=True,
+                                        background="white light_gray",
+                                        value_formatter = gui_utils.get_currency_format_from_float,
+                                        )
+        chart = plot.handler
+        chart.show()
+        self.pack_start(chart)
+
+
+class DividendsChart(gtk.VBox):
+
+    def __init__(self, portfolio):
+        gtk.VBox.__init__(self)
+        data = {}
+        for pos in portfolio:
+            first = True
+            for div in pos.dividends:
+                if first:
+                    data[pos.name] = div.total
+                    first = False
+                else:
+                    data[pos.name]+=div.total
+        if len(data) == 0:
+            self.pack_start(gtk.Label('No dividends...'))
+        else:
+            plot = cairoplot.plots.VerticalBarPlot('gtk',
+                                            data=data,
+                                            width=300,
+                                            height=300,
+                                            x_labels=data.keys(),
+                                            display_values=True,
+                                            background="white light_gray",
+                                            value_formatter = gui_utils.get_currency_format_from_float,
+                                            )
+            chart = plot.handler
+            chart.show()
+            self.pack_start(chart)
+
+
 class Pie(gtk.VBox):
 
     def __init__(self, portfolio, attribute):
         gtk.VBox.__init__(self)
         self.portfolio = portfolio
-
-        data = {'None':0.0}
+        data = {}
         for pos in self.portfolio:
             if getattr(pos.stock, attribute) is None:
-                data['None'] += pos.cvalue
+                try:
+                    data['None'] += pos.cvalue
+                except:
+                    data['None'] = pos.cvalue
             else:
-                item = getattr(pos.stock, attribute).name
-                if item in data:
+                item = str(getattr(pos.stock, attribute))
+                try:
                     data[item] += pos.cvalue
-                else:
+                except:
                     data[item] = pos.cvalue
         if sum(data.values()) == 0:
             self.pack_start(gtk.Label(NO_DATA_STRING))
