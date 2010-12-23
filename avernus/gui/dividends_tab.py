@@ -16,8 +16,10 @@ class DividendsTab(gtk.VBox):
         actiongroup.add_actions([
                 ('add',    gtk.STOCK_ADD,     'add',    None, _('Add new dividend'),         tree.on_add),
                 ('remove', gtk.STOCK_DELETE,  'remove', None, _('Delete selected dividend'), tree.on_remove),
+                ('edit', gtk.STOCK_EDIT,  'remove', None, _('Edit selected dividend'), tree.on_edit),
                  ])
         actiongroup.get_action('remove').set_sensitive(False)
+        actiongroup.get_action('edit').set_sensitive(False)
         #self.set_property('hscrollbar-policy', gtk.POLICY_AUTOMATIC)
         #self.set_property('vscrollbar-policy', gtk.POLICY_AUTOMATIC)
         tb = gtk.Toolbar()
@@ -56,8 +58,10 @@ class DividendsTree(Tree):
         obj, iterator = self.get_selected_item()
         if isinstance(obj, controller.Dividend):
             self.actiongroup.get_action('remove').set_sensitive(True)
+            self.actiongroup.get_action('edit').set_sensitive(True)
             return
         self.actiongroup.get_action('remove').set_sensitive(False)
+        self.actiongroup.get_action('edit').set_sensitive(False)
 
     def load_dividends(self):
         for pos in self.portfolio:
@@ -74,7 +78,12 @@ class DividendsTree(Tree):
                 div.total])
 
     def on_add(self, widget=None):
-        dialogs.AddDividendDialog(self.portfolio, tree = self)
+        dialogs.DividendDialog(self.portfolio, tree = self)
+    
+    def on_edit(self, widget):
+        obj, iterator = self.get_selected_item()
+        if obj:
+            dialogs.DividendDialog(self.portfolio, tree = self, dividend=obj)
 
     def on_remove(self, widget=None):
         obj, iterator = self.get_selected_item()

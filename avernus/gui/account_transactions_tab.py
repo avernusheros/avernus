@@ -146,6 +146,7 @@ class TransactionsTree(gui_utils.Tree):
         self.connect('drag-end', self.on_drag_end)
         self.connect('button_press_event', self.on_button_press)
         self.connect('button_release_event', self.on_button_release)
+        self.connect('key_press_event', self.on_key_press)
         search_entry.connect('changed', self.on_search_entry_changed)
         pubsub.subscribe('accountTransaction.created', self.on_transaction_created)
         
@@ -228,7 +229,7 @@ class TransactionsTree(gui_utils.Tree):
     
     def on_dividend(self, widget=None):
         trans, iterator = self._get_selected_transaction()
-        dlg = dialogs.AddDividendDialog(date=trans.date, price=trans.amount)
+        dlg = dialogs.DividendDialog(date=trans.date, price=trans.amount)
     
     def on_remove(self, widget=None):
         trans, iterator = self._get_selected_transaction()
@@ -289,6 +290,12 @@ class TransactionsTree(gui_utils.Tree):
             context_menu.add(self.actiongroup.get_action('add').create_menu_item())
         context_menu.show(event)
 
+    def on_key_press(self, widget, event):
+        if gtk.gdk.keyval_name(event.keyval) == 'Delete':
+            self.on_remove()
+            return True
+        return False
+        
     def on_button_press(self, widget, event):
         if event.button == 3:
             self.show_context_menu(event)

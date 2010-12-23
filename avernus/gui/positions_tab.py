@@ -227,9 +227,9 @@ class PositionsTree(Tree):
     
     def on_dividend(self, widget):
         if self.selected_item is not None:
-            dialogs.AddDividendDialog(pf=self.container, position=self.selected_item[0])
+            dialogs.DividendDialog(pf=self.container, position=self.selected_item[0])
         else:
-            dialogs.AddDividendDialog(pf=self.container)
+            dialogs.DividendDialog(pf=self.container)
     
     def on_chart(self, widget):
         ChartWindow(self.selected_item[0].stock)

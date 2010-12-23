@@ -157,13 +157,11 @@ class DividendsChart(gtk.VBox):
         gtk.VBox.__init__(self)
         data = {}
         for pos in portfolio:
-            first = True
             for div in pos.dividends:
-                if first:
-                    data[pos.name] = div.total
-                    first = False
-                else:
+                try:
                     data[pos.name]+=div.total
+                except:
+                    data[pos.name]=div.total                    
         if len(data) == 0:
             self.pack_start(gtk.Label('No dividends...'))
         else:

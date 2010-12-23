@@ -655,19 +655,21 @@ class SplitDialog(gtk.Dialog):
             self.pos.split(val1, val2, datetime(year, month+1, day))
 
 
-class AddDividendDialog(gtk.Dialog):
-    def __init__(self, pf=None, tree=None, date=None, price=None, position=None):
+class DividendDialog(gtk.Dialog):
+    def __init__(self, pf=None, tree=None, date=None, price=None, position=None, dividend=None):
         gtk.Dialog.__init__(self, _("Add dividend"), None
                             , gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
                      (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
                       'Add', gtk.RESPONSE_ACCEPT))
         self.tree = tree
+        self.dividend = dividend
         vbox = self.get_content_area()
         table = gtk.Table()
         vbox.pack_start(table)
 
         table.attach(gtk.Label(_('Position')),0,1,0,1)
-        
+        if dividend is not None:
+            position = dividend.position
         self.pos_selector = PosSelector(pf, position)
         self.pos_selector.connect('changed', self.on_changed_pos)
         table.attach(self.pos_selector,1,2,0,1)
@@ -698,6 +700,13 @@ class AddDividendDialog(gtk.Dialog):
             self.value_entry.set_value(price)
             self.on_change()
 
+        if dividend is not None:
+            self.calendar.select_month(dividend.date.month-1, dividend.date.year)
+            self.calendar.select_day(dividend.date.day)
+            self.value_entry.set_value(dividend.price)
+            self.tacosts_entry.set_value(dividend.costs)
+            self.on_change()
+        
         self.set_response_sensitive(gtk.RESPONSE_ACCEPT, self.position is not None)
         self.show_all()
         response = self.run()
@@ -724,6 +733,13 @@ class AddDividendDialog(gtk.Dialog):
             date = datetime(year, month+1, day)
             value = self.value_entry.get_value()
             ta_costs = self.tacosts_entry.get_value()
-            div = controller.newDividend(price=value, date=date, costs=ta_costs, position=self.selected_pos, shares=self.selected_pos.quantity)
-            if self.tree is not None:
-                self.tree.insert_dividend(div)
+            if self.dividend is None:
+                div = controller.newDividend(price=value, date=date, costs=ta_costs, position=self.selected_pos, shares=self.selected_pos.quantity)
+                if self.tree is not None:
+                    self.tree.insert_dividend(div)
+            else:
+                self.dividend.price = value
+                self.dividend.date = date
+                self.dividend.costs = ta_costs
+                self.dividend.position = self.selected_pos
+                self.dividend.shares=self.selected_pos.quantity
