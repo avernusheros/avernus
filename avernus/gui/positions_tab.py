@@ -3,9 +3,9 @@
 import gtk,sys
 from avernus import pubsub
 from avernus.gui.plot import ChartWindow
-from avernus.gui.dialogs import SellDialog, NewWatchlistPositionDialog, SplitDialog, BuyDialog, EditPositionDialog
+from avernus.gui.dialogs import SellDialog, NewWatchlistPositionDialog, BuyDialog, EditPositionDialog
 from avernus.gui.gui_utils import Tree, ContextMenu, get_name_string, datetime_format
-from avernus.gui import gui_utils
+from avernus.gui import gui_utils, dialogs
 from avernus.objects.position import MetaPosition
 
 gain_thresholds = {
@@ -37,8 +37,8 @@ def current_price_markup(column, cell, model, iter, user_data):
 class PositionContextMenu(ContextMenu):
     def __init__(self, actiongroup):
         ContextMenu.__init__(self)
-        for action in ['edit', 'chart', 'remove']:
-            self.add(actiongroup.get_action(action).create_menu_item())
+        for action in actiongroup.list_actions():
+            self.add(action.create_menu_item())
         
 
 class PositionsTree(Tree):
@@ -125,6 +125,7 @@ class PositionsTree(Tree):
                 ('edit' ,  gtk.STOCK_EDIT,    'edit',   None, _('Edit selected position'),   self.on_edit),
                 ('remove', gtk.STOCK_DELETE,  'remove', None, _('Delete selected position'), self.on_remove),
                 ('chart',  None,              'chart',  None, _('Chart selected position'),  self.on_chart),
+                ('dividend', None,            'dividend', None, _('Add dividend payment'), self.on_dividend), 
                 #('split',  None            , 'split...', None, _('Split selected position'), self.on_remove),
                 ('tag',    None,              'tag',    None, _('Tag selected position'),    self.on_tag),
                 ('update', gtk.STOCK_REFRESH, 'update', None, _('Update positions'),         lambda x: self.container.update_positions())
@@ -183,7 +184,7 @@ class PositionsTree(Tree):
                 row[self.COLS['gain_percent']] = gain_percent
                 row[self.COLS['gain_icon']] = get_arrow_icon(gain_percent)
                 row[self.COLS['days_gain']] = item.days_gain
-                row[self.COLS['mkt_value']] = round(item.cvalue,2)
+                row[self.COLS['mkt_value']] = item.cvalue
                 if not self.watchlist:
                     row[self.COLS['pf_percent']] = item.portfolio_fraction
                 
@@ -223,6 +224,12 @@ class PositionsTree(Tree):
     def on_tag(self, widget):
         path, col = self.get_cursor()
         self.set_cursor(path, focus_column = self.get_column(13), start_editing=True)
+    
+    def on_dividend(self, widget):
+        if self.selected_item is not None:
+            dialogs.AddDividendDialog(pf=self.container, position=self.selected_item[0])
+        else:
+            dialogs.AddDividendDialog(pf=self.container)
     
     def on_chart(self, widget):
         ChartWindow(self.selected_item[0].stock)

@@ -52,16 +52,16 @@ class ChartTab(gtk.ScrolledWindow):
         #table.attach(gtk.Label(_('Portfolio Value')), 0,1, 4,5)
         #FIXME
         #table.attach(self.portfolio_value_chart(), 0,1,5,6)
-
-        label = gtk.Label()
-        label.set_markup(_('<b>Dividends</b>'))
-        table.attach(label,0,1,6,7)
-        table.attach(DividendsChart(self.pf), 0,1,7,8)
         
         label = gtk.Label()
         label.set_markup(_('<b>Dividends per Year</b>'))
-        table.attach(label,1,2,6,7)
-        table.attach(DividendsPerYearChart(self.pf), 1,2,7,8)
+        table.attach(label,1,2,4,5)
+        table.attach(DividendsPerYearChart(self.pf), 1,2,5,6)
+        
+        label = gtk.Label()
+        label.set_markup(_('<b>Dividends</b>'))
+        table.attach(label,0,2,6,7)
+        table.attach(DividendsChart(self.pf), 0,2,7,8)
 
         self.add_with_viewport(table)
         self.show_all()
@@ -168,8 +168,8 @@ class DividendsChart(gtk.VBox):
             self.pack_start(gtk.Label('No dividends...'))
         else:
             plot = cairoplot.plots.VerticalBarPlot('gtk',
-                                            data=data,
-                                            width=300,
+                                            data=data.values(),
+                                            width=600,
                                             height=300,
                                             x_labels=data.keys(),
                                             display_values=True,

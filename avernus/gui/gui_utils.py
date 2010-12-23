@@ -49,6 +49,7 @@ class Tree(gtk.TreeView):
         column.pack_start(cell2, expand = True)     
         column.set_attributes(cell1, icon_name=attribute1)
         column.add_attribute(cell2, "markup", attribute2)
+        column.set_sort_column_id(attribute2)
         if func1 is not None:
             column.set_cell_data_func(cell1, func1, attribute1)
         if func2 is not None:

@@ -21,14 +21,14 @@ class Position(object):
         if self.price * self.quantity == 0:
             percent = 0
         else:
-            percent = round(absolute * 100 / (self.price*self.quantity),2)
+            percent = absolute * 100 / (self.price*self.quantity)
         return absolute, percent
 
     @property
     def current_change(self):
         if not self.stock:
             return 0,0
-        return self.stock.change, round(self.stock.percent,2)
+        return self.stock.change, self.stock.percent
     
     @property    
     def bvalue(self):

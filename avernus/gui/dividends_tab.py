@@ -24,9 +24,13 @@ class DividendsTab(gtk.VBox):
         for action in actiongroup.list_actions():
             button = action.create_tool_item()
             tb.insert(button, -1)
-
+        
+        sw = gtk.ScrolledWindow()
+        sw.set_property('hscrollbar-policy', gtk.POLICY_AUTOMATIC)
+        sw.set_property('vscrollbar-policy', gtk.POLICY_AUTOMATIC)
+        sw.add(tree)
         self.pack_start(tb, expand = False, fill = False)
-        self.pack_start(tree)
+        self.pack_start(sw)
         self.show_all()
 
 

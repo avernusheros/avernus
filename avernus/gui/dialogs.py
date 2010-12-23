@@ -592,7 +592,7 @@ class NewWatchlistPositionDialog(gtk.Dialog):
 
 class PosSelector(gtk.ComboBox):
     
-    def __init__(self, pf):
+    def __init__(self, pf, position=None):
         gtk.ComboBox.__init__(self)
         cell = gtk.CellRendererText()
         self.pack_start(cell, True)
@@ -602,15 +602,18 @@ class PosSelector(gtk.ComboBox):
 
         liststore = gtk.ListStore(object, str)
         liststore.append([-1, 'Select a position'])
+        i=1
         if pf is not None:
-            for pos in pf:
+            for pos in sorted(pf, key=lambda pos: pos.stock.name):
                 if pos.quantity > 0:
                     liststore.append([pos, str(pos.quantity) +' ' +pos.name])
+                    if position and position==pos:
+                        self.set_active(i)
+                    i+=1
         else:
-            for pf in controller.getAllPortfolio():
-                for pos in pf:
-                    if pos.quantity > 0:
-                        liststore.append([pos, pos.portfolio.name+": "+str(pos.quantity) +' ' +pos.name])
+            for pos in sorted(controller.getAllPosition(), key=lambda pos: pos.stock.name):
+                if pos.quantity > 0:
+                    liststore.append([pos, pos.portfolio.name+": "+str(pos.quantity) +' ' +pos.name])
         self.set_model(liststore)
 
 
@@ -653,7 +656,7 @@ class SplitDialog(gtk.Dialog):
 
 
 class AddDividendDialog(gtk.Dialog):
-    def __init__(self, pf=None, tree=None, date=None, price=None):
+    def __init__(self, pf=None, tree=None, date=None, price=None, position=None):
         gtk.Dialog.__init__(self, _("Add dividend"), None
                             , gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
                      (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
@@ -664,11 +667,11 @@ class AddDividendDialog(gtk.Dialog):
         vbox.pack_start(table)
 
         table.attach(gtk.Label(_('Position')),0,1,0,1)
-        self.pos_selector = PosSelector(pf)
+        
+        self.pos_selector = PosSelector(pf, position)
         self.pos_selector.connect('changed', self.on_changed_pos)
         table.attach(self.pos_selector,1,2,0,1)
-
-        self.selected_pos = None
+        self.selected_pos = position
 
         table.attach(gtk.Label(_('Amount')),0,1,1,2)
         self.value_entry = gtk.SpinButton(gtk.Adjustment(lower=0, upper=100000,step_incr=0.1, value = 1.0), digits=2)
@@ -695,7 +698,7 @@ class AddDividendDialog(gtk.Dialog):
             self.value_entry.set_value(price)
             self.on_change()
 
-        self.set_response_sensitive(gtk.RESPONSE_ACCEPT, False)
+        self.set_response_sensitive(gtk.RESPONSE_ACCEPT, self.position is not None)
         self.show_all()
         response = self.run()
         self.process_result(response)
