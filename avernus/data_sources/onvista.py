@@ -221,7 +221,6 @@ class Onvista():
         regex404 = re.compile("http://www\\.onvista\\.de/404\\.html")
         if regex404.search(str(base)):
             Log.info("Encountered 404 while Searching")
-            print "Ditching 404"
             return
         name = unicode(base.h1.contents[0])
         isin = str(base.findAll('tr','hgrau2')[1].findAll('td')[1].contents[0].replace('&nbsp;',''))
@@ -264,7 +263,7 @@ class Onvista():
     def update_stocks(self, sts):
         for st in sts:
             if st.type == stock.FUND:
-                file = opener.open("http://fonds.onvista.de/kurse.html", urllib.urlencode({"ISIN": st.isin}))
+                file = opener.open("http://www.onvista.de/fonds/kurse.html", urllib.urlencode({"ISIN": st.isin}))
                 generator = self._parse_kurse_html(file)
             elif st.type == stock.ETF:
                 file = opener.open("http://www.onvista.de/etf/kurse.html", urllib.urlencode({"ISIN": st.isin}))
@@ -333,10 +332,10 @@ if __name__ == "__main__":
     s1 = Stock('DE0008474248', ex, stock.FUND)
     s2 = Stock('LU0382362290', ex, stock.ETF)
 
-    def test_update():
+    def test_update(s):
 
-        plugin.update_stocks([s1])
-        print s1.price, s1.change, s1.date
+        plugin.update_stocks([s])
+        print s.price, s.change, s.date
         #print s2.price, s2.change, s2.date
 
     def test_search():
@@ -373,5 +372,5 @@ if __name__ == "__main__":
     #print plugin.search_kurse(s1)
     #print plugin.search_kurse(s3)
     #test_parse_kurse()
-    test_update()
+    test_update(s2)
     #test_historicals()
