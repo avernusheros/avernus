@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=avernus
+Comment=avernus finance application
+Categories=GNOME;Office;
+Exec=avernus
+Icon=/usr/share/avernus/images/icon.png
+Terminal=false
+Type=Application

@@ -1,7 +1,0 @@
-[stocktracker Plugin]
-Module=yahoo_newsfeed
-Name=Yahoo Newsfeed
-Description=show news from yahoo finance
-Authors=Wolfgang
-Version=0.0.1
-Dependencies=feedparser,

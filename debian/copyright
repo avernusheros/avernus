@@ -1,14 +1,13 @@
 Format-Specification: http://wiki.debian.org/Proposals/CopyrightFormat
-Upstream-Name: stocktracker
-Upstream-Maintainer: stocktracker-heros <xyz@gmail.com>
-Upstream-Source: https://launchpad.net/stocktracker
+Upstream-Name: avernus
+Upstream-Maintainer: avernus-heros <xyz@gmail.com>
+Upstream-Source: https://launchpad.net/avernus
 
 Files: *
 Copyright: (C)
 Copyright: (C))
 Copyright: (C) 2008-2009 Adam Olsen
 Copyright: (C) 2008-2009 - Lionel Dricot & Bertrand Rousseau
-Copyright: (C) 2008-2009 Wolfgang Steitz <wsteitz(at)gmail.com>
 Copyright: (C) 2008-2010
 Copyright: (C) 2008 Magnun Leno da Silva
 Copyright: (C) 2008 Rodrigo Moreira Araújo

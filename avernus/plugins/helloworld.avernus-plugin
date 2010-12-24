@@ -1,0 +1,6 @@
+[avernus Plugin]
+Module=helloworld
+Name=Hello World
+Description=Plugin Description goes here. Hello World!
+Authors=Wolfgang
+Version=0.2.0
