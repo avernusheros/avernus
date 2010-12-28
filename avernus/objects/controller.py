@@ -1,32 +1,35 @@
 #!/usr/bin/env python
 
-from avernus.objects import model
-from avernus.objects.model import SQLiteEntity, Meta
-from avernus.objects.container import Portfolio, Watchlist, Index, Tag
-from avernus.objects.transaction import Transaction
-from avernus.objects.position import PortfolioPosition, WatchlistPosition
-from avernus.objects.stock import Stock
-from avernus.objects.dividend import Dividend
-from avernus.objects.quotation import Quotation
-from avernus.objects.sector import Sector
-from avernus.objects.risk import Risk
-from avernus.objects.region import Region
-from avernus.objects.asset_class import AssetClass
 from avernus import pubsub
-from avernus.objects.account import Account, AccountTransaction, AccountCategory
 from avernus.logger import Log
-
+from avernus.objects import model
+from avernus.objects.account import Account, AccountTransaction, AccountCategory
+from avernus.objects.asset_class import AssetClass
+from avernus.objects.container import Portfolio, Watchlist, Index, Tag
+from avernus.objects.dimension import Dimension, DimensionValue, \
+    AssetDimensionValue
+from avernus.objects.dividend import Dividend
+from avernus.objects.model import SQLiteEntity, Meta
+from avernus.objects.position import PortfolioPosition, WatchlistPosition
+from avernus.objects.quotation import Quotation
+from avernus.objects.region import Region
+from avernus.objects.risk import Risk
+from avernus.objects.sector import Sector
+from avernus.objects.stock import Stock
+from avernus.objects.transaction import Transaction
 import datetime
 import gobject
-import threading, thread
-import time
 import sys
+import thread
+import threading
+import time
+
 
 
 modelClasses = [Portfolio, Transaction, Tag, Watchlist, Index, Dividend,
                 PortfolioPosition, WatchlistPosition, AccountCategory,
                 Quotation, Stock, Meta, Sector, Account, AccountTransaction,
-                Region, AssetClass, Risk]
+                Region, AssetClass, Risk, Dimension, DimensionValue, AssetDimensionValue]
 
 #these classes will be loaded with one single call and will also load composite
 #relations. therefore it is important that the list is complete in the sense

@@ -17,5 +17,6 @@ class AssetClass(SQLiteEntity):
                      'onDelete':onDelete
                      }
 
+        
     def __str__(self):
         return self.name

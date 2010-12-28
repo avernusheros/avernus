@@ -1,10 +1,10 @@
+from avernus.objects.asset_class import AssetClass
 from avernus.objects.model import SQLiteEntity
-from avernus.objects.sector import Sector
 from avernus.objects.region import Region
 from avernus.objects.risk import Risk
-from avernus.objects.asset_class import AssetClass
-
+from avernus.objects.sector import Sector
 import datetime
+
 
 FUND  = 0
 STOCK = 1
