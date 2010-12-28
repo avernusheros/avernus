@@ -1,6 +1,7 @@
 from avernus.objects.model import SQLiteEntity
 from avernus.objects.sector import Sector
 from avernus.objects.region import Region
+from avernus.objects.risk import Risk
 from avernus.objects.asset_class import AssetClass
 
 import datetime
@@ -25,6 +26,7 @@ class Stock(SQLiteEntity):
                    'name': 'VARCHAR',
                    'sector': Sector,
                    'region': Region,
+                   'risk':Risk,
                    'asset_class':AssetClass,
                    'exchange': 'VARCHAR',
                    'currency': 'VARCHAR',

@@ -9,6 +9,7 @@ from avernus.objects.stock import Stock
 from avernus.objects.dividend import Dividend
 from avernus.objects.quotation import Quotation
 from avernus.objects.sector import Sector
+from avernus.objects.risk import Risk
 from avernus.objects.region import Region
 from avernus.objects.asset_class import AssetClass
 from avernus import pubsub
@@ -25,7 +26,7 @@ import sys
 modelClasses = [Portfolio, Transaction, Tag, Watchlist, Index, Dividend,
                 PortfolioPosition, WatchlistPosition, AccountCategory,
                 Quotation, Stock, Meta, Sector, Account, AccountTransaction,
-                Region, AssetClass]
+                Region, AssetClass, Risk]
 
 #these classes will be loaded with one single call and will also load composite
 #relations. therefore it is important that the list is complete in the sense
@@ -33,7 +34,7 @@ modelClasses = [Portfolio, Transaction, Tag, Watchlist, Index, Dividend,
 initialLoadingClasses = [Portfolio,Transaction,Tag,Watchlist,Index,Dividend,Sector,
                          PortfolioPosition, WatchlistPosition,Account, Meta, Stock, AccountTransaction, AccountCategory]
 
-VERSION = 4
+VERSION = 5
 datasource_manager = None
 
 #FIXME very hackish, but allows to remove the circular controller imports in the objects
@@ -43,6 +44,7 @@ controller = sys.modules[__name__]
 SECTORS = ['Basic Materials','Conglomerates','Consumer Goods','Energy','Financial','Healthcare','Industrial Goods','Services','Technology','Transportation','Utilities']
 REGIONS = ['Emerging Markets', 'Europe', 'America', 'Worldwide']
 ASSET_CLASSES = ['large cap stocks', 'Bonds', 'real estate', 'insurance' ]
+RISK = ['high', 'medium', 'low']
 CATEGORIES = {
     _('Utilities'): [_('Gas'),_('Phone'), _('Water'), _('Electricity')],
     _('Entertainment'): [_('Books'),_('Movies'), _('Music'), _('Amusement')],
@@ -91,7 +93,6 @@ def check_duplicate(tp, **kwargs):
         return present
     return None
 
-
 def detectDuplicate(tp,**kwargs):
     #print tp, kwargs
     sqlArgs = {}
@@ -139,6 +140,11 @@ def upgrade_db(db_version):
         model.store.execute('ALTER TABLE stock ADD COLUMN asset_class INTEGER')
         for aclass in ASSET_CLASSES:
             newAssetClass(aclass)
+        db_version+=1
+    if db_version==4:
+        model.store.execute('ALTER TABLE stock ADD COLUMN risk INTEGER')
+        for risk in RISK:
+            newRisk(risk)
         db_version+=1
     if db_version==VERSION:
         set_db_version(db_version)
@@ -300,6 +306,9 @@ def newAssetClass(name):
 def newRegion(name):
     return detectDuplicate(Region, name=name)
 
+def newRisk(name):
+    return detectDuplicate(Risk, name=name)
+
 def newStock(insert=True, **kwargs):
     result = Stock(**kwargs)
     result.controller = controller
@@ -378,6 +387,9 @@ def getAllSector():
 def getAllAssetClass():
     return AssetClass.getAll()
 
+def getAllRisk():
+    return Risk.getAll()
+
 def getAllRegion():
     return Region.getAll()
 
@@ -396,13 +408,18 @@ def deleteSectorFromStock(sector):
     for stock in getAllStock():
         if stock.sector == sector:
             stock.sector = None
+    
+def deleteRiskFromStock(risk):
+    for stock in getAllStock():
+        if stock.risk == risk:
+            stock.risk = None
             
 def deleteAssetClassFromStock(asset_class):
     for stock in getAllStock():
         if stock.asset_class == asset_class:
             stock.asset_class = None
 
-def deleteRegionFromStock(sector):
+def deleteRegionFromStock(region):
     for stock in getAllStock():
         if stock.region == region:
             stock.region = None

@@ -34,11 +34,6 @@ class ChartTab(gtk.ScrolledWindow):
         table.attach(label,1,2,0,1)
         table.attach(Pie(self.pf, 'type_string'),1,2,1,2)
 
-        #label = gtk.Label()
-        #label.set_markup(_('<b>Tags</b>'))
-        #table.attach(label,0,1,2,3)
-        #table.attach(self.tags_pie(),0,1,3,4)
-
         label = gtk.Label()
         label.set_markup(_('<b>Asset classes</b>'))
         table.attach(label,0,1,2,3)
@@ -53,6 +48,16 @@ class ChartTab(gtk.ScrolledWindow):
         label.set_markup(_('<b>Regions</b>'))
         table.attach(label,0,1,4,5)
         table.attach(Pie(self.pf, 'region'),0,1,5,6)
+        
+        label = gtk.Label()
+        label.set_markup(_('<b>Risks</b>'))
+        table.attach(label,1,2,4,5)
+        table.attach(Pie(self.pf, 'risk'),1,2,5,6)
+        
+        label = gtk.Label()
+        label.set_markup(_('<b>Tags</b>'))
+        table.attach(label,0,1,6,7)
+        table.attach(self.tags_pie(),0,1,7,8)
 
         #table.attach(gtk.Label(_('Portfolio Value')), 0,1, 4,5)
         #FIXME
@@ -60,13 +65,13 @@ class ChartTab(gtk.ScrolledWindow):
         
         label = gtk.Label()
         label.set_markup(_('<b>Dividends per Year</b>'))
-        table.attach(label,1,2,4,5)
-        table.attach(DividendsPerYearChart(self.pf), 1,2,5,6)
+        table.attach(label,1,2,6,7)
+        table.attach(DividendsPerYearChart(self.pf), 1,2,7,8)
         
         label = gtk.Label()
         label.set_markup(_('<b>Dividends</b>'))
-        table.attach(label,0,2,6,7)
-        table.attach(DividendsChart(self.pf), 0,2,7,8)
+        table.attach(label,0,2,8,9)
+        table.attach(DividendsChart(self.pf), 0,2,9,10)
 
         self.add_with_viewport(table)
         self.show_all()
