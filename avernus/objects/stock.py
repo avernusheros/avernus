@@ -46,6 +46,8 @@ class Stock(SQLiteEntity):
                          'name':'',
                          'sector':None,
                          'region':None,
+                         'risk' : None,
+                         'asset_class' : None,
                          'isin':''
                          }
 
