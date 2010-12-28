@@ -55,24 +55,21 @@ class EditStockDialog(gtk.Dialog):
         self.destroy()
 
 
-class MyComboBoxEntry(gtk.ComboBoxEntry):
+class DimensionComboBox(gtk.ComboBoxEntry):
 
     COL_OBJ  = 0
     COL_TEXT = 1
 
-    def __init__(self, items, creator, current=None):
-        self.creator = creator
+    def __init__(self, dimension, asset):
+        values = [(None, 'None'),]+[(dimVal, dimVal.name) for dimVal in dimension.values]
+        self.dimension = dimension
         liststore = gtk.ListStore(object, str)
         gtk.ComboBoxEntry.__init__(self, liststore, self.COL_TEXT)
-        i=0
-        for item, string in items:
+        for item, string in values:
             liststore.append([item, string])
-            if current == item:
-                self.set_active(i)
-            i+=1
+        self.child.set_text(asset.getDimensionText())
         completion = gtk.EntryCompletion()
         completion.set_model(liststore)
-        #completion.set_minimum_key_length(1)
         completion.set_text_column(self.COL_TEXT)
         self.child.set_completion(completion)
 
@@ -82,7 +79,8 @@ class MyComboBoxEntry(gtk.ComboBoxEntry):
             name = self.get_active_text()
             if len(name) == 0:
                 return None
-            return self.creator(name=name)
+            print "hier muss magie passieren! DimensionComboBox.get_active"
+            return None
         return self.get_model()[iterator][self.COL_OBJ]
 
 
@@ -116,14 +114,9 @@ class EditStockTable(gtk.Table):
         for dim in controller.getAllDimension():
             #print dim
             self.attach(gtk.Label(_(dim.name)),0,1,currentRow,currentRow+1, yoptions=gtk.FILL)
-            values = [(None, 'None'),]+[(dimVal, dimVal.name) for dimVal in 
-                                        controller.getDimensionValueForDimension(dim)]
-            #sectors = [(None, 'None'),]+[(sector, sector.name) for sector in controller.getAllSector()]
-            # MyComboBoxEntry.current does not make sense for the new format
+            # DimensionComboBox.current does not make sense for the new format
             comboName = dim.name+"ValueComboBox"
-            setattr(self, comboName, 
-                    MyComboBoxEntry(values, controller.newDimensionValue, None))
-            #self.sector_cb = MyComboBoxEntry(sectors, controller.newSector, self.stock.sector)
+            setattr(self, comboName, DimensionComboBox(dim, stock))
             self.attach(getattr(self, comboName), 1,2,currentRow,currentRow+1,  yoptions=gtk.FILL)
             currentRow += 1
         
@@ -134,10 +127,6 @@ class EditStockTable(gtk.Table):
             self.stock.isin = self.isin_entry.get_text()
             active_iter = self.type_cb.get_active_iter()
             self.stock.type = self.type_cb.get_model()[active_iter][1]
-            self.stock.sector = self.sector_cb.get_active()
-            self.stock.region = self.region_cb.get_active()
-            self.stock.risk = self.risk_cb.get_active()
-            self.stock.asset_class = self.class_cb.get_active()
             pubsub.publish("stock.edited", self.stock)
 
 

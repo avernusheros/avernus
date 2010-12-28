@@ -55,6 +55,9 @@ class Stock(SQLiteEntity):
     @property
     def stock(self):
         return self
+    
+    def getDimensionText(self):
+        return "Nur ein Platzhalter!"
 
     @property
     def percent(self):

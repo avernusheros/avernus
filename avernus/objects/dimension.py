@@ -19,6 +19,10 @@ class Dimension(SQLiteEntity):
     def __str__(self):
         return self.name
     
+    @property
+    def values(self):
+        return self.controller.getDimensionValueForDimension(self)
+    
 class DimensionValue(SQLiteEntity):
     
     __primaryKey__ = 'id'

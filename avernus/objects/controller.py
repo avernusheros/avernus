@@ -35,7 +35,9 @@ modelClasses = [Portfolio, Transaction, Tag, Watchlist, Index, Dividend,
 #relations. therefore it is important that the list is complete in the sense
 #that there are no classes holding composite keys to classes outside the list
 initialLoadingClasses = [Portfolio,Transaction,Tag,Watchlist,Index,Dividend,Sector,
-                         PortfolioPosition, WatchlistPosition,Account, Meta, Stock, AccountTransaction, AccountCategory]
+                         PortfolioPosition, WatchlistPosition,Account, Meta, Stock, 
+                         AccountTransaction, AccountCategory, Dimension, DimensionValue,
+                         AssetDimensionValue]
 
 VERSION = 5
 datasource_manager = None
