@@ -300,6 +300,10 @@ def newTag(name):
     pubsub.publish('tag.created',result)
     return result
 
+def newDimensionValue(dimension=None, name=""):
+    print "New DimensionValue ", dimension, name
+    return None
+
 def newSector(name):
     return detectDuplicate(Sector, name=name)
 
@@ -383,6 +387,16 @@ def getAllAccountCategoriesHierarchical():
         else:
             hierarchy[cat.parent] = [cat]
     return hierarchy
+
+def getAllDimension():
+    return Dimension.getAll()
+
+def getDimensionValueForDimension(dim):
+    erg = []
+    for value in DimensionValue.getAll():
+        if value.dimension == dim:
+            erg.append(value)
+    return erg
 
 def getAllSector():
     return Sector.getAll()

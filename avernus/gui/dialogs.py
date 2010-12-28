@@ -112,26 +112,21 @@ class EditStockTable(gtk.Table):
         cb.add_attribute(cell, 'text', 0)
         cb.set_active(self.stock.type)
         self.attach(cb, 1,2,2,3,  yoptions=gtk.FILL)
-
-        self.attach(gtk.Label(_('Sector')),0,1,3,4, yoptions=gtk.FILL)
-        sectors = [(None, 'None'),]+[(sector, sector.name) for sector in controller.getAllSector()]
-        self.sector_cb = MyComboBoxEntry(sectors, controller.newSector, self.stock.sector)
-        self.attach(self.sector_cb, 1,2,3,4,  yoptions=gtk.FILL)
-
-        self.attach(gtk.Label(_('Region')),0,1,4,5, yoptions=gtk.FILL)
-        regions = [(None, 'None'),]+[(regions, regions.name) for regions in controller.getAllRegion()]
-        self.region_cb = MyComboBoxEntry(regions, controller.newRegion, self.stock.region)
-        self.attach(self.region_cb, 1,2,4,5,  yoptions=gtk.FILL)
+        currentRow = 3
+        for dim in controller.getAllDimension():
+            #print dim
+            self.attach(gtk.Label(_(dim.name)),0,1,currentRow,currentRow+1, yoptions=gtk.FILL)
+            values = [(None, 'None'),]+[(dimVal, dimVal.name) for dimVal in 
+                                        controller.getDimensionValueForDimension(dim)]
+            #sectors = [(None, 'None'),]+[(sector, sector.name) for sector in controller.getAllSector()]
+            # MyComboBoxEntry.current does not make sense for the new format
+            comboName = dim.name+"ValueComboBox"
+            setattr(self, comboName, 
+                    MyComboBoxEntry(values, controller.newDimensionValue, None))
+            #self.sector_cb = MyComboBoxEntry(sectors, controller.newSector, self.stock.sector)
+            self.attach(getattr(self, comboName), 1,2,currentRow,currentRow+1,  yoptions=gtk.FILL)
+            currentRow += 1
         
-        self.attach(gtk.Label(_('Asset class')),0,1,5,6, yoptions=gtk.FILL)
-        classes = [(None, 'None'),]+[(c, c.name) for c in controller.getAllAssetClass()]
-        self.class_cb = MyComboBoxEntry(classes, controller.newAssetClass, self.stock.asset_class)
-        self.attach(self.class_cb, 1,2,5,6,  yoptions=gtk.FILL)
-        
-        self.attach(gtk.Label(_('Risk')),0,1,6,7, yoptions=gtk.FILL)
-        risks = [(None, 'None'),]+[(c, c.name) for c in controller.getAllRisk()]
-        self.risk_cb = MyComboBoxEntry(risks, controller.newRisk, self.stock.risk)
-        self.attach(self.risk_cb, 1,2,6,7,  yoptions=gtk.FILL)
 
     def process_result(self, widget=None, response = gtk.RESPONSE_ACCEPT):
         if response == gtk.RESPONSE_ACCEPT:
