@@ -34,10 +34,15 @@ class ChartTab(gtk.ScrolledWindow):
         table.attach(label,1,2,0,1)
         table.attach(Pie(self.pf, 'type_string'),1,2,1,2)
 
+        #label = gtk.Label()
+        #label.set_markup(_('<b>Tags</b>'))
+        #table.attach(label,0,1,2,3)
+        #table.attach(self.tags_pie(),0,1,3,4)
+
         label = gtk.Label()
-        label.set_markup(_('<b>Tags</b>'))
+        label.set_markup(_('<b>Asset classes</b>'))
         table.attach(label,0,1,2,3)
-        table.attach(self.tags_pie(),0,1,3,4)
+        table.attach(Pie(self.pf, 'asset_class'),0,1,3,4)
 
         label = gtk.Label()
         label.set_markup(_('<b>Sectors</b>'))

@@ -122,6 +122,11 @@ class EditStockTable(gtk.Table):
         regions = [(None, 'None'),]+[(regions, regions.name) for regions in controller.getAllRegion()]
         self.region_cb = MyComboBoxEntry(regions, controller.newRegion, self.stock.region)
         self.attach(self.region_cb, 1,2,4,5,  yoptions=gtk.FILL)
+        
+        self.attach(gtk.Label(_('Asset class')),0,1,5,6, yoptions=gtk.FILL)
+        classes = [(None, 'None'),]+[(c, c.name) for c in controller.getAllAssetClass()]
+        self.class_cb = MyComboBoxEntry(classes, controller.newAssetClass, self.stock.asset_class)
+        self.attach(self.class_cb, 1,2,5,6,  yoptions=gtk.FILL)
 
     def process_result(self, widget=None, response = gtk.RESPONSE_ACCEPT):
         if response == gtk.RESPONSE_ACCEPT:
@@ -131,6 +136,7 @@ class EditStockTable(gtk.Table):
             self.stock.type = self.type_cb.get_model()[active_iter][1]
             self.stock.sector = self.sector_cb.get_active()
             self.stock.region = self.region_cb.get_active()
+            self.stock.asset_class = self.class_cb.get_active()
             pubsub.publish("stock.edited", self.stock)
 
 
