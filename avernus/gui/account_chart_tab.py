@@ -283,7 +283,8 @@ class CategoryPie(gtk.VBox, Chart):
                                 width=300,
                                 height=300,
                                 gradient=True,
-                                shadow=False
+                                shadow=False,
+                                values=True
                                 )
         self.chart = plot.handler
         self.chart.show()

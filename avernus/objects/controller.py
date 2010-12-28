@@ -161,7 +161,7 @@ def load_sample_data():
         newSector(sname)
     for rname in REGIONS:
         newRegion(rname)
-    for aclass in ASSSET_CLASSES:
+    for aclass in ASSET_CLASSES:
         newAssetClass(aclass)
     for cat, subcats in CATEGORIES.iteritems():
         parent = newAccountCategory(name=cat)

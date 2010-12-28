@@ -214,7 +214,8 @@ class Pie(gtk.VBox):
                                         data=data,
                                         width=300,
                                         height=300,
-                                        gradient=True
+                                        gradient=True,
+                                        values=True
                                         )
             self.chart = plot.handler
             self.chart.show()
