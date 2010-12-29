@@ -90,17 +90,17 @@ class PositionsTree(Tree):
         self.create_column(_('Name'), self.COLS['name'])
         self.create_icon_column(_('Type'), self.COLS['type'],size= gtk.ICON_SIZE_DND)
         if not self.watchlist:
-            self.create_column(_('Pf %'), self.COLS['pf_percent'], func=gui_utils.float_format)
+            self.create_column(_('Pf %'), self.COLS['pf_percent'], func=gui_utils.percent_format)
         self.create_column(_('Start'), self.COLS['start'], func=start_price_markup)
         if not self.watchlist:
             self.create_column(_('Buy value'), self.COLS['buy_value'], func=gui_utils.currency_format)
         self.create_column(_('Last price'), self.COLS['last_price'], func=current_price_markup)
         self.create_column(_('Change'), self.COLS['change'], func=gui_utils.float_to_red_green_string_currency)
-        self.create_column('%', self.COLS['change_percent'], func=gui_utils.float_to_red_green_string)
+        self.create_column('%', self.COLS['change_percent'], func=gui_utils.float_to_red_green_string_percent)
         if not self.watchlist:
             self.create_column(_('Mkt value'), self.COLS['mkt_value'], gui_utils.currency_format)
         self.create_column(_('Gain'), self.COLS['gain'], gui_utils.float_to_red_green_string_currency)
-        self.create_icon_text_column('%', self.COLS['gain_icon'], self.COLS['gain_percent'], func2=gui_utils.float_to_red_green_string)
+        self.create_icon_text_column('%', self.COLS['gain_icon'], self.COLS['gain_percent'], func2=gui_utils.float_to_red_green_string_percent)
         if not self.watchlist:
             self.create_column(_('Today'), self.COLS['days_gain'], gui_utils.float_to_red_green_string_currency)
         col, cell = self.create_column(_('Tags'), self.COLS['tags'])
