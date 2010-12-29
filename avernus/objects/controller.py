@@ -4,7 +4,6 @@ from avernus import pubsub
 from avernus.logger import Log
 from avernus.objects import model
 from avernus.objects.account import Account, AccountTransaction, AccountCategory
-from avernus.objects.asset_class import AssetClass
 from avernus.objects.container import Portfolio, Watchlist, Index, Tag
 from avernus.objects.dimension import Dimension, DimensionValue, \
     AssetDimensionValue
@@ -12,9 +11,6 @@ from avernus.objects.dividend import Dividend
 from avernus.objects.model import SQLiteEntity, Meta
 from avernus.objects.position import PortfolioPosition, WatchlistPosition
 from avernus.objects.quotation import Quotation
-from avernus.objects.region import Region
-from avernus.objects.risk import Risk
-from avernus.objects.sector import Sector
 from avernus.objects.stock import Stock
 from avernus.objects.transaction import Transaction
 import datetime
@@ -28,13 +24,13 @@ import time
 
 modelClasses = [Portfolio, Transaction, Tag, Watchlist, Index, Dividend,
                 PortfolioPosition, WatchlistPosition, AccountCategory,
-                Quotation, Stock, Meta, Sector, Account, AccountTransaction,
-                Region, AssetClass, Risk, Dimension, DimensionValue, AssetDimensionValue]
+                Quotation, Stock, Meta, Account, AccountTransaction,
+                Dimension, DimensionValue, AssetDimensionValue]
 
 #these classes will be loaded with one single call and will also load composite
 #relations. therefore it is important that the list is complete in the sense
 #that there are no classes holding composite keys to classes outside the list
-initialLoadingClasses = [Portfolio,Transaction,Tag,Watchlist,Index,Dividend,Sector,
+initialLoadingClasses = [Portfolio,Transaction,Tag,Watchlist,Index,Dividend,
                          PortfolioPosition, WatchlistPosition,Account, Meta, Stock, 
                          AccountTransaction, AccountCategory, Dimension, DimensionValue,
                          AssetDimensionValue]
@@ -137,19 +133,10 @@ def upgrade_db(db_version):
         db_version+=1
     if db_version==2:
         print "Updating db to version 3..."
-        model.store.execute('ALTER TABLE stock ADD COLUMN region INTEGER')
-        for rname in REGIONS:
-            newRegion(rname)
         db_version+=1
     if db_version==3:
-        model.store.execute('ALTER TABLE stock ADD COLUMN asset_class INTEGER')
-        for aclass in ASSET_CLASSES:
-            newAssetClass(aclass)
         db_version+=1
     if db_version==4:
-        model.store.execute('ALTER TABLE stock ADD COLUMN risk INTEGER')
-        for risk in RISK:
-            newRisk(risk)
         db_version+=1
     if db_version==VERSION:
         set_db_version(db_version)
@@ -164,10 +151,6 @@ def set_db_version(version):
 def load_sample_data():
     for sname in SECTORS:
         newDimension(sname)
-    for rname in REGIONS:
-        newRegion(rname)
-    for aclass in ASSET_CLASSES:
-        newAssetClass(aclass)
     for cat, subcats in CATEGORIES.iteritems():
         parent = newAccountCategory(name=cat)
         for subcat in subcats:
@@ -311,19 +294,10 @@ def newDimension(name):
     dim.controller = controller
     return dim
 
-def newAssetClass(name):
-    return detectDuplicate(AssetClass, name=name)
-
 def newAssetDimensionValue(stock, dimensionValue, value):
     adv = detectDuplicate(AssetDimensionValue, stock=stock.id, dimensionValue=dimensionValue.id,
                           value=value)
     return adv
-
-def newRegion(name):
-    return detectDuplicate(Region, name=name)
-
-def newRisk(name):
-    return detectDuplicate(Risk, name=name)
 
 def newStock(insert=True, **kwargs):
     result = Stock(**kwargs)
@@ -416,18 +390,6 @@ def getAssetDimensionValueForStock(stock, dim):
     stockADVs = filter(lambda adv: adv.dimensionValue.dimension == dim, stockADVs)
     return stockADVs
 
-def getAllSector():
-    return Sector.getAll()
-    
-def getAllAssetClass():
-    return AssetClass.getAll()
-
-def getAllRisk():
-    return Risk.getAll()
-
-def getAllRegion():
-    return Region.getAll()
-
 def getAllTag():
     return Tag.getAll()
 
@@ -438,26 +400,6 @@ def getPositionForPortfolio(portfolio):
     key = portfolio.getPrimaryKey()
     erg = PortfolioPosition.getAllFromOneColumn("portfolio",key)
     return erg
-
-def deleteSectorFromStock(sector):
-    for stock in getAllStock():
-        if stock.sector == sector:
-            stock.sector = None
-    
-def deleteRiskFromStock(risk):
-    for stock in getAllStock():
-        if stock.risk == risk:
-            stock.risk = None
-            
-def deleteAssetClassFromStock(asset_class):
-    for stock in getAllStock():
-        if stock.asset_class == asset_class:
-            stock.asset_class = None
-
-def deleteRegionFromStock(region):
-    for stock in getAllStock():
-        if stock.region == region:
-            stock.region = None
 
 def getTransactionForPosition(position):
     key = position.getPrimaryKey()
