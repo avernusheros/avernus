@@ -1,10 +1,12 @@
 #!/usr/bin/env python
 
-import gtk, pango
 from avernus import pubsub, config
-from datetime import datetime
-from avernus.objects import controller, stock
 from avernus.gui import gui_utils
+from avernus.objects import controller, stock
+from avernus.objects.dimension import DimensionValue
+from datetime import datetime
+import gtk
+import pango
 
 
 class EditPositionDialog(gtk.Dialog):
@@ -67,7 +69,7 @@ class DimensionComboBox(gtk.ComboBoxEntry):
         gtk.ComboBoxEntry.__init__(self, liststore, self.COL_TEXT)
         for item, string in values:
             liststore.append([item, string])
-        self.child.set_text(asset.getDimensionText())
+        self.child.set_text(asset.getDimensionText(dimension))
         completion = gtk.EntryCompletion()
         completion.set_model(liststore)
         completion.set_text_column(self.COL_TEXT)
@@ -114,7 +116,6 @@ class EditStockTable(gtk.Table):
         for dim in controller.getAllDimension():
             #print dim
             self.attach(gtk.Label(_(dim.name)),0,1,currentRow,currentRow+1, yoptions=gtk.FILL)
-            # DimensionComboBox.current does not make sense for the new format
             comboName = dim.name+"ValueComboBox"
             setattr(self, comboName, DimensionComboBox(dim, stock))
             self.attach(getattr(self, comboName), 1,2,currentRow,currentRow+1,  yoptions=gtk.FILL)
@@ -127,6 +128,14 @@ class EditStockTable(gtk.Table):
             self.stock.isin = self.isin_entry.get_text()
             active_iter = self.type_cb.get_active_iter()
             self.stock.type = self.type_cb.get_model()[active_iter][1]
+            for dim in controller.getAllDimension():
+                box = getattr(self, dim.name+"ValueComboBox")
+                active = box.get_active()
+                if isinstance(active, DimensionValue):
+                    # one value chosen
+                    self.stock.updateSingleDimensionValue(active)
+                else:
+                    print "Unprocessed Selection ", active
             pubsub.publish("stock.edited", self.stock)
 
 

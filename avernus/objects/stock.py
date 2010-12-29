@@ -56,8 +56,20 @@ class Stock(SQLiteEntity):
     def stock(self):
         return self
     
-    def getDimensionText(self):
-        return "Nur ein Platzhalter!"
+    def getDimensionText(self, dim):
+        advs = self.getAssetDimensionValue(dim)
+        if len(advs) == 1:
+            return str(advs.pop(0))
+        return str(advs)
+    
+    def updateSingleDimensionValue(self, dimVal):
+        # we have 100% this value in its dimension
+        self.controller.newAssetDimensionValue(self, dimVal, 1.0)
+        # TODO other dimensionValues have to be deleted
+        
+    def getAssetDimensionValue(self, dim):
+        assDimVals = self.controller.getAssetDimensionValueForStock(self, dim)
+        return assDimVals
 
     @property
     def percent(self):

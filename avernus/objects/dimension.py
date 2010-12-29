@@ -34,6 +34,9 @@ class DimensionValue(SQLiteEntity):
                   }
     __comparisonPositives__ = ['dimension','name']
     
+    def __repr__(self):
+        return self.name
+    
 class AssetDimensionValue(SQLiteEntity):
     
     __primaryKey__ = 'id'
@@ -45,4 +48,9 @@ class AssetDimensionValue(SQLiteEntity):
                    'value': 'FLOAT'                 
                   }
     __comparisonPositives__ = ['dimensionValue','stock']
-        
+    
+    def __repr__(self):
+        erg = self.dimensionValue.name
+        if self.value != 1.0:
+            erg += ":"+str(self.value)
+        return erg

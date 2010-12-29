@@ -312,6 +312,11 @@ def newSector(name):
 def newAssetClass(name):
     return detectDuplicate(AssetClass, name=name)
 
+def newAssetDimensionValue(stock, dimensionValue, value):
+    adv = detectDuplicate(AssetDimensionValue, stock=stock.id, dimensionValue=dimensionValue.id,
+                          value=value)
+    return adv
+
 def newRegion(name):
     return detectDuplicate(Region, name=name)
 
@@ -399,6 +404,11 @@ def getDimensionValueForDimension(dim):
         if value.dimension == dim:
             erg.append(value)
     return erg
+
+def getAssetDimensionValueForStock(stock, dim):
+    stockADVs = AssetDimensionValue.getAllFromOneColumn('stock', stock.id)
+    stockADVs = filter(lambda adv: adv.dimensionValue.dimension == dim, stockADVs)
+    return stockADVs
 
 def getAllSector():
     return Sector.getAll()
