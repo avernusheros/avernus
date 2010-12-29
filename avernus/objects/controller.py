@@ -163,7 +163,7 @@ def set_db_version(version):
 
 def load_sample_data():
     for sname in SECTORS:
-        newSector(sname)
+        newDimension(sname)
     for rname in REGIONS:
         newRegion(rname)
     for aclass in ASSET_CLASSES:
@@ -306,8 +306,10 @@ def newDimensionValue(dimension=None, name=""):
     print "New DimensionValue ", dimension, name
     return None
 
-def newSector(name):
-    return detectDuplicate(Sector, name=name)
+def newDimension(name):
+    dim = detectDuplicate(Dimension, name=name)
+    dim.controller = controller
+    return dim
 
 def newAssetClass(name):
     return detectDuplicate(AssetClass, name=name)
