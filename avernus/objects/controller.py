@@ -398,12 +398,16 @@ def getAllAccountCategoriesHierarchical():
 def getAllDimension():
     return Dimension.getAll()
 
-def getDimensionValueForDimension(dim):
+def getAllDimensionValueForDimension(dim):
     erg = []
     for value in DimensionValue.getAll():
         if value.dimension == dim:
             erg.append(value)
     return erg
+
+def getDimensionValueForDimension(dim, string):
+    return detectDuplicate(DimensionValue, dimension=dim.id, name=string)
+    
 
 def getAssetDimensionValueForStock(stock, dim):
     stockADVs = AssetDimensionValue.getAllFromOneColumn('stock', stock.id)

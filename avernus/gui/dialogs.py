@@ -79,10 +79,32 @@ class DimensionComboBox(gtk.ComboBoxEntry):
         iterator = self.get_active_iter()
         if iterator is None:
             name = self.get_active_text()
+            for col in self.get_model():
+                if col[self.COL_TEXT] == name:
+                    return col[self.COL_OBJ]
             if len(name) == 0:
                 return None
-            print "hier muss magie passieren! DimensionComboBox.get_active"
-            return None
+            # There is text but none of the selected ==> we have to parse
+            portions = name.split(",")
+            erg = []
+            for portion in portions:
+                data = portion.partition(":")
+                currentName = data[0].strip()
+                value = data[2].strip()
+                #print "|"+value+"|"
+                if value == "":
+                    value = "1"
+                erg.append((controller.getDimensionValueForDimension(self.dimension, currentName),
+                           float(value)))
+            # a little sanity.. the sum should be 1.0
+            sum = 0
+            for dv, val in erg:
+                sum += val
+            if sum == 1.0:
+                return erg
+            else:
+                print "The sum of your entries is not 1.0. ignored: ", erg
+                return None
         return self.get_model()[iterator][self.COL_OBJ]
 
 
@@ -133,7 +155,10 @@ class EditStockTable(gtk.Table):
                 active = box.get_active()
                 if isinstance(active, DimensionValue):
                     # one value chosen
-                    self.stock.updateSingleDimensionValue(active)
+                    self.stock.updateAssetDimensionValue([(active,1.0)])
+                elif isinstance(active, list):
+                    # we have a list of values
+                    self.stock.updateAssetDimensionValue(active)
                 else:
                     print "Unprocessed Selection ", active
             pubsub.publish("stock.edited", self.stock)

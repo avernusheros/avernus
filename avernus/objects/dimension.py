@@ -21,7 +21,7 @@ class Dimension(SQLiteEntity):
     
     @property
     def values(self):
-        return self.controller.getDimensionValueForDimension(self)
+        return self.controller.getAllDimensionValueForDimension(self)
     
 class DimensionValue(SQLiteEntity):
     
@@ -50,7 +50,9 @@ class AssetDimensionValue(SQLiteEntity):
     __comparisonPositives__ = ['dimensionValue','stock']
     
     def __repr__(self):
-        erg = self.dimensionValue.name
-        if self.value != 1.0:
-            erg += ":"+str(self.value)
-        return erg
+        if self.dimensionValue:
+            erg = self.dimensionValue.name
+            if self.value != 1.0:
+                erg += ":"+str(self.value)
+            return erg
+        return SQLiteEntity.__repr__(self)
