@@ -23,55 +23,21 @@ class ChartTab(gtk.ScrolledWindow):
 
         #table.attach(gtk.Label(_('Cash over time')), 0,2,0,1)
         #table.attach(self.cash_chart(),0,2,1,2)
-
-        label = gtk.Label()
-        label.set_markup(_('<b>Market value</b>'))
-        table.attach(label, 0,1,0,1)
-        table.attach(Pie(self.pf, 'name'),0,1,1,2)
-
-        label = gtk.Label()
-        label.set_markup(_('<b>Investment types</b>'))
-        table.attach(label,1,2,0,1)
-        table.attach(Pie(self.pf, 'type_string'),1,2,1,2)
-
-        label = gtk.Label()
-        label.set_markup(_('<b>Asset classes</b>'))
-        table.attach(label,0,1,2,3)
-        table.attach(Pie(self.pf, 'asset_class'),0,1,3,4)
-
-        label = gtk.Label()
-        label.set_markup(_('<b>Sectors</b>'))
-        table.attach(label,1,2,2,3)
-        table.attach(Pie(self.pf, 'sector'),1,2,3,4)
-
-        label = gtk.Label()
-        label.set_markup(_('<b>Regions</b>'))
-        table.attach(label,0,1,4,5)
-        table.attach(Pie(self.pf, 'region'),0,1,5,6)
-        
-        label = gtk.Label()
-        label.set_markup(_('<b>Risks</b>'))
-        table.attach(label,1,2,4,5)
-        table.attach(Pie(self.pf, 'risk'),1,2,5,6)
-        
-        label = gtk.Label()
-        label.set_markup(_('<b>Tags</b>'))
-        table.attach(label,0,1,6,7)
-        table.attach(self.tags_pie(),0,1,7,8)
-
-        #table.attach(gtk.Label(_('Portfolio Value')), 0,1, 4,5)
-        #FIXME
-        #table.attach(self.portfolio_value_chart(), 0,1,5,6)
-        
-        label = gtk.Label()
-        label.set_markup(_('<b>Dividends per Year</b>'))
-        table.attach(label,1,2,6,7)
-        table.attach(DividendsPerYearChart(self.pf), 1,2,7,8)
-        
-        label = gtk.Label()
-        label.set_markup(_('<b>Dividends</b>'))
-        table.attach(label,0,2,8,9)
-        table.attach(DividendsChart(self.pf), 0,2,9,10)
+        row = 0
+        col = 0
+        switch = True
+        for dim in controller.getAllDimension():
+            label = gtk.Label()
+            label.set_markup(_('<b>'+dim.name+'</b>'))
+            table.attach(label, col,col+1,row,row+1)
+            table.attach(DimensionPie(self.pf, dim),col,col+1,row+1,row+2)
+            if switch:
+                col = 1
+            else:
+                col = 0
+                row += 2
+            switch = not switch
+            
 
         self.add_with_viewport(table)
         self.show_all()
@@ -189,24 +155,17 @@ class DividendsChart(gtk.VBox):
             self.pack_start(chart)
 
 
-class Pie(gtk.VBox):
+class DimensionPie(gtk.VBox):
 
-    def __init__(self, portfolio, attribute):
+    def __init__(self, portfolio, dimension):
         gtk.VBox.__init__(self)
         self.portfolio = portfolio
         data = {}
+        for val in dimension.values:
+            data[val.name] = 0
         for pos in self.portfolio:
-            if getattr(pos.stock, attribute) is None:
-                try:
-                    data['None'] += pos.cvalue
-                except:
-                    data['None'] = pos.cvalue
-            else:
-                item = str(getattr(pos.stock, attribute))
-                try:
-                    data[item] += pos.cvalue
-                except:
-                    data[item] = pos.cvalue
+            for adv in pos.stock.getAssetDimensionValue(dimension):
+                data[adv.dimensionValue.name] += adv.value * pos.price * pos.quantity
         if sum(data.values()) == 0:
             self.pack_start(gtk.Label(NO_DATA_STRING))
         else:
