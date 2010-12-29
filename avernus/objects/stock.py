@@ -71,7 +71,9 @@ class Stock(SQLiteEntity):
         return erg
     
     def updateAssetDimensionValue(self, dimVals):
-        # TODO: Delete any existing values
+        dim = dimVals[0][0].dimension
+        for adv in self.getAssetDimensionValue(dim):
+            adv.delete()
         for dimVal, value in dimVals:
             self.controller.newAssetDimensionValue(self,dimVal,value)
         
