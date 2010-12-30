@@ -15,6 +15,13 @@ class Dimension(SQLiteEntity):
                    'name': 'VARCHAR'                   
                   }
     __comparisonPositives__ = ['name']
+    
+    def on_delete(self, **kwargs):
+        self.controller.deleteAllDimensionValue(self)
+    
+    __callbacks__ = {
+                 'onDelete':on_delete
+                 }
 
     def __str__(self):
         return self.name
@@ -22,6 +29,7 @@ class Dimension(SQLiteEntity):
     @property
     def values(self):
         return self.controller.getAllDimensionValueForDimension(self)
+    
     
 class DimensionValue(SQLiteEntity):
     
@@ -34,8 +42,16 @@ class DimensionValue(SQLiteEntity):
                   }
     __comparisonPositives__ = ['dimension','name']
     
+    def on_delete(self, **kwargs):
+        self.controller.deleteAllAssetDimensionValue(self)
+    
+    __callbacks__ = {
+                 'onDelete':on_delete
+                 }
+                    
     def __repr__(self):
         return self.name
+    
     
 class AssetDimensionValue(SQLiteEntity):
     

@@ -37,7 +37,7 @@ class DimensionList(gtk.VBox):
         gtk.VBox.__init__(self)
         self.tree = gui_utils.Tree()
         self.tree.set_headers_visible(False)
-        self.model = gtk.ListStore(object, str)
+        self.model = gtk.TreeStore(object, str)
         self.tree.set_model(self.model)
         col, cell = self.tree.create_column('Dimensions', self.NAME)
         cell.set_property('editable', True)
@@ -48,7 +48,9 @@ class DimensionList(gtk.VBox):
         self.pack_start(sw, expand=True, fill=True)
         sw.add(self.tree)
         for dim in controller.getAllDimension():
-            self.model.append([dim, dim.name])
+            iterator = self.model.append(None, [dim, dim.name])
+            for val in controller.getAllDimensionValueForDimension(dim):
+                self.model.append(iterator, [val, val.name])
         actiongroup = gtk.ActionGroup('dimensions')
         actiongroup.add_actions([
                 ('add',     gtk.STOCK_ADD,    'new dimension',      None, _('Add new dimension'), self.on_add),
@@ -65,7 +67,7 @@ class DimensionList(gtk.VBox):
 
     def on_add(self, widget):
         dimension = controller.newDimension('new dimension')
-        iterator = self.model.append([dimension, dimension.name])
+        iterator = self.model.append(None, [dimension, dimension.name])
         #self.expand_row( model.get_path(parent_iter), True)
         self.tree.set_cursor(self.model.get_path(iterator), focus_column = self.tree.get_column(0), start_editing=True)
 

@@ -371,11 +371,9 @@ def getAllDimension():
     return Dimension.getAll()
 
 def getAllDimensionValueForDimension(dim):
-    erg = []
     for value in DimensionValue.getAll():
         if value.dimension == dim:
-            erg.append(value)
-    return erg
+            yield value
 
 def getAssetDimensionValueForStock(stock, dim):
     stockADVs = AssetDimensionValue.getAllFromOneColumn('stock', stock.id)
@@ -401,6 +399,16 @@ def getTransactionForPosition(position):
 def deleteAllPositionTransaction(position):
     for trans in getTransactionForPosition(position):
         trans.delete()
+
+def deleteAllDimensionValue(dimension):
+    for val in getAllDimensionValueForDimension(dimension):
+        deleteAssetDimensionValue(val)
+        del val
+
+def deleteAssetDimensionValue(dimvalue):
+    for adm in AssetDimensionValue.getAll():
+        if adm.dimensionValue == dimvalue:
+            del adm
 
 def getPositionForWatchlist(watchlist):
     key = watchlist.getPrimaryKey()
