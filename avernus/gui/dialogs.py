@@ -110,24 +110,24 @@ class DimensionComboBox(gtk.ComboBoxEntry):
 
 class EditStockTable(gtk.Table):
 
-    def __init__(self, stock):
+    def __init__(self, stock_to_edit):
         gtk.Table.__init__(self)
-        self.stock = stock
+        self.stock = stock_to_edit
 
         self.attach(gtk.Label(_('Name')),0,1,0,1, yoptions=gtk.FILL)
         self.name_entry = gtk.Entry()
-        self.name_entry.set_text(stock.name)
+        self.name_entry.set_text(stock_to_edit.name)
         self.attach(self.name_entry,1,2,0,1,yoptions=gtk.FILL)
 
         self.attach(gtk.Label(_('ISIN')),0,1,1,2, yoptions=gtk.FILL)
         self.isin_entry = gtk.Entry()
-        self.isin_entry.set_text(stock.isin)
+        self.isin_entry.set_text(stock_to_edit.isin)
         self.attach(self.isin_entry,1,2,1,2,yoptions=gtk.FILL)
 
         self.attach(gtk.Label(_('Type')),0,1,2,3, yoptions=gtk.FILL)
         liststore = gtk.ListStore(str, int)
-        for key, val in [('fund',0), ('stock',1), ('etf',2)]:
-            liststore.append([key, val])
+        for val, name in stock.TYPES.iteritems():
+            liststore.append([name, val])
         self.type_cb = cb = gtk.ComboBox(liststore)
         cell = gtk.CellRendererText()
         cb.pack_start(cell, True)
@@ -139,7 +139,7 @@ class EditStockTable(gtk.Table):
             #print dim
             self.attach(gtk.Label(_(dim.name)),0,1,currentRow,currentRow+1, yoptions=gtk.FILL)
             comboName = dim.name+"ValueComboBox"
-            setattr(self, comboName, DimensionComboBox(dim, stock))
+            setattr(self, comboName, DimensionComboBox(dim, stock_to_edit))
             self.attach(getattr(self, comboName), 1,2,currentRow,currentRow+1,  yoptions=gtk.FILL)
             currentRow += 1
         
@@ -209,6 +209,7 @@ class EditPositionTable(gtk.Table):
 SPINNER_SIZE = 40
 
 class StockSelector(gtk.VBox):
+    
     def __init__(self):
         gtk.VBox.__init__(self)
         self.search_field = gtk.Entry()
@@ -234,7 +235,6 @@ class StockSelector(gtk.VBox):
                          self.result_tree,
                          col,
                          cell)
-
         sw.add(self.result_tree)
         self.pack_end(sw)
         self.spinner = None
@@ -274,7 +274,8 @@ class StockSelector(gtk.VBox):
         controller.datasource_manager.stop_search()
 
     def insert_item(self, stock, icon='gtk-harddisk'):
-        icons = ['fund', 'stock', 'etf']
+        #FIXME bond icon
+        icons = ['fund', 'stock', 'etf', 'stock']
         self.result_tree.get_model().append(None, [
                                        stock,
                                        icon,

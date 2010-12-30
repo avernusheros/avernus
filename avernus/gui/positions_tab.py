@@ -271,7 +271,7 @@ class PositionsTree(Tree):
         gain = position.gain
         gain_icon = get_arrow_icon(gain[1])
         c_change = position.current_change
-        icons = ['fund', 'stock', 'etf']
+        icons = ['fund', 'stock', 'etf', 'bond']
         ret = [position, 
                get_name_string(stock), 
                position.price, 

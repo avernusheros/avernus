@@ -5,10 +5,12 @@ import datetime
 FUND  = 0
 STOCK = 1
 ETF   = 2
+BOND  = 3
 
 TYPES = {FUND: 'FUND',
          STOCK: 'STOCK',
-         ETF: 'ETF'
+         ETF: 'ETF',
+         BOND: 'BOND'
          }  
 
 

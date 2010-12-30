@@ -49,7 +49,6 @@ class ChartTab(gtk.ScrolledWindow):
                 row += 2
             switch = not switch
             
-            
         label = gtk.Label()
         label.set_markup(_('<b>Dividends per Year</b>'))
         table.attach(label,0,2,row,row+1)
@@ -84,24 +83,6 @@ class ChartTab(gtk.ScrolledWindow):
         print "Data: ", data
         chart.set_args({'data':data, "x_labels":x_labels})
         return chart
-
-    def tags_pie(self):
-        data = {}
-        for pos in self.pf:
-            for tag in pos.tags:
-                try:
-                    data[tag] += pos.cvalue
-                except:
-                    data[tag] = pos.cvalue
-        if len(data) == 0:
-            return gtk.Label(NO_DATA_STRING)
-        plot = cairoplot.plots.PiePlot('gtk',
-                                    data=data,
-                                    width=300,
-                                    height=300,
-                                    gradient=True
-                                    )
-        return plot.handler
 
     def cash_chart(self):
         #FIXME stufenchart?
@@ -209,23 +190,22 @@ class Pie(gtk.VBox):
 
 
 class DimensionPie(gtk.VBox):
+    
+    #FIXME show how many positions of portfolio are considered
 
     def __init__(self, portfolio, dimension):
         gtk.VBox.__init__(self)
         self.portfolio = portfolio
-        data = {'None':0}
+        data = {}
         for val in dimension.values:
             data[val.name] = 0
         for pos in self.portfolio:
-            remaining = 1.0
             for adv in pos.stock.getAssetDimensionValue(dimension):
                 data[adv.dimensionValue.name] += adv.value * pos.price * pos.quantity
-                remaining -= adv.value
-            data['None']+=remaining * pos.price * pos.quantity
         #remove unused dimvalues
         data = dict((k, v) for k, v in data.iteritems() if v != 0.0)
         if sum(data.values()) == 0:
-            self.pack_start(gtk.Label(NO_DATA_STRING))
+            self.pack_start(gtk.Label('No positions assigned to dimension!'))
         else:
             plot = cairoplot.plots.PiePlot('gtk',
                                         data=data,
