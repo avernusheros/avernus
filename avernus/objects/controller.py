@@ -41,9 +41,13 @@ datasource_manager = None
 #FIXME very hackish, but allows to remove the circular controller imports in the objects
 controller = sys.modules[__name__]
 
-# SAMPLE DATA
-SECTORS = [_('Region'), _('Asset Class'), _('Risk'), _('Currency'), _('Market Capitalization'),
-           _('Company Size')]
+DIMENSIONS = {_('Region'): [_('Emerging markets'), _('America'), _('Europe'), _('Pacific')],
+              _('Asset Class'): [_('Bond'),_('Stocks developed countries'),_('Commodities')],
+              _('Risk'): [_('high'),_('medium'),_('low')],
+              _('Currency'): [_('Euro'),_('Dollar'),_('Yen')],
+              _('Company Size'): [_('large'),_('medium'),_('small')],
+              _('Sector'): ['Basic Materials','Conglomerates','Consumer Goods','Energy','Financial','Healthcare','Industrial Goods','Services','Technology','Transportation','Utilities']
+              }
 CATEGORIES = {
     _('Utilities'): [_('Gas'),_('Phone'), _('Water'), _('Electricity')],
     _('Entertainment'): [_('Books'),_('Movies'), _('Music'), _('Amusement')],
@@ -147,8 +151,10 @@ def set_db_version(version):
     m.version = version
 
 def load_sample_data():
-    for sname in SECTORS:
-        newDimension(sname)
+    for dim, vals in DIMENSIONS.iteritems():
+        new_dim = newDimension(dim)
+        for val in vals:
+            newDimensionValue(new_dim, val)
     for cat, subcats in CATEGORIES.iteritems():
         parent = newAccountCategory(name=cat)
         for subcat in subcats:
@@ -282,10 +288,9 @@ def newTag(name):
     result.insert()
     pubsub.publish('tag.created',result)
     return result
-
+    
 def newDimensionValue(dimension=None, name=""):
-    print "New DimensionValue ", dimension, name
-    return None
+    return detectDuplicate(DimensionValue, dimension=dimension.id, name=name)
 
 def newDimension(name):
     dim = detectDuplicate(Dimension, name=name)
@@ -378,10 +383,6 @@ def getAllDimensionValueForDimension(dim):
         if value.dimension == dim:
             erg.append(value)
     return erg
-
-def getDimensionValueForDimension(dim, string):
-    return detectDuplicate(DimensionValue, dimension=dim.id, name=string)
-    
 
 def getAssetDimensionValueForStock(stock, dim):
     stockADVs = AssetDimensionValue.getAllFromOneColumn('stock', stock.id)
