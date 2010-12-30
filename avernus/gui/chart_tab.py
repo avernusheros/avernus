@@ -213,12 +213,17 @@ class DimensionPie(gtk.VBox):
     def __init__(self, portfolio, dimension):
         gtk.VBox.__init__(self)
         self.portfolio = portfolio
-        data = {}
+        data = {'None':0}
         for val in dimension.values:
             data[val.name] = 0
         for pos in self.portfolio:
+            remaining = 1.0
             for adv in pos.stock.getAssetDimensionValue(dimension):
                 data[adv.dimensionValue.name] += adv.value * pos.price * pos.quantity
+                remaining -= adv.value
+            data['None']+=remaining * pos.price * pos.quantity
+        #remove unused dimvalues
+        data = dict((k, v) for k, v in data.iteritems() if v != 0.0)
         if sum(data.values()) == 0:
             self.pack_start(gtk.Label(NO_DATA_STRING))
         else:
