@@ -21,14 +21,14 @@ class PrefDialog(gtk.Dialog):
         notebook = gtk.Notebook()
         vbox.pack_start(notebook)
         notebook.append_page(PluginManager(pengine), gtk.Label('Plugins'))
-        notebook.append_page(SectorList(), gtk.Label('Sectors'))
+        notebook.append_page(DimensionList(), gtk.Label('Dimensions'))
         self.show_all()
         self.run()
         self.destroy()
         Log.debug("PrefDialog destroyed")
 
 
-class SectorList(gtk.VBox):
+class DimensionList(gtk.VBox):
 
     OBJECT = 0
     NAME = 1
@@ -39,7 +39,7 @@ class SectorList(gtk.VBox):
         self.tree.set_headers_visible(False)
         self.model = gtk.ListStore(object, str)
         self.tree.set_model(self.model)
-        col, cell = self.tree.create_column('Sectors', self.NAME)
+        col, cell = self.tree.create_column('Dimensions', self.NAME)
         cell.set_property('editable', True)
         cell.connect('edited', self.on_cell_edited)
         sw = gtk.ScrolledWindow()
@@ -47,13 +47,13 @@ class SectorList(gtk.VBox):
         sw.set_property('vscrollbar-policy', gtk.POLICY_AUTOMATIC)
         self.pack_start(sw, expand=True, fill=True)
         sw.add(self.tree)
-        for sector in controller.getAllSector():
-            self.model.append([sector, sector.name])
-        actiongroup = gtk.ActionGroup('sectors')
+        for dim in controller.getAllDimension():
+            self.model.append([dim, dim.name])
+        actiongroup = gtk.ActionGroup('dimensions')
         actiongroup.add_actions([
-                ('add',     gtk.STOCK_ADD,    'new sector',      None, _('Add new sector'), self.on_add),
-                ('rename',  gtk.STOCK_EDIT,   'rename sector',   None, _('Rename selected sector'), self.on_edit),
-                ('remove',  gtk.STOCK_DELETE, 'remove sector',   None, _('Remove selected sector'), self.on_remove)
+                ('add',     gtk.STOCK_ADD,    'new dimension',      None, _('Add new dimension'), self.on_add),
+                ('rename',  gtk.STOCK_EDIT,   'rename dimension',   None, _('Rename selected dimension'), self.on_edit),
+                ('remove',  gtk.STOCK_DELETE, 'remove dimension',   None, _('Remove selected dimension'), self.on_remove)
                      ])
         toolbar = gtk.Toolbar()
         self.conditioned = ['rename', 'edit']
@@ -64,8 +64,8 @@ class SectorList(gtk.VBox):
         self.pack_start(toolbar, expand=False, fill=True)
 
     def on_add(self, widget):
-        sector = controller.newSector('new sector')
-        iterator = self.model.append([sector, sector.name])
+        dimension = controller.newDimension('new dimension')
+        iterator = self.model.append([dimension, dimension.name])
         #self.expand_row( model.get_path(parent_iter), True)
         self.tree.set_cursor(self.model.get_path(iterator), focus_column = self.tree.get_column(0), start_editing=True)
 

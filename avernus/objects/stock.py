@@ -1,10 +1,6 @@
 from avernus.objects.model import SQLiteEntity
-from avernus.objects.sector import Sector
-from avernus.objects.region import Region
-from avernus.objects.risk import Risk
-from avernus.objects.asset_class import AssetClass
-
 import datetime
+
 
 FUND  = 0
 STOCK = 1
@@ -24,10 +20,6 @@ class Stock(SQLiteEntity):
                    'isin': 'VARCHAR',
                    'type': 'INTEGER',
                    'name': 'VARCHAR',
-                   'sector': Sector,
-                   'region': Region,
-                   'risk':Risk,
-                   'asset_class':AssetClass,
                    'exchange': 'VARCHAR',
                    'currency': 'VARCHAR',
                    'price': 'FLOAT',
@@ -44,10 +36,6 @@ class Stock(SQLiteEntity):
                          'change':0.0,
                          'type':1,
                          'name':'',
-                         'sector':None,
-                         'region':None,
-                         'risk':None,
-                         'asset_class':None,
                          'isin':''
                          }
 
@@ -55,6 +43,31 @@ class Stock(SQLiteEntity):
     @property
     def stock(self):
         return self
+    
+    def getDimensionText(self, dim):
+        advs = self.getAssetDimensionValue(dim)
+        if len(advs) == 1:
+            # we have 100% this value in its dimension
+            return str(advs.pop(0))
+        erg = ""
+        i = 0
+        for adv in advs:
+            i += 1
+            erg += str(adv)
+            if i<len(advs):
+                erg += ", "
+        return erg
+    
+    def updateAssetDimensionValue(self, dimVals):
+        dim = dimVals[0][0].dimension
+        for adv in self.getAssetDimensionValue(dim):
+            adv.delete()
+        for dimVal, value in dimVals:
+            self.controller.newAssetDimensionValue(self,dimVal,value)
+        
+    def getAssetDimensionValue(self, dim):
+        assDimVals = self.controller.getAssetDimensionValueForStock(self, dim)
+        return assDimVals
 
     @property
     def percent(self):

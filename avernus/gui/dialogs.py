@@ -1,10 +1,12 @@
 #!/usr/bin/env python
 
-import gtk, pango
 from avernus import pubsub, config
-from datetime import datetime
-from avernus.objects import controller, stock
 from avernus.gui import gui_utils
+from avernus.objects import controller, stock
+from avernus.objects.dimension import DimensionValue
+from datetime import datetime
+import gtk
+import pango
 
 
 class EditPositionDialog(gtk.Dialog):
@@ -55,24 +57,21 @@ class EditStockDialog(gtk.Dialog):
         self.destroy()
 
 
-class MyComboBoxEntry(gtk.ComboBoxEntry):
+class DimensionComboBox(gtk.ComboBoxEntry):
 
     COL_OBJ  = 0
     COL_TEXT = 1
 
-    def __init__(self, items, creator, current=None):
-        self.creator = creator
+    def __init__(self, dimension, asset):
+        values = [(None, 'None'),]+[(dimVal, dimVal.name) for dimVal in dimension.values]
+        self.dimension = dimension
         liststore = gtk.ListStore(object, str)
         gtk.ComboBoxEntry.__init__(self, liststore, self.COL_TEXT)
-        i=0
-        for item, string in items:
+        for item, string in values:
             liststore.append([item, string])
-            if current == item:
-                self.set_active(i)
-            i+=1
+        self.child.set_text(asset.getDimensionText(dimension))
         completion = gtk.EntryCompletion()
         completion.set_model(liststore)
-        #completion.set_minimum_key_length(1)
         completion.set_text_column(self.COL_TEXT)
         self.child.set_completion(completion)
 
@@ -80,9 +79,32 @@ class MyComboBoxEntry(gtk.ComboBoxEntry):
         iterator = self.get_active_iter()
         if iterator is None:
             name = self.get_active_text()
+            for col in self.get_model():
+                if col[self.COL_TEXT] == name:
+                    return col[self.COL_OBJ]
             if len(name) == 0:
                 return None
-            return self.creator(name=name)
+            # There is text but none of the selected ==> we have to parse
+            portions = name.split(",")
+            erg = []
+            for portion in portions:
+                data = portion.partition(":")
+                currentName = data[0].strip()
+                value = data[2].strip()
+                #print "|"+value+"|"
+                if value == "":
+                    value = "1"
+                erg.append((controller.getDimensionValueForDimension(self.dimension, currentName),
+                           float(value)))
+            # a little sanity.. the sum should be 1.0
+            sum = 0
+            for dv, val in erg:
+                sum += val
+            if sum == 1.0:
+                return erg
+            else:
+                print "The sum of your entries is not 1.0. ignored: ", erg
+                return None
         return self.get_model()[iterator][self.COL_OBJ]
 
 
@@ -112,26 +134,15 @@ class EditStockTable(gtk.Table):
         cb.add_attribute(cell, 'text', 0)
         cb.set_active(self.stock.type)
         self.attach(cb, 1,2,2,3,  yoptions=gtk.FILL)
-
-        self.attach(gtk.Label(_('Sector')),0,1,3,4, yoptions=gtk.FILL)
-        sectors = [(None, 'None'),]+[(sector, sector.name) for sector in controller.getAllSector()]
-        self.sector_cb = MyComboBoxEntry(sectors, controller.newSector, self.stock.sector)
-        self.attach(self.sector_cb, 1,2,3,4,  yoptions=gtk.FILL)
-
-        self.attach(gtk.Label(_('Region')),0,1,4,5, yoptions=gtk.FILL)
-        regions = [(None, 'None'),]+[(regions, regions.name) for regions in controller.getAllRegion()]
-        self.region_cb = MyComboBoxEntry(regions, controller.newRegion, self.stock.region)
-        self.attach(self.region_cb, 1,2,4,5,  yoptions=gtk.FILL)
+        currentRow = 3
+        for dim in controller.getAllDimension():
+            #print dim
+            self.attach(gtk.Label(_(dim.name)),0,1,currentRow,currentRow+1, yoptions=gtk.FILL)
+            comboName = dim.name+"ValueComboBox"
+            setattr(self, comboName, DimensionComboBox(dim, stock))
+            self.attach(getattr(self, comboName), 1,2,currentRow,currentRow+1,  yoptions=gtk.FILL)
+            currentRow += 1
         
-        self.attach(gtk.Label(_('Asset class')),0,1,5,6, yoptions=gtk.FILL)
-        classes = [(None, 'None'),]+[(c, c.name) for c in controller.getAllAssetClass()]
-        self.class_cb = MyComboBoxEntry(classes, controller.newAssetClass, self.stock.asset_class)
-        self.attach(self.class_cb, 1,2,5,6,  yoptions=gtk.FILL)
-        
-        self.attach(gtk.Label(_('Risk')),0,1,6,7, yoptions=gtk.FILL)
-        risks = [(None, 'None'),]+[(c, c.name) for c in controller.getAllRisk()]
-        self.risk_cb = MyComboBoxEntry(risks, controller.newRisk, self.stock.risk)
-        self.attach(self.risk_cb, 1,2,6,7,  yoptions=gtk.FILL)
 
     def process_result(self, widget=None, response = gtk.RESPONSE_ACCEPT):
         if response == gtk.RESPONSE_ACCEPT:
@@ -139,10 +150,17 @@ class EditStockTable(gtk.Table):
             self.stock.isin = self.isin_entry.get_text()
             active_iter = self.type_cb.get_active_iter()
             self.stock.type = self.type_cb.get_model()[active_iter][1]
-            self.stock.sector = self.sector_cb.get_active()
-            self.stock.region = self.region_cb.get_active()
-            self.stock.risk = self.risk_cb.get_active()
-            self.stock.asset_class = self.class_cb.get_active()
+            for dim in controller.getAllDimension():
+                box = getattr(self, dim.name+"ValueComboBox")
+                active = box.get_active()
+                if isinstance(active, DimensionValue):
+                    # one value chosen
+                    self.stock.updateAssetDimensionValue([(active,1.0)])
+                elif isinstance(active, list):
+                    # we have a list of values
+                    self.stock.updateAssetDimensionValue(active)
+                else:
+                    print "Unprocessed Selection ", active
             pubsub.publish("stock.edited", self.stock)
 
 
