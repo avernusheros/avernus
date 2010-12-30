@@ -65,6 +65,7 @@ class MainTree(gui_utils.Tree):
 
     def _subscribe(self):
         self.connect('button-press-event', self.on_button_press_event)
+        self.connect('key-press-event', self.on_key_press)
         self.connect('cursor_changed', self.on_cursor_changed)
         self.subscriptions = (
                     ("container.edited", self.on_updated),
@@ -93,6 +94,12 @@ class MainTree(gui_utils.Tree):
             elif self.get_selection().path_is_selected(target[0]) and isinstance(obj, Category):
                 #disable editing of categories
                 return True
+
+    def on_key_press(self, widget, event):
+        if gtk.gdk.keyval_name(event.keyval) == 'Delete':
+            self.on_remove()
+            return True
+        return False
 
     def insert_categories(self):
         self.pf_iter = self.get_model().append(None, [Category('Portfolios'),'portfolios', _("<b>Portfolios</b>"),''])
@@ -127,6 +134,7 @@ class MainTree(gui_utils.Tree):
             if response == gtk.RESPONSE_OK:
                 obj.delete()
                 self.get_model().remove(iter)
+                self.selected_item = None
                 pubsub.publish('maintree.unselect')
 
     def on_account_updated(self, account):
