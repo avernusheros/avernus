@@ -94,7 +94,7 @@ class DimensionComboBox(gtk.ComboBoxEntry):
                 #print "|"+value+"|"
                 if value == "":
                     value = "1"
-                erg.append((controller.getDimensionValueForDimension(self.dimension, currentName),
+                erg.append((controller.newDimensionValue(self.dimension, currentName),
                            float(value)))
             # a little sanity.. the sum should be 1.0
             sum = 0
