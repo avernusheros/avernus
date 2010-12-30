@@ -53,6 +53,10 @@ class AccountChartTab(gtk.ScrolledWindow):
 
         self.add_with_viewport(self.table)
         self.zooms = ['ACT','1m', '3m', '6m', 'YTD', '1y','2y','5y', 'all']
+        self.show_all()
+    
+    def show(self):
+        width = self.allocation[2]        
         combobox = gtk.combo_box_new_text()
         for ch in self.zooms:
             combobox.append_text(ch)
@@ -76,28 +80,28 @@ class AccountChartTab(gtk.ScrolledWindow):
         self.table.attach(combobox,1,2,0,1)
 
         self.charts = []
-        chart = EarningsVsSpendingsChart(self.account, self.start_date, self.end_date, self.current_step)
+        chart = EarningsVsSpendingsChart(width, self.account, self.start_date, self.end_date, self.current_step)
         self.charts.append(chart)
         self.table.attach(chart,0,2,2,3)
 
         label = gtk.Label()
         label.set_markup('<b>Balance over time</b>')
         self.table.attach(label, 0,2,3,4)
-        chart = BalanceChart(self.account, self.start_date, self.end_date)
+        chart = BalanceChart(width, self.account, self.start_date, self.end_date)
         self.charts.append(chart)
         self.table.attach(chart,0,2,4,5)
 
         label = gtk.Label()
         label.set_markup('<b>Earnings</b>')
         self.table.attach(label,0,1,5,6)
-        chart = CategoryPie(self.account, self.start_date, self.end_date, earnings=True)
+        chart = CategoryPie(width/2, self.account, self.start_date, self.end_date, earnings=True)
         self.charts.append(chart)
         self.table.attach(chart,0,1,6,7)
 
         label = gtk.Label()
         label.set_markup('<b>Spendings</b>')
         self.table.attach(label,1,2,5,6)
-        chart = CategoryPie(self.account, self.start_date, self.end_date, earnings=False)
+        chart = CategoryPie(width/2, self.account, self.start_date, self.end_date, earnings=False)
         self.table.attach(chart,1,2,6,7)
         self.charts.append(chart)
         self.show_all()
@@ -131,6 +135,13 @@ class AccountChartTab(gtk.ScrolledWindow):
 
 
 class Chart(object):
+    
+    def __init__(self, width, account, start_date, end_date):
+        self.start_date = start_date
+        self.end_date = end_date
+        self.width = width
+        self.account = account
+        self._draw_chart()
 
     def on_zoom_change(self, start_date):
         self.start_date = start_date
@@ -140,14 +151,12 @@ class Chart(object):
     def on_step_change(self, step):
         pass
 
+
 class BalanceChart(gtk.VBox, Chart):
 
-    def __init__(self, account, start_date, end_date):
+    def __init__(self, width, account, start_date, end_date):
         gtk.VBox.__init__(self)
-        self.account = account
-        self.start_date = start_date
-        self.end_date = end_date
-        self._draw_chart()
+        Chart.__init__(self, width, account, start_date, end_date)
 
     def _draw_chart(self):
         balance = self.account.get_balance_over_time(self.start_date)
@@ -157,7 +166,7 @@ class BalanceChart(gtk.VBox, Chart):
 
         plot = cairoplot.plots.DotLinePlot('gtk',
                                 data=[item[1] for item in balance],
-                                width=600,
+                                width=self.width,
                                 height=300,
                                 x_labels=legend,
                                 y_formatter=gui_utils.get_currency_format_from_float,
@@ -172,11 +181,8 @@ class BalanceChart(gtk.VBox, Chart):
 
 class EarningsVsSpendingsChart(gtk.VBox, Chart):
 
-    def __init__(self, account, start_date, end_date, step='day'):
+    def __init__(self, width, account, start_date, end_date, step='day'):
         gtk.VBox.__init__(self)
-        self.account = account
-        self.start_date = start_date
-        self.end_date = end_date
         self.step = step
         hbox = gtk.HBox()
         markup = '<span weight="bold" color="blue">Earnings</span>'+' vs '+'<span weight="bold" color="darkgreen">Spendings</span>'
@@ -191,7 +197,7 @@ class EarningsVsSpendingsChart(gtk.VBox, Chart):
         hbox.pack_start(self.type_cb)
 
         self.pack_start(hbox)
-        self._draw_chart()
+        Chart.__init__(self, width, account, start_date, end_date)
 
     def on_type_change(self, widget):
         self.remove(self.chart)
@@ -210,7 +216,7 @@ class EarningsVsSpendingsChart(gtk.VBox, Chart):
         if chart_type == 'line chart':
             plot = cairoplot.plots.DotLinePlot('gtk',
                                 data=[earnings, spendings],
-                                width=600,
+                                width=self.width,
                                 height=300,
                                 x_labels=legend,
                                 y_title='Amount',
@@ -223,7 +229,7 @@ class EarningsVsSpendingsChart(gtk.VBox, Chart):
         else:
             plot = cairoplot.plots.VerticalBarPlot('gtk',
                                 data=[[earnings[i], spendings[i]] for i in range(len(earnings))],
-                                width=600,
+                                width=self.width,
                                 height=300,
                                 #series_labels = ['earnings', 'spendings'],
                                 x_labels=legend,
@@ -241,16 +247,13 @@ class EarningsVsSpendingsChart(gtk.VBox, Chart):
 
 class CategoryPie(gtk.VBox, Chart):
 
-    def __init__(self, account, start_date, end_date, earnings=True):
+    def __init__(self, width, account, start_date, end_date, earnings=True):
         gtk.VBox.__init__(self)
-        self.account = account
         self.b_earnings = earnings
-        self.start_date = start_date
-        self.end_date = end_date
         self.category = None
         self._init_widgets()
-        self._draw_chart()
-
+        Chart.__init__(self, width, account, start_date, end_date)
+    
     def _init_widgets(self):
         self.liststore = gtk.ListStore(object, str)
         combobox = gtk.ComboBox(self.liststore)
@@ -280,7 +283,7 @@ class CategoryPie(gtk.VBox, Chart):
                     self.liststore.append([cat, name])
         plot = cairoplot.plots.PiePlot('gtk',
                                 data=data,
-                                width=300,
+                                width=self.width,
                                 height=300,
                                 gradient=True,
                                 shadow=False,

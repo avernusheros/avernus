@@ -127,8 +127,8 @@ class MainTree(gui_utils.Tree):
         if not isinstance(obj, Category):
             dlg = gtk.MessageDialog(None,
                  gtk.DIALOG_DESTROY_WITH_PARENT, gtk.MESSAGE_QUESTION,
-                 gtk.BUTTONS_OK_CANCEL,
-                 _("Permanently delete ")+obj.name+'?')
+                 gtk.BUTTONS_OK_CANCEL)
+            dlg.set_markup(_("Permanently delete <b>")+obj.name+'</b>?')
             response = dlg.run()
             dlg.destroy()
             if response == gtk.RESPONSE_OK:

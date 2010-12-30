@@ -18,6 +18,7 @@ class ChartTab(gtk.ScrolledWindow):
         self.show_all()
 
     def show(self):
+        width = self.allocation[2]     
         self.clear()
         table = gtk.Table()
 
@@ -27,12 +28,12 @@ class ChartTab(gtk.ScrolledWindow):
         label = gtk.Label()
         label.set_markup(_('<b>Market value</b>'))
         table.attach(label, 0,1,0,1)
-        table.attach(Pie(self.pf, 'name'),0,1,1,2)
+        table.attach(Pie(width/2, self.pf, 'name'),0,1,1,2)
         
         label = gtk.Label()
         label.set_markup(_('<b>Investment types</b>'))
         table.attach(label,1,2,0,1)
-        table.attach(Pie(self.pf, 'type_string'),1,2,1,2)
+        table.attach(Pie(width/2, self.pf, 'type_string'),1,2,1,2)
         
         row = 2
         col = 0
@@ -41,7 +42,7 @@ class ChartTab(gtk.ScrolledWindow):
             label = gtk.Label()
             label.set_markup(_('<b>'+dim.name+'</b>'))
             table.attach(label, col,col+1,row,row+1)
-            table.attach(DimensionPie(self.pf, dim),col,col+1,row+1,row+2)
+            table.attach(DimensionPie(width/2, self.pf, dim),col,col+1,row+1,row+2)
             if switch:
                 col = 1
             else:
@@ -52,12 +53,12 @@ class ChartTab(gtk.ScrolledWindow):
         label = gtk.Label()
         label.set_markup(_('<b>Dividends per Year</b>'))
         table.attach(label,0,2,row,row+1)
-        table.attach(DividendsPerYearChart(self.pf), 1,2,row+2,row+3)
+        table.attach(DividendsPerYearChart(width/2, self.pf), 1,2,row+2,row+3)
         
         label = gtk.Label()
         label.set_markup(_('<b>Dividends</b>'))
         table.attach(label,0,2,row+3,row+4)
-        table.attach(DividendsChart(self.pf), 0,2,row+4,row+5)
+        table.attach(DividendsChart(width, self.pf), 0,2,row+4,row+5)
 
         self.add_with_viewport(table)
         self.show_all()
@@ -107,7 +108,7 @@ class ChartTab(gtk.ScrolledWindow):
 
 class DividendsPerYearChart(gtk.VBox):
 
-    def __init__(self, portfolio):
+    def __init__(self, width, portfolio):
         gtk.VBox.__init__(self)
         data = {}
         for year in date_utils.get_years(portfolio.birthday):
@@ -117,7 +118,7 @@ class DividendsPerYearChart(gtk.VBox):
                 data[str(div.date.year)]+=div.total
         plot = cairoplot.plots.VerticalBarPlot('gtk',
                                         data=data,
-                                        width=300,
+                                        width=width,
                                         height=300,
                                         x_labels=data.keys(),
                                         display_values=True,
@@ -131,7 +132,7 @@ class DividendsPerYearChart(gtk.VBox):
 
 class DividendsChart(gtk.VBox):
 
-    def __init__(self, portfolio):
+    def __init__(self, width, portfolio):
         gtk.VBox.__init__(self)
         data = {}
         for pos in portfolio:
@@ -145,7 +146,7 @@ class DividendsChart(gtk.VBox):
         else:
             plot = cairoplot.plots.VerticalBarPlot('gtk',
                                             data=data.values(),
-                                            width=600,
+                                            width=width,
                                             height=300,
                                             x_labels=data.keys(),
                                             display_values=True,
@@ -158,7 +159,7 @@ class DividendsChart(gtk.VBox):
             
 class Pie(gtk.VBox):
 
-    def __init__(self, portfolio, attribute):
+    def __init__(self, width, portfolio, attribute):
         gtk.VBox.__init__(self)
         self.portfolio = portfolio
         data = {}
@@ -179,7 +180,7 @@ class Pie(gtk.VBox):
         else:
             plot = cairoplot.plots.PiePlot('gtk',
                                         data=data,
-                                        width=300,
+                                        width=width,
                                         height=300,
                                         gradient=True,
                                         values=True
@@ -193,7 +194,7 @@ class DimensionPie(gtk.VBox):
     
     #FIXME show how many positions of portfolio are considered
 
-    def __init__(self, portfolio, dimension):
+    def __init__(self, width, portfolio, dimension):
         gtk.VBox.__init__(self)
         self.portfolio = portfolio
         data = {}
@@ -209,7 +210,7 @@ class DimensionPie(gtk.VBox):
         else:
             plot = cairoplot.plots.PiePlot('gtk',
                                         data=data,
-                                        width=300,
+                                        width=width,
                                         height=300,
                                         gradient=True,
                                         values=True
