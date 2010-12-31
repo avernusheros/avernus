@@ -71,7 +71,8 @@ class MainTree(gui_utils.Tree):
                     ("container.edited", self.on_updated),
                     ("tag.created", self.insert_tag),
                     ("tag.updated", self.on_updated),
-                    ('account.updated', self.on_account_updated)
+                    ('account.updated', self.on_item_updated),
+                    ('container.updated', self.on_item_updated)
                 )
         for topic, callback in self.subscriptions:
             pubsub.subscribe(topic, callback)
@@ -137,10 +138,10 @@ class MainTree(gui_utils.Tree):
                 self.selected_item = None
                 pubsub.publish('maintree.unselect')
 
-    def on_account_updated(self, account):
-        row = self.find_item(account)
+    def on_item_updated(self, item):
+        row = self.find_item(item)
         if row:
-            self.find_item(account)[3] = gui_utils.get_currency_format_from_float(account.amount)
+            row[3] = gui_utils.get_currency_format_from_float(item.amount)
         
     def on_updated(self, item):
         obj, iter = self.selected_item

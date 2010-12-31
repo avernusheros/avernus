@@ -24,6 +24,10 @@ class Container(object):
         return value
 
     @property
+    def amount(self):
+        return self.cvalue
+
+    @property
     def price(self):
         return self.cvalue
 
