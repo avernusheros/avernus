@@ -73,8 +73,26 @@ class DimensionComboBox(gtk.ComboBoxEntry):
         completion = gtk.EntryCompletion()
         completion.set_model(liststore)
         completion.set_text_column(self.COL_TEXT)
+        completion.set_match_func(self.match_func)
         self.child.set_completion(completion)
+        completion.connect("match-selected", self.on_completion_match)
 
+    def match_func(self, completion, key, iter):
+        model = completion.get_model()
+        text = model.get_value(iter, self.COL_TEXT).lower()
+        key = key.split(',')[-1].strip().lower()
+        if text.startswith(key):
+            return True
+        return False
+
+    def on_completion_match(self, completion, model, iter):
+        current_text = self.get_active_text()
+        current_text = current_text[:-len(current_text.split(',')[-1])]
+        self.child.set_text(current_text+' '+model[iter][self.COL_TEXT])
+        self.child.set_position(-1)
+        # stop the event propagation
+        return True
+    
     def get_active(self):
         iterator = self.get_active_iter()
         if iterator is None:
