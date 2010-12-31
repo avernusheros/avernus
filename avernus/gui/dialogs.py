@@ -76,6 +76,10 @@ class DimensionComboBox(gtk.ComboBoxEntry):
         completion.set_match_func(self.match_func)
         self.child.set_completion(completion)
         completion.connect("match-selected", self.on_completion_match)
+        self.child.connect('changed', self.on_entry_changed)
+        
+    def on_entry_changed(self, editable):
+        print "changed..."
 
     def match_func(self, completion, key, iter):
         model = completion.get_model()
