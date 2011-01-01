@@ -57,8 +57,6 @@ class MainTree(gui_utils.Tree):
             self.insert_portfolio(pf)
         for wl in controller.getAllWatchlist():
             self.insert_watchlist(wl)
-        for tag in controller.getAllTag():
-            self.insert_tag(tag)
         for account in controller.getAllAccount():
             self.insert_account(account)
         self.expand_all()
@@ -69,8 +67,6 @@ class MainTree(gui_utils.Tree):
         self.connect('cursor_changed', self.on_cursor_changed)
         self.subscriptions = (
                     ("container.edited", self.on_updated),
-                    ("tag.created", self.insert_tag),
-                    ("tag.updated", self.on_updated),
                     ('account.updated', self.on_item_updated),
                     ('container.updated', self.on_item_updated)
                 )
@@ -105,7 +101,6 @@ class MainTree(gui_utils.Tree):
     def insert_categories(self):
         self.pf_iter = self.get_model().append(None, [Category('Portfolios'),'portfolios', _("<b>Portfolios</b>"),''])
         self.wl_iter = self.get_model().append(None, [Category('Watchlists'),'watchlists', _("<b>Watchlists</b>"),''])
-        self.tag_iter = self.get_model().append(None, [Category('Tags'),'tags', _("<b>Tags</b>"),None])
         self.accounts_iter = self.get_model().append(None, [Category('Accounts'),'accounts', _("<b>Accounts</b>"),''])
         #self.index_iter = self.get_model().append(None, [Category('Indices'),'indices', _("<b>Indices</b>"),''])
 
@@ -117,9 +112,6 @@ class MainTree(gui_utils.Tree):
     
     def insert_portfolio(self, item):
         self.get_model().append(self.pf_iter, [item, 'portfolio', item.name, gui_utils.get_currency_format_from_float(item.cvalue)])
-
-    def insert_tag(self, item):
-        self.get_model().append(self.tag_iter, [item, 'tag', item.name, ''])
 
     def on_remove(self, widget=None):
         if self.selected_item is None:

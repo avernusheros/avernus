@@ -4,7 +4,7 @@ from avernus import pubsub
 from avernus.logger import Log
 from avernus.objects import model
 from avernus.objects.account import Account, AccountTransaction, AccountCategory
-from avernus.objects.container import Portfolio, Watchlist, Index, Tag
+from avernus.objects.container import Portfolio, Watchlist
 from avernus.objects.dimension import Dimension, DimensionValue, \
     AssetDimensionValue
 from avernus.objects.dividend import Dividend
@@ -22,7 +22,7 @@ import time
 
 
 
-modelClasses = [Portfolio, Transaction, Tag, Watchlist, Index, Dividend,
+modelClasses = [Portfolio, Transaction, Watchlist, Dividend,
                 PortfolioPosition, WatchlistPosition, AccountCategory,
                 Quotation, Stock, Meta, Account, AccountTransaction,
                 Dimension, DimensionValue, AssetDimensionValue]
@@ -30,7 +30,7 @@ modelClasses = [Portfolio, Transaction, Tag, Watchlist, Index, Dividend,
 #these classes will be loaded with one single call and will also load composite
 #relations. therefore it is important that the list is complete in the sense
 #that there are no classes holding composite keys to classes outside the list
-initialLoadingClasses = [Portfolio,Transaction,Tag,Watchlist,Index,Dividend,
+initialLoadingClasses = [Portfolio,Transaction,Watchlist,Dividend,
                          PortfolioPosition, WatchlistPosition,Account, Meta, Stock, 
                          AccountTransaction, AccountCategory, Dimension, DimensionValue,
                          AssetDimensionValue]
@@ -159,8 +159,8 @@ def load_sample_data():
     wl = newWatchlist(_('sample watchlist'))
 
 def update_all():
-    datasource_manager.update_stocks(getAllStock()+getAllIndex())
-    for container in getAllPortfolio()+getAllWatchlist()+getAllIndex():
+    datasource_manager.update_stocks(getAllStock())
+    for container in getAllPortfolio()+getAllWatchlist():
         container.last_update = datetime.datetime.now()
 
 def newPortfolio(name, id=None, last_update = datetime.datetime.now(), comment="",cash=0.0):
@@ -233,11 +233,6 @@ def newTransaction(date=datetime.datetime.now(),\
     return result
 
 
-def newIndex(name='', isin='', currency='', date=datetime.datetime.now(), exchange='', yahoo_symbol=''):
-    result = Index(id=None, name=name, currency=currency, isin=isin, date=date, exchange=exchange, yahoo_symbol=yahoo_symbol, price=0, change=0)
-    result.insert()
-    return result
-
 def newPortfolioPosition(price=0,\
                          date=datetime.datetime.now(),\
                          quantity=1,\
@@ -276,12 +271,6 @@ def newWatchlistPosition(price=0,\
     return result
 
 
-def newTag(name):
-    result = Tag(name=name)
-    result.insert()
-    pubsub.publish('tag.created',result)
-    return result
-    
 def newDimensionValue(dimension=None, name=""):
     return detectDuplicate(DimensionValue, dimension=dimension.id, name=name)
 
@@ -347,9 +336,6 @@ def getAllTransaction():
 def getAllWatchlist():
     return Watchlist.getAll()
 
-def getAllIndex():
-    return Index.getAll()
-
 def getAllAccount():
     return Account.getAll()
 
@@ -379,9 +365,6 @@ def getAssetDimensionValueForStock(stock, dim):
     stockADVs = AssetDimensionValue.getAllFromOneColumn('stock', stock.id)
     stockADVs = filter(lambda adv: adv.dimensionValue.dimension == dim, stockADVs)
     return stockADVs
-
-def getAllTag():
-    return Tag.getAll()
 
 def getAllStock():
     return Stock.getAll()
@@ -417,14 +400,6 @@ def getPositionForWatchlist(watchlist):
 def deleteAllWatchlistPosition(watchlist):
     for pos in getPositionForWatchlist(watchlist):
         pos.delete()
-
-def getPositionForTag(tag):
-    possible = getAllPosition()
-    for pos in possible:
-        if not pos.__composite_retrieved__:
-            pos.retrieveAllComposite()
-    possible = filter(lambda pos: pos.hasTag(tag), possible)
-    return possible
 
 def getDividendForPosition(pos):
     return Dividend.getAllFromOneColumn("position", pos.getPrimaryKey())
@@ -508,13 +483,6 @@ def getBuyTransaction(portfolio_position):
     for ta in Transaction.getAllFromOneColumn('position', key):
         if ta.type == 1:
             return ta
-
-def onPositionNewTag(position=None,tagText=None):
-    if not position or not tagText:
-        Log.error("Malformed onPositionNewTag Call (position,tagText)" + str((position,tagText)))
-    position.tags.append(detectDuplicate(Tag, name=tagText))
-
-pubsub.subscribe('position.newTag', onPositionNewTag)
 
 
 class GeneratorTask(object):

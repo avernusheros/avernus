@@ -1,11 +1,10 @@
 from avernus.objects.model import SQLiteEntity
-from avernus.objects.container import Portfolio, Watchlist, Tag
+from avernus.objects.container import Portfolio, Watchlist
 from avernus.objects.stock import Stock
 from datetime import datetime
 
  
 class Position(object):
-    tagstring = ''
     
     @property
     def days_gain(self):
@@ -67,9 +66,6 @@ class PortfolioPosition(SQLiteEntity, Position):
                    "stock": Stock,
                    "comment": "TEXT"
                    }
-    __relations__  = {
-                    "tags"       : Tag,
-                    }
 
     def onDelete(self, **kwargs):
         self.controller.deleteAllPositionTransaction(self)
@@ -87,16 +83,6 @@ class PortfolioPosition(SQLiteEntity, Position):
         for div in self.controller.getDividendForPosition(self):
             yield div
 
-    @property
-    def tagstring(self):
-        ret = ''
-        for t in self.tags:
-            ret += t.name + ' '
-        return ret 
-    
-    def hasTag(self, tag):
-        return tag in self.tags
-    
     def get_value_over_time(self, start_day, end_day=datetime.today()):
         #transactions on same day!
         #dividends?
@@ -151,7 +137,6 @@ class WatchlistPosition(SQLiteEntity, Position):
                    }
 
     quantity = 1
-    tags_string =''
 
 
 class MetaPosition(Position):

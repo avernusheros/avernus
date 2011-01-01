@@ -52,13 +52,12 @@ class PositionsTree(Tree):
          'shares':6, 
          'buy_value':7,
          'mkt_value':8,
-         'tags':9,
-         'days_gain':10,
-         'gain_percent':11,
-         'gain_icon':12, 
-         'change_percent':13,
-         'type': 14,
-         'pf_percent': 15
+         'days_gain':9,
+         'gain_percent':10,
+         'gain_icon':11, 
+         'change_percent':12,
+         'type': 13,
+         'pf_percent': 14
           }
 
     def __init__(self, container, actiongroup, use_metapositions=True):
@@ -82,7 +81,7 @@ class PositionsTree(Tree):
         self.on_unselect()
 
     def _init_widgets(self):
-        self.model = gtk.TreeStore(object,str, float, float,float, float, str, float, float, str, float, float,str, float, str, float)
+        self.model = gtk.TreeStore(object,str, float, float,float, float, str, float, float, float, float,str, float, str, float)
         self.set_model(self.model)
         
         if not self.watchlist:
@@ -103,9 +102,6 @@ class PositionsTree(Tree):
         self.create_icon_text_column('%', self.COLS['gain_icon'], self.COLS['gain_percent'], func2=gui_utils.float_to_red_green_string_percent)
         if not self.watchlist:
             self.create_column(_('Today'), self.COLS['days_gain'], gui_utils.float_to_red_green_string_currency)
-        col, cell = self.create_column(_('Tags'), self.COLS['tags'])
-        cell.set_property('editable', True)
-        cell.connect('edited', self.on_tag_edited)
         self.set_rules_hint(True)
 
     def _connect_signals(self):
@@ -114,7 +110,6 @@ class PositionsTree(Tree):
         self.connect("destroy", self.on_destroy)
         self.subscriptions = (
             ('stocks.updated', self.on_stocks_updated),
-            ('position.tags.changed', self.on_positon_tags_changed),
             ('container.position.added', self.on_position_added)
         )
         for topic, callback in self.subscriptions:
@@ -127,11 +122,9 @@ class PositionsTree(Tree):
                 ('chart',  None,              'chart',  None, _('Chart selected position'),  self.on_chart),
                 ('dividend', None,            'dividend', None, _('Add dividend payment'), self.on_dividend), 
                 #('split',  None            , 'split...', None, _('Split selected position'), self.on_remove),
-                ('tag',    None,              'tag',    None, _('Tag selected position'),    self.on_tag),
                 ('update', gtk.STOCK_REFRESH, 'update', None, _('Update positions'),         lambda x: self.container.update_positions())
                                 ])
         self.actiongroup.get_action('chart').set_icon_name('avernus')
-        self.actiongroup.get_action('tag').set_icon_name('tag')
         accelgroup = gtk.AccelGroup()
         for action in self.actiongroup.list_actions():
             action.set_accel_group(accelgroup)
@@ -142,11 +135,11 @@ class PositionsTree(Tree):
                 PositionContextMenu(self.actiongroup).show(event)
 
     def on_unselect(self):
-        for action in ['edit', 'remove', 'chart', 'tag']:
+        for action in ['edit', 'remove', 'chart']:
             self.actiongroup.get_action(action).set_sensitive(False)       
         
     def on_select(self, obj):
-        for action in ['edit', 'remove', 'chart', 'tag']:
+        for action in ['edit', 'remove', 'chart']:
             self.actiongroup.get_action(action).set_sensitive(True)
 
     def on_destroy(self, x):
@@ -156,18 +149,6 @@ class PositionsTree(Tree):
     def load_positions(self):
         for pos in self.container:
             self.insert_position(pos)
-    
-    def on_tag_edited(self, cellrenderertext, path, new_text):
-        if self.selected_item is None:
-            return
-        obj, iter = self.selected_item
-        for tag in new_text.split():
-            pubsub.publish('position.newTag',position=obj,tagText=tag)
-   
-    def on_positon_tags_changed(self, tags, item):
-        row = self.find_position(item)
-        if row:
-            row[self.COLS['tags']] = item.tags_string
     
     def on_stocks_updated(self, container):
         if container.name == self.container.name:
@@ -221,10 +202,6 @@ class PositionsTree(Tree):
         else:
             BuyDialog(self.container)
         
-    def on_tag(self, widget):
-        path, col = self.get_cursor()
-        self.set_cursor(path, focus_column = self.get_column(13), start_editing=True)
-    
     def on_dividend(self, widget):
         if self.selected_item is not None:
             dialogs.DividendDialog(pf=self.container, position=self.selected_item[0])
@@ -281,7 +258,6 @@ class PositionsTree(Tree):
                gui_utils.get_string_from_float(position.quantity),
                position.bvalue,
                position.cvalue,
-               position.tagstring,
                position.days_gain,
                gain[1],
                gain_icon,
@@ -399,8 +375,8 @@ class PositionsTab(gtk.VBox):
         tb = gtk.Toolbar()
         
         if container.__name__ == 'Portfolio':
-            buttons = ['add', 'remove', 'edit', 'tag', 'chart', '---', 'update']
-        elif container.__name__ == 'Watchlist' or container.__name__ == 'Tag':
+            buttons = ['add', 'remove', 'edit', 'chart', '---', 'update']
+        elif container.__name__ == 'Watchlist':
             buttons = ['add', 'remove', 'edit', 'chart', '---', 'update']
         
         for action in buttons:
