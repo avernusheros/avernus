@@ -42,6 +42,8 @@ class EditStockDialog(gtk.Dialog):
                             , gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
                      (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
                       gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
+        
+        
 
         vbox = self.get_content_area()
         self.table = EditStockTable(stock)
@@ -76,10 +78,15 @@ class DimensionComboBox(gtk.ComboBoxEntry):
         completion.set_match_func(self.match_func)
         self.child.set_completion(completion)
         completion.connect("match-selected", self.on_completion_match)
-        self.child.connect('changed', self.on_entry_changed)
+        self.connect('changed', self.on_entry_changed)
         
     def on_entry_changed(self, editable):
-        print "changed..."
+        if not self.parse(): # unsuccesfull parse
+            self.drag_highlight()
+            self.child.drag_highlight()
+        else: # sucessful parse
+            self.drag_unhighlight()
+            self.child.drag_unhighlight()
 
     def match_func(self, completion, key, iter):
         model = completion.get_model()
@@ -97,38 +104,43 @@ class DimensionComboBox(gtk.ComboBoxEntry):
         # stop the event propagation
         return True
     
-    def get_active(self):
+    def parse(self):
         iterator = self.get_active_iter()
         if iterator is None:
             name = self.get_active_text()
-            for col in self.get_model():
-                if col[self.COL_TEXT] == name:
-                    return col[self.COL_OBJ]
-            if len(name) == 0:
-                return None
-            # There is text but none of the selected ==> we have to parse
             portions = name.split(",")
+            sum = 0
             erg = []
             for portion in portions:
                 data = portion.partition(":")
                 currentName = data[0].strip()
                 value = data[2].strip()
                 #print "|"+value+"|"
-                if value == "":
-                    value = "1"
-                erg.append((controller.newDimensionValue(self.dimension, currentName),
-                           float(value)))
-            # a little sanity.. the sum should be 1.0
-            sum = 0
-            for dv, val in erg:
-                sum += val
-            if sum == 1.0:
-                return erg
+                if value == "": # no value given
+                    if not currentName == "": # has the user not even entered a name?
+                        value = "1" # he has, so consider it to be a full value
+                    else:
+                        continue # no name, no entry
+                try:
+                    value = float(value) # try parsing a float out of the number
+                except:
+                    return False # failure
+                sum += value
+                erg.append((currentName, value))
+            if sum > 1:
+                return False # failure
             else:
-                print "The sum of your entries is not 1.0. ignored: ", erg
-                return None
-        return self.get_model()[iterator][self.COL_OBJ]
-
+                return erg
+        return [(self.get_model()[iterator][self.COL_OBJ].name,1.0)] # hack to have it easier in the calling method
+                
+    def get_active(self):
+        erg = []
+        parse = self.parse()
+        print parse
+        for name, value in parse:
+            print name, value
+            erg.append((controller.newDimensionValue(self.dimension, name), value))
+        return erg
 
 class EditStockTable(gtk.Table):
 
@@ -175,15 +187,8 @@ class EditStockTable(gtk.Table):
             for dim in controller.getAllDimension():
                 box = getattr(self, dim.name+"ValueComboBox")
                 active = box.get_active()
-                if isinstance(active, DimensionValue):
-                    # one value chosen
-                    self.stock.updateAssetDimensionValue([(active,1.0)])
-                elif isinstance(active, list):
-                    # we have a list of values
-                    self.stock.updateAssetDimensionValue(active)
-                else:
-                    print "Unprocessed Selection ", active
-            pubsub.publish("stock.edited", self.stock)
+                self.stock.updateAssetDimensionValue(active)
+                pubsub.publish("stock.edited", self.stock)
 
 
 class EditPositionTable(gtk.Table):
