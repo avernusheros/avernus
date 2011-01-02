@@ -10,6 +10,10 @@ import datetime
 sources = {'onvista.de': onvista.Onvista(),
            'yahoo': yahoo.Yahoo()
             }
+source_icons = {
+                'onvista.de':'onvista',
+                'yahoo':'yahoo'
+                }
 
 class DatasourceManager(object):
     
@@ -48,7 +52,7 @@ class DatasourceManager(object):
             return
         item['source'] = source.name
         stock = controller.newStock(**item)
-        self.search_callback(stock, 'gtk-add')
+        self.search_callback(stock, source_icons[item['source']])
 
     def update_stocks(self, stocks):
         if len(stocks) == 0 or not self.b_online:
