@@ -1,46 +1,53 @@
 #!/usr/bin/env python
 
-from avernus.objects import model
-from avernus.objects.model import SQLiteEntity, Meta
-from avernus.objects.container import Portfolio, Watchlist, Index, Tag
-from avernus.objects.transaction import Transaction
-from avernus.objects.position import PortfolioPosition, WatchlistPosition
-from avernus.objects.stock import Stock
-from avernus.objects.dividend import Dividend
-from avernus.objects.quotation import Quotation
-from avernus.objects.sector import Sector
-from avernus.objects.region import Region
 from avernus import pubsub
-from avernus.objects.account import Account, AccountTransaction, AccountCategory
 from avernus.logger import Log
-
+from avernus.objects import model
+from avernus.objects.account import Account, AccountTransaction, AccountCategory
+from avernus.objects.container import Portfolio, Watchlist
+from avernus.objects.dimension import Dimension, DimensionValue, \
+    AssetDimensionValue
+from avernus.objects.dividend import Dividend
+from avernus.objects.model import SQLiteEntity, Meta
+from avernus.objects.position import PortfolioPosition, WatchlistPosition
+from avernus.objects.quotation import Quotation
+from avernus.objects.stock import Stock
+from avernus.objects.transaction import Transaction
 import datetime
 import gobject
-import threading, thread
-import time
 import sys
+import thread
+import threading
+import time
 
 
-modelClasses = [Portfolio, Transaction, Tag, Watchlist, Index, Dividend,
+
+modelClasses = [Portfolio, Transaction, Watchlist, Dividend,
                 PortfolioPosition, WatchlistPosition, AccountCategory,
-                Quotation, Stock, Meta, Sector, Account, AccountTransaction,
-                Region]
+                Quotation, Stock, Meta, Account, AccountTransaction,
+                Dimension, DimensionValue, AssetDimensionValue]
 
 #these classes will be loaded with one single call and will also load composite
 #relations. therefore it is important that the list is complete in the sense
 #that there are no classes holding composite keys to classes outside the list
-initialLoadingClasses = [Portfolio,Transaction,Tag,Watchlist,Index,Dividend,Sector,
-                         PortfolioPosition, WatchlistPosition,Account, Meta, Stock, AccountTransaction, AccountCategory]
+initialLoadingClasses = [Portfolio,Transaction,Watchlist,Dividend,
+                         PortfolioPosition, WatchlistPosition,Account, Meta, Stock, 
+                         AccountTransaction, AccountCategory, Dimension, DimensionValue,
+                         AssetDimensionValue]
 
-VERSION = 3
+VERSION = 1
 datasource_manager = None
 
 #FIXME very hackish, but allows to remove the circular controller imports in the objects
 controller = sys.modules[__name__]
 
-# SAMPLE DATA
-SECTORS = ['Basic Materials','Conglomerates','Consumer Goods','Energy','Financial','Healthcare','Industrial Goods','Services','Technology','Transportation','Utilities']
-REGIONS = ['Emerging Markets', 'Europe', 'America', 'Worldwide']
+DIMENSIONS = {_('Region'): [_('Emerging markets'), _('America'), _('Europe'), _('Pacific')],
+              _('Asset Class'): [_('Bond'),_('Stocks developed countries'),_('Commodities')],
+              _('Risk'): [_('high'),_('medium'),_('low')],
+              _('Currency'): [_('Euro'),_('Dollar'),_('Yen')],
+              _('Company Size'): [_('large'),_('medium'),_('small')],
+              _('Sector'): ['Basic Materials','Conglomerates','Consumer Goods','Energy','Financial','Healthcare','Industrial Goods','Services','Technology','Transportation','Utilities']
+              }
 CATEGORIES = {
     _('Utilities'): [_('Gas'),_('Phone'), _('Water'), _('Electricity')],
     _('Entertainment'): [_('Books'),_('Movies'), _('Music'), _('Amusement')],
@@ -89,7 +96,6 @@ def check_duplicate(tp, **kwargs):
         return present
     return None
 
-
 def detectDuplicate(tp,**kwargs):
     #print tp, kwargs
     sqlArgs = {}
@@ -127,12 +133,6 @@ def upgrade_db(db_version):
     if db_version==1:
         print "Updating database v.1 to v.2!"
         db_version+=1
-    if db_version==2:
-        print "Updating db to version 3..."
-        model.store.execute('ALTER TABLE stock ADD COLUMN region INTEGER')
-        for rname in REGIONS:
-            newRegion(rname)
-        db_version+=1
     if db_version==VERSION:
         set_db_version(db_version)
         print "Successfully updated your database to the current version!"
@@ -144,10 +144,10 @@ def set_db_version(version):
     m.version = version
 
 def load_sample_data():
-    for sname in SECTORS:
-        newSector(sname)
-    for rname in REGIONS:
-        newRegion(rname)
+    for dim, vals in DIMENSIONS.iteritems():
+        new_dim = newDimension(dim)
+        for val in vals:
+            newDimensionValue(new_dim, val)
     for cat, subcats in CATEGORIES.iteritems():
         parent = newAccountCategory(name=cat)
         for subcat in subcats:
@@ -159,8 +159,8 @@ def load_sample_data():
     wl = newWatchlist(_('sample watchlist'))
 
 def update_all():
-    datasource_manager.update_stocks(getAllStock()+getAllIndex())
-    for container in getAllPortfolio()+getAllWatchlist()+getAllIndex():
+    datasource_manager.update_stocks(getAllStock())
+    for container in getAllPortfolio()+getAllWatchlist():
         container.last_update = datetime.datetime.now()
 
 def newPortfolio(name, id=None, last_update = datetime.datetime.now(), comment="",cash=0.0):
@@ -233,11 +233,6 @@ def newTransaction(date=datetime.datetime.now(),\
     return result
 
 
-def newIndex(name='', isin='', currency='', date=datetime.datetime.now(), exchange='', yahoo_symbol=''):
-    result = Index(id=None, name=name, currency=currency, isin=isin, date=date, exchange=exchange, yahoo_symbol=yahoo_symbol, price=0, change=0)
-    result.insert()
-    return result
-
 def newPortfolioPosition(price=0,\
                          date=datetime.datetime.now(),\
                          quantity=1,\
@@ -276,17 +271,18 @@ def newWatchlistPosition(price=0,\
     return result
 
 
-def newTag(name):
-    result = Tag(name=name)
-    result.insert()
-    pubsub.publish('tag.created',result)
-    return result
+def newDimensionValue(dimension=None, name=""):
+    return detectDuplicate(DimensionValue, dimension=dimension.id, name=name)
 
-def newSector(name):
-    return detectDuplicate(Sector, name=name)
+def newDimension(name):
+    dim = detectDuplicate(Dimension, name=name)
+    dim.controller = controller
+    return dim
 
-def newRegion(name):
-    return detectDuplicate(Region, name=name)
+def newAssetDimensionValue(stock, dimensionValue, value):
+    adv = detectDuplicate(AssetDimensionValue, stock=stock.id, dimensionValue=dimensionValue.id,
+                          value=value)
+    return adv
 
 def newStock(insert=True, **kwargs):
     result = Stock(**kwargs)
@@ -340,9 +336,6 @@ def getAllTransaction():
 def getAllWatchlist():
     return Watchlist.getAll()
 
-def getAllIndex():
-    return Index.getAll()
-
 def getAllAccount():
     return Account.getAll()
 
@@ -360,14 +353,18 @@ def getAllAccountCategoriesHierarchical():
             hierarchy[cat.parent] = [cat]
     return hierarchy
 
-def getAllSector():
-    return Sector.getAll()
+def getAllDimension():
+    return Dimension.getAll()
 
-def getAllRegion():
-    return Region.getAll()
+def getAllDimensionValueForDimension(dim):
+    for value in DimensionValue.getAll():
+        if value.dimension == dim:
+            yield value
 
-def getAllTag():
-    return Tag.getAll()
+def getAssetDimensionValueForStock(stock, dim):
+    stockADVs = AssetDimensionValue.getAllFromOneColumn('stock', stock.id)
+    stockADVs = filter(lambda adv: adv.dimensionValue.dimension == dim, stockADVs)
+    return stockADVs
 
 def getAllStock():
     return Stock.getAll()
@@ -376,16 +373,6 @@ def getPositionForPortfolio(portfolio):
     key = portfolio.getPrimaryKey()
     erg = PortfolioPosition.getAllFromOneColumn("portfolio",key)
     return erg
-
-def deleteSectorFromStock(sector):
-    for stock in getAllStock():
-        if stock.sector == sector:
-            stock.sector = None
-
-def deleteRegionFromStock(sector):
-    for stock in getAllStock():
-        if stock.region == region:
-            stock.region = None
 
 def getTransactionForPosition(position):
     key = position.getPrimaryKey()
@@ -396,6 +383,16 @@ def deleteAllPositionTransaction(position):
     for trans in getTransactionForPosition(position):
         trans.delete()
 
+def deleteAllDimensionValue(dimension):
+    for val in getAllDimensionValueForDimension(dimension):
+        deleteAssetDimensionValue(val)
+        del val
+
+def deleteAssetDimensionValue(dimvalue):
+    for adm in AssetDimensionValue.getAll():
+        if adm.dimensionValue == dimvalue:
+            del adm
+
 def getPositionForWatchlist(watchlist):
     key = watchlist.getPrimaryKey()
     return WatchlistPosition.getAllFromOneColumn("watchlist",key)
@@ -403,14 +400,6 @@ def getPositionForWatchlist(watchlist):
 def deleteAllWatchlistPosition(watchlist):
     for pos in getPositionForWatchlist(watchlist):
         pos.delete()
-
-def getPositionForTag(tag):
-    possible = getAllPosition()
-    for pos in possible:
-        if not pos.__composite_retrieved__:
-            pos.retrieveAllComposite()
-    possible = filter(lambda pos: pos.hasTag(tag), possible)
-    return possible
 
 def getDividendForPosition(pos):
     return Dividend.getAllFromOneColumn("position", pos.getPrimaryKey())
@@ -494,13 +483,6 @@ def getBuyTransaction(portfolio_position):
     for ta in Transaction.getAllFromOneColumn('position', key):
         if ta.type == 1:
             return ta
-
-def onPositionNewTag(position=None,tagText=None):
-    if not position or not tagText:
-        Log.error("Malformed onPositionNewTag Call (position,tagText)" + str((position,tagText)))
-    position.tags.append(detectDuplicate(Tag, name=tagText))
-
-pubsub.subscribe('position.newTag', onPositionNewTag)
 
 
 class GeneratorTask(object):

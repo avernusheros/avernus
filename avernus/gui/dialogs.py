@@ -1,10 +1,12 @@
 #!/usr/bin/env python
 
-import gtk, pango
 from avernus import pubsub, config
-from datetime import datetime
-from avernus.objects import controller, stock
 from avernus.gui import gui_utils
+from avernus.objects import controller, stock
+from avernus.objects.dimension import DimensionValue
+from datetime import datetime
+import gtk
+import pango
 
 
 class EditPositionDialog(gtk.Dialog):
@@ -55,73 +57,114 @@ class EditStockDialog(gtk.Dialog):
         self.destroy()
 
 
-class MyComboBoxEntry(gtk.ComboBoxEntry):
+class DimensionComboBox(gtk.ComboBoxEntry):
 
     COL_OBJ  = 0
     COL_TEXT = 1
 
-    def __init__(self, items, creator, current=None):
-        self.creator = creator
+    def __init__(self, dimension, asset):
+        values = [(None, 'None'),]+[(dimVal, dimVal.name) for dimVal in dimension.values]
+        self.dimension = dimension
         liststore = gtk.ListStore(object, str)
         gtk.ComboBoxEntry.__init__(self, liststore, self.COL_TEXT)
-        i=0
-        for item, string in items:
+        for item, string in values:
             liststore.append([item, string])
-            if current == item:
-                self.set_active(i)
-            i+=1
+        self.child.set_text(asset.getDimensionText(dimension))
         completion = gtk.EntryCompletion()
         completion.set_model(liststore)
-        #completion.set_minimum_key_length(1)
         completion.set_text_column(self.COL_TEXT)
+        completion.set_match_func(self.match_func)
         self.child.set_completion(completion)
+        completion.connect("match-selected", self.on_completion_match)
+        self.child.connect('changed', self.on_entry_changed)
+        
+    def on_entry_changed(self, editable):
+        print "changed..."
 
+    def match_func(self, completion, key, iter):
+        model = completion.get_model()
+        text = model.get_value(iter, self.COL_TEXT).lower()
+        key = key.split(',')[-1].strip().lower()
+        if text.startswith(key):
+            return True
+        return False
+
+    def on_completion_match(self, completion, model, iter):
+        current_text = self.get_active_text()
+        current_text = current_text[:-len(current_text.split(',')[-1])]
+        self.child.set_text(current_text+' '+model[iter][self.COL_TEXT])
+        self.child.set_position(-1)
+        # stop the event propagation
+        return True
+    
     def get_active(self):
         iterator = self.get_active_iter()
         if iterator is None:
             name = self.get_active_text()
+            for col in self.get_model():
+                if col[self.COL_TEXT] == name:
+                    return col[self.COL_OBJ]
             if len(name) == 0:
                 return None
-            return self.creator(name=name)
+            # There is text but none of the selected ==> we have to parse
+            portions = name.split(",")
+            erg = []
+            for portion in portions:
+                data = portion.partition(":")
+                currentName = data[0].strip()
+                value = data[2].strip()
+                #print "|"+value+"|"
+                if value == "":
+                    value = "1"
+                erg.append((controller.newDimensionValue(self.dimension, currentName),
+                           float(value)))
+            # a little sanity.. the sum should be 1.0
+            sum = 0
+            for dv, val in erg:
+                sum += val
+            if sum == 1.0:
+                return erg
+            else:
+                print "The sum of your entries is not 1.0. ignored: ", erg
+                return None
         return self.get_model()[iterator][self.COL_OBJ]
 
 
 class EditStockTable(gtk.Table):
 
-    def __init__(self, stock):
+    def __init__(self, stock_to_edit):
         gtk.Table.__init__(self)
-        self.stock = stock
+        self.stock = stock_to_edit
 
         self.attach(gtk.Label(_('Name')),0,1,0,1, yoptions=gtk.FILL)
         self.name_entry = gtk.Entry()
-        self.name_entry.set_text(stock.name)
+        self.name_entry.set_text(stock_to_edit.name)
         self.attach(self.name_entry,1,2,0,1,yoptions=gtk.FILL)
 
         self.attach(gtk.Label(_('ISIN')),0,1,1,2, yoptions=gtk.FILL)
         self.isin_entry = gtk.Entry()
-        self.isin_entry.set_text(stock.isin)
+        self.isin_entry.set_text(stock_to_edit.isin)
         self.attach(self.isin_entry,1,2,1,2,yoptions=gtk.FILL)
 
         self.attach(gtk.Label(_('Type')),0,1,2,3, yoptions=gtk.FILL)
         liststore = gtk.ListStore(str, int)
-        for key, val in [('fund',0), ('stock',1), ('etf',2)]:
-            liststore.append([key, val])
+        for val, name in stock.TYPES.iteritems():
+            liststore.append([name, val])
         self.type_cb = cb = gtk.ComboBox(liststore)
         cell = gtk.CellRendererText()
         cb.pack_start(cell, True)
         cb.add_attribute(cell, 'text', 0)
         cb.set_active(self.stock.type)
         self.attach(cb, 1,2,2,3,  yoptions=gtk.FILL)
-
-        self.attach(gtk.Label(_('Sector')),0,1,3,4, yoptions=gtk.FILL)
-        sectors = [(None, 'None'),]+[(sector, sector.name) for sector in controller.getAllSector()]
-        self.sector_cb = MyComboBoxEntry(sectors, controller.newSector, self.stock.sector)
-        self.attach(self.sector_cb, 1,2,3,4,  yoptions=gtk.FILL)
-
-        self.attach(gtk.Label(_('Region')),0,1,4,5, yoptions=gtk.FILL)
-        regions = [(None, 'None'),]+[(regions, regions.name) for regions in controller.getAllRegion()]
-        self.region_cb = MyComboBoxEntry(regions, controller.newRegion, self.stock.region)
-        self.attach(self.region_cb, 1,2,4,5,  yoptions=gtk.FILL)
+        currentRow = 3
+        for dim in controller.getAllDimension():
+            #print dim
+            self.attach(gtk.Label(_(dim.name)),0,1,currentRow,currentRow+1, yoptions=gtk.FILL)
+            comboName = dim.name+"ValueComboBox"
+            setattr(self, comboName, DimensionComboBox(dim, stock_to_edit))
+            self.attach(getattr(self, comboName), 1,2,currentRow,currentRow+1,  yoptions=gtk.FILL)
+            currentRow += 1
+        
 
     def process_result(self, widget=None, response = gtk.RESPONSE_ACCEPT):
         if response == gtk.RESPONSE_ACCEPT:
@@ -129,8 +172,17 @@ class EditStockTable(gtk.Table):
             self.stock.isin = self.isin_entry.get_text()
             active_iter = self.type_cb.get_active_iter()
             self.stock.type = self.type_cb.get_model()[active_iter][1]
-            self.stock.sector = self.sector_cb.get_active()
-            self.stock.region = self.region_cb.get_active()
+            for dim in controller.getAllDimension():
+                box = getattr(self, dim.name+"ValueComboBox")
+                active = box.get_active()
+                if isinstance(active, DimensionValue):
+                    # one value chosen
+                    self.stock.updateAssetDimensionValue([(active,1.0)])
+                elif isinstance(active, list):
+                    # we have a list of values
+                    self.stock.updateAssetDimensionValue(active)
+                else:
+                    print "Unprocessed Selection ", active
             pubsub.publish("stock.edited", self.stock)
 
 
@@ -179,6 +231,7 @@ class EditPositionTable(gtk.Table):
 SPINNER_SIZE = 40
 
 class StockSelector(gtk.VBox):
+    
     def __init__(self):
         gtk.VBox.__init__(self)
         self.search_field = gtk.Entry()
@@ -204,7 +257,6 @@ class StockSelector(gtk.VBox):
                          self.result_tree,
                          col,
                          cell)
-
         sw.add(self.result_tree)
         self.pack_end(sw)
         self.spinner = None
@@ -244,7 +296,8 @@ class StockSelector(gtk.VBox):
         controller.datasource_manager.stop_search()
 
     def insert_item(self, stock, icon='gtk-harddisk'):
-        icons = ['fund', 'stock', 'etf']
+        #FIXME bond icon
+        icons = ['fund', 'stock', 'etf', 'stock']
         self.result_tree.get_model().append(None, [
                                        stock,
                                        icon,

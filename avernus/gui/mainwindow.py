@@ -155,10 +155,8 @@ class MainWindow(gtk.Window):
         if size is not None:
             width, height = eval(size)
             self.resize(width, height)
-
-        pos = self.config.get_option('hpaned position', 'Gui')
-        if pos is None:
-            pos = width*0.25
+            
+        pos = self.config.get_option('hpaned position', 'Gui') or width*0.25
         self.hpaned.set_position(int(pos))
 
         #config entries are strings...

@@ -77,7 +77,7 @@ def init_icons():
     #icons.add_icon_name_from_directory('tag', path)
     #icons.add_icon_name_from_directory('tags', path)
     #icons.add_stock_from_directory('avernus-chart', path)
-    gtk.window_set_default_icon_name('bullbear')
+    gtk.window_set_default_icon_name('avernus')
 
 
 def init_plugin_engine(api):

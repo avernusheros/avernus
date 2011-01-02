@@ -105,6 +105,11 @@ def float_format(column, cell_renderer, tree_model, iter, user_data):
     number = tree_model.get_value(iter, user_data)
     cell_renderer.set_property('text', get_string_from_float(number))
     return
+
+def percent_format(column, cell_renderer, tree_model, iter, user_data):
+    number = tree_model.get_value(iter, user_data)
+    cell_renderer.set_property('text', get_string_from_float(number)+'%')
+    return
      
 def currency_format(column, cell_renderer, tree_model, iter, user_data):
     number = tree_model.get_value(iter, user_data)
@@ -125,6 +130,11 @@ def float_to_red_green_string_currency(column, cell, model, iter, user_data):
 def float_to_red_green_string(column, cell, model, iter, user_data):
     num = model.get_value(iter, user_data)
     text = get_string_from_float(num)
+    cell.set_property('markup', get_green_red_string(num, text))
+    
+def float_to_red_green_string_percent(column, cell, model, iter, user_data):
+    num = model.get_value(iter, user_data)
+    text = get_string_from_float(num)+'%'
     cell.set_property('markup', get_green_red_string(num, text))
 
 def sort_by_time(model, iter1, iter2, data=None):

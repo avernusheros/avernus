@@ -1694,7 +1694,8 @@ class PiePlot(Plot):
             background = "white light_gray",
             gradient = False,
             shadow = False,
-            colors = None):
+            colors = None,
+            values = False):
 
         Plot.__init__( self, surface, data, width, height, background, series_colors = colors )
         self.center = (self.dimensions[HORZ]/2, self.dimensions[VERT]/2)
@@ -1702,6 +1703,7 @@ class PiePlot(Plot):
         self.radius = min(self.dimensions[HORZ]/3,self.dimensions[VERT]/3)
         self.gradient = gradient
         self.shadow = shadow
+        self.values = values
 
     def sort_function(x,y):
         return x.content - y.content
@@ -1741,17 +1743,21 @@ class PiePlot(Plot):
         x0,y0 = self.center
         cr = self.context
         for number,key in enumerate(self.series_labels):
-            # self.data[number] should be just a number
             data = sum(self.series[number].to_list())
+            if self.values:
+                text = key +" "+str(round(100*float(data)/self.total,2)) +'%'
+            else:
+                text = key
+            # self.data[number] should be just a number
 
             next_angle = angle + 2.0*math.pi*data/self.total
             cr.set_source_rgba(*self.series_colors[number][:4])
-            w = cr.text_extents(key)[2]
+            w = cr.text_extents(text)[2]
             if (angle + next_angle)/2 < math.pi/2 or (angle + next_angle)/2 > 3*math.pi/2:
                 cr.move_to(x0 + (self.radius+10)*math.cos((angle+next_angle)/2), y0 + (self.radius+10)*math.sin((angle+next_angle)/2) )
             else:
                 cr.move_to(x0 + (self.radius+10)*math.cos((angle+next_angle)/2) - w, y0 + (self.radius+10)*math.sin((angle+next_angle)/2) )
-            cr.show_text(key)
+            cr.show_text(text)
             angle = next_angle
 
     def render_plot(self):
@@ -1793,7 +1799,8 @@ class DonutPlot(PiePlot):
             gradient = False,
             shadow = False,
             colors = None,
-            inner_radius=-1):
+            inner_radius=-1,
+            values = False):
 
         Plot.__init__( self, surface, data, width, height, background, series_colors = colors )
 
@@ -1807,6 +1814,7 @@ class DonutPlot(PiePlot):
 
         self.gradient = gradient
         self.shadow = shadow
+        self.values = values
 
     def draw_piece(self, angle, next_angle):
         self.context.move_to(self.center[0] + (self.inner_radius)*math.cos(angle), self.center[1] + (self.inner_radius)*math.sin(angle))

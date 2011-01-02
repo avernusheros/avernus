@@ -57,20 +57,18 @@ class MainTree(gui_utils.Tree):
             self.insert_portfolio(pf)
         for wl in controller.getAllWatchlist():
             self.insert_watchlist(wl)
-        for tag in controller.getAllTag():
-            self.insert_tag(tag)
         for account in controller.getAllAccount():
             self.insert_account(account)
         self.expand_all()
 
     def _subscribe(self):
         self.connect('button-press-event', self.on_button_press_event)
+        self.connect('key-press-event', self.on_key_press)
         self.connect('cursor_changed', self.on_cursor_changed)
         self.subscriptions = (
                     ("container.edited", self.on_updated),
-                    ("tag.created", self.insert_tag),
-                    ("tag.updated", self.on_updated),
-                    ('account.updated', self.on_account_updated)
+                    ('account.updated', self.on_item_updated),
+                    ('container.updated', self.on_item_updated)
                 )
         for topic, callback in self.subscriptions:
             pubsub.subscribe(topic, callback)
@@ -94,10 +92,15 @@ class MainTree(gui_utils.Tree):
                 #disable editing of categories
                 return True
 
+    def on_key_press(self, widget, event):
+        if gtk.gdk.keyval_name(event.keyval) == 'Delete':
+            self.on_remove()
+            return True
+        return False
+
     def insert_categories(self):
         self.pf_iter = self.get_model().append(None, [Category('Portfolios'),'portfolios', _("<b>Portfolios</b>"),''])
         self.wl_iter = self.get_model().append(None, [Category('Watchlists'),'watchlists', _("<b>Watchlists</b>"),''])
-        self.tag_iter = self.get_model().append(None, [Category('Tags'),'tags', _("<b>Tags</b>"),None])
         self.accounts_iter = self.get_model().append(None, [Category('Accounts'),'accounts', _("<b>Accounts</b>"),''])
         #self.index_iter = self.get_model().append(None, [Category('Indices'),'indices', _("<b>Indices</b>"),''])
 
@@ -110,9 +113,6 @@ class MainTree(gui_utils.Tree):
     def insert_portfolio(self, item):
         self.get_model().append(self.pf_iter, [item, 'portfolio', item.name, gui_utils.get_currency_format_from_float(item.cvalue)])
 
-    def insert_tag(self, item):
-        self.get_model().append(self.tag_iter, [item, 'tag', item.name, ''])
-
     def on_remove(self, widget=None):
         if self.selected_item is None:
             return
@@ -120,19 +120,20 @@ class MainTree(gui_utils.Tree):
         if not isinstance(obj, Category):
             dlg = gtk.MessageDialog(None,
                  gtk.DIALOG_DESTROY_WITH_PARENT, gtk.MESSAGE_QUESTION,
-                 gtk.BUTTONS_OK_CANCEL,
-                 _("Permanently delete ")+obj.name+'?')
+                 gtk.BUTTONS_OK_CANCEL)
+            dlg.set_markup(_("Permanently delete <b>")+obj.name+'</b>?')
             response = dlg.run()
             dlg.destroy()
             if response == gtk.RESPONSE_OK:
                 obj.delete()
                 self.get_model().remove(iter)
+                self.selected_item = None
                 pubsub.publish('maintree.unselect')
 
-    def on_account_updated(self, account):
-        row = self.find_item(account)
+    def on_item_updated(self, item):
+        row = self.find_item(item)
         if row:
-            self.find_item(account)[3] = gui_utils.get_currency_format_from_float(account.amount)
+            row[3] = gui_utils.get_currency_format_from_float(item.amount)
         
     def on_updated(self, item):
         obj, iter = self.selected_item
