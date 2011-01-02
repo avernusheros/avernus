@@ -463,10 +463,11 @@ def getStockForSearchstring(searchstring):
         sqlArgs[req] = '%'+searchstring+'%'
     return Stock.getByColumns(sqlArgs,operator=" OR ",operator2=' LIKE ', create=True)
 
-def getQuotationsFromStock(stock, start):
+def getQuotationsFromStock(stock, start=None):
     args = {'stock': stock.getPrimaryKey(), 'exchange':stock.exchange}
     erg = Quotation.getByColumns(args, create=True)
-    erg = filter(lambda quote: quote.date > start, erg)
+    if start:
+        erg = filter(lambda quote: quote.date > start, erg)
     erg = sorted(erg, key=lambda stock: stock.date)
     return erg
 

@@ -21,9 +21,10 @@ class EditPositionDialog(gtk.Dialog):
         vbox.pack_start(notebook)
         self.position_table = EditPositionTable(position)
         self.stock_table = EditStockTable(position.stock)
+        self.quotation_table = QuotationTable(position.stock)
         notebook.append_page(self.position_table, gtk.Label(_('Position')))
         notebook.append_page(self.stock_table, gtk.Label(_('Stock')))
-
+        notebook.append_page(self.quotation_table, gtk.Label(_('Quotation')))
         self.show_all()
         response = self.run()
         self.process_result(response = response)
@@ -43,8 +44,6 @@ class EditStockDialog(gtk.Dialog):
                      (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
                       gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
         
-        
-
         vbox = self.get_content_area()
         self.table = EditStockTable(stock)
         vbox.pack_start(self.table)
@@ -138,9 +137,28 @@ class DimensionComboBox(gtk.ComboBoxEntry):
         parse = self.parse()
         print parse
         for name, value in parse:
-            print name, value
+            #print name, value
             erg.append((controller.newDimensionValue(self.dimension, name), value))
         return erg
+    
+class QuotationTable(gtk.Table):
+    
+    def __init__(self, position):
+        gtk.Table.__init__(self)
+        self.position = position
+        self.stock = position.stock
+        
+        self.attach(gtk.Label(_('Start')), 0,1,0,1, yoptions=gtk.FILL)
+        self.attach(gtk.Label(self.position.date), 1,2,0,1, yoptions=gtk.FILL)
+        
+        quotations = controller.getQuotationsFromStock(self.stock)
+        
+        self.attach(gtk.Label(_('Quotation Count')), 0,1,1,2, yoptions=gtk.FILL)
+        self.attach(gtk.Label(len(quotations)), 1,2,1,2, yoptions=gtk.FILL)
+        self.attach(gtk.Label(_('First Date')), 0,1,2,3, yoptions=gtk.FILL)
+        self.attach(gtk.Label(quotations[0].date), 1,2,2,3, yoptions=gtk.FILL)
+        self.attach(gtk.Label(_('Last Date')), 0,1,3,4, yoptions=gtk.FILL)
+        self.attach(gtk.Label(quotations[-1].date), 1,2,3,4, yoptions=gtk.FILL)
 
 class EditStockTable(gtk.Table):
 
