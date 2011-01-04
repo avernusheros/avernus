@@ -20,10 +20,11 @@ class EditPositionDialog(gtk.Dialog):
         notebook = gtk.Notebook()
         vbox.pack_start(notebook)
         self.position_table = EditPositionTable(position)
+        self.quotation_table = QuotationTable(position.stock)
         self.stock_table = EditStockTable(position.stock, self)
         notebook.append_page(self.position_table, gtk.Label(_('Position')))
         notebook.append_page(self.stock_table, gtk.Label(_('Stock')))
-
+        notebook.append_page(self.quotation_table, gtk.Label(_('Quotation')))
         self.show_all()
         response = self.run()
         self.process_result(response = response)
@@ -43,8 +44,6 @@ class EditStockDialog(gtk.Dialog):
                      (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
                       gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
         
-        
-
         vbox = self.get_content_area()
         self.table = EditStockTable(stock)
         vbox.pack_start(self.table)
@@ -85,7 +84,8 @@ class DimensionComboBox(gtk.ComboBoxEntry):
         self.connect('changed', self.on_entry_changed)
         
     def on_entry_changed(self, editable):
-        if not self.parse(): # unsuccesfull parse
+        parse = self.parse()
+        if not parse and not parse == []: # unsuccesfull parse
             self.child.set_icon_from_stock(1, gtk.STOCK_CANCEL)
             self.dialog.set_response_sensitive(gtk.RESPONSE_ACCEPT, False)
         else: # sucessful parse
@@ -115,6 +115,7 @@ class DimensionComboBox(gtk.ComboBoxEntry):
             portions = name.split(",")
             sum = 0
             erg = []
+            mode = ""
             for portion in portions:
                 data = portion.partition(":")
                 currentName = data[0].strip()
@@ -127,12 +128,22 @@ class DimensionComboBox(gtk.ComboBoxEntry):
                         continue # no name, no entry
                 try:
                     value = float(value) # try parsing a float out of the number
+                    if value < 1:
+                        if mode == "percent": # mode clash
+                            return False
+                        mode = "float"
+                    else:
+                        if mode == "float":
+                            return False
+                        mode = "percent"
                 except:
                     return False # failure
                 sum += value
                 erg.append((currentName, value))
-            if sum > 1:
+            if mode == "float" and sum > 1:
                 return False # failure
+            elif mode == "percent" and sum > 100:
+                return False
             else:
                 return erg
         return [(self.get_model()[iterator][self.COL_OBJ].name,1.0)] # hack to have it easier in the calling method
@@ -142,10 +153,31 @@ class DimensionComboBox(gtk.ComboBoxEntry):
         parse = self.parse()
         #print parse
         for name, value in parse:
-            print name, value
+            #print name, value
             erg.append((controller.newDimensionValue(self.dimension, name), value))
         return erg
-
+    
+class QuotationTable(gtk.Table):
+    
+    def __init__(self, position):
+        gtk.Table.__init__(self)
+        self.position = position
+        self.stock = position.stock
+        
+        self.attach(gtk.Label(_('Start')), 0,1,0,1, yoptions=gtk.FILL)
+        self.attach(gtk.Label(self.position.date), 1,2,0,1, yoptions=gtk.FILL)
+        
+        quotations = controller.getQuotationsFromStock(self.stock)
+        
+        if len(quotations) > 0:
+            self.attach(gtk.Label(_('Quotation Count')), 0,1,1,2, yoptions=gtk.FILL)
+            self.attach(gtk.Label(len(quotations)), 1,2,1,2, yoptions=gtk.FILL)
+            self.attach(gtk.Label(_('First Date')), 0,1,2,3, yoptions=gtk.FILL)
+            self.attach(gtk.Label(quotations[0].date), 1,2,2,3, yoptions=gtk.FILL)
+            self.attach(gtk.Label(_('Last Date')), 0,1,3,4, yoptions=gtk.FILL)
+            self.attach(gtk.Label(quotations[-1].date), 1,2,3,4, yoptions=gtk.FILL)
+        else:
+            self.attach(gtk.Label(_('No data!')),0,2,1,2, yoptions=gtk.FILL)
 
 class EditStockTable(gtk.Table):
 
