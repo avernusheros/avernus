@@ -20,8 +20,8 @@ class EditPositionDialog(gtk.Dialog):
         notebook = gtk.Notebook()
         vbox.pack_start(notebook)
         self.position_table = EditPositionTable(position)
-        self.stock_table = EditStockTable(position.stock)
         self.quotation_table = QuotationTable(position.stock)
+        self.stock_table = EditStockTable(position.stock, self)
         notebook.append_page(self.position_table, gtk.Label(_('Position')))
         notebook.append_page(self.stock_table, gtk.Label(_('Stock')))
         notebook.append_page(self.quotation_table, gtk.Label(_('Quotation')))
@@ -63,9 +63,10 @@ class DimensionComboBox(gtk.ComboBoxEntry):
     COL_OBJ  = 0
     COL_TEXT = 1
 
-    def __init__(self, dimension, asset):
+    def __init__(self, dimension, asset, dialog):
         values = [(None, 'None'),]+[(dimVal, dimVal.name) for dimVal in dimension.values]
         self.dimension = dimension
+        self.dialog = dialog
         liststore = gtk.ListStore(object, str)
         gtk.ComboBoxEntry.__init__(self, liststore, self.COL_TEXT)
         for item, string in values:
@@ -76,16 +77,20 @@ class DimensionComboBox(gtk.ComboBoxEntry):
         completion.set_text_column(self.COL_TEXT)
         completion.set_match_func(self.match_func)
         self.child.set_completion(completion)
+        self.child.set_icon_from_stock(1, gtk.STOCK_APPLY)
+        self.child.set_property('secondary-icon-activatable', False)
+        self.child.set_property('secondary-icon-tooltip-markup', '<b>ValueA</b> or <b>ValueA:40, ValueB:30 ...</b>')
         completion.connect("match-selected", self.on_completion_match)
         self.connect('changed', self.on_entry_changed)
         
     def on_entry_changed(self, editable):
-        if not self.parse(): # unsuccesfull parse
-            self.drag_highlight()
-            self.child.drag_highlight()
+        parse = self.parse()
+        if not parse and not parse == []: # unsuccesfull parse
+            self.child.set_icon_from_stock(1, gtk.STOCK_CANCEL)
+            self.dialog.set_response_sensitive(gtk.RESPONSE_ACCEPT, False)
         else: # sucessful parse
-            self.drag_unhighlight()
-            self.child.drag_unhighlight()
+            self.child.set_icon_from_stock(1, gtk.STOCK_APPLY)
+            self.dialog.set_response_sensitive(gtk.RESPONSE_ACCEPT, True)
 
     def match_func(self, completion, key, iter):
         model = completion.get_model()
@@ -110,6 +115,7 @@ class DimensionComboBox(gtk.ComboBoxEntry):
             portions = name.split(",")
             sum = 0
             erg = []
+            mode = ""
             for portion in portions:
                 data = portion.partition(":")
                 currentName = data[0].strip()
@@ -122,12 +128,22 @@ class DimensionComboBox(gtk.ComboBoxEntry):
                         continue # no name, no entry
                 try:
                     value = float(value) # try parsing a float out of the number
+                    if value < 1:
+                        if mode == "percent": # mode clash
+                            return False
+                        mode = "float"
+                    else:
+                        if mode == "float":
+                            return False
+                        mode = "percent"
                 except:
                     return False # failure
                 sum += value
                 erg.append((currentName, value))
-            if sum > 1:
+            if mode == "float" and sum > 1:
                 return False # failure
+            elif mode == "percent" and sum > 100:
+                return False
             else:
                 return erg
         return [(self.get_model()[iterator][self.COL_OBJ].name,1.0)] # hack to have it easier in the calling method
@@ -135,7 +151,7 @@ class DimensionComboBox(gtk.ComboBoxEntry):
     def get_active(self):
         erg = []
         parse = self.parse()
-        print parse
+        #print parse
         for name, value in parse:
             #print name, value
             erg.append((controller.newDimensionValue(self.dimension, name), value))
@@ -153,16 +169,19 @@ class QuotationTable(gtk.Table):
         
         quotations = controller.getQuotationsFromStock(self.stock)
         
-        self.attach(gtk.Label(_('Quotation Count')), 0,1,1,2, yoptions=gtk.FILL)
-        self.attach(gtk.Label(len(quotations)), 1,2,1,2, yoptions=gtk.FILL)
-        self.attach(gtk.Label(_('First Date')), 0,1,2,3, yoptions=gtk.FILL)
-        self.attach(gtk.Label(quotations[0].date), 1,2,2,3, yoptions=gtk.FILL)
-        self.attach(gtk.Label(_('Last Date')), 0,1,3,4, yoptions=gtk.FILL)
-        self.attach(gtk.Label(quotations[-1].date), 1,2,3,4, yoptions=gtk.FILL)
+        if len(quotations) > 0:
+            self.attach(gtk.Label(_('Quotation Count')), 0,1,1,2, yoptions=gtk.FILL)
+            self.attach(gtk.Label(len(quotations)), 1,2,1,2, yoptions=gtk.FILL)
+            self.attach(gtk.Label(_('First Date')), 0,1,2,3, yoptions=gtk.FILL)
+            self.attach(gtk.Label(quotations[0].date), 1,2,2,3, yoptions=gtk.FILL)
+            self.attach(gtk.Label(_('Last Date')), 0,1,3,4, yoptions=gtk.FILL)
+            self.attach(gtk.Label(quotations[-1].date), 1,2,3,4, yoptions=gtk.FILL)
+        else:
+            self.attach(gtk.Label(_('No data!')),0,2,1,2, yoptions=gtk.FILL)
 
 class EditStockTable(gtk.Table):
 
-    def __init__(self, stock_to_edit):
+    def __init__(self, stock_to_edit, dialog):
         gtk.Table.__init__(self)
         self.stock = stock_to_edit
 
@@ -191,11 +210,10 @@ class EditStockTable(gtk.Table):
             #print dim
             self.attach(gtk.Label(_(dim.name)),0,1,currentRow,currentRow+1, yoptions=gtk.FILL)
             comboName = dim.name+"ValueComboBox"
-            setattr(self, comboName, DimensionComboBox(dim, stock_to_edit))
+            setattr(self, comboName, DimensionComboBox(dim, stock_to_edit, dialog))
             self.attach(getattr(self, comboName), 1,2,currentRow,currentRow+1,  yoptions=gtk.FILL)
             currentRow += 1
         
-
     def process_result(self, widget=None, response = gtk.RESPONSE_ACCEPT):
         if response == gtk.RESPONSE_ACCEPT:
             self.stock.name = self.name_entry.get_text()
@@ -329,6 +347,7 @@ class StockSelector(gtk.VBox):
                                        stock.currency,
                                        icons[stock.type]
                                        ])
+
 
 class SellDialog(gtk.Dialog):
     def __init__(self, pos, transaction = None):

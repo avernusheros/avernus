@@ -304,7 +304,8 @@ class Onvista():
                 file = opener.open("http://anleihen.onvista.de/kurse.html", urllib.urlencode({"ISIN": st.isin}))
                 generator = self._parse_kurse_html(file, tdInd=bondTDS, stockType=stock.BOND)
             else:
-                print "Unknown stock type in onvistaplugin.update_stocks"
+                print "Unknown stock type in onvistaplugin.update_stocks: ", st.type
+                generator = []
             for item in generator:
                 if st.date < item['date']: #found newer price
                     st.exchange = item['exchange']
