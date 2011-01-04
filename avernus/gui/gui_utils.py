@@ -141,7 +141,7 @@ def sort_by_time(model, iter1, iter2, data=None):
     #why is d2 None?
     d1 = model.get_value(iter1, data)
     d2 = model.get_value(iter2, data)
-    if d2 is None:
+    if not d1 or not d2:
         return 1
     elif d1 < d2:
         return -1
