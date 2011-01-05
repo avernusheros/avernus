@@ -285,7 +285,7 @@ if __name__ == "__main__":
     if len(sys.argv[:])>1 and sys.argv[1]:
         filename = sys.argv[1]
     else:
-        filename = '../tests/data/csv/dkb.csv'
+        filename = '../tests/data/csv/bankofscotland.csv'
     importer = CsvImporter()
     profile = importer._sniff_csv(filename)
     for key, val in profile.iteritems():

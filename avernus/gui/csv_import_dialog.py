@@ -10,18 +10,17 @@ class CSVImportDialog(gtk.Dialog):
     
     TITLE = _("Import CSV")
     
-    def __init__(self, *args):
+    def __init__(self, widget=None, account=None):
         gtk.Dialog.__init__(self, self.TITLE, None
                             , gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
                      (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,))
-        
+        self.account = account
         self.config = config.avernusConfig()
         self._init_widgets()
         self.importer = csvimporter.CsvImporter()
         self.profile = {}
         self.b_file = False
-        self.b_account = False
-        
+        self.b_account = account or False
         response = self.run()  
         self.process_result(response = response)
 
@@ -43,9 +42,16 @@ class CSVImportDialog(gtk.Dialog):
         vbox.pack_start(accBox, fill=False, expand=False)
         accBox.pack_start(gtk.Label('Target account'), fill=False, expand=False)
         model = gtk.ListStore(object, str)
+        i = 0
+        active = -1
         for account in controller.getAllAccount():
             model.append([account, account.name])
+            if self.account == account:
+                active = i
+            i+=1   
         self.account_cb = gtk.ComboBox(model)
+        if active>0:
+            self.account_cb.set_active(active)
         cell = gtk.CellRendererText()
         self.account_cb.pack_start(cell, True)
         self.account_cb.add_attribute(cell, 'text', 1)

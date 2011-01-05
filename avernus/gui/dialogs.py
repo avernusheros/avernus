@@ -103,7 +103,10 @@ class DimensionComboBox(gtk.ComboBoxEntry):
     def on_completion_match(self, completion, model, iter):
         current_text = self.get_active_text()
         current_text = current_text[:-len(current_text.split(',')[-1])]
-        self.child.set_text(current_text+' '+model[iter][self.COL_TEXT])
+        if len(current_text) == 0:
+            self.child.set_text(model[iter][self.COL_TEXT])
+        else:
+            self.child.set_text(current_text+' '+model[iter][self.COL_TEXT])
         self.child.set_position(-1)
         # stop the event propagation
         return True
@@ -136,10 +139,11 @@ class DimensionComboBox(gtk.ComboBoxEntry):
                         if mode == "float":
                             return False
                         mode = "percent"
+                        value = value/100
                 except:
                     return False # failure
                 sum += value
-                erg.append((currentName, value))
+                erg.append((unicode(currentName), value))
             if mode == "float" and sum > 1:
                 return False # failure
             elif mode == "percent" and sum > 100:
@@ -223,7 +227,7 @@ class EditStockTable(gtk.Table):
             for dim in controller.getAllDimension():
                 box = getattr(self, dim.name+"ValueComboBox")
                 active = box.get_active()
-                self.stock.updateAssetDimensionValue(active)
+                self.stock.updateAssetDimensionValue(dim, active)
                 pubsub.publish("stock.edited", self.stock)
 
 

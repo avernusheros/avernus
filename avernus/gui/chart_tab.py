@@ -156,7 +156,8 @@ class DividendsChart(gtk.VBox):
             chart = plot.handler
             chart.show()
             self.pack_start(chart)
-            
+          
+           
 class Pie(gtk.VBox):
 
     def __init__(self, width, portfolio, attribute):
@@ -202,7 +203,7 @@ class DimensionPie(gtk.VBox):
             data[val.name] = 0
         for pos in self.portfolio:
             for adv in pos.stock.getAssetDimensionValue(dimension):
-                data[adv.dimensionValue.name] += adv.value * pos.price * pos.quantity
+                data[adv.dimensionValue.name] += adv.value * pos.cvalue
         #remove unused dimvalues
         data = dict((k, v) for k, v in data.iteritems() if v != 0.0)
         if sum(data.values()) == 0:

@@ -138,6 +138,7 @@ class TransactionsTree(gui_utils.Tree):
         self.create_column(_('Amount'), self.AMOUNT, func=gui_utils.currency_format)
         self.create_column(_('Category'), self.CATEGORY)
         self.set_rules_hint(True)
+        sorter.set_sort_column_id(self.DATE, gtk.SORT_DESCENDING)
         self.get_selection().set_mode(gtk.SELECTION_MULTIPLE)
         self.enable_model_drag_source(gtk.gdk.BUTTON1_MASK, 
                                       [ ( 'text/plain', 0, 80 )],
