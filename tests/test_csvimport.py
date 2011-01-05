@@ -47,7 +47,7 @@ class CsvImporterTest(unittest.TestCase):
         self.assertEqual(date, datetime.date(2010, 3, 8))
         self.assertEqual(desc, 'Lastschrift Einzug - Auftraggeber: XYZ SAGT DANKE Buchungstext: XYZ SAGT DANKE EC 123456789 06.03 14.53 CE0 Ref. ABCDFER213456789/1480 ')
         self.assertEqual(amount, -32.27)   
-   
+
     def test_psd(self):
         filename = 'tests/data/csv/psd.csv'
         profile = {'encoding':'windows-1252',
@@ -93,7 +93,7 @@ class CsvImporterTest(unittest.TestCase):
         self.assertEqual(len(transactions), 4)
         date, desc, amount, duplicate = transactions[3]
         self.assertEqual(date, datetime.date(2010, 2, 1))
-        self.assertEqual(desc,  u'\xdcberweisungsgutschrift -  - Mustermann,Max - ')
+        self.assertEqual(desc,  u'\xdcberweisungsgutschrift - Mustermann,Max')
         self.assertEqual(amount, 2500.00) 
 
     def test_dkb(self):
@@ -117,5 +117,5 @@ class CsvImporterTest(unittest.TestCase):
         self.assertEqual(len(transactions), 20)
         date, desc, amount, duplicate = transactions[3]
         self.assertEqual(date, datetime.date(2010, 8, 4))
-        self.assertEqual(desc,  u'UEBERWEISUNGSGUTSCHRIFT - BJOERN GOss - UNICOMP MECHANICAL KEYBOARD  - 18106230 - 67250020 - ')
+        self.assertEqual(desc,  u'UEBERWEISUNGSGUTSCHRIFT - BJOERN GOss - UNICOMP MECHANICAL KEYBOARD  - 18106230 - 67250020')
         self.assertEqual(amount, 88.00) 

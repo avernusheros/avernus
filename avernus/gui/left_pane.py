@@ -4,6 +4,7 @@ import gtk
 from datetime import datetime
 from avernus import pubsub
 from avernus.gui import gui_utils, dialogs, progress_manager
+from avernus.gui.csv_import_dialog import CSVImportDialog
 from avernus.objects import controller
 
 
@@ -30,8 +31,8 @@ class MainTreeBox(gtk.VBox):
         main_tree_toolbar = gtk.Toolbar()
         self.conditioned = ['remove', 'edit']
 
-        for action in ['add', 'remove', 'edit']:
-            button = actiongroup.get_action(action).create_tool_item()
+        for action in actiongroup.list_actions():
+            button = action.create_tool_item()
             main_tree_toolbar.insert(button, -1)
         self.pack_start(main_tree_toolbar, expand=False, fill=False)
 
@@ -143,7 +144,6 @@ class MainTree(gui_utils.Tree):
             row[2] = item.name
             row[3] = gui_utils.get_currency_format_from_float(item.amount)
         
-
     def on_cursor_changed(self, widget):
         #Get the current selection in the gtk.TreeView
         selection = widget.get_selection()
@@ -162,17 +162,12 @@ class MainTree(gui_utils.Tree):
         self.on_unselect()
 
     def on_unselect(self):
-        for action in ['remove', 'edit', 'add']:
-            self.actiongroup.get_action(action).set_sensitive(False)
+        for action in self.actiongroup.list_actions():
+            action.set_sensitive(False)
 
     def on_select(self, obj):
         if isinstance(obj, Category):
             self.on_unselect()
-            #if obj.name == 'Portfolios': self.selected_type = 'portfolio'
-            #elif obj.name == 'Watchlists': self.selected_type = 'watchlist'
-            #elif obj.name == 'Accounts': self.selected_type = 'account'   
-            if not obj.name in ['Portfolios', 'Watchlists', 'Accounts']:
-                return
             self.actiongroup.get_action('add').set_sensitive(True)
         else:
             for action in ['remove', 'edit']:
@@ -332,3 +327,5 @@ class ContainerContextMenu(gui_utils.ContextMenu):
         if container.__name__ == 'Portfolio':
             self.add_item(_('Deposit cash'),  lambda x: dialogs.CashDialog(container, 0) , 'gtk-add')
             self.add_item(_('Withdraw cash'),  lambda x: dialogs.CashDialog(container, 1) , 'gtk-remove')
+        elif container.__name__ == 'Account':
+            self.add_item(_('Import transactions'),  lambda x: CSVImportDialog(account = container) , 'gtk-add')
