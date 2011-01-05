@@ -118,7 +118,6 @@ class DimensionComboBox(gtk.ComboBoxEntry):
             portions = name.split(",")
             sum = 0
             erg = []
-            mode = ""
             for portion in portions:
                 data = portion.partition(":")
                 currentName = data[0].strip()
@@ -126,39 +125,29 @@ class DimensionComboBox(gtk.ComboBoxEntry):
                 #print "|"+value+"|"
                 if value == "": # no value given
                     if not currentName == "": # has the user not even entered a name?
-                        value = "1" # he has, so consider it to be a full value
+                        value = "100" # he has, so consider it to be a full value
                     else:
                         continue # no name, no entry
                 try:
                     value = float(value) # try parsing a float out of the number
-                    if value < 1:
-                        if mode == "percent": # mode clash
-                            return False
-                        mode = "float"
-                    else:
-                        if mode == "float":
-                            return False
-                        mode = "percent"
-                        value = value/100
                 except:
                     return False # failure
                 sum += value
                 erg.append((unicode(currentName), value))
-            if mode == "float" and sum > 1:
-                return False # failure
-            elif mode == "percent" and sum > 100:
+            if sum > 100:
                 return False
             else:
                 return erg
-        return [(self.get_model()[iterator][self.COL_OBJ].name,1.0)] # hack to have it easier in the calling method
+        return [(self.get_model()[iterator][self.COL_OBJ].name,100)] # hack to have it easier in the calling method
                 
     def get_active(self):
         erg = []
         parse = self.parse()
         #print parse
-        for name, value in parse:
+        if parse:
+            for name, value in parse:
             #print name, value
-            erg.append((controller.newDimensionValue(self.dimension, name), value))
+                erg.append((controller.newDimensionValue(self.dimension, name), value))
         return erg
     
 class QuotationTable(gtk.Table):
