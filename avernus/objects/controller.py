@@ -388,7 +388,7 @@ def deleteAllDimensionValue(dimension):
         deleteAssetDimensionValue(val)
         del val
 
-def deleteAssetDimensionValue(dimvalue):
+def deleteAllAssetDimensionValue(dimvalue):
     for adm in AssetDimensionValue.getAll():
         if adm.dimensionValue == dimvalue:
             del adm

@@ -139,6 +139,7 @@ class DimensionComboBox(gtk.ComboBoxEntry):
                         if mode == "float":
                             return False
                         mode = "percent"
+                        value = value/100
                 except:
                     return False # failure
                 sum += value
