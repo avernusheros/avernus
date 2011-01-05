@@ -254,23 +254,23 @@ class EditPositionTable(gtk.Table):
         self.attach(self.calendar,1,2,2,3)
 
         self.attach(gtk.Label(_('Comment')),0,1,3,4)
+        
         self.comment_entry = gtk.TextView()
+        self.comment_entry.set_wrap_mode(gtk.WRAP_WORD)
         self.comment_entry.set_size_request(50, 80)
-        self.comment_entry.set_wrap_mode(pango.WRAP_WORD)
-        buffer = self.comment_entry.get_buffer()
-        buffer.set_text(self.pos.comment)
+        entry_buffer = self.comment_entry.get_buffer()
+        entry_buffer.set_text(self.pos.comment)
         self.attach(self.comment_entry, 1,2,3,4)
 
     def process_result(self, widget=None, response = gtk.RESPONSE_ACCEPT):
         if response == gtk.RESPONSE_ACCEPT:
             ta = self.pos.buy_transaction
-
             ta.quantity = self.pos.quantity = self.shares_entry.get_value()
             ta.price = self.pos.price = self.price_entry.get_value()
             year, month, day = self.calendar.get_date()
             ta.date = self.pos.date = datetime(year, month+1, day)
             buffer = self.comment_entry.get_buffer()
-            self.pos.comment = buffer.get_text(buffer.get_start_iter(), buffer.get_end_iter())
+            self.pos.comment = unicode(buffer.get_text(buffer.get_start_iter(), buffer.get_end_iter()))
 
 
 SPINNER_SIZE = 40
