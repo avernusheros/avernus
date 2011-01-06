@@ -9,6 +9,11 @@ from avernus.logger import Log
 from avernus.objects import stock
 
 TYPES = {'Fonds':stock.FUND, 'Aktien':stock.STOCK, 'Namensaktie':stock.STOCK, 'Vorzugsaktie':stock.STOCK}
+EXCHANGE_CURRENCY = [(['NYQ', 'PNK'], 'USD'),
+                     (['GER', 'BER', 'FRA', 'MUN', 'STU', 'HAN' ,'HAM' ,'DUS'], 'EUR'),
+                     (['LSE'], 'GBP')
+                     ]
+
 
 class Yahoo():
     name = "yahoo"
@@ -24,10 +29,9 @@ class Yahoo():
         except:
             return None
                 
-    def request_csv(self, symbol, stat):
+    def __request_csv(self, symbol, stat):
         try:
             url = 'http://finance.yahoo.com/d/quotes.csv?s=%s&f=%s' % (symbol, stat)
-            print url
             Log.info(url)
             return urlopen(url)
         except:
@@ -178,12 +182,12 @@ class Yahoo():
         res['exchange'] = item[5]
         res['type']     = TYPES[item[4]]
         res['price']    = float(item[3].replace('.','').replace(',','.'))
-        res['currency'] = None
-        #res['time']    = item[7]  #only time not date
         res['date']     = datetime.utcnow().replace(year=2009)
-        #res['change']   = self.__parse_change(item[8], res['price'])
-        #res['volume']   = int(item[9].replace(",", ""))
-        return res
+        for ex, cur in EXCHANGE_CURRENCY:
+            if res['exchange'] in ex:
+                res['currency'] = cur
+                return res
+        return None
     
     def __load_yahoo_ids(self):
         path = os.path.join(config.config_path, 'yahoo_ids')
