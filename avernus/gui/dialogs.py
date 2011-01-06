@@ -64,13 +64,12 @@ class DimensionComboBox(gtk.ComboBoxEntry):
     COL_TEXT = 1
 
     def __init__(self, dimension, asset, dialog):
-        values = [(None, 'None'),]+[(dimVal, dimVal.name) for dimVal in dimension.values]
         self.dimension = dimension
         self.dialog = dialog
         liststore = gtk.ListStore(object, str)
         gtk.ComboBoxEntry.__init__(self, liststore, self.COL_TEXT)
-        for item, string in values:
-            liststore.append([item, string])
+        for dimVal in dimension.values:
+            liststore.append([dimVal, dimVal.name])
         self.child.set_text(asset.getDimensionText(dimension))
         completion = gtk.EntryCompletion()
         completion.set_model(liststore)
@@ -143,10 +142,8 @@ class DimensionComboBox(gtk.ComboBoxEntry):
     def get_active(self):
         erg = []
         parse = self.parse()
-        #print parse
         if parse:
             for name, value in parse:
-            #print name, value
                 erg.append((controller.newDimensionValue(self.dimension, name), value))
         return erg
    
