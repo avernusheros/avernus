@@ -4,7 +4,7 @@ from avernus.objects import controller
 from avernus.objects.stock import Stock
 from avernus import pubsub
 from avernus.data_sources import yahoo, onvista
-import datetime
+import datetime, re
 
 
 sources = {'onvista.de': onvista.Onvista(),
@@ -50,9 +50,15 @@ class DatasourceManager(object):
         #mandatory: isin, type, name
         if controller.is_duplicate(Stock, **item):
             return
+        if not self.validate_isin(item['isin']):
+            print "false isin", item['isin']
+            return
         item['source'] = source.name
         stock = controller.newStock(**item)
         self.search_callback(stock, source_icons[item['source']])
+
+    def validate_isin(self, isin):
+        return re.match('^[A-Z]{2}[A-Z0-9]{9}[0-9]$', isin)
 
     def update_stocks(self, stocks):
         if len(stocks) == 0 or not self.b_online:

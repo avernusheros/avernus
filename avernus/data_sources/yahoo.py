@@ -1,7 +1,7 @@
 # -*- Mode: Python; coding: utf-8; indent-tabs-mode: nil; tab-width: 4 -*-
 from BeautifulSoup import BeautifulSoup
 from urllib import urlopen
-import csv, pytz, re, os, pickle
+import csv, pytz, re, os, pickle, json
 from datetime import datetime
 from avernus import config
 
@@ -24,9 +24,10 @@ class Yahoo():
         except:
             return None
                 
-    def __request_csv(self, symbol, stat):
+    def request_csv(self, symbol, stat):
         try:
             url = 'http://finance.yahoo.com/d/quotes.csv?s=%s&f=%s' % (symbol, stat)
+            print url
             Log.info(url)
             return urlopen(url)
         except:
@@ -112,6 +113,13 @@ class Yahoo():
             #(stock, date, open, high, low, close, vol)
             yield (stock,stock.exchange,dt,float(row[1]),float(row[2]),\
                         float(row[3]),float(row[6]), int(row[5]))
+    
+    def search_without_beautifulsoup(self, searchstring):
+        #does not provide isin or even lookup by isin
+        url = "http://d.yimg.com/autoc.finance.yahoo.com/autoc?query=%s&callback=YAHOO.Finance.SymbolSuggest.ssCallback" % (searchstring)
+        json_response = str(urlopen(url).read()).replace("YAHOO.Finance.SymbolSuggest.ssCallback(", "").replace(")","")
+        for item in json.loads(json_response)['ResultSet']['Result']:
+            print item
             
     def search(self, searchstring):
         doc = self.__request(searchstring)
@@ -191,3 +199,9 @@ class Yahoo():
         path = os.path.join(config.config_path, 'yahoo_ids')
         with open(path, 'wb') as file:
             pickle.dump(self.yahoo_ids, file)
+
+
+if __name__ == "__main__":
+    y = Yahoo()
+    y.search('DE0009774794')
+    y.request_csv('DE0009774794', 'l1d1d3c1x')
