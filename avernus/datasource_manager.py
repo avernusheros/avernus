@@ -69,20 +69,29 @@ class DatasourceManager(object):
         
     def update_stock(self, stock):
         self.update_stocks([stock])
-        
-    def update_historical_prices(self, stock):
+    
+    def get_historical_prices(self, stock, start_date=None, end_date=None):
         if not self.b_online:
             yield 1
-        today = datetime.date.today() - datetime.timedelta(days=1)
-        newest = controller.getNewestQuotation(stock)
-        if newest == None:
-            newest = datetime.date(today.year -20, today.month, today.day)
-        if newest <= today:
-            for qt in sources[stock.source].update_historical_prices(stock, newest, today):
+        if end_date is None:
+            end_date = datetime.date.today() - datetime.timedelta(days=1)
+        if start_date is None:
+            start_date = datetime.date(end_date.year -20, end_date.month, end_date.day)
+        if start_date <= end_date:
+            for qt in sources[stock.source].update_historical_prices(stock, start_date, end_date):
                 #qt : (stock, exchange, date, open, high, low, close, vol)
-                controller.newQuotation(stock=qt[0], exchange=qt[1],\
+                yield controller.newQuotation(stock=qt[0], exchange=qt[1],\
                             date=qt[2], open=qt[3], high=qt[4],\
                             low=qt[5], close=qt[6], vol=qt[7],\
                             detectDuplicates=True)
         #needed to run as generator thread
         yield 1
+        
+    def update_historical_prices(self, stock):
+        if not self.b_online:
+            yield 1
+        end_date = datetime.date.today() - datetime.timedelta(days=1)
+        start_date = controller.getNewestQuotation(stock)
+        if start_date == None:
+            start_date = datetime.date(end_date.year -20, end_date.month, end_date.day)
+        yield self.get_historical_prices(stock, start_date, end_date)

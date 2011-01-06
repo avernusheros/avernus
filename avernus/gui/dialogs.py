@@ -149,28 +149,47 @@ class DimensionComboBox(gtk.ComboBoxEntry):
             #print name, value
                 erg.append((controller.newDimensionValue(self.dimension, name), value))
         return erg
+   
     
 class QuotationTable(gtk.Table):
     
-    def __init__(self, position):
+    def __init__(self, stock):
         gtk.Table.__init__(self)
-        self.position = position
-        self.stock = position.stock
+        self.stock = stock
         
-        self.attach(gtk.Label(_('Start')), 0,1,0,1, yoptions=gtk.FILL)
-        self.attach(gtk.Label(self.position.date), 1,2,0,1, yoptions=gtk.FILL)
+        self.attach(gtk.Label(_('First quotation')), 0,1,0,1, yoptions=gtk.FILL)
+        self.first_label = gtk.Label()
+        self.attach(self.first_label, 1,2,0,1, yoptions=gtk.FILL)
+        self.attach(gtk.Label(_('Last quotation')), 0,1,1,2, yoptions=gtk.FILL)
+        self.last_label = gtk.Label()
+        self.attach(self.last_label, 1,2,1,2, yoptions=gtk.FILL)
+        self.attach(gtk.Label(_('# quotations')), 0,1,2,3, yoptions=gtk.FILL)
+        self.count_label = gtk.Label()
+        self.attach(self.count_label, 1,2,2,3, yoptions=gtk.FILL)
+            
+        button = gtk.Button('Get quotations!')
+        button.connect('clicked', self.on_button_clicked)
+        self.attach(button, 0,2,4,5, yoptions=gtk.FILL)
+        self.update_labels()
         
+    def on_button_clicked(self, button):
+        controller.GeneratorTask(controller.datasource_manager.get_historical_prices, self.new_quotation_callback, complete_callback=self.update_labels).start(self.stock)
+        
+    def new_quotation_callback(self, qt):
+        self.count+=1
+        self.count_label.set_text(str(self.count))
+        
+    def update_labels(self):
         quotations = controller.getQuotationsFromStock(self.stock)
-        
-        if len(quotations) > 0:
-            self.attach(gtk.Label(_('Quotation Count')), 0,1,1,2, yoptions=gtk.FILL)
-            self.attach(gtk.Label(len(quotations)), 1,2,1,2, yoptions=gtk.FILL)
-            self.attach(gtk.Label(_('First Date')), 0,1,2,3, yoptions=gtk.FILL)
-            self.attach(gtk.Label(quotations[0].date), 1,2,2,3, yoptions=gtk.FILL)
-            self.attach(gtk.Label(_('Last Date')), 0,1,3,4, yoptions=gtk.FILL)
-            self.attach(gtk.Label(quotations[-1].date), 1,2,3,4, yoptions=gtk.FILL)
+        self.count = len(quotations)
+        self.count_label.set_text(str(self.count))
+        if self.count == 0:
+            self.first_label.set_text('n/a')
+            self.last_label.set_text('n/a')
         else:
-            self.attach(gtk.Label(_('No data!')),0,2,1,2, yoptions=gtk.FILL)
+            self.first_label.set_text(gui_utils.get_date_string(quotations[0].date))
+            self.last_label.set_text(gui_utils.get_date_string(quotations[-1].date))
+
 
 class EditStockTable(gtk.Table):
 
