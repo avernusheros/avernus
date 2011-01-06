@@ -1,12 +1,12 @@
 # -*- Mode: Python; coding: utf-8; indent-tabs-mode: nil; tab-width: 4 -*-
 from BeautifulSoup import BeautifulSoup
 from urllib import urlopen
-import csv, pytz, re, os, pickle, json
+import csv, pytz, re, json
 from datetime import datetime
 from avernus import config
 
 from avernus.logger import Log
-from avernus.objects import stock
+from avernus.objects import stock, controller
 
 TYPES = {'Fonds':stock.FUND, 'Aktien':stock.STOCK, 'Namensaktie':stock.STOCK, 'Vorzugsaktie':stock.STOCK}
 EXCHANGE_CURRENCY = [(['NYQ', 'PNK'], 'USD'),
@@ -17,9 +17,6 @@ EXCHANGE_CURRENCY = [(['NYQ', 'PNK'], 'USD'),
 
 class Yahoo():
     name = "yahoo"
-
-    def __init__(self):
-        self.__load_yahoo_ids()
     
     def __request(self, searchstring):
         try:
@@ -37,19 +34,10 @@ class Yahoo():
         except:
             return None
         
-    def __get_yahoo_ids(self, stocks):
-        ids = []
-        for stock in stocks:
-            try:
-                ids.append(self.yahoo_ids[(stock.isin, stock.currency)][0])
-            except:
-                print "no yahoo id cached"
-        return '+'.join(ids)
-
     def __get_all_yahoo_ids(self, stocks):
         ids = []
         for stock in stocks:
-            ids+= self.yahoo_ids[(stock.isin, stock.currency)]
+            ids+= [source_info.info for source_info in controller.getSourceInfo(self.name, stock)]
         return '+'.join(ids)
 
     def update_stocks(self, stocks):
@@ -60,7 +48,7 @@ class Yahoo():
         for row in csv.reader(res):
             if len_ids == 0:
                 current_stock += 1
-                len_ids = len(self.yahoo_ids[(stocks[current_stock].isin, stocks[current_stock].currency)])
+                len_ids = len(controller.getSourceInfo(self.name, stocks[current_stock]))
             len_ids -= 1
             if len(row) > 1:
                 if row[1] == 'N/A':
@@ -97,7 +85,7 @@ class Yahoo():
     def update_historical_prices(self, stock, start_date, end_date):
         #we should use a more intelligent way of choosing the exchange
         #e.g. the exchange with the highest volume for this stock
-        yid = self.__get_yahoo_ids([stock])
+        yid = controller.getSourceInfo(self.name, stock)[0].info
         url = 'http://ichart.yahoo.com/table.csv?s=%s&' % yid + \
               'a=%s&' % str(start_date.month-1) + \
               'b=%s&' % str(start_date.day) + \
@@ -128,12 +116,7 @@ class Yahoo():
     def search(self, searchstring):
         doc = self.__request(searchstring)
         if doc is None:
-            print "doc is none"
             return
-        #1. beatifull soup does not like this part of the html file
-        #2. remove newlines
-        #my_massage = [(re.compile('OPTION VALUE=>---------------------<'), ''), \
-        #              (re.compile('\n'), '')]
         soup = BeautifulSoup(doc)#, markupMassage=my_massage)
         for table in soup.findAll('table', summary="YFT_SL_TABLE_SUMMARY"):
             for body in table('tbody'):
@@ -146,31 +129,8 @@ class Yahoo():
                     if len(item) == 6:
                         item = self.__to_dict(item)
                         if item is not None:
-                            if (item['isin'],item['currency']) in self.yahoo_ids.keys():
-                                if not item['yahoo_id'] in self.yahoo_ids[(item['isin'],item['currency'])] :
-                                    self.yahoo_ids[(item['isin'],item['currency'])].append(item['yahoo_id'])
-                            else:
-                                self.yahoo_ids[(item['isin'],item['currency'])] = [item['yahoo_id']]
-                            yield (item, self)
-        self.__save_yahoo_ids()
+                            yield (item, self, item['yahoo_id'])
     
-    #not used
-    def __parse_price(self, pricestring):
-        if pricestring[-1] == '$':
-            price = pricestring[:-1]
-            cur = '$'
-        elif pricestring[-1] == 'p':
-            price = pricestring[:-1]
-            cur = 'GBPp'
-        else:
-            price, cur = pricestring.strip(';').split('&')
-            if cur == 'euro' or cur == 'nbsp':
-                cur = 'EUR'
-        return float(price), cur
-    
-    def __parse_change(self, changestring, price):
-        return price - (price*100 / (100 + float(changestring.strip('%'))))
-                    
     def __to_dict(self, item):
         if not item[4] in TYPES:
             return None
@@ -188,22 +148,7 @@ class Yahoo():
                 res['currency'] = cur
                 return res
         return None
-    
-    def __load_yahoo_ids(self):
-        path = os.path.join(config.config_path, 'yahoo_ids')
-        if os.path.isfile(path):
-            with open(path, 'r') as file:
-                data = pickle.load(file)
-                if type(data) == type(dict()):
-                    self.yahoo_ids = data
-        else:
-            self.yahoo_ids = {}
-
-    def __save_yahoo_ids(self):
-        path = os.path.join(config.config_path, 'yahoo_ids')
-        with open(path, 'wb') as file:
-            pickle.dump(self.yahoo_ids, file)
-
+   
 
 if __name__ == "__main__":
     y = Yahoo()

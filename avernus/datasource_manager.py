@@ -46,15 +46,20 @@ class DatasourceManager(object):
             search.stop()
         self.current_searches = [] 
 
-    def _item_found_callback(self, item, source):
+    def _item_found_callback(self, item, source, source_info=None):
         #mandatory: isin, type, name
-        if controller.is_duplicate(Stock, **item):
-            return
         if not self.validate_isin(item['isin']):
             return
-        item['source'] = source.name
-        stock = controller.newStock(**item)
-        self.search_callback(stock, source_icons[item['source']])
+        new = False
+        stock = controller.check_duplicate(Stock, **item)
+        if not stock:
+            new = True
+            item['source'] = source.name
+            stock = controller.newStock(**item)
+        if source_info is not None:
+            controller.newSourceInfo(source=source.name, stock=stock, info=source_info)
+        if new:     
+            self.search_callback(stock, source_icons[item['source']])
 
     def validate_isin(self, isin):
         return re.match('^[A-Z]{2}[A-Z0-9]{9}[0-9]$', isin)
