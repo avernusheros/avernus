@@ -385,7 +385,7 @@ def deleteAllPositionTransaction(position):
 
 def deleteAllDimensionValue(dimension):
     for val in getAllDimensionValueForDimension(dimension):
-        deleteAssetDimensionValue(val)
+        deleteAllAssetDimensionValue(val)
         del val
 
 def deleteAllAssetDimensionValue(dimvalue):
