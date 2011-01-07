@@ -28,7 +28,7 @@ class Yahoo():
                 
     def __request_csv(self, symbol, stat):
         try:
-            url = 'http://finance.yahoo.com/d/quotes.csv?s=%s&f=%s' % (symbol, stat)
+            url = 'http://de.finance.yahoo.com/d/quotes.csv?s=%s&f=%s' % (symbol, stat)
             Log.info(url)
             return urlopen(url)
         except:
@@ -46,18 +46,19 @@ class Yahoo():
         len_ids = 0
         res = self.__request_csv(ids, 'l1d1d3c1x')
         for row in csv.reader(res):
-            if len_ids == 0:
+            while len_ids == 0:
                 current_stock += 1
                 len_ids = len(controller.getSourceInfo(self.name, stocks[current_stock]))
             len_ids -= 1
             if len(row) > 1:
                 if row[1] == 'N/A':
-                    continue 
-                try:
-                    new_date = datetime.strptime(row[1] + ' ' + row[2], '%m/%d/%Y %H:%M%p')
-                except Exception as e:
-                    Log.info(e)
-                    new_date = datetime.strptime(row[1], '%m/%d/%Y')
+                    continue
+                new_date = datetime.strptime(row[1], '%m/%d/%Y')
+                if re.match('^[0-9]{1,2}:[0-9]{2}am|pm$', row[2]):
+                    hour = int(row[2].split(':')[0])
+                    if 'pm' in row[2]:
+                        hour+12
+                    new_date = new_date.replace(hour=hour, minute=int(row[2].split(':')[1][:-2]))
                 new_date = pytz.timezone('US/Eastern').localize(new_date)
                 new_date = new_date.astimezone(pytz.utc)
                 new_date = new_date.replace(tzinfo = None)
