@@ -189,7 +189,7 @@ def get_date_string(date):
 
 def get_datetime_string(datetime):
     if datetime is not None:
-        if datetime.hour == 0 and datetime.minute == 0 and datetime.second == 0:
+        if datetime.hour == 5 and datetime.minute == 0 and datetime.second == 0:
             return get_date_string(datetime)
         else:
             return datetime_format(to_local_time(datetime))

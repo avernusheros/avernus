@@ -13,6 +13,7 @@ from avernus.objects.position import PortfolioPosition, WatchlistPosition
 from avernus.objects.quotation import Quotation
 from avernus.objects.stock import Stock
 from avernus.objects.transaction import Transaction
+from avernus.objects.source_info import SourceInfo
 import datetime
 import gobject
 import sys
@@ -22,7 +23,7 @@ import time
 
 
 
-modelClasses = [Portfolio, Transaction, Watchlist, Dividend,
+modelClasses = [Portfolio, Transaction, Watchlist, Dividend, SourceInfo,
                 PortfolioPosition, WatchlistPosition, AccountCategory,
                 Quotation, Stock, Meta, Account, AccountTransaction,
                 Dimension, DimensionValue, AssetDimensionValue]
@@ -35,7 +36,7 @@ initialLoadingClasses = [Portfolio,Transaction,Watchlist,Dividend,
                          AccountTransaction, AccountCategory, Dimension, DimensionValue,
                          AssetDimensionValue]
 
-VERSION = 1
+VERSION = 2
 datasource_manager = None
 
 #FIXME very hackish, but allows to remove the circular controller imports in the objects
@@ -93,7 +94,7 @@ def check_duplicate(tp, **kwargs):
         sqlArgs[req] = kwargs[req]
     present = tp.getByColumns(sqlArgs,operator=" AND ",create=True)
     if present:
-        return present
+        return present[0]
     return None
 
 def detectDuplicate(tp,**kwargs):
@@ -132,6 +133,7 @@ def createTables():
 def upgrade_db(db_version):
     if db_version==1:
         print "Updating database v.1 to v.2!"
+        model.store.execute('ALTER TABLE stock ADD COLUMN ter FLOAT DEFAULT 0.0')
         db_version+=1
     if db_version==VERSION:
         set_db_version(db_version)
@@ -270,6 +272,16 @@ def newWatchlistPosition(price=0,\
     result.insert()
     return result
 
+def newSourceInfo(source='', stock=None, info=''):
+    if check_duplicate(SourceInfo, source=source, stock=stock.id, info=info) is not None:
+        return None
+    si = SourceInfo(source=source, stock=stock, info=info)
+    si.insert()
+    return si
+    
+def getSourceInfo(source='', stock=None):
+    args = {'stock': stock.getPrimaryKey(), 'source':source}
+    return SourceInfo.getByColumns(args, create=True)
 
 def newDimensionValue(dimension=None, name=""):
     return detectDuplicate(DimensionValue, dimension=dimension.id, name=name)
@@ -385,7 +397,7 @@ def deleteAllPositionTransaction(position):
 
 def deleteAllDimensionValue(dimension):
     for val in getAllDimensionValueForDimension(dimension):
-        deleteAssetDimensionValue(val)
+        deleteAllAssetDimensionValue(val)
         del val
 
 def deleteAllAssetDimensionValue(dimvalue):

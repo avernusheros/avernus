@@ -19,7 +19,6 @@ QUEUE_THRESHOLD = 3
 QUEUE_DIVIDEND = 10
 QUEUE_MAX = 10
 
-
 def to_float(s):
     return float(s.replace('.','').replace('%','').replace(',','.').split('&')[0])
 
@@ -172,8 +171,8 @@ class Onvista():
 
     def __init__(self):
         self.name = 'onvista.de'
-        self.exchangeBlacklist = ['Summe:','Realtime-Kurse','Neartime-Kurse',\
-                                 'Leider stehen zu diesem Fonds keine Informationen zur Verfügung.']
+        self.exchangeBlacklist = [u'Summe:',u'Realtime-Kurse',u'Neartime-Kurse',\
+                                 u'Leider stehen zu diesem Fonds keine Informationen zur Verfügung.']
 
     def search(self, searchstring):
         Log.debug("Starting search for " + searchstring)
@@ -313,8 +312,6 @@ class Onvista():
                     st.date = item['date']
                     st.change = item['change']
                     st.volume = item['volume']
-                    st.updated = True
-                    #break
 
     def update_historical_prices(self, st, start_date, end_date):
         delta = relativedelta(start_date, end_date)
@@ -401,10 +398,10 @@ if __name__ == "__main__":
     ex = Exchange()
     s1 = Stock('DE000A0F5G98', ex, stock.FUND)
     s2 = Stock('LU0103598305', ex, stock.FUND)
-    s3 = Stock('LU0382362290', ex, stock.ETF)
-    test_search()
+    s3 = Stock('DE000A0YBR04', ex, stock.ETF)
+    #test_search()
     #print plugin.search_kurse(s1)
     #print plugin.search_kurse(s3)
     #test_parse_kurse()
-    #test_update(s2)
+    test_update(s3)
     #test_historicals()

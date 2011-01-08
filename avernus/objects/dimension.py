@@ -68,7 +68,7 @@ class AssetDimensionValue(SQLiteEntity):
     def __repr__(self):
         if self.dimensionValue:
             erg = self.dimensionValue.name
-            if self.value != 1.0:
+            if self.value != 100:
                 erg += ":"+str(self.value)
             return erg
         return SQLiteEntity.__repr__(self)

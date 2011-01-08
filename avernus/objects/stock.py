@@ -27,8 +27,10 @@ class Stock(SQLiteEntity):
                    'price': 'FLOAT',
                    'date': 'TIMESTAMP',
                    'change': 'FLOAT',
+                   'ter': 'FLOAT',
                    'source': 'VARCHAR',
                   }
+                  
     __comparisonPositives__ = ['isin', 'currency']
     __defaultValues__ = {
                          'exchange':None,
@@ -38,7 +40,8 @@ class Stock(SQLiteEntity):
                          'change':0.0,
                          'type':1,
                          'name':'',
-                         'isin':''
+                         'isin':'',
+                         'ter':0.0
                          }
 
     #needed for some treeviews, e.g. news_tab

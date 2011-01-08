@@ -64,13 +64,12 @@ class DimensionComboBox(gtk.ComboBoxEntry):
     COL_TEXT = 1
 
     def __init__(self, dimension, asset, dialog):
-        values = [(None, 'None'),]+[(dimVal, dimVal.name) for dimVal in dimension.values]
         self.dimension = dimension
         self.dialog = dialog
         liststore = gtk.ListStore(object, str)
         gtk.ComboBoxEntry.__init__(self, liststore, self.COL_TEXT)
-        for item, string in values:
-            liststore.append([item, string])
+        for dimVal in dimension.values:
+            liststore.append([dimVal, dimVal.name])
         self.child.set_text(asset.getDimensionText(dimension))
         completion = gtk.EntryCompletion()
         completion.set_model(liststore)
@@ -143,34 +142,51 @@ class DimensionComboBox(gtk.ComboBoxEntry):
     def get_active(self):
         erg = []
         parse = self.parse()
-        #print parse
         if parse:
             for name, value in parse:
-            #print name, value
                 erg.append((controller.newDimensionValue(self.dimension, name), value))
         return erg
+   
     
 class QuotationTable(gtk.Table):
     
-    def __init__(self, position):
+    def __init__(self, stock):
         gtk.Table.__init__(self)
-        self.position = position
-        self.stock = position.stock
+        self.stock = stock
         
-        self.attach(gtk.Label(_('Start')), 0,1,0,1, yoptions=gtk.FILL)
-        self.attach(gtk.Label(self.position.date), 1,2,0,1, yoptions=gtk.FILL)
+        self.attach(gtk.Label(_('First quotation')), 0,1,0,1, yoptions=gtk.FILL)
+        self.first_label = gtk.Label()
+        self.attach(self.first_label, 1,2,0,1, yoptions=gtk.FILL)
+        self.attach(gtk.Label(_('Last quotation')), 0,1,1,2, yoptions=gtk.FILL)
+        self.last_label = gtk.Label()
+        self.attach(self.last_label, 1,2,1,2, yoptions=gtk.FILL)
+        self.attach(gtk.Label(_('# quotations')), 0,1,2,3, yoptions=gtk.FILL)
+        self.count_label = gtk.Label()
+        self.attach(self.count_label, 1,2,2,3, yoptions=gtk.FILL)
+            
+        button = gtk.Button('Get quotations!')
+        button.connect('clicked', self.on_button_clicked)
+        self.attach(button, 0,2,4,5, yoptions=gtk.FILL)
+        self.update_labels()
         
+    def on_button_clicked(self, button):
+        controller.GeneratorTask(controller.datasource_manager.get_historical_prices, self.new_quotation_callback, complete_callback=self.update_labels).start(self.stock)
+        
+    def new_quotation_callback(self, qt):
+        self.count+=1
+        self.count_label.set_text(str(self.count))
+        
+    def update_labels(self):
         quotations = controller.getQuotationsFromStock(self.stock)
-        
-        if len(quotations) > 0:
-            self.attach(gtk.Label(_('Quotation Count')), 0,1,1,2, yoptions=gtk.FILL)
-            self.attach(gtk.Label(len(quotations)), 1,2,1,2, yoptions=gtk.FILL)
-            self.attach(gtk.Label(_('First Date')), 0,1,2,3, yoptions=gtk.FILL)
-            self.attach(gtk.Label(quotations[0].date), 1,2,2,3, yoptions=gtk.FILL)
-            self.attach(gtk.Label(_('Last Date')), 0,1,3,4, yoptions=gtk.FILL)
-            self.attach(gtk.Label(quotations[-1].date), 1,2,3,4, yoptions=gtk.FILL)
+        self.count = len(quotations)
+        self.count_label.set_text(str(self.count))
+        if self.count == 0:
+            self.first_label.set_text('n/a')
+            self.last_label.set_text('n/a')
         else:
-            self.attach(gtk.Label(_('No data!')),0,2,1,2, yoptions=gtk.FILL)
+            self.first_label.set_text(gui_utils.get_date_string(quotations[0].date))
+            self.last_label.set_text(gui_utils.get_date_string(quotations[-1].date))
+
 
 class EditStockTable(gtk.Table):
 
@@ -198,7 +214,12 @@ class EditStockTable(gtk.Table):
         cb.add_attribute(cell, 'text', 0)
         cb.set_active(self.stock.type)
         self.attach(cb, 1,2,2,3,  yoptions=gtk.FILL)
-        currentRow = 3
+        
+        self.attach(gtk.Label(_('TER')),0,1,3,4,yoptions=gtk.SHRINK)
+        self.ter_entry = gtk.SpinButton(gtk.Adjustment(lower=0, upper=100,step_incr=0.1, value = self.stock.ter), digits=2)
+        self.attach(self.ter_entry,1,2,3,4,yoptions=gtk.SHRINK)
+        
+        currentRow = 4
         for dim in controller.getAllDimension():
             #print dim
             self.attach(gtk.Label(_(dim.name)),0,1,currentRow,currentRow+1, yoptions=gtk.FILL)
@@ -213,6 +234,7 @@ class EditStockTable(gtk.Table):
             self.stock.isin = self.isin_entry.get_text()
             active_iter = self.type_cb.get_active_iter()
             self.stock.type = self.type_cb.get_model()[active_iter][1]
+            self.stock.ter = self.ter_entry.get_value()
             for dim in controller.getAllDimension():
                 box = getattr(self, dim.name+"ValueComboBox")
                 active = box.get_active()
@@ -243,23 +265,23 @@ class EditPositionTable(gtk.Table):
         self.attach(self.calendar,1,2,2,3)
 
         self.attach(gtk.Label(_('Comment')),0,1,3,4)
+        
         self.comment_entry = gtk.TextView()
+        self.comment_entry.set_wrap_mode(gtk.WRAP_WORD)
         self.comment_entry.set_size_request(50, 80)
-        self.comment_entry.set_wrap_mode(pango.WRAP_WORD)
-        buffer = self.comment_entry.get_buffer()
-        buffer.set_text(self.pos.comment)
+        entry_buffer = self.comment_entry.get_buffer()
+        entry_buffer.set_text(self.pos.comment)
         self.attach(self.comment_entry, 1,2,3,4)
 
     def process_result(self, widget=None, response = gtk.RESPONSE_ACCEPT):
         if response == gtk.RESPONSE_ACCEPT:
             ta = self.pos.buy_transaction
-
             ta.quantity = self.pos.quantity = self.shares_entry.get_value()
             ta.price = self.pos.price = self.price_entry.get_value()
             year, month, day = self.calendar.get_date()
             ta.date = self.pos.date = datetime(year, month+1, day)
             buffer = self.comment_entry.get_buffer()
-            self.pos.comment = buffer.get_text(buffer.get_start_iter(), buffer.get_end_iter())
+            self.pos.comment = unicode(buffer.get_text(buffer.get_start_iter(), buffer.get_end_iter()))
 
 
 SPINNER_SIZE = 40
