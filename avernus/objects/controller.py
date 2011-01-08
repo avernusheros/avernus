@@ -36,7 +36,7 @@ initialLoadingClasses = [Portfolio,Transaction,Watchlist,Dividend,
                          AccountTransaction, AccountCategory, Dimension, DimensionValue,
                          AssetDimensionValue]
 
-VERSION = 1
+VERSION = 2
 datasource_manager = None
 
 #FIXME very hackish, but allows to remove the circular controller imports in the objects
@@ -133,6 +133,7 @@ def createTables():
 def upgrade_db(db_version):
     if db_version==1:
         print "Updating database v.1 to v.2!"
+        model.store.execute('ALTER TABLE stock ADD COLUMN ter FLOAT DEFAULT 0.0')
         db_version+=1
     if db_version==VERSION:
         set_db_version(db_version)

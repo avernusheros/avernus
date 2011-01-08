@@ -139,11 +139,8 @@ class Yahoo():
         res['name']     = item[1]
         res['yahoo_id'] = item[0]
         res['isin']     = item[2]
-        #res['wkn']     = item[3]
         res['exchange'] = item[5]
         res['type']     = TYPES[item[4]]
-        res['price']    = float(item[3].replace('.','').replace(',','.'))
-        res['date']     = datetime.utcnow().replace(year=2009)
         for ex, cur in EXCHANGE_CURRENCY:
             if res['exchange'] in ex:
                 res['currency'] = cur

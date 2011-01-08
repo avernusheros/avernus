@@ -214,7 +214,12 @@ class EditStockTable(gtk.Table):
         cb.add_attribute(cell, 'text', 0)
         cb.set_active(self.stock.type)
         self.attach(cb, 1,2,2,3,  yoptions=gtk.FILL)
-        currentRow = 3
+        
+        self.attach(gtk.Label(_('TER')),0,1,3,4,yoptions=gtk.SHRINK)
+        self.ter_entry = gtk.SpinButton(gtk.Adjustment(lower=0, upper=100,step_incr=0.1, value = self.stock.ter), digits=2)
+        self.attach(self.ter_entry,1,2,3,4,yoptions=gtk.SHRINK)
+        
+        currentRow = 4
         for dim in controller.getAllDimension():
             #print dim
             self.attach(gtk.Label(_(dim.name)),0,1,currentRow,currentRow+1, yoptions=gtk.FILL)
@@ -229,6 +234,7 @@ class EditStockTable(gtk.Table):
             self.stock.isin = self.isin_entry.get_text()
             active_iter = self.type_cb.get_active_iter()
             self.stock.type = self.type_cb.get_model()[active_iter][1]
+            self.stock.ter = self.ter_entry.get_value()
             for dim in controller.getAllDimension():
                 box = getattr(self, dim.name+"ValueComboBox")
                 active = box.get_active()

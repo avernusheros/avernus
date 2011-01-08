@@ -7,7 +7,15 @@ from datetime import datetime, date
 
 class Container(object):
 
-    tagstring = ''
+    @property
+    def ter(self):
+        ter = 0
+        val = 0
+        for pos in self:
+            pos_val = pos.cvalue
+            ter+=pos_val*pos.stock.ter
+            val+=pos_val
+        return ter/val
 
     @property
     def bvalue(self):
