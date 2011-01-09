@@ -43,7 +43,7 @@ class EditStockDialog(gtk.Dialog):
                             , gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
                      (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
                       gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
-        
+
         vbox = self.get_content_area()
         self.table = EditStockTable(stock)
         vbox.pack_start(self.table)
@@ -81,7 +81,7 @@ class DimensionComboBox(gtk.ComboBoxEntry):
         self.child.set_property('secondary-icon-tooltip-markup', '<b>ValueA</b> or <b>ValueA:40, ValueB:30 ...</b>')
         completion.connect("match-selected", self.on_completion_match)
         self.connect('changed', self.on_entry_changed)
-        
+
     def on_entry_changed(self, editable):
         parse = self.parse()
         if not parse and not parse == []: # unsuccesfull parse
@@ -109,7 +109,7 @@ class DimensionComboBox(gtk.ComboBoxEntry):
         self.child.set_position(-1)
         # stop the event propagation
         return True
-    
+
     def parse(self):
         iterator = self.get_active_iter()
         if iterator is None:
@@ -138,7 +138,7 @@ class DimensionComboBox(gtk.ComboBoxEntry):
             else:
                 return erg
         return [(self.get_model()[iterator][self.COL_OBJ].name,100)] # hack to have it easier in the calling method
-                
+
     def get_active(self):
         erg = []
         parse = self.parse()
@@ -146,14 +146,14 @@ class DimensionComboBox(gtk.ComboBoxEntry):
             for name, value in parse:
                 erg.append((controller.newDimensionValue(self.dimension, name), value))
         return erg
-   
-    
+
+
 class QuotationTable(gtk.Table):
-    
+
     def __init__(self, stock):
         gtk.Table.__init__(self)
         self.stock = stock
-        
+
         self.attach(gtk.Label(_('First quotation')), 0,1,0,1, yoptions=gtk.FILL)
         self.first_label = gtk.Label()
         self.attach(self.first_label, 1,2,0,1, yoptions=gtk.FILL)
@@ -163,19 +163,19 @@ class QuotationTable(gtk.Table):
         self.attach(gtk.Label(_('# quotations')), 0,1,2,3, yoptions=gtk.FILL)
         self.count_label = gtk.Label()
         self.attach(self.count_label, 1,2,2,3, yoptions=gtk.FILL)
-            
+
         button = gtk.Button('Get quotations!')
         button.connect('clicked', self.on_button_clicked)
         self.attach(button, 0,2,4,5, yoptions=gtk.FILL)
         self.update_labels()
-        
+
     def on_button_clicked(self, button):
         controller.GeneratorTask(controller.datasource_manager.get_historical_prices, self.new_quotation_callback, complete_callback=self.update_labels).start(self.stock)
-        
+
     def new_quotation_callback(self, qt):
         self.count+=1
         self.count_label.set_text(str(self.count))
-        
+
     def update_labels(self):
         quotations = controller.getQuotationsFromStock(self.stock)
         self.count = len(quotations)
@@ -214,11 +214,11 @@ class EditStockTable(gtk.Table):
         cb.add_attribute(cell, 'text', 0)
         cb.set_active(self.stock.type)
         self.attach(cb, 1,2,2,3,  yoptions=gtk.FILL)
-        
+
         self.attach(gtk.Label(_('TER')),0,1,3,4,yoptions=gtk.SHRINK)
         self.ter_entry = gtk.SpinButton(gtk.Adjustment(lower=0, upper=100,step_incr=0.1, value = self.stock.ter), digits=2)
         self.attach(self.ter_entry,1,2,3,4,yoptions=gtk.SHRINK)
-        
+
         currentRow = 4
         for dim in controller.getAllDimension():
             #print dim
@@ -227,7 +227,7 @@ class EditStockTable(gtk.Table):
             setattr(self, comboName, DimensionComboBox(dim, stock_to_edit, dialog))
             self.attach(getattr(self, comboName), 1,2,currentRow,currentRow+1,  yoptions=gtk.FILL)
             currentRow += 1
-        
+
     def process_result(self, widget=None, response = gtk.RESPONSE_ACCEPT):
         if response == gtk.RESPONSE_ACCEPT:
             self.stock.name = self.name_entry.get_text()
@@ -265,7 +265,7 @@ class EditPositionTable(gtk.Table):
         self.attach(self.calendar,1,2,2,3)
 
         self.attach(gtk.Label(_('Comment')),0,1,3,4)
-        
+
         self.comment_entry = gtk.TextView()
         self.comment_entry.set_wrap_mode(gtk.WRAP_WORD)
         self.comment_entry.set_size_request(50, 80)
@@ -275,19 +275,23 @@ class EditPositionTable(gtk.Table):
 
     def process_result(self, widget=None, response = gtk.RESPONSE_ACCEPT):
         if response == gtk.RESPONSE_ACCEPT:
-            ta = self.pos.buy_transaction
-            ta.quantity = self.pos.quantity = self.shares_entry.get_value()
-            ta.price = self.pos.price = self.price_entry.get_value()
+            self.pos.quantity = self.shares_entry.get_value()
+            self.pos.price = self.price_entry.get_value()
             year, month, day = self.calendar.get_date()
-            ta.date = self.pos.date = datetime(year, month+1, day)
+            self.pos.date = datetime(year, month+1, day)
             buffer = self.comment_entry.get_buffer()
             self.pos.comment = unicode(buffer.get_text(buffer.get_start_iter(), buffer.get_end_iter()))
+            if hasattr(self.pos, "buy_transaction"):
+                ta = self.pos_buy_transaction
+                ta.quantity = self.pos.quantity
+                ta.price = self.pos.price
+                ta.date = self.pos.date
 
 
 SPINNER_SIZE = 40
 
 class StockSelector(gtk.VBox):
-    
+
     def __init__(self):
         gtk.VBox.__init__(self)
         self.search_field = gtk.Entry()
@@ -701,7 +705,7 @@ class NewWatchlistPositionDialog(gtk.Dialog):
 
 
 class PosSelector(gtk.ComboBox):
-    
+
     def __init__(self, pf, position=None):
         gtk.ComboBox.__init__(self)
         cell = gtk.CellRendererText()
@@ -816,7 +820,7 @@ class DividendDialog(gtk.Dialog):
             self.value_entry.set_value(dividend.price)
             self.tacosts_entry.set_value(dividend.costs)
             self.on_change()
-        
+
         self.set_response_sensitive(gtk.RESPONSE_ACCEPT, self.position is not None)
         self.show_all()
         response = self.run()
