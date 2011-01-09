@@ -11,7 +11,7 @@ TYPES = {FUND: 'FUND',
          STOCK: 'STOCK',
          ETF: 'ETF',
          BOND: 'BOND'
-         }  
+         }
 
 
 class Stock(SQLiteEntity):
@@ -30,13 +30,13 @@ class Stock(SQLiteEntity):
                    'ter': 'FLOAT',
                    'source': 'VARCHAR',
                   }
-                  
+
     __comparisonPositives__ = ['isin', 'currency']
     __defaultValues__ = {
                          'exchange':None,
                          'currency':'',
                          'price':0.0,
-                         'date':datetime.datetime.utcnow(),
+                         'date': datetime.datetime(2000, 1, 1),
                          'change':0.0,
                          'type':1,
                          'name':'',
@@ -48,7 +48,7 @@ class Stock(SQLiteEntity):
     @property
     def stock(self):
         return self
-    
+
     def getDimensionText(self, dim):
         advs = self.getAssetDimensionValue(dim)
         if len(advs) == 1:
@@ -62,13 +62,13 @@ class Stock(SQLiteEntity):
             if i<len(advs):
                 erg += ", "
         return erg
-    
+
     def updateAssetDimensionValue(self, dimension, dimVals):
         for adv in self.getAssetDimensionValue(dimension):
             adv.delete()
         for dimVal, value in dimVals:
             self.controller.newAssetDimensionValue(self,dimVal,value)
-        
+
     def getAssetDimensionValue(self, dim):
         assDimVals = self.controller.getAssetDimensionValueForStock(self, dim)
         return assDimVals
@@ -85,7 +85,7 @@ class Stock(SQLiteEntity):
         if self.type in TYPES:
             return TYPES[self.type]
         return ''
-        
+
     def __str__(self):
         return self.name +' | '+self.isin+' | '+self.exchange
 
