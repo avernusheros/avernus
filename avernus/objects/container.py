@@ -15,6 +15,8 @@ class Container(object):
             pos_val = pos.cvalue
             ter+=pos_val*pos.stock.ter
             val+=pos_val
+        if val==0:
+            return 0.0
         return ter/val
 
     @property
@@ -92,6 +94,12 @@ class Portfolio(SQLiteEntity, Container):
                    "comment":       "TEXT",
                    "cash":          "FLOAT",
                    }
+
+    def __len__(self):
+        count = 0
+        for pos in self:
+            count+=1
+        return count
 
     def __iter__(self):
         return self.controller.getPositionForPortfolio(self).__iter__()

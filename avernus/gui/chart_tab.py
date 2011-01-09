@@ -18,23 +18,28 @@ class ChartTab(gtk.ScrolledWindow):
         self.show_all()
 
     def show(self):
-        width = self.allocation[2]     
+        if len(self.pf) == 0:
+            self.add_with_viewport(gtk.Label(NO_DATA_STRING))
+            self.show_all()
+            return
+
+        width = self.allocation[2]
         self.clear()
         table = gtk.Table()
 
         #table.attach(gtk.Label(_('Cash over time')), 0,2,0,1)
         #table.attach(self.cash_chart(),0,2,1,2)
-        
+
         label = gtk.Label()
         label.set_markup(_('<b>Market value</b>'))
         table.attach(label, 0,1,0,1)
         table.attach(Pie(width/2, self.pf, 'name'),0,1,1,2)
-        
+
         label = gtk.Label()
         label.set_markup(_('<b>Investment types</b>'))
         table.attach(label,1,2,0,1)
         table.attach(Pie(width/2, self.pf, 'type_string'),1,2,1,2)
-        
+
         row = 2
         col = 0
         switch = True
@@ -49,12 +54,12 @@ class ChartTab(gtk.ScrolledWindow):
                 col = 0
                 row += 2
             switch = not switch
-            
+
         label = gtk.Label()
         label.set_markup(_('<b>Dividends per Year</b>'))
         table.attach(label,0,2,row,row+1)
         table.attach(DividendsPerYearChart(width/2, self.pf), 1,2,row+2,row+3)
-        
+
         label = gtk.Label()
         label.set_markup(_('<b>Dividends</b>'))
         table.attach(label,0,2,row+3,row+4)
@@ -140,7 +145,7 @@ class DividendsChart(gtk.VBox):
                 try:
                     data[pos.name]+=div.total
                 except:
-                    data[pos.name]=div.total                    
+                    data[pos.name]=div.total
         if len(data) == 0:
             self.pack_start(gtk.Label('No dividends...'))
         else:
@@ -156,8 +161,8 @@ class DividendsChart(gtk.VBox):
             chart = plot.handler
             chart.show()
             self.pack_start(chart)
-          
-           
+
+
 class Pie(gtk.VBox):
 
     def __init__(self, width, portfolio, attribute):
@@ -192,7 +197,7 @@ class Pie(gtk.VBox):
 
 
 class DimensionPie(gtk.VBox):
-    
+
     #FIXME show how many positions of portfolio are considered
 
     def __init__(self, width, portfolio, dimension):
