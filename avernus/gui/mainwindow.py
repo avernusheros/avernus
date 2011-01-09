@@ -18,7 +18,6 @@ from avernus.gui.overview_tab import OverviewTab
 from avernus.gui.left_pane import MainTreeBox, Category
 from avernus.gui.dividends_tab import DividendsTab
 from avernus.gui.transactions_tab import TransactionsTab
-from avernus.gui.indexpositions_tab import IndexPositionsTab
 from avernus.gui.container_overview_tab import ContainerOverviewTab
 from avernus.gui.closed_positions_tab import ClosedPositionsTab
 from avernus.gui.preferences import PrefDialog
@@ -136,10 +135,6 @@ class MainWindow(gtk.Window):
                                   (ClosedPositionsTab, 'Closed positions'),
                                   (chart_tab.ChartTab, 'Charts')]
         self.tabs['Watchlist'] = [(PositionsTab, 'Positions')]
-        self.tabs['Tag']       = [(PositionsTab, 'Positions'),
-                                  (TransactionsTab, 'Transactions'),
-                                  (chart_tab.ChartTab, 'Charts')]
-        self.tabs['Index']     = [(IndexPositionsTab, 'Positions')]
         self.tabs['Category']  = [(ContainerOverviewTab, 'Overview')]
         self.tabs['Account']   = [(AccountTransactionTab, 'Transactions'),
                                   (AccountChartTab, 'Charts')]
@@ -155,7 +150,7 @@ class MainWindow(gtk.Window):
         if size is not None:
             width, height = eval(size)
             self.resize(width, height)
-            
+
         pos = self.config.get_option('hpaned position', 'Gui') or width*0.25
         self.hpaned.set_position(int(pos))
 

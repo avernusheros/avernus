@@ -534,7 +534,6 @@ class BuyDialog(gtk.Dialog):
         else:
             self.b_new = False
 
-
         vbox = self.get_content_area()
         table = gtk.Table()
         table.set_row_spacings(4)
@@ -555,7 +554,7 @@ class BuyDialog(gtk.Dialog):
 
         #shares entry
         table.attach(gtk.Label(_('Shares')),1,2,1,2,xoptions=gtk.SHRINK,yoptions=gtk.SHRINK)
-        self.shares_entry = gtk.SpinButton(gtk.Adjustment(lower=0, upper=100000,step_incr=1.0, value = 0), digits=2)
+        self.shares_entry = gtk.SpinButton(gtk.Adjustment(lower=0, upper=100000,step_incr=1.0, value = 1), digits=2)
         self.shares_entry.connect("value-changed", self.on_change)
         table.attach(self.shares_entry,2,3,1,2,xoptions=gtk.SHRINK,yoptions=gtk.SHRINK)
 
@@ -627,6 +626,9 @@ class BuyDialog(gtk.Dialog):
 
     def on_stock_selection(self, *args):
         self.stock_ok = True
+        st = self.stock_selector.get_stock()
+        st.update_price()
+        self.price_entry.set_value(st.price)
         self.set_response_sensitivity()
 
     def on_stock_deselection(self, *args):
