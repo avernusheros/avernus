@@ -483,6 +483,11 @@ def getQuotationsFromStock(stock, start=None):
     erg = sorted(erg, key=lambda stock: stock.date)
     return erg
 
+def getAllQuotationsFromStock(stock, start=None):
+    """from all exchanges"""
+    erg = Quotation.getByColumns({'stock': stock.id}, create=True)
+    return sorted(erg, key=lambda stock: stock.date)
+
 def getNewestQuotation(stock):
     key = stock.getPrimaryKey()
     erg = Quotation.getAllFromOneColumn("stock", key)

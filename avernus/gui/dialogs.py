@@ -177,7 +177,7 @@ class QuotationTable(gtk.Table):
         self.count_label.set_text(str(self.count))
 
     def update_labels(self):
-        quotations = controller.getQuotationsFromStock(self.stock)
+        quotations = controller.getAllQuotationsFromStock(self.stock)
         self.count = len(quotations)
         self.count_label.set_text(str(self.count))
         if self.count == 0:
@@ -282,7 +282,7 @@ class EditPositionTable(gtk.Table):
             buffer = self.comment_entry.get_buffer()
             self.pos.comment = unicode(buffer.get_text(buffer.get_start_iter(), buffer.get_end_iter()))
             if hasattr(self.pos, "buy_transaction"):
-                ta = self.pos_buy_transaction
+                ta = self.pos.buy_transaction
                 ta.quantity = self.pos.quantity
                 ta.price = self.pos.price
                 ta.date = self.pos.date

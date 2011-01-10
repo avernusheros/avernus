@@ -19,6 +19,7 @@ QUEUE_THRESHOLD = 3
 QUEUE_DIVIDEND = 10
 QUEUE_MAX = 10
 
+
 def to_float(s):
     return float(s.replace('.','').replace('%','').replace(',','.').split('&')[0])
 
@@ -314,38 +315,25 @@ class Onvista():
                     st.volume = item['volume']
 
     def update_historical_prices(self, st, start_date, end_date):
-        delta = relativedelta(start_date, end_date)
         #print delta
-        months = min(60,abs(delta.years)*12 + abs(delta.months))
         url = ''
         width = ''
         if st.type == stock.FUND:
-            url = 'http://fonds.onvista.de/kurshistorie.html'
+            url = 'http://www.onvista.de/fonds/kurshistorie.html'
             width = '100%'
         elif st.type == stock.ETF:
-            url = 'http://etf.onvista.de/kurshistorie.html'
+            url = 'http://www.onvista.de/etf/kurshistorie.html'
             width = '640'
         else:
             Log.error("Uknown stock type in onvistaplugin.search_kurse")
-        #url += "?ISIN="+str(stock.isin) + "&RANGE=" + str(months) +"M"
-        #get = FileGetter(url)
-        #get.start()
-        #get.join()
-        #file = get.get_result()
-        file = opener.open(url,urllib.urlencode({'ISIN':st.isin, 'RANGE':str(months)+'M'}))
+        file = opener.open(url,urllib.urlencode({'ISIN':st.isin}))
         soup = BeautifulSoup(file)
-        #print soup
-        tables = soup.html.body.findAll('table',{'width':width})
-        table = tables[2]
-        #for t in tables:
-        #    print t
-        lines = table.findAll('tr',{'align':'right'})
+        lines = soup.findAll('tr',{'align':'right'})
         for line in lines:
-            tds = line.findAll('td')
-            day = to_datetime(tds[0].contents[0].replace('&nbsp;','')).date()
-            kurs = to_float(tds[1].contents[0].replace('&nbsp;',''))
+            tds = line.findAll('td', text=True)
+            day = to_datetime(tds[0].replace('&nbsp;', '')).date()
+            kurs = to_float(tds[1].replace('&nbsp;', ''))
             yield (st,'KAG',day,kurs,kurs,kurs,kurs,0)
-
 
 
 if __name__ == "__main__":
@@ -403,5 +391,5 @@ if __name__ == "__main__":
     #print plugin.search_kurse(s1)
     #print plugin.search_kurse(s3)
     #test_parse_kurse()
-    test_update(s3)
-    #test_historicals()
+    #test_update(s3)
+    test_historicals()
