@@ -32,7 +32,7 @@ modelClasses = [Portfolio, Transaction, Watchlist, Dividend, SourceInfo,
 #relations. therefore it is important that the list is complete in the sense
 #that there are no classes holding composite keys to classes outside the list
 initialLoadingClasses = [Portfolio,Transaction,Watchlist,Dividend,
-                         PortfolioPosition, WatchlistPosition,Account, Meta, Stock, 
+                         PortfolioPosition, WatchlistPosition,Account, Meta, Stock,
                          AccountTransaction, AccountCategory, Dimension, DimensionValue,
                          AssetDimensionValue]
 
@@ -278,7 +278,7 @@ def newSourceInfo(source='', stock=None, info=''):
     si = SourceInfo(source=source, stock=stock, info=info)
     si.insert()
     return si
-    
+
 def getSourceInfo(source='', stock=None):
     args = {'stock': stock.getPrimaryKey(), 'source':source}
     return SourceInfo.getByColumns(args, create=True)
@@ -483,6 +483,13 @@ def getQuotationsFromStock(stock, start=None):
     erg = sorted(erg, key=lambda stock: stock.date)
     return erg
 
+def getPriceFromStockAtDate(stock, date):
+    args = {'stock': stock.id, 'date':date.date()}
+    res = Quotation.getByColumns(args, create=False)
+    for item in res:
+        return item[5]
+    return None
+
 def getAllQuotationsFromStock(stock, start=None):
     """from all exchanges"""
     erg = Quotation.getByColumns({'stock': stock.id}, create=True)
@@ -508,7 +515,7 @@ class GeneratorTask(object):
     http://unpythonic.blogspot.com/2007/08/using-threads-in-pygtk.html
     Thanks!
     """
-    def __init__(self, generator, loop_callback, complete_callback=None):
+    def __init__(self, generator, loop_callback=None, complete_callback=None):
         self.generator = generator
         self.loop_callback = loop_callback
         self.complete_callback = complete_callback
@@ -527,7 +534,8 @@ class GeneratorTask(object):
             ret = ()
         if not isinstance(ret, tuple):
             ret = (ret,)
-        self.loop_callback(*ret)
+        if self.loop_callback:
+            self.loop_callback(*ret)
 
     def start(self, *args, **kwargs):
         threading.Thread(target=self._start, args=args, kwargs=kwargs).start()

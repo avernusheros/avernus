@@ -91,3 +91,6 @@ class Stock(SQLiteEntity):
 
     def update_price(self):
         self.controller.datasource_manager.update_stock(self)
+
+    def get_price_at_date(self, date):
+        return self.controller.getPriceFromStockAtDate(self, date)

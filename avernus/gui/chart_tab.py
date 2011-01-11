@@ -1,9 +1,14 @@
 #!/usr/bin/env python
 
 from avernus import cairoplot, date_utils
-import gtk
+import gtk, gobject
 from avernus.objects import controller
 from avernus.gui import gui_utils
+from dateutil.rrule import *
+import datetime
+
+#FIXME
+from account_chart_tab import get_legend
 
 NO_DATA_STRING = '\nNo Data!\nAdd positions to portfolio first.\n\n'
 
@@ -27,20 +32,19 @@ class ChartTab(gtk.ScrolledWindow):
         self.clear()
         table = gtk.Table()
 
-        #table.attach(gtk.Label(_('Cash over time')), 0,2,0,1)
-        #table.attach(self.cash_chart(),0,2,1,2)
+        table.attach(ValueChart(width, self.pf),0,2,0,1)
 
         label = gtk.Label()
         label.set_markup(_('<b>Market value</b>'))
-        table.attach(label, 0,1,0,1)
-        table.attach(Pie(width/2, self.pf, 'name'),0,1,1,2)
+        table.attach(label, 0,1,1,2)
+        table.attach(Pie(width/2, self.pf, 'name'),0,1,2,3)
 
         label = gtk.Label()
         label.set_markup(_('<b>Investment types</b>'))
-        table.attach(label,1,2,0,1)
-        table.attach(Pie(width/2, self.pf, 'type_string'),1,2,1,2)
+        table.attach(label,1,2,1,2)
+        table.attach(Pie(width/2, self.pf, 'type_string'),1,2,2,3)
 
-        row = 2
+        row = 3
         col = 0
         switch = True
         for dim in controller.getAllDimension():
@@ -58,7 +62,7 @@ class ChartTab(gtk.ScrolledWindow):
         label = gtk.Label()
         label.set_markup(_('<b>Dividends per Year</b>'))
         table.attach(label,0,2,row,row+1)
-        table.attach(DividendsPerYearChart(width/2, self.pf), 1,2,row+2,row+3)
+        table.attach(DividendsPerYearChart(width, self.pf), 0,2,row+2,row+3)
 
         label = gtk.Label()
         label.set_markup(_('<b>Dividends</b>'))
@@ -71,24 +75,6 @@ class ChartTab(gtk.ScrolledWindow):
     def clear(self):
         for child in self.get_children():
             self.remove(child)
-
-    def portfolio_value_chart(self):
-        start = self.pf.birthday
-        end = date.today()
-        delta = end - start
-        step = delta // 100
-        print "Step: ",step
-        data = []
-        x_labels = []
-        current = start
-        while current < end:
-            data.append(self.pf.get_value_at_date(current))
-            x_labels.append(str(current))
-            current += step
-        chart = gtk_dot_line_plot()
-        print "Data: ", data
-        chart.set_args({'data':data, "x_labels":x_labels})
-        return chart
 
     def cash_chart(self):
         #FIXME stufenchart?
@@ -109,6 +95,75 @@ class ChartTab(gtk.ScrolledWindow):
                      'y_formatters':gui_utils.get_string_from_float
                      })
         return chart
+
+
+class ValueChart(gtk.VBox):
+    SPINNER_SIZE = 40
+    MAX_VALUES = 25
+
+    def __init__(self, width, portfolio):
+        gtk.VBox.__init__(self)
+        self.portfolio = portfolio
+        self.width = width
+        self.chart = None
+        
+        hbox = gtk.HBox()
+        self.pack_start(hbox, fill=False, expand=False)
+        label = gtk.Label()
+        label.set_markup(_('<b>Value over time</b>'))
+        hbox.pack_start(label, fill=True, expand=True)
+        
+        combobox = gtk.combo_box_new_text()
+        for st in ['daily', 'weekly', 'monthly', 'yearly']:
+            combobox.append_text(st)
+        combobox.set_active(2)
+        combobox.connect('changed', self.on_zoom_change)
+        hbox.pack_start(combobox, fill=False, expand=False)
+  
+        self.on_zoom_change(combobox)
+    
+    def on_zoom_change(self, cb):
+        self.step = cb.get_active_text()
+        if self.step == 'daily':
+            self.days = list(rrule(DAILY, dtstart = self.portfolio.birthday, until = datetime.date.today()))[-self.MAX_VALUES:]
+        elif self.step == 'weekly':
+            self.days = list(rrule(WEEKLY, dtstart = self.portfolio.birthday, until = datetime.date.today(), byweekday=FR))[-self.MAX_VALUES:]
+        elif self.step == 'monthly':
+            self.days = list(rrule(MONTHLY, dtstart = self.portfolio.birthday, until = datetime.date.today(), bymonthday=-1))[-self.MAX_VALUES:]
+        elif self.step == 'yearly':
+            self.days = list(rrule(YEARLY, dtstart = self.portfolio.birthday, until = datetime.date.today(), bymonthday=-1, bymonth=12))[-self.MAX_VALUES:]
+        self.redraw()
+    
+    def redraw(self):
+        if self.chart:
+            self.remove(self.chart)
+        self.spinner = gtk.Spinner()
+        self.spinner.set_size_request(self.SPINNER_SIZE, self.SPINNER_SIZE)
+        self.pack_start(self.spinner, fill=True, expand=False)
+        self.spinner.show()
+        self.spinner.start()
+        controller.GeneratorTask(self._get_data, complete_callback=self._show_chart).start()
+    
+    def _get_data(self):
+        self.data = [self.portfolio.get_value_at_date(t) for t in self.days]
+        yield 1
+                
+    def _show_chart(self):
+        self.remove(self.spinner)
+        plot = cairoplot.plots.DotLinePlot('gtk',
+                                data=self.data,
+                                width=self.width,
+                                height=300,
+                                x_labels = get_legend(self.days[0], self.days[-1], self.step),
+                                y_formatter=gui_utils.get_currency_format_from_float,
+                                y_title='Amount',
+                                background="white light_gray",
+                                grid=True,
+                                dots=2,
+                                )
+        self.chart = plot.handler
+        self.pack_start(self.chart)
+        self.chart.show()
 
 
 class DividendsPerYearChart(gtk.VBox):

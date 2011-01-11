@@ -121,11 +121,9 @@ class Portfolio(SQLiteEntity, Container):
         return res
 
     def get_value_at_date(self, t):
-        erg = 0
-        for po in self:
-            if t > po.date.date():
-                erg += po.get_value_at_date(t)
-        return erg
+        #FIXME
+        #does not consider sold positions
+        return sum(pos.get_value_at_date(t) for pos in self if t>pos.date)
 
     @property
     def transactions(self):

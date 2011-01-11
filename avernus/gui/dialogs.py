@@ -329,7 +329,7 @@ class StockSelector(gtk.VBox):
         self.spinner = gtk.Spinner()
         self.pack_start(self.spinner, fill=True, expand=False)
         self.spinner.show()
-        self.spinner.set_size_request(SPINNER_SIZE, SPINNER_SIZE);
+        self.spinner.set_size_request(SPINNER_SIZE, SPINNER_SIZE)
         self.spinner.start()
 
     def _hide_spinner(self):
