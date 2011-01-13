@@ -81,6 +81,7 @@ class Container(object):
         self.controller.datasource_manager.update_stocks([pos.stock for pos in self if pos.quantity>0])
         self.last_update = datetime.now()
         pubsub.publish("stocks.updated", self)
+        yield 1
 
 
 class Portfolio(SQLiteEntity, Container):

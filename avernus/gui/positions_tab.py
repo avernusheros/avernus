@@ -5,8 +5,9 @@ from avernus import pubsub
 from avernus.gui.plot import ChartWindow
 from avernus.gui.dialogs import SellDialog, NewWatchlistPositionDialog, BuyDialog, EditPositionDialog
 from avernus.gui.gui_utils import Tree, ContextMenu, get_name_string, datetime_format
-from avernus.gui import gui_utils, dialogs
+from avernus.gui import gui_utils, dialogs, progress_manager
 from avernus.objects.position import MetaPosition
+from avernus.objects import controller
 
 gain_thresholds = {
                    (-sys.maxint,-0.5):'arrow_down',
@@ -122,7 +123,7 @@ class PositionsTree(Tree):
                 ('chart',  None,              'chart',  None, _('Chart selected position'),  self.on_chart),
                 ('dividend', None,            'dividend', None, _('Add dividend payment'), self.on_dividend),
                 #('split',  None            , 'split...', None, _('Split selected position'), self.on_remove),
-                ('update', gtk.STOCK_REFRESH, 'update', None, _('Update positions'),         lambda x: self.container.update_positions())
+                ('update', gtk.STOCK_REFRESH, 'update', None, _('Update positions'),         self.on_update_positions)
                                 ])
         self.actiongroup.get_action('chart').set_icon_name('avernus')
         accelgroup = gtk.AccelGroup()
@@ -171,6 +172,13 @@ class PositionsTree(Tree):
                 row[self.COLS['mkt_value']] = item.cvalue
                 if not self.watchlist:
                     row[self.COLS['pf_percent']] = item.portfolio_fraction
+    
+    def on_update_positions(self, *args):
+        def finished_cb():
+            progress_manager.remove_monitor(555)
+        m = progress_manager.add_monitor(555, _('updating stocks...'), gtk.STOCK_REFRESH)
+        m.progress_update_auto()
+        controller.GeneratorTask(self.container.update_positions, complete_callback=finished_cb).start()
 
     def on_position_added(self, container, item):
         if container.id == self.container.id:
