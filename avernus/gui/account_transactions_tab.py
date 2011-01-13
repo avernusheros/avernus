@@ -2,7 +2,6 @@
 
 import gtk, datetime, pango
 from avernus.gui import gui_utils, dialogs
-import avernus.objects
 from avernus.objects import controller
 from avernus import pubsub
 from avernus.logger import Log
@@ -548,7 +547,7 @@ class EditTransaction(gtk.Dialog):
         hbox = gtk.HBox()
         label = gtk.Label(_('Amount'))
         hbox.pack_start(label)
-        self.amount_entry = gtk.SpinButton(gtk.Adjustment(lower=-999999999, upper=999999999,step_incr=10, value = self.transaction.amount), digits=2)
+        self.amount_entry = gtk.SpinButton(gtk.Adjustment(lower=-999999999, upper=999999999, step_incr=10, value = self.transaction.amount), digits=2)
         hbox.pack_start(self.amount_entry)
         vbox.pack_start(hbox)
         

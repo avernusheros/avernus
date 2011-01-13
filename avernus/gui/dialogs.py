@@ -1,12 +1,10 @@
 #!/usr/bin/env python
 
-from avernus import pubsub, config
+from avernus import pubsub
 from avernus.gui import gui_utils
 from avernus.objects import controller, stock
-from avernus.objects.dimension import DimensionValue
 from datetime import datetime
 import gtk
-import pango
 
 
 class EditPositionDialog(gtk.Dialog):
@@ -807,7 +805,7 @@ class DividendDialog(gtk.Dialog):
         table.attach(self.total,1,2,3,4,xoptions=gtk.SHRINK,yoptions=gtk.SHRINK)
 
         self.calendar = gtk.Calendar()
-        table.attach(self.calendar, 0,2,4,5)
+        table.attach(self.calendar, 0, 2, 4, 5)
 
         if date is not None:
             self.calendar.select_month(date.month-1, date.year)

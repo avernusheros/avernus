@@ -25,6 +25,13 @@ class ProgressMonitor(gtk.Frame):
         gobject.idle_add(self.progress.set_fraction, float(percent) / 100)
         gobject.idle_add(self.progress.set_text, '%d%%' % percent)
 
+    def progress_update_pulse(self, *args):
+        gobject.idle_add(self.progress.pulse)
+        return True
+        
+    def progress_update_auto(self):
+        gobject.timeout_add(100, self.progress_update_pulse)
+
     def stop(self, *e):
         """
         Stops this monitor, removes it from the progress area

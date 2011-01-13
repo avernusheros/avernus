@@ -4,9 +4,10 @@ from urllib import urlopen
 import csv, pytz, re, json
 from datetime import datetime
 from avernus import config
-
-from avernus.logger import Log
 from avernus.objects import stock, controller
+
+import logging
+logger = logging.getLogger(__name__)
 
 TYPES = {'Fonds':stock.FUND, 'Aktien':stock.STOCK, 'Namensaktie':stock.STOCK, 'Vorzugsaktie':stock.STOCK}
 EXCHANGE_CURRENCY = [(['NYQ', 'PNK'], 'USD'),
@@ -14,26 +15,24 @@ EXCHANGE_CURRENCY = [(['NYQ', 'PNK'], 'USD'),
                      (['LSE'], 'GBP')
                      ]
 
-
 class Yahoo():
     name = "yahoo"
-    
+
     def __request(self, searchstring):
         try:
-            url = 'http://de.finance.yahoo.com/lookup/all?s='+searchstring          
-            Log.info(url)
+            url = 'http://de.finance.yahoo.com/lookup/all?s='+searchstring
             return urlopen(url)
         except:
             return None
-                
+
     def __request_csv(self, symbol, stat):
         try:
-            url = 'http://de.finance.yahoo.com/d/quotes.csv?s=%s&f=%s' % (symbol, stat)
-            Log.info(url)
+            url = 'http://download.finance.yahoo.com/d/quotes.csv?s=%s&f=%s' % (symbol, stat)
+            logger.debug(url)
             return urlopen(url)
         except:
             return None
-        
+
     def __get_all_yahoo_ids(self, stocks):
         ids = []
         for stock in stocks:
@@ -66,28 +65,28 @@ class Yahoo():
                     try:
                         stocks[current_stock].price = float(row[0])
                     except Exception as e:
-                        Log.info(e)
+                        logger.info(e)
                         continue
                     stocks[current_stock].date = new_date
                     stocks[current_stock].change = float(row[3])
                     stocks[current_stock].exchange = row[4]
-                         
+
     def get_info(self, symbol):
         #name, isin, exchange, currency
         for row in csv.reader(self.__request_csv(symbol, 'nxc4')):
             if len(row) < 2 or row[1] == 'N/A':
                 return None
         return row[0], 'n/a', row[1], row[2]
-        
+
     def _test_api(self, symbol):
         for row in csv.reader(self.__request_csv(symbol, 'nxc4n0n1n2n3n4')):
             print row
-    
+
     def update_historical_prices(self, stock, start_date, end_date):
         #we should use a more intelligent way of choosing the exchange
         #e.g. the exchange with the highest volume for this stock
         yid = controller.getSourceInfo(self.name, stock)[0].info
-        url = 'http://ichart.yahoo.com/table.csv?s=%s&' % yid + \
+        url = 'http://download.finance.yahoo.com/d/quotes.csv?s=%s&' % yid + \
               'a=%s&' % str(start_date.month-1) + \
               'b=%s&' % str(start_date.day) + \
               'c=%s&' % str(start_date.year) + \
@@ -96,9 +95,10 @@ class Yahoo():
               'e=%s&' % str(end_date.day) + \
               'f=%s&' % str(end_date.year) + \
               'ignore=.csv'
+        logger.debug(url)
         file = urlopen(url)
         if file.info().gettype() == 'text/html':
-            Log.info("no historical data found for stock: "+stock.name)
+            logger.info("no historical data found for stock: "+stock.name)
             return
         days = file.readlines()
         for row in [day[:-2].split(',') for day in days[1:]]:
@@ -106,14 +106,14 @@ class Yahoo():
             #(stock, date, open, high, low, close, vol)
             yield (stock,stock.exchange,dt,float(row[1]),float(row[2]),\
                         float(row[3]),float(row[6]), int(row[5]))
-    
+
     def search_without_beautifulsoup(self, searchstring):
         #does not provide isin or even lookup by isin
         url = "http://d.yimg.com/autoc.finance.yahoo.com/autoc?query=%s&callback=YAHOO.Finance.SymbolSuggest.ssCallback" % (searchstring)
         json_response = str(urlopen(url).read()).replace("YAHOO.Finance.SymbolSuggest.ssCallback(", "").replace(")","")
         for item in json.loads(json_response)['ResultSet']['Result']:
             print item
-            
+
     def search(self, searchstring):
         doc = self.__request(searchstring)
         if doc is None:
@@ -131,7 +131,7 @@ class Yahoo():
                         item = self.__to_dict(item)
                         if item is not None:
                             yield (item, self, item['yahoo_id'])
-    
+
     def __to_dict(self, item):
         if not item[4] in TYPES:
             return None
@@ -146,9 +146,9 @@ class Yahoo():
                 res['currency'] = cur
                 return res
         return None
-   
+
 
 if __name__ == "__main__":
     y = Yahoo()
     y.search('DE0009774794')
-    y.request_csv('DE0009774794', 'l1d1d3c1x')
+    y.__request_csv('DE0009774794', 'l1d1d3c1x')

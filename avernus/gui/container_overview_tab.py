@@ -118,7 +118,6 @@ class ContainerOverviewTree(gui_utils.Tree):
                 row[self.CHANGE_PERCENT] = item.percent
                 row[self.TER] = item.ter
 
-
     def insert_item(self, item):
         self.get_model().append([item,
                                item.name,

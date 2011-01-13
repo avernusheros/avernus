@@ -2,8 +2,10 @@
 import sys
 import gtk
 from avernus.gui import gui_utils
-from avernus.logger import Log
 from avernus.objects import controller
+import logging
+logger = logging.getLogger(__name__)
+
 
 class PrefDialog(gtk.Dialog):
 

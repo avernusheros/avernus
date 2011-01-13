@@ -79,6 +79,10 @@ class PortfolioPosition(SQLiteEntity, Position):
         return self.controller.getBuyTransaction(self)
 
     @property
+    def sell_transactions(self):
+        return self.controller.yieldSellTransactions(self)
+
+    @property
     def dividends(self):
         for div in self.controller.getDividendForPosition(self):
             yield div
@@ -107,18 +111,28 @@ class PortfolioPosition(SQLiteEntity, Position):
             res.append((current, ta.quantity*price))
         return res
 
+    def get_quantity_at_date(self, t):
+        if t<self.date:
+            return 0
+        q=self.quantity
+        for sell_ta in self.sell_transactions:
+            if t<sell_ta.date:
+                q+=sell_ta.quantity
+        return q
+
     def get_value_at_date(self, t):
-        # this will on purpose ignore any transactions and assume the current
-        # quantity is the all-true one
         i=1
+        quantity = self.get_quantity_at_date(t)
+        if quantity==0:
+            return 0
         price = self.controller.getPriceFromStockAtDate(self.stock, t)
         while not price and i<4:
             t -= datetime.timedelta(days = i)
             price = self.controller.getPriceFromStockAtDate(self.stock, t)
             i+=1
         if price:
-            return self.quantity*price
-        return 0.0
+            return quantity*price
+        return 0
 
 
 class WatchlistPosition(SQLiteEntity, Position):

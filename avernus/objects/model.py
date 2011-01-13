@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 
-from avernus.logger import Log
+import logging
 from inspect import isclass
 
+logger = logging.getLogger(__name__)
 store = None
 
 
@@ -24,18 +25,18 @@ class Cache(object):
         """
         Caches an object. Key to caching is the tuple (class,primary key)
         """
-        Log.debug("Caching "+str(obj))
+        logger.debug("Caching "+str(obj))
         self.objects[(obj.__class__,obj.getPrimaryKey())] = obj
 
     def isCached(self, t, k):
         return (t,k) in self.objects
 
     def get(self, t, k):
-        Log.debug("Return cached object for (type,key) " + str((t,k)))
+        logger.debug("Return cached object for (type,key) " + str((t,k)))
         return self.objects[(t,k)]
 
     def unCache(self, obj):
-        Log.debug("UnCaching " +str(obj))
+        logger.debug("UnCaching " +str(obj))
         del self.objects[(obj.__class__,obj.getPrimaryKey())]
 
 # module global cache
@@ -51,39 +52,39 @@ class SQList(list):
     Because database tables do not guarantee order preservation, this list is not
     even ordered, so it is a set.
     """
-    
+
     def __init__(self, parent, *args, **kwargs):
         """
         for the callback to the database, the parent is stored in the list
         """
         list.__init__(self,*args,**kwargs)
         self.parent = parent
-        
+
     def append(self,x,store=True):
         """
         if x is already present, nothing happens.
         if x is new, the parent gets noticed
-        """        
+        """
         if x in self:
-            Log.error("Duplicate Relation Entry parent: " + str(self.parent) + " entity " + str(x))
+            logger.error("Duplicate Relation Entry parent: " + str(self.parent) + " entity " + str(x))
             return None
         list.append(self,x)
         if store:
             self.parent.addRelationEntry(self,x)
-            
+
     def extend(self, other,store=True):
         """
         simluation with multiple appends
         """
         for some in other:
             self.append(some,store)
-            
+
     def insert(self, i, x, store=True):
         """
         as ordering is not guaranteed, an insert is an append with ignoring the position
         """
         self.append(x,store)
-        
+
     def remove(self,x):
         """
         the removal of the object is passed on to the parent to remove the database entry
@@ -130,7 +131,7 @@ class SQLiteEntity(object):
                     else:#a key
                         #retrieve the object to reference
                         self.__setattr__(
-                                         arg, 
+                                         arg,
                                          self.__columns__[arg].getByPrimaryKey(val),
                                          True
                                          )
@@ -153,7 +154,7 @@ class SQLiteEntity(object):
             self.__setattr__(name,erg, True)
         if 'onInit' in self.__callbacks__:
             self.__callbacks__['onInit'](self)
-            
+
     #UNTESTED
     def equals(self,other):
         if not isinstance(other,type(self)):
@@ -164,22 +165,22 @@ class SQLiteEntity(object):
                 #print "not equals because has not attribute", attr, other
                 return False
             if self.__getattribute__(attr) != other.__getattribute__(attr):
-                return False 
+                return False
         # still alive, did we have something to compare?
         if len(self.__comparisonPositives__) == 0:
             print "model.equals call with no comparisonPositives, fallback to true"
         return True
-    
+
     def __setattr__(self, name, val, insert = False):
         object.__setattr__(self, name, val)
         if not insert and name in self.__columns__.keys():
             self.update()
-            
+
     def retrieveAllComposite(self):
         for name,relation in self.__relations__.items():
             self.__setattr__(name,self.retrieveComposite(name, relation))
         self.__composite_retrieved__ = True
-            
+
     def retrieveComposite(self, name, relation):
         #the column name of the partner in the relations table
         relKey = self.__class__.generateRelationTableOtherKey(relation)
@@ -190,7 +191,7 @@ class SQLiteEntity(object):
         query += " FROM " + self.__class__.generateRelationTableName(relation, name)
         query += " WHERE " + myKey +"=:temp"
         vals = {'temp':self.getPrimaryKey()}
-        Log.info(query+str(vals))
+        logger.debug(query+str(vals))
         res = store.select(query,vals)
         erg = SQList(self)
         #retrieve all related objects by their primary key
@@ -199,15 +200,15 @@ class SQLiteEntity(object):
         if 'onRetrieveComposite' in self.__callbacks__:
             self.__callbacks__['onRetrieveComposite'](self, name=name,relation=relation,erg=erg)
         return erg
-           
+
     def getPrimaryKey(self):
         return self.__getattribute__(self.__primaryKey__)
-    
+
     def getRelationNameFromList(self, li):
         for na in self.__relations__:
             if li == self.__getattribute__(na):
                 return na
-    
+
     def addRelationEntry(self, li, other):
         name = self.getRelationNameFromList(li)
         tName = self.__class__.generateRelationTableName(other.__class__, name)
@@ -219,11 +220,11 @@ class SQLiteEntity(object):
         query += ", " + oKey
         query += ") VALUES (?,?)"
         vals = [self.getPrimaryKey(), other.getPrimaryKey()]
-        Log.info(query+str(vals))
+        logger.debug(query+str(vals))
         store.execute(query,vals)
         if 'onAddRelationEntry' in self.__callbacks__:
             self.__callbacks__['onAddRelationEntry'](self,name=name,li=li,other=other)
-            
+
     def removeRelationEntry(self, li, other):
         name = self.getRelationNameFromList(li)
         tName = self.__class__.generateRelationTableName(other.__class__, name)
@@ -232,7 +233,7 @@ class SQLiteEntity(object):
         query = "DELETE FROM " + tName + " WHERE "
         query += mKey + "=? AND " + oKey + "=?"
         vals = [self.getPrimaryKey(), other.getPrimaryKey()]
-        Log.info(query+str(vals))
+        logger.debug(query+str(vals))
         store.execute(query,vals)
         if 'onRemoveRelationEntry' in self.__callbacks__:
             self.__callbacks__['onRemoveRelationEntry'](self,name=name,li=li,other=other)
@@ -257,7 +258,7 @@ class SQLiteEntity(object):
             if cols.index(col) < len(cols) - 1:
                     erg += ", "
         return erg
-    
+
     @classmethod
     def primaryKeyExists(cls, primary):
         return not cls.getByPrimaryKey(primary, True) == None
@@ -267,7 +268,7 @@ class SQLiteEntity(object):
         if primary is None:
             return None
         if not checkTableExistence(cls.__tableName__):
-            Log.error("Table not existent: "+cls.__tableName__)
+            logger.error("Table not existent: "+cls.__tableName__)
             return None
         #FIXME somehow I got a char here and the app crashed.
         primary = int(primary)
@@ -276,18 +277,18 @@ class SQLiteEntity(object):
             return cache.get(cls, primary)
         erg = "SELECT * FROM " + cls.__tableName__ + " WHERE "
         erg += cls.__primaryKey__ + "=?" #+ cls.__primaryKey__
-        Log.info(erg+str(primary))
+        logger.debug(erg+str(primary))
         res = store.select(erg,[primary])
-       
+
         row = next(res, None)
         if not row:
             if not internal:
-                Log.error("Primary Key not found in Database: " + str(primary))
+                logger.error("Primary Key not found in Database: " + str(primary))
             return None
         res = cls(**row)
         cache.cache(res)
         return res
-    
+
     @classmethod
     def getByColumns(cls, cols, operator=" AND ",operator2='=', create=False):
         query = "SELECT * FROM " + cls.__tableName__
@@ -300,12 +301,12 @@ class SQLiteEntity(object):
                 query += operator
             vals.append(val)
             i+=1
-        Log.info(query+str(vals))
+        logger.debug(query+str(vals))
         res = store.select(query,vals)
         if not create:
             return res
         return cls.create_objects(res)
-        
+
     @classmethod
     def create_objects(cls, res):
         erg = []
@@ -322,7 +323,7 @@ class SQLiteEntity(object):
     def getAllFromOneColumn(cls, column, value):
         query = "SELECT * FROM " + cls.__tableName__
         query += " WHERE " + column +"=?"
-        Log.info(query+str(value))
+        logger.debug(query+str(value))
         res = store.select(query,[value])
         erg = []
         for row in res:
@@ -338,7 +339,7 @@ class SQLiteEntity(object):
     @classmethod
     def getAll(cls):
         if not checkTableExistence(cls.__tableName__):
-            Log.error("Table not existent: "+cls.__tableName__)
+            logger.error("Table not existent: "+cls.__tableName__)
             return []
         query = "SELECT * FROM " + cls.__tableName__
         res = store.select(query)
@@ -364,7 +365,7 @@ class SQLiteEntity(object):
         erg += cls.__primaryKey__
         erg += " ) "
         erg += " ) "
-        Log.info(erg)
+        logger.debug(erg)
         store.execute(erg)
         if store.policy['createCompositeOnCreate']:
             cls.createCompositeTable()
@@ -396,7 +397,7 @@ class SQLiteEntity(object):
             query += cls.generateRelationTableOtherKey(other)
             query += " )"
             query += " )"
-            Log.info(query)
+            logger.debug(query)
             store.execute(query)
 
     def attributeList(self, cols):
@@ -437,7 +438,7 @@ class SQLiteEntity(object):
 
     def insert(self):
         if not checkTableExistence(self.__tableName__):
-            Log.error("Insert into nonExistent table: " + str(self.__tableName__))
+            logger.error("Insert into nonExistent table: " + str(self.__tableName__))
             return None
         erg = "INSERT INTO "
         erg += self.__tableName__
@@ -455,15 +456,15 @@ class SQLiteEntity(object):
             #set a dummy but do not update in the database
             self.__setattr__(self.__primaryKey__,None,insert=True)
         vals = self.attributeList(cols)
-        Log.info(erg + str(vals))
-        
+        logger.debug(erg + str(vals))
+
         res = store.select('SELECT MAX('+self.__primaryKey__+') FROM '+self.__tableName__).next()
         id = res[0]
         if id == None:
             id = 1
         else:
             id += 1
-        
+
         self.__setattr__('id', id)
         store.execute(erg,vals)
         cache.cache(self)
@@ -482,7 +483,7 @@ class SQLiteEntity(object):
         erg += "WHERE "
         erg += self.primaryKeyString()
         vals = self.attributeDict(self.__columns__.keys())
-        Log.info(erg + str(vals))
+        logger.debug(erg + str(vals))
         store.execute(erg,vals)
         if 'onUpdate' in self.__callbacks__:
             self.__callbacks__['onUpdate'](self,vals=vals)
@@ -490,14 +491,14 @@ class SQLiteEntity(object):
     def delete(self, delRelations = True):
         erg = "DELETE FROM " + self.__tableName__ + " WHERE " + self.primaryKeyString()
         vals = self.attributeDict([self.__primaryKey__])
-        Log.info(erg + str(vals))
+        logger.debug(erg + str(vals))
         store.execute(erg,vals)
         cache.unCache(self)
         if delRelations:
             self.deleteRelations()
         if 'onDelete' in self.__callbacks__:
             self.__callbacks__['onDelete'](self)
-            
+
     def deleteRelations(self):
         for name,rel in self.__relations__.items():
             query = "DELETE FROM "
@@ -506,20 +507,20 @@ class SQLiteEntity(object):
             query += type(self).generateRelationTableMyKey()
             query += "=?"
             vals = [self.getPrimaryKey()]
-            Log.info(query+str(vals))
+            logger.debug(query+str(vals))
             store.execute(query,vals)
             self.__setattr__(name,SQList(self))
-            
+
     def select(self, request, arguments=None):
         yield store.select(request, arguments)
-            
+
     def __repr__(self):
         erg = self.__class__.__name__ +"@"+str(id(self))+ "["
         erg += self.__primaryKey__+":"+str(self.getPrimaryKey())
         #erg = erg[:-1]
         erg += "]"
         return erg
-        
+
 
 class Meta(SQLiteEntity):
     __primaryKey__ = "id"
@@ -527,7 +528,7 @@ class Meta(SQLiteEntity):
     __columns__ = {
                    "id"     : "INTEGER",
                    "version": "INTEGER",
-                   }        
+                   }
 
 
 

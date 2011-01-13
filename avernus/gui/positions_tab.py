@@ -81,7 +81,7 @@ class PositionsTree(Tree):
         self.on_unselect()
 
     def _init_widgets(self):
-        self.model = gtk.TreeStore(object,str, float, float,float, float, str, float, float, float, float,str, float, str, float)
+        self.model = gtk.TreeStore(object, str, float, float, float, float, str, float, float, float, float, str, float, str, float)
         self.set_model(self.model)
 
         if not self.watchlist:
@@ -222,7 +222,6 @@ class PositionsTree(Tree):
     def update_position_after_edit(self, pos, iter=None):
         if iter is None:
             iter = self.find_position(pos).iter
-        row = self.model[iter]
         col = 0
         for item in self._get_row(pos):
             self.model.set_value(iter, col, item)
@@ -373,8 +372,6 @@ class PositionsTab(gtk.VBox):
         gtk.VBox.__init__(self)
         actiongroup = gtk.ActionGroup('position_tab')
         positions_tree = PositionsTree(container, actiongroup, use_metapositions = container.__name__ == 'Portfolio')
-        hbox = gtk.HBox()
-
         tb = gtk.Toolbar()
 
         if container.__name__ == 'Portfolio':
