@@ -87,22 +87,22 @@ class Paralyzer:
         self.producerArgs = self.consumerArgs = ()
 
     def perform(self):
-        Log.debug('Performing Tasks #' + str(self.taskSize))
+        logger.debug('Performing Tasks #' + str(self.taskSize))
         self.finished = []
         queueSize = min(QUEUE_THRESHOLD, self.taskSize)
         calcSize = self.taskSize/QUEUE_DIVIDEND
         size = max(queueSize,calcSize)
         size = min(size, QUEUE_MAX)
-        Log.debug("ThreadQueue Size: " + str(size))
+        logger.debug("ThreadQueue Size: " + str(size))
         self.q = Queue(size)
         prod_thread = threading.Thread(target=self.producer, args=self.producerArgs)
         cons_thread = threading.Thread(target=self.consumer, args=self.consumerArgs)
         prod_thread.start()
         cons_thread.start()
         prod_thread.join()
-        Log.debug('Producer Thread joined')
+        logger.debug('Producer Thread joined')
         cons_thread.join()
-        Log.debug('Consumer Thread joined')
+        logger.debug('Consumer Thread joined')
         return self.finished
 
     def consumer(self):
@@ -178,7 +178,7 @@ class Onvista():
                                  u'Leider stehen zu diesem Fonds keine Informationen zur Verfügung.']
 
     def search(self, searchstring):
-        Log.debug("Starting search for " + searchstring)
+        logger.debug("Starting search for " + searchstring)
         #http://www.onvista.de/suche.html?TARGET=kurse&SEARCH_VALUE=&ID_TOOL=FUN
         search_url = "http://www.onvista.de/suche.html"
         #ID_TOOL FUN only searches fonds and etfs
@@ -190,7 +190,7 @@ class Onvista():
         # now check if we got a single result or a result page
         # if we get a result page, the url doesn't change
         if received_url == search_url or received_url.startswith(search_url):
-            Log.debug("Received result page")
+            logger.debug("Received result page")
             # we have a result page
             soup = BeautifulSoup(page.read())
             #print soup
@@ -201,10 +201,10 @@ class Onvista():
             filePara = FileDownloadParalyzer([tag['href'] for tag in linkTagsFonds])
             pages = filePara.perform()
             for kursPage in pages:
-                Log.debug("Parsing fonds result page")
+                logger.debug("Parsing fonds result page")
                 for item in self._parse_kurse_html(kursPage):
                     yield (item, self)
-            Log.debug("Finished Fonds")
+            logger.debug("Finished Fonds")
 
             # enhance the /kurse suffix to the links
             etflinks = [tag['href'] for tag in linkTagsETF]
@@ -212,7 +212,7 @@ class Onvista():
             filePara = FileDownloadParalyzer(etflinks)
             pages = filePara.perform()
             for kursPage in pages:
-                Log.debug("Parsing ETF result page")
+                logger.debug("Parsing ETF result page")
                 for item in self._parse_kurse_html(kursPage, tdInd=etfTDS, stockType=stock.ETF):
                     yield (item, self)
 
@@ -221,11 +221,11 @@ class Onvista():
             filePara = FileDownloadParalyzer(bondlinks)
             pages = filePara.perform()
             for kursPage in pages:
-                Log.debug("Parsing bond result page")
+                logger.debug("Parsing bond result page")
                 for item in self._parse_kurse_html(kursPage, tdInd=bondTDS, stockType=stock.BOND):
                     yield (item, self)
         else:
-            Log.debug("Received a Single result page")
+            logger.debug("Received a Single result page")
             # we have a single page
             # determine whether its an etf or a fonds
             html = page.read()
@@ -244,14 +244,14 @@ class Onvista():
                 #print "found aktiveFonds-onepage"
                 for item in self._parse_kurse_html(html):
                     yield (item, self)
-        Log.debug("Finished Searching " + searchstring)
+        logger.debug("Finished Searching " + searchstring)
 
     def _parse_kurse_html(self, kursPage, tdInd=fondTDS, stockType = stock.FUND):
         base = BeautifulSoup(kursPage).find('div', 'content')
         #print base
         regex404 = re.compile("http://www\\.onvista\\.de/404\\.html")
         if regex404.search(str(base)):
-            Log.info("Encountered 404 while Searching")
+            logger.info("Encountered 404 while Searching")
             return
         name = unicode(base.h1.contents[0])
         if stockType == stock.BOND:
@@ -325,8 +325,8 @@ class Onvista():
         elif st.type == stock.BOND:
             url = 'http://anleihen.onvista.de/kurshistorie.html'
         else:
-            Log.error("Uknown stock type in onvistaplugin.search_kurse")
-        file = opener.open(url,urllib.urlencode({'ISIN':st.isin, 'RANGE':'6M'}))
+            logger.error("Uknown stock type in onvistaplugin.search_kurse")
+        file = opener.open(url,urllib.urlencode({'ISIN':st.isin, 'RANGE':'60M'}))
         soup = BeautifulSoup(file)
         if st.type==stock.BOND:
             lines = soup.findAll('tr',{'class':'hr'})

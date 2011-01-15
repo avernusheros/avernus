@@ -59,6 +59,9 @@ class ChartTab(gtk.ScrolledWindow):
                 row += 2
             switch = not switch
 
+        if not switch:
+            row+=2
+
         label = gtk.Label()
         label.set_markup(_('<b>Dividends per Year</b>'))
         table.attach(label,0,2,row,row+1)

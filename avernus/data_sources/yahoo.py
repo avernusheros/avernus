@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 TYPES = {'Fonds':stock.FUND, 'Aktien':stock.STOCK, 'Namensaktie':stock.STOCK, 'Vorzugsaktie':stock.STOCK}
 EXCHANGE_CURRENCY = [(['NYQ', 'PNK'], 'USD'),
-                     (['GER', 'BER', 'FRA', 'MUN', 'STU', 'HAN' ,'HAM' ,'DUS'], 'EUR'),
+                     (['GER', 'BER', 'FRA', 'MUN', 'STU', 'HAN' ,'HAM' ,'DUS', 'AMS'], 'EUR'),
                      (['LSE'], 'GBP')
                      ]
 

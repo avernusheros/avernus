@@ -162,7 +162,6 @@ def update_all():
     yield 1
         
 def update_historical_prices():
-    #FIXME stocks might be in list twice
     stocks = get_all_used_stocks()
     l = len(stocks)
     i=0
