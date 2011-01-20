@@ -22,6 +22,7 @@ class EditPositionDialog(gtk.Dialog):
             self.is_meta = True
             self.position_table = gtk.Label('This is a meta-position!')
         else:
+            self.is_meta = False
             self.position_table = EditPositionTable(position)
         self.quotation_table = QuotationTable(position.stock)
         self.stock_table = EditStockTable(position.stock, self)
