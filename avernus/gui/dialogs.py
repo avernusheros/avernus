@@ -3,6 +3,7 @@
 from avernus import pubsub
 from avernus.gui import gui_utils
 from avernus.objects import controller, stock
+from avernus.objects.position import MetaPosition
 from datetime import datetime
 import gtk
 
@@ -17,7 +18,11 @@ class EditPositionDialog(gtk.Dialog):
         vbox = self.get_content_area()
         notebook = gtk.Notebook()
         vbox.pack_start(notebook)
-        self.position_table = EditPositionTable(position)
+        if isinstance(position, MetaPosition):
+            self.is_meta = True
+            self.position_table = gtk.Label('This is a meta-position!')
+        else:
+            self.position_table = EditPositionTable(position)
         self.quotation_table = QuotationTable(position.stock)
         self.stock_table = EditStockTable(position.stock, self)
         notebook.append_page(self.position_table, gtk.Label(_('Position')))
@@ -29,7 +34,8 @@ class EditPositionDialog(gtk.Dialog):
 
     def process_result(self, widget=None, response = gtk.RESPONSE_ACCEPT):
         if response == gtk.RESPONSE_ACCEPT:
-            self.position_table.process_result(response)
+            if not self.is_meta:
+                self.position_table.process_result(response)
             self.stock_table.process_result(response)
         self.destroy()
 

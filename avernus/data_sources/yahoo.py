@@ -44,6 +44,8 @@ class Yahoo():
         current_stock = -1
         len_ids = 0
         res = self.__request_csv(ids, 'l1d1d3c1x')
+        if not res:
+            return
         for row in csv.reader(res):
             while len_ids == 0:
                 current_stock += 1
