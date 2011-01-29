@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-from avernus.logger import Log
 from avernus.objects import model
 from avernus.objects.account import Account, AccountTransaction, AccountCategory
 from avernus.objects.container import Portfolio, Watchlist
@@ -19,6 +18,9 @@ import sys
 import thread
 import threading
 
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 modelClasses = [Portfolio, Transaction, Watchlist, Dividend, SourceInfo,
@@ -67,14 +69,14 @@ CATEGORIES = {
 def initialLoading():
     #first load all the objects from the database so that they are cached
     for cl in initialLoadingClasses:
-        Log.debug("Loading Objects of Class: " + cl.__name__)
+        logger.debug("Loading Objects of Class: " + cl.__name__)
         cl.getAll()
     #now load all of the composite
     for cl in initialLoadingClasses:
         #this will now be much faster as everything is in the cache
         for obj in cl.getAll():
             obj.controller = controller
-            Log.debug("Loading Composites of Objekt: " + str(obj))
+            logger.debug("Loading Composites of Objekt: " + str(obj))
             obj.retrieveAllComposite()
 
 def is_duplicate(tp, **kwargs):
@@ -160,7 +162,7 @@ def update_all():
     for container in getAllPortfolio()+getAllWatchlist():
         container.last_update = datetime.datetime.now()
     yield 1
-        
+
 def update_historical_prices():
     stocks = get_all_used_stocks()
     l = len(stocks)
@@ -169,7 +171,7 @@ def update_historical_prices():
         for qt in datasource_manager.get_historical_prices(st):
             pass
         i+=1
-        yield float(i)/l*100 
+        yield float(i)/l*100
 
 def newPortfolio(name, id=None, last_update = datetime.datetime.now(), comment="",cash=0.0):
     result = Portfolio(id=id, name=name,last_update=last_update,comment=comment,cash=cash)
@@ -386,7 +388,7 @@ def getAssetDimensionValueForStock(stock, dim):
 
 def getAllStock():
     return Stock.getAll()
-    
+
 def get_all_used_stocks():
     query = """
     select distinct stock from portfolioposition

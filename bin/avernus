@@ -5,7 +5,7 @@ import sys
 import os
 import gtk
 import optparse
-
+import logging
 
 # Add project root directory (enable symlink, and trunk execution).
 PROJECT_ROOT_DIRECTORY = os.path.abspath(
@@ -20,8 +20,19 @@ import avernus
 from avernus import config
 from avernus.plugin_engine import PluginEngine
 from avernus.plugin_api    import PluginAPI
-from avernus.logger import Log
 
+
+def init_logger(debug=False):
+    console_format = "%(levelname)-8s: %(message)s"
+    loggerlevel = logging.INFO
+    if debug:
+        loggerlevel = logging.DEBUG
+        console_format = "%(asctime)s,%(msecs)3d:" + console_format
+        console_format += " (%(name)s)" # add module name
+    datefmt = "%H:%M:%S"
+    # logging to terminal
+    logging.basicConfig(level=loggerlevel, format=console_format,
+            datefmt=datefmt)
 
 def init_translations():
     import locale
@@ -111,12 +122,7 @@ if __name__ == "__main__":
     parser.add_option("-f", "--file",  dest="datafile", help="set database file")
     (options, args) = parser.parse_args()
 
-    #set the logging level to show debug messages
-    if options.debug:
-        import logging
-        Log.setLevel(logging.DEBUG)
-        Log.debug("Debug output enabled.")
-        Log.set_debugging_mode(True)
+    init_logger(options.debug)
 
     #gobject.threads_init()
     gtk.gdk.threads_init()

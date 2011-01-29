@@ -4,9 +4,11 @@ import gtk, datetime, pango
 from avernus.gui import gui_utils, dialogs
 from avernus.objects import controller
 from avernus import pubsub
-from avernus.logger import Log
 from avernus import config
 
+import logging
+
+logger = logging.getLogger(__name__)
 
 class AccountTransactionTab(gtk.VBox):
 
@@ -523,7 +525,7 @@ class CategoriesTree(gui_utils.Tree):
                     transaction = controller.AccountTransaction.getByPrimaryKey(int(id))
                     transaction.category = cat
             else:
-                Log.debug("NO CATEGORY")
+                logger.debug("NO CATEGORY")
         return
 
 
