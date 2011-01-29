@@ -17,7 +17,6 @@ def getdatapath():
     and /usr/share/avernus in an installed version but this path
     is specified at installation time.
     """
-
     # get pathname absolute or relative
     if __avernus_data_directory__.startswith('/'):
         pathname = __avernus_data_directory__
@@ -30,7 +29,7 @@ def getdatapath():
     else:
         raise project_path_not_found
 
-
+data_path = glib.get_user_data_dir()
 config_path = os.path.join( glib.get_user_config_dir(), 'avernus')
 plugins_path = [os.path.join(os.getcwd(), 'avernus/plugins'), os.path.join(config_path,'plugins') ]
 #media_path = os.path.join(getdatapath(), 'media')
@@ -44,7 +43,7 @@ class avernusConfig():
         if not os.path.exists(self.filename):
             self.create()
         self.parser.read(self.filename)
-            
+
     def create(self):
         if not os.path.exists(config_path):
             os.mkdir(config_path)
@@ -54,7 +53,7 @@ class avernusConfig():
         if not self.parser.has_section('Plugins'):
             self.parser.add_section('Plugins')
         if not self.parser.has_section('Gui'):
-            self.parser.add_section('Gui')    
+            self.parser.add_section('Gui')
         self.set_option('database file', os.path.join(config_path, 'avernus.db'))
         self.write()
 
@@ -62,7 +61,7 @@ class avernusConfig():
         #print self
         with open(self.filename, 'wb') as configfile:
             self.parser.write(configfile)
-    
+
     def get_option(self, name, section = 'General'):
         if self.parser.has_option(section, name):
             return self.parser.get(section, name)

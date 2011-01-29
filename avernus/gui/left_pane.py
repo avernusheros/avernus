@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 import gtk
-from datetime import datetime
 from avernus import pubsub
 from avernus.gui import gui_utils, dialogs, progress_manager
 from avernus.gui.csv_import_dialog import CSVImportDialog

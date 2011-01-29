@@ -10,21 +10,20 @@ if __name__ == '__main__':
     import sys
     sys.path.append('..')
 
-import gtk,os #, gobject
+import gtk, gobject
 from avernus import pubsub, config
-from avernus.gui import dialogs, chart_tab
+from avernus.gui import chart_tab
 from avernus.gui.positions_tab import PositionsTab
-from avernus.gui.overview_tab import OverviewTab
-from avernus.gui.left_pane import MainTreeBox, Category
+from avernus.gui.left_pane import MainTreeBox
 from avernus.gui.dividends_tab import DividendsTab
 from avernus.gui.transactions_tab import TransactionsTab
-from avernus.gui.indexpositions_tab import IndexPositionsTab
 from avernus.gui.container_overview_tab import ContainerOverviewTab
 from avernus.gui.closed_positions_tab import ClosedPositionsTab
 from avernus.gui.preferences import PrefDialog
 from avernus.gui.account_transactions_tab import AccountTransactionTab
 from avernus.gui.account_chart_tab import AccountChartTab
 from avernus.gui.csv_import_dialog import CSVImportDialog
+from avernus.gui import progress_manager
 from webbrowser import open as web
 import avernus
 from avernus.objects import model
@@ -61,7 +60,8 @@ class MenuBar(gtk.MenuBar):
              ('import'        , None                 , '_Import CSV'        , None        , None, CSVImportDialog),
              ('quit'          , gtk.STOCK_QUIT       , '_Quit'              , '<Control>q', None, parent.on_destroy),
              ('prefs'         , gtk.STOCK_PREFERENCES, '_Preferences'       , None        , None, parent.on_prefs),
-             ('update'        , gtk.STOCK_REFRESH    , '_Update all stocks' , 'F5'        , None, lambda x: avernus.objects.controller.update_all()),
+             ('update'        , gtk.STOCK_REFRESH    , '_Update all stocks' , 'F5'        , None, parent.on_update_all),
+             ('historical'    ,gtk.STOCK_REFRESH     ,'Get _historical data', None       , None,  parent.on_historical),
              ('help'          , gtk.STOCK_HELP       , '_Help'              , 'F1'        , None, lambda x:web("https://answers.launchpad.net/avernus")),
              ('website'       , None                 , '_Website'           , None        , None, lambda x:web("https://launchpad.net/avernus")),
              ('feature'       , None                 , 'Request a _Feature' , None        , None, lambda x:web("https://blueprints.launchpad.net/avernus")),
@@ -72,9 +72,9 @@ class MenuBar(gtk.MenuBar):
         for action in actiongroup.list_actions():
             action.set_accel_group(accelgroup)
 
-        file_menu_items  = ['import','---','quit']
+        file_menu_items  = ['import', '---', 'quit']
         edit_menu_items = ['prefs']
-        tools_menu_items = ['update']
+        tools_menu_items = ['update', 'historical']
         help_menu_items  = ['help', 'website', 'feature', 'bug', '---', 'about']
 
         self._create_menu('avernus', file_menu_items)
@@ -136,10 +136,6 @@ class MainWindow(gtk.Window):
                                   (ClosedPositionsTab, 'Closed positions'),
                                   (chart_tab.ChartTab, 'Charts')]
         self.tabs['Watchlist'] = [(PositionsTab, 'Positions')]
-        self.tabs['Tag']       = [(PositionsTab, 'Positions'),
-                                  (TransactionsTab, 'Transactions'),
-                                  (chart_tab.ChartTab, 'Charts')]
-        self.tabs['Index']     = [(IndexPositionsTab, 'Positions')]
         self.tabs['Category']  = [(ContainerOverviewTab, 'Overview')]
         self.tabs['Account']   = [(AccountTransactionTab, 'Transactions'),
                                   (AccountChartTab, 'Charts')]
@@ -155,7 +151,7 @@ class MainWindow(gtk.Window):
         if size is not None:
             width, height = eval(size)
             self.resize(width, height)
-            
+
         pos = self.config.get_option('hpaned position', 'Gui') or width*0.25
         self.hpaned.set_position(int(pos))
 
@@ -206,3 +202,16 @@ class MainWindow(gtk.Window):
 
     def on_prefs(self, *args):
         PrefDialog(self.pengine)
+    
+    def on_historical(self, *args):
+        def finished_cb():
+            progress_manager.remove_monitor(42)
+        m = progress_manager.add_monitor(42, _('downloading quotations...'), gtk.STOCK_REFRESH)
+        avernus.objects.controller.GeneratorTask(avernus.objects.controller.update_historical_prices, m.progress_update, complete_callback=finished_cb).start()
+
+    def on_update_all(self, *args):
+        def finished_cb():
+            progress_manager.remove_monitor(11)
+        m = progress_manager.add_monitor(11, _('updating stocks...'), gtk.STOCK_REFRESH)
+        m.progress_update_auto()
+        avernus.objects.controller.GeneratorTask(avernus.objects.controller.update_all, complete_callback=finished_cb).start()

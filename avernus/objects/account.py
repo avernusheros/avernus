@@ -113,21 +113,21 @@ class Account(SQLiteEntity):
                             sums[cat] += trans.amount
         return sums
 
-    def get_earnings_summed(self, end_date, start_date, period='month', transfers=False):
+    def get_earnings_summed(self, end_date, start_date, period='monthly', transfers=False):
         return self._get_earnings_or_spendings_summed(start_date, end_date, period, earnings=True)
 
-    def get_spendings_summed(self, end_date, start_date, period='month', transfers=False):
+    def get_spendings_summed(self, end_date, start_date, period='monthly', transfers=False):
         return self._get_earnings_or_spendings_summed(start_date, end_date, period, earnings=False, transfers=False)
 
-    def _get_earnings_or_spendings_summed(self, start_date, end_date, period='month', earnings=True, transfers=False):
-        if period == 'month': 
+    def _get_earnings_or_spendings_summed(self, start_date, end_date, period='monthly', earnings=True, transfers=False):
+        if period == 'monthly':
             #last day of month
             days = list(rrule(MONTHLY, dtstart = start_date, until = end_date, bymonthday=-1))
-        elif period == 'year':
+        elif period == 'yearly':
             days = list(rrule(YEARLY, dtstart = start_date, until = end_date, bymonthday=-1, bymonth=12))
-        elif period == 'day':
+        elif period == 'dayly':
             days = list(rrule(DAILY, dtstart = start_date, until = end_date))
-        elif period == 'week':
+        elif period == 'weekly':
             days = list(rrule(WEEKLY, dtstart = start_date, until = end_date, byweekday=SU))
         ret = []
         for day in days+[end_date]:
@@ -159,7 +159,7 @@ class AccountCategory(SQLiteEntity):
         if self.name < other.name:
             return -1
         return 1
-    
+
     def get_parent(self):
         if self.parentid != -1:
             return self.getByPrimaryKey(self.parentid)
@@ -213,7 +213,7 @@ class AccountTransaction(SQLiteEntity):
 
     def is_transfer(self):
         return (self.transfer is not None)
-    
+
     def has_category(self):
         return (self.category is not None)
 

@@ -8,12 +8,15 @@ from Queue import Queue
 import urllib
 import urllib2
 
+import logging
+logger = logging.getLogger(__name__)
+
+
 if __name__ == "__main__":
     import sys
     sys.path.append("../../")
 
 from avernus.objects import stock
-from avernus.logger import Log
 
 QUEUE_THRESHOLD = 3
 QUEUE_DIVIDEND = 10
@@ -84,22 +87,22 @@ class Paralyzer:
         self.producerArgs = self.consumerArgs = ()
 
     def perform(self):
-        Log.debug('Performing Tasks #' + str(self.taskSize))
+        logger.debug('Performing Tasks #' + str(self.taskSize))
         self.finished = []
         queueSize = min(QUEUE_THRESHOLD, self.taskSize)
         calcSize = self.taskSize/QUEUE_DIVIDEND
         size = max(queueSize,calcSize)
         size = min(size, QUEUE_MAX)
-        Log.debug("ThreadQueue Size: " + str(size))
+        logger.debug("ThreadQueue Size: " + str(size))
         self.q = Queue(size)
         prod_thread = threading.Thread(target=self.producer, args=self.producerArgs)
         cons_thread = threading.Thread(target=self.consumer, args=self.consumerArgs)
         prod_thread.start()
         cons_thread.start()
         prod_thread.join()
-        Log.debug('Producer Thread joined')
+        logger.debug('Producer Thread joined')
         cons_thread.join()
-        Log.debug('Consumer Thread joined')
+        logger.debug('Consumer Thread joined')
         return self.finished
 
     def consumer(self):
@@ -156,7 +159,7 @@ etfTDS = {
           'volume':11,
           'change':3,
           }
-          
+
 bondTDS = {
         'table_class':'t KURSTABELLE',
         'table':0,
@@ -175,7 +178,7 @@ class Onvista():
                                  u'Leider stehen zu diesem Fonds keine Informationen zur Verfügung.']
 
     def search(self, searchstring):
-        Log.debug("Starting search for " + searchstring)
+        logger.debug("Starting search for " + searchstring)
         #http://www.onvista.de/suche.html?TARGET=kurse&SEARCH_VALUE=&ID_TOOL=FUN
         search_url = "http://www.onvista.de/suche.html"
         #ID_TOOL FUN only searches fonds and etfs
@@ -187,7 +190,7 @@ class Onvista():
         # now check if we got a single result or a result page
         # if we get a result page, the url doesn't change
         if received_url == search_url or received_url.startswith(search_url):
-            Log.debug("Received result page")
+            logger.debug("Received result page")
             # we have a result page
             soup = BeautifulSoup(page.read())
             #print soup
@@ -198,31 +201,31 @@ class Onvista():
             filePara = FileDownloadParalyzer([tag['href'] for tag in linkTagsFonds])
             pages = filePara.perform()
             for kursPage in pages:
-                Log.debug("Parsing fonds result page")
+                logger.debug("Parsing fonds result page")
                 for item in self._parse_kurse_html(kursPage):
                     yield (item, self)
-            Log.debug("Finished Fonds")
-            
+            logger.debug("Finished Fonds")
+
             # enhance the /kurse suffix to the links
             etflinks = [tag['href'] for tag in linkTagsETF]
             etflinks = [link + "/kurse" for link in etflinks]
             filePara = FileDownloadParalyzer(etflinks)
             pages = filePara.perform()
             for kursPage in pages:
-                Log.debug("Parsing ETF result page")
+                logger.debug("Parsing ETF result page")
                 for item in self._parse_kurse_html(kursPage, tdInd=etfTDS, stockType=stock.ETF):
                     yield (item, self)
-                    
+
             bondlinks = [tag['href'] for tag in linkTagsBond]
             bondlinks = [link + "/kurse" for link in bondlinks]
             filePara = FileDownloadParalyzer(bondlinks)
             pages = filePara.perform()
             for kursPage in pages:
-                Log.debug("Parsing bond result page")
-                for item in self._parse_kurse_html(kursPage, tdInd=bondTDS, stockType=stock.BOND): 
-                    yield (item, self)        
+                logger.debug("Parsing bond result page")
+                for item in self._parse_kurse_html(kursPage, tdInd=bondTDS, stockType=stock.BOND):
+                    yield (item, self)
         else:
-            Log.debug("Received a Single result page")
+            logger.debug("Received a Single result page")
             # we have a single page
             # determine whether its an etf or a fonds
             html = page.read()
@@ -241,14 +244,14 @@ class Onvista():
                 #print "found aktiveFonds-onepage"
                 for item in self._parse_kurse_html(html):
                     yield (item, self)
-        Log.debug("Finished Searching " + searchstring)
-        
+        logger.debug("Finished Searching " + searchstring)
+
     def _parse_kurse_html(self, kursPage, tdInd=fondTDS, stockType = stock.FUND):
         base = BeautifulSoup(kursPage).find('div', 'content')
         #print base
         regex404 = re.compile("http://www\\.onvista\\.de/404\\.html")
         if regex404.search(str(base)):
-            Log.info("Encountered 404 while Searching")
+            logger.info("Encountered 404 while Searching")
             return
         name = unicode(base.h1.contents[0])
         if stockType == stock.BOND:
@@ -274,11 +277,11 @@ class Onvista():
                     exchange = unicode(tds[0].find(text=True))
                     price = to_float(tds[tdInd['price']].contents[0])
                     if stockType == stock.BOND:
-                        temp_date = to_datetime(tds[tdInd['temp_date']].contents[0], 
+                        temp_date = to_datetime(tds[tdInd['temp_date']].contents[0],
                                             tds[tdInd['temp_date']+1].contents[0])
                     else:
                         currency = unicode(tds[tdInd['currency']].contents[0])
-                        temp_date = to_datetime(tds[tdInd['temp_date']].contents[0]+year, 
+                        temp_date = to_datetime(tds[tdInd['temp_date']].contents[0]+year,
                                             tds[tdInd['temp_date']+1].contents[0])
                     volume = to_int(tds[tdInd['volume']].contents[0])
                     change = tds[tdInd['change']]
@@ -314,38 +317,36 @@ class Onvista():
                     st.volume = item['volume']
 
     def update_historical_prices(self, st, start_date, end_date):
-        delta = relativedelta(start_date, end_date)
-        #print delta
-        months = min(60,abs(delta.years)*12 + abs(delta.months))
         url = ''
-        width = ''
         if st.type == stock.FUND:
-            url = 'http://fonds.onvista.de/kurshistorie.html'
-            width = '100%'
+            url = 'http://www.onvista.de/fonds/kurshistorie.html'
         elif st.type == stock.ETF:
-            url = 'http://etf.onvista.de/kurshistorie.html'
-            width = '640'
+            url = 'http://www.onvista.de/etf/kurshistorie.html'
+        elif st.type == stock.BOND:
+            url = 'http://anleihen.onvista.de/kurshistorie.html'
         else:
-            Log.error("Uknown stock type in onvistaplugin.search_kurse")
-        #url += "?ISIN="+str(stock.isin) + "&RANGE=" + str(months) +"M"
-        #get = FileGetter(url)
-        #get.start()
-        #get.join()
-        #file = get.get_result()
-        file = opener.open(url,urllib.urlencode({'ISIN':st.isin, 'RANGE':str(months)+'M'}))
+            logger.error("Uknown stock type in onvistaplugin.search_kurse")
+        file = opener.open(url,urllib.urlencode({'ISIN':st.isin, 'RANGE':'60M'}))
         soup = BeautifulSoup(file)
-        #print soup
-        tables = soup.html.body.findAll('table',{'width':width})
-        table = tables[2]
-        #for t in tables:
-        #    print t
-        lines = table.findAll('tr',{'align':'right'})
+        if st.type==stock.BOND:
+            lines = soup.findAll('tr',{'class':'hr'})
+        else:
+            lines = soup.findAll('tr',{'align':'right'})
         for line in lines:
-            tds = line.findAll('td')
-            day = to_datetime(tds[0].contents[0].replace('&nbsp;','')).date()
-            kurs = to_float(tds[1].contents[0].replace('&nbsp;',''))
-            yield (st,'KAG',day,kurs,kurs,kurs,kurs,0)
+            tds = line.findAll('td', text=True)
+            day = to_datetime(tds[0].replace('&nbsp;', '')).date()
 
+            if st.type == stock.BOND:
+                yield (st,'KAG',
+                       day,
+                       to_float(tds[1].replace('&nbsp;', '')),
+                       to_float(tds[2].replace('&nbsp;', '')),
+                       to_float(tds[3].replace('&nbsp;', '')),
+                       to_float(tds[4].replace('&nbsp;', '')),
+                       0)
+            else:
+                kurs = to_float(tds[1].replace('&nbsp;', ''))
+                yield (st,'KAG',day,kurs,kurs,kurs,kurs,0)
 
 
 if __name__ == "__main__":
@@ -372,12 +373,12 @@ if __name__ == "__main__":
         #print s2.price, s2.change, s2.date
 
     def test_search():
-        for res in plugin.search('GR0114020457'):
+        for res in plugin.search('DE0008474248'):
             print res
 
     def test_historicals():
         print "los"
-        for quot in plugin.update_historical_prices(s1, date(1920,1,1), date.today()):
+        for quot in plugin.update_historical_prices(s3, date(1920,1,1), date.today()):
             print quot
         for quot in plugin.update_historical_prices(s2, date(1920,1,1), date.today()):
             print quot
@@ -392,16 +393,16 @@ if __name__ == "__main__":
         page = opener.open('http://www.onvista.de/etf/kurse.html?ISIN=LU0203243414')
         for item in plugin._parse_kurse_html(page, tdInd=etfTDS, stockType = stock.ETF):
             print item
-        
-        
+
+
     plugin = Onvista()
     ex = Exchange()
     s1 = Stock('DE000A0F5G98', ex, stock.FUND)
     s2 = Stock('LU0103598305', ex, stock.FUND)
-    s3 = Stock('DE000A0YBR04', ex, stock.ETF)
+    s3 = Stock('LU0103598305', ex, stock.FUND)
     #test_search()
     #print plugin.search_kurse(s1)
     #print plugin.search_kurse(s3)
     #test_parse_kurse()
-    test_update(s3)
-    #test_historicals()
+    #test_update(s3)
+    test_historicals()

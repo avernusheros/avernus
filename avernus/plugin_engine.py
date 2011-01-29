@@ -4,9 +4,10 @@ import imp
 import os
 import types
 from configobj import ConfigObj
-
 from avernus import config
-from avernus.logger import Log
+import logging
+logger = logging.getLogger(__name__)
+
 
 class Plugin(object):
     instance = None
@@ -15,7 +16,7 @@ class Plugin(object):
     icon = 'plugin'
     _active = False
     missing_modules = []
-    
+
     def __init__(self, info, module_path):
         """Initialize the Plugin using a ConfigObj."""
         info_fields = {
@@ -32,7 +33,7 @@ class Plugin(object):
             except KeyError:
                 setattr(self, attr, [])
         self._load_module(module_path)
-    
+
     @property
     def configurable(self):
         if self.instance is None:
@@ -41,7 +42,7 @@ class Plugin(object):
 
     def _get_active(self):
         return self._active
-    
+
     def _set_active(self, value):
         if value:
             self.instance = self.plugin_class()
@@ -51,9 +52,9 @@ class Plugin(object):
             self.instance.deactivate()
             self.instance = None
         self._active = value
-    
+
     active = property(_get_active, _set_active)
-       
+
     def _check_module_depends(self):
         self.missing_modules = []
         for mod_name in self.module_depends:
@@ -62,8 +63,8 @@ class Plugin(object):
             except:
                 self.missing_modules.append(mod_name)
                 self.error = True
-    
-    
+
+
     def _load_module(self, module_path):
         """Load the module containing this plugin."""
         try:
@@ -81,7 +82,7 @@ class Plugin(object):
                         self.class_name = item.__name__
                     break
         except ImportError, e:
-            Log.debug(self.module_name+str(e))
+            logger.debug(self.module_name+str(e))
             # load_module() failed, probably because of a module dependency
             if len(self.module_depends) > 0:
                 self._check_module_depends()
@@ -91,7 +92,7 @@ class Plugin(object):
             self.error = True
         except Exception, e:
             # load_module() failed for some other reason
-            Log.debug(self.module_name+"load_module() failed for some other reason")
+            logger.debug(self.module_name+"load_module() failed for some other reason")
             self.error = True
 
 
@@ -102,8 +103,8 @@ class PluginEngine():
         self.plugin_path = plugin_path
         self.initialized_plugins = []
         self.config = config.avernusConfig()
-    
-    def load_plugins(self):       
+
+    def load_plugins(self):
         plugin_info_files = []
         for path in self.plugin_path:
             if os.path.exists(path):
@@ -115,12 +116,12 @@ class PluginEngine():
             info = ConfigObj(info_file)
             p = Plugin(info["avernus Plugin"], self.plugin_path)
             self.plugins[p.module_name] = p
-    
-    @property 
+
+    @property
     def enabled_plugins(self):
         plugins = filter(lambda (name,p): p.enabled, self.plugins.iteritems())
         return dict(plugins)
-    
+
     def activate_plugins(self, plugins, save=True):
         for plugin in plugins:
             if plugin.enabled and not plugin.error:
@@ -128,14 +129,14 @@ class PluginEngine():
                 plugin.active = True
         if save:
             self.save_to_config()
-                
+
     def deactivate_plugins(self, plugins, save=True):
         for plugin in plugins:
             if not plugin.enabled:
                 plugin.active = False
         if save:
             self.save_to_config()
-    
+
     def save_to_config(self):
         self.config.set_option('enabled', self.enabled_plugins.keys(), section = 'Plugins')
 

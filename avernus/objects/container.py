@@ -15,6 +15,8 @@ class Container(object):
             pos_val = pos.cvalue
             ter+=pos_val*pos.stock.ter
             val+=pos_val
+        if val==0:
+            return 0.0
         return ter/val
 
     @property
@@ -79,6 +81,7 @@ class Container(object):
         self.controller.datasource_manager.update_stocks([pos.stock for pos in self if pos.quantity>0])
         self.last_update = datetime.now()
         pubsub.publish("stocks.updated", self)
+        yield 1
 
 
 class Portfolio(SQLiteEntity, Container):
@@ -92,6 +95,12 @@ class Portfolio(SQLiteEntity, Container):
                    "comment":       "TEXT",
                    "cash":          "FLOAT",
                    }
+
+    def __len__(self):
+        count = 0
+        for pos in self:
+            count+=1
+        return count
 
     def __iter__(self):
         return self.controller.getPositionForPortfolio(self).__iter__()
@@ -113,11 +122,9 @@ class Portfolio(SQLiteEntity, Container):
         return res
 
     def get_value_at_date(self, t):
-        erg = 0
-        for po in self:
-            if t > po.date.date():
-                erg += po.get_value_at_date(t)
-        return erg
+        #FIXME
+        #does not consider sold positions
+        return sum(pos.get_value_at_date(t) for pos in self if t>pos.date)
 
     @property
     def transactions(self):

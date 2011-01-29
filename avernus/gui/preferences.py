@@ -2,8 +2,10 @@
 import sys
 import gtk
 from avernus.gui import gui_utils
-from avernus.logger import Log
 from avernus.objects import controller
+import logging
+logger = logging.getLogger(__name__)
+
 
 class PrefDialog(gtk.Dialog):
 
@@ -16,7 +18,7 @@ class PrefDialog(gtk.Dialog):
                             (gtk.STOCK_OK, gtk.RESPONSE_ACCEPT),
                             )
         self.set_default_size(self.DEFAULT_WIDTH, self.DEFAULT_HEIGHT)
-        Log.debug("PrefDialog started")
+        logger.debug("PrefDialog started")
         vbox = self.get_content_area()
         notebook = gtk.Notebook()
         vbox.pack_start(notebook)
@@ -25,7 +27,7 @@ class PrefDialog(gtk.Dialog):
         self.show_all()
         self.run()
         self.destroy()
-        Log.debug("PrefDialog destroyed")
+        logger.debug("PrefDialog destroyed")
 
 
 class DimensionList(gtk.VBox):

@@ -20,16 +20,16 @@ MONTHS = {
 
 def get_legend(smaller, bigger, step):
     erg = []
-    if step == 'month':
+    if step == 'monthly':
         delta = relativedelta(months=+1)
         formatstring = "%b %y"
-    elif step == 'year':
+    elif step == 'yearly':
         delta = relativedelta(years=+1)
         formatstring = "%Y"
-    elif step == 'day':
+    elif step == 'daily':
         delta = relativedelta(days=+1)
         formatstring = "%x"
-    elif step == 'week':
+    elif step == 'weekly':
         delta = relativedelta(weeks=+1)
         formatstring = "%U"
     while smaller <= bigger:
@@ -69,7 +69,7 @@ class AccountChartTab(gtk.ScrolledWindow):
 
         #FIXME macht das step einstellen wirklich sinn? alternative ist automatische einstellung
         #oder manuelle einstellung erlauben, aber sachen vorgeben, zb 1y und month
-        self.steps = ['day','week','month','year']
+        self.steps = ['daily','weekly','monthly','yearly']
         active = 2
         combobox = gtk.combo_box_new_text()
         for st in self.steps:

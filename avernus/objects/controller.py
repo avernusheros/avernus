@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-from avernus import pubsub
 from avernus.logger import Log
 from avernus.objects import model
 from avernus.objects.account import Account, AccountTransaction, AccountCategory
@@ -8,7 +7,7 @@ from avernus.objects.container import Portfolio, Watchlist
 from avernus.objects.dimension import Dimension, DimensionValue, \
     AssetDimensionValue
 from avernus.objects.dividend import Dividend
-from avernus.objects.model import SQLiteEntity, Meta
+from avernus.objects.model import Meta
 from avernus.objects.position import PortfolioPosition, WatchlistPosition
 from avernus.objects.quotation import Quotation
 from avernus.objects.stock import Stock
@@ -19,7 +18,6 @@ import gobject
 import sys
 import thread
 import threading
-import time
 
 
 
@@ -32,7 +30,7 @@ modelClasses = [Portfolio, Transaction, Watchlist, Dividend, SourceInfo,
 #relations. therefore it is important that the list is complete in the sense
 #that there are no classes holding composite keys to classes outside the list
 initialLoadingClasses = [Portfolio,Transaction,Watchlist,Dividend,
-                         PortfolioPosition, WatchlistPosition,Account, Meta, Stock, 
+                         PortfolioPosition, WatchlistPosition,Account, Meta, Stock,
                          AccountTransaction, AccountCategory, Dimension, DimensionValue,
                          AssetDimensionValue]
 
@@ -105,11 +103,8 @@ def detectDuplicate(tp,**kwargs):
     present = tp.getByColumns(sqlArgs,operator=" AND ",create=True)
     if present:
         if len(present) == 1:
-            #print "PRESENT!"
             return present[0]
         else:
-            #print tp, kwargs
-            #print present
             raise Exception("Multiple results for duplicate detection")
     #print "not Present!"
     new = tp(**kwargs)
@@ -161,9 +156,20 @@ def load_sample_data():
     wl = newWatchlist(_('sample watchlist'))
 
 def update_all():
-    datasource_manager.update_stocks(getAllStock())
+    datasource_manager.update_stocks(get_all_used_stocks())
     for container in getAllPortfolio()+getAllWatchlist():
         container.last_update = datetime.datetime.now()
+    yield 1
+        
+def update_historical_prices():
+    stocks = get_all_used_stocks()
+    l = len(stocks)
+    i=0
+    for st in stocks:
+        for qt in datasource_manager.get_historical_prices(st):
+            pass
+        i+=1
+        yield float(i)/l*100 
 
 def newPortfolio(name, id=None, last_update = datetime.datetime.now(), comment="",cash=0.0):
     result = Portfolio(id=id, name=name,last_update=last_update,comment=comment,cash=cash)
@@ -278,7 +284,7 @@ def newSourceInfo(source='', stock=None, info=''):
     si = SourceInfo(source=source, stock=stock, info=info)
     si.insert()
     return si
-    
+
 def getSourceInfo(source='', stock=None):
     args = {'stock': stock.getPrimaryKey(), 'source':source}
     return SourceInfo.getByColumns(args, create=True)
@@ -380,6 +386,14 @@ def getAssetDimensionValueForStock(stock, dim):
 
 def getAllStock():
     return Stock.getAll()
+    
+def get_all_used_stocks():
+    query = """
+    select distinct stock from portfolioposition
+    union
+    select distinct stock from watchlistposition
+    """
+    return [Stock.getByPrimaryKey(stockid[0]) for stockid in model.store.select(query)]
 
 def getPositionForPortfolio(portfolio):
     key = portfolio.getPrimaryKey()
@@ -407,7 +421,7 @@ def deleteAllAssetDimensionValue(dimvalue):
 
 def getPositionForWatchlist(watchlist):
     key = watchlist.getPrimaryKey()
-    return WatchlistPosition.getAllFromOneColumn("watchlist",key)
+    return WatchlistPosition.getAllFromOneColumn("watchlist", key)
 
 def deleteAllWatchlistPosition(watchlist):
     for pos in getPositionForWatchlist(watchlist):
@@ -483,6 +497,18 @@ def getQuotationsFromStock(stock, start=None):
     erg = sorted(erg, key=lambda stock: stock.date)
     return erg
 
+def getPriceFromStockAtDate(stock, date):
+    args = {'stock': stock.id, 'date':date.date()}
+    res = Quotation.getByColumns(args, create=False)
+    for item in res:
+        return item[5]
+    return None
+
+def getAllQuotationsFromStock(stock, start=None):
+    """from all exchanges"""
+    erg = Quotation.getByColumns({'stock': stock.id}, create=True)
+    return sorted(erg, key=lambda stock: stock.date)
+
 def getNewestQuotation(stock):
     key = stock.getPrimaryKey()
     erg = Quotation.getAllFromOneColumn("stock", key)
@@ -492,10 +518,12 @@ def getNewestQuotation(stock):
         return erg[0].date
 
 def getBuyTransaction(portfolio_position):
-    key = portfolio_position.getPrimaryKey()
-    for ta in Transaction.getAllFromOneColumn('position', key):
-        if ta.type == 1:
-            return ta
+    for ta in Transaction.getByColumns({'position': portfolio_position.id, 'type':1}, create=True):
+        return ta
+
+def yieldSellTransactions(portfolio_position):
+    for ta in Transaction.getByColumns({'position': portfolio_position.id, 'type':0}, create=True):
+       yield ta
 
 
 class GeneratorTask(object):
@@ -503,7 +531,7 @@ class GeneratorTask(object):
     http://unpythonic.blogspot.com/2007/08/using-threads-in-pygtk.html
     Thanks!
     """
-    def __init__(self, generator, loop_callback, complete_callback=None):
+    def __init__(self, generator, loop_callback=None, complete_callback=None):
         self.generator = generator
         self.loop_callback = loop_callback
         self.complete_callback = complete_callback
@@ -522,7 +550,8 @@ class GeneratorTask(object):
             ret = ()
         if not isinstance(ret, tuple):
             ret = (ret,)
-        self.loop_callback(*ret)
+        if self.loop_callback:
+            self.loop_callback(*ret)
 
     def start(self, *args, **kwargs):
         threading.Thread(target=self._start, args=args, kwargs=kwargs).start()

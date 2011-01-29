@@ -7,15 +7,6 @@ import gtk
 import optparse
 
 
-# optional Launchpad integration
-# this shouldn't crash if not found as it is simply used for bug reporting
-#TODO investigate usage of LaunchpadIntegration
-try:
-    import LaunchpadIntegration
-    launchpad_available = True
-except:
-    launchpad_available = False
-
 # Add project root directory (enable symlink, and trunk execution).
 PROJECT_ROOT_DIRECTORY = os.path.abspath(
     os.path.dirname(os.path.dirname(os.path.realpath(sys.argv[0]))))

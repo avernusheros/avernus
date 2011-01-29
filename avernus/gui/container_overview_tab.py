@@ -31,10 +31,10 @@ class AccountOverviewTree(gui_utils.Tree):
         self.model = gtk.ListStore(object, str, float, int, object, object)
         self.set_model(self.model)
         self.create_column(_('Name'), 1)
-        self.create_column(_('Amount'), 2)
+        self.create_column(_('Amount'), 2, func=gui_utils.currency_format)
         self.create_column(_('# Transactions'), 3)
-        self.create_column(_('First transaction'), 4, func = gui_utils.gui_utils.date_to_string)
-        self.create_column(_('Last transaction'), 5, func = gui_utils.gui_utils.date_to_string)
+        self.create_column(_('First transaction'), 4, func = gui_utils.date_to_string)
+        self.create_column(_('Last transaction'), 5, func =gui_utils.date_to_string)
         self._load_accounts()
 
     def _load_accounts(self):
@@ -48,7 +48,7 @@ class AccountOverviewTree(gui_utils.Tree):
 
 
 class ContainerOverviewTree(gui_utils.Tree):
-    
+
     OBJ = 0
     NAME = 1
     LAST_PRICE = 2
@@ -62,10 +62,10 @@ class ContainerOverviewTree(gui_utils.Tree):
         self.set_model(gtk.ListStore(object,str, str,float, float, float))
 
         self.create_column(_('Name'), self.NAME)
-        self.create_column(_('Last price'), self.LAST_PRICE)
+        self.create_column(_('Current value'), self.LAST_PRICE)
         col, cell = self.create_column(_('Change'), self.CHANGE, func=gui_utils.float_to_red_green_string)
         col, cell = self.create_column(_('Change %'), self.CHANGE_PERCENT, func=gui_utils.float_to_red_green_string)
-        col, cell = self.create_column(unichr(8709)+' TER', self.TER, func=gui_utils.float_format) 
+        col, cell = self.create_column(unichr(8709)+' TER', self.TER, func=gui_utils.float_format)
 
         def sort_price(model, iter1, iter2):
             item1 = model.get_value(iter1, self.OBJ)
@@ -117,7 +117,6 @@ class ContainerOverviewTree(gui_utils.Tree):
                 row[self.CHANGE] = item.change
                 row[self.CHANGE_PERCENT] = item.percent
                 row[self.TER] = item.ter
-                
 
     def insert_item(self, item):
         self.get_model().append([item,
