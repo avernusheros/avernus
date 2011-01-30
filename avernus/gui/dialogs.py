@@ -736,7 +736,28 @@ class PosSelector(gtk.ComboBox):
                 if pos.quantity > 0:
                     liststore.append([pos, pos.portfolio.name+": "+str(pos.quantity) +' ' +pos.name])
         self.set_model(liststore)
+        
+class CalendarDialog(gtk.Dialog):
+    
+    def __init__(self):
+        gtk.Dialog.__init__(self, _("Chose a date"), None
+                            , gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
+                     (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
+                      gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
+        vbox = self.get_content_area()
+        self.calendar = gtk.Calendar()
+        vbox.pack_start(self.calendar)
+        self.show_all()
+        response = self.run()
+        self.process_result(response)
+        self.destroy()
 
+    def process_result(self, response):
+        if response == gtk.RESPONSE_ACCEPT:
+            y,m,d = self.calendar.get_date()
+            self.selected_date = datetime(y,m+1,d)
+        else:
+            self.selected_date = None
 
 class SplitDialog(gtk.Dialog):
     def __init__(self, pos):
