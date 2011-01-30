@@ -33,6 +33,21 @@ class AccountTransactionTab(gtk.VBox):
         self.search_entry.set_icon_from_stock(1, gtk.STOCK_CLEAR)
         self.search_entry.set_property('secondary-icon-tooltip-text', 'Clear search')
         self.search_entry.connect('icon-press', self.on_clear_search)
+        self.start_entry = gtk.Entry()
+        self.end_entry = gtk.Entry()
+        self.pick_start = datetime.datetime(2000,1,1)
+        self.pick_end = datetime.datetime.today()
+        self.start_entry.set_icon_from_stock(1, gtk.STOCK_SELECT_COLOR)
+        self.start_entry.set_property("secondary-icon-tooltip-text","Pick date")
+        self.start_entry.connect('icon-press', self.on_pick_start)
+        self.end_entry.set_icon_from_stock(1, gtk.STOCK_SELECT_COLOR)
+        self.end_entry.set_property("secondary-icon-tooltip-text","Pick date")
+        self.end_entry.connect('icon-press', self.on_pick_end)
+        hbox.pack_start(gtk.Label(_('Start')), expand=False, fill=False)
+        hbox.pack_start(self.start_entry, expand=False, fill=False)
+        hbox.pack_start(gtk.Label(_('End')), expand=False, fill=False)
+        hbox.pack_start(self.end_entry, expand=False, fill=False)
+        
         self.pack_start(hbox, expand=False, fill=False)
 
         self.hpaned = gtk.HPaned()
@@ -62,7 +77,8 @@ class AccountTransactionTab(gtk.VBox):
 
         uncategorized_button.connect('toggled', self.transactions_tree.on_toggle_uncategorized)
         transfer_button.connect('toggled', self.transactions_tree.on_toggle_transfer)
-
+        self.update_range()
+        
         vbox = gtk.VBox()
         frame = gtk.Frame()
         frame.add(vbox)
@@ -93,9 +109,31 @@ class AccountTransactionTab(gtk.VBox):
         vbox.pack_start(toolbar, expand=False, fill=False)
         self.connect("destroy", self.on_destroy)
         self.show_all()
+        
+    def on_pick_start(self, entry, icon_pos, event):
+        self.__on_pick(True)
+            
+    def __on_pick(self, start=False):
+        dialog = dialogs.CalendarDialog()
+        if dialog.selected_date:
+            if start:
+                self.pick_start = dialog.selected_date
+            else:
+                self.pick_end = dialog.selected_date
+            self.update_range()
+        
+    def on_pick_end(self, entry, icon_pos, event):
+        self.__on_pick()
 
     def on_clear_search(self, entry, icon_pos, event):
         self.search_entry.set_text('')
+        
+    def update_range(self):
+        self.start_entry.set_text(self.pick_start.strftime('%d.%m.%y'))
+        self.end_entry.set_text(self.pick_end.strftime('%d.%m.%y'))
+        self.transactions_tree.range_start = self.pick_start
+        self.transactions_tree.range_end = self.pick_end
+        self.transactions_tree.modelfilter.refilter()
 
     def show(self):
         self.transactions_tree.clear()
@@ -127,6 +165,8 @@ class TransactionsTree(gui_utils.Tree):
         self.searchstring = ''
         self.only_transfer = False
         self.only_uncategorized = False
+        self.range_start = datetime.datetime.min
+        self.range_end = datetime.datetime.max
         gui_utils.Tree.__init__(self)
 
         self.model = gtk.ListStore(object, str, float, str, object, str)
@@ -156,6 +196,8 @@ class TransactionsTree(gui_utils.Tree):
         self.connect('key_press_event', self.on_key_press)
         search_entry.connect('changed', self.on_search_entry_changed)
         pubsub.subscribe('accountTransaction.created', self.on_transaction_created)
+        
+        self.reset_filter_dates()
 
     def visible_cb(self, model, iter):
         #transaction = model[iter][0]
@@ -167,7 +209,8 @@ class TransactionsTree(gui_utils.Tree):
                 )\
                 and (not self.only_transfer or transaction.is_transfer())\
                 and (not self.only_uncategorized or not transaction.has_category()):
-            return True
+            if transaction.date >= self.range_start.date() and transaction.date <= self.range_end.date():
+                return True
         return False
 
     def on_search_entry_changed(self, editable):
@@ -338,6 +381,18 @@ class TransactionsTree(gui_utils.Tree):
         else:
             self.only_transfer=False
         self.modelfilter.refilter()
+        
+    def on_toggle_date(self, button, start, end):
+        if button.get_active():
+            self.start_filter = start
+            self.end_filter = end
+        else:
+            self.reset_filter_dates()
+        self.modelfilter.refilter()
+        
+    def reset_filter_dates(self):
+        self.start_filter = datetime.datetime(datetime.MINYEAR,1,1)
+        self.end_filter = datetime.datetime.now()
 
     def clear(self):
         self.model.clear()
