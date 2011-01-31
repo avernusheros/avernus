@@ -74,11 +74,17 @@ class AccountTransactionTab(gtk.VBox):
         frame.add(sw)
         frame.set_shadow_type(gtk.SHADOW_IN)
         self.hpaned.pack1(frame, shrink=True, resize=True)
+        
+        status_bar = gtk.HBox()
+        self.transactionsCountLabel = gtk.Label('n/a')
+        status_bar.pack_start(self.transactionsCountLabel, expand=False, fill=False)
+        status_bar.pack_start(gtk.Label(_('Transactions')), expand=False, fill=False)
+        self.pack_start(status_bar, expand=False, fill=False)
 
         uncategorized_button.connect('toggled', self.transactions_tree.on_toggle_uncategorized)
         transfer_button.connect('toggled', self.transactions_tree.on_toggle_transfer)
         self.update_range()
-        
+                
         vbox = gtk.VBox()
         frame = gtk.Frame()
         frame.add(vbox)
@@ -121,6 +127,7 @@ class AccountTransactionTab(gtk.VBox):
             else:
                 self.pick_end = dialog.selected_date
             self.update_range()
+            self.update_status_bar()
         
     def on_pick_end(self, entry, icon_pos, event):
         self.__on_pick()
@@ -134,12 +141,16 @@ class AccountTransactionTab(gtk.VBox):
         self.transactions_tree.range_start = self.pick_start
         self.transactions_tree.range_end = self.pick_end
         self.transactions_tree.modelfilter.refilter()
+        
+    def update_status_bar(self):
+        self.transactionsCountLabel.set_text(str(len(self.transactions_tree.modelfilter)) + " ")
 
     def show(self):
         self.transactions_tree.clear()
         self.transactions_tree.load_transactions()
         self.category_tree.clear()
         self.category_tree.load_categories()
+        self.update_status_bar()
 
     def on_destroy(self, widget):
         self.config.set_option('account hpaned position', self.hpaned.get_position(), 'Gui')
