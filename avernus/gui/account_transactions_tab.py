@@ -1,14 +1,14 @@
 #!/usr/bin/env python
 
-from avernus import config, pubsub
+import gtk, datetime, pango
 from avernus.gui import gui_utils, dialogs
-from avernus.gui.dialogs import CalendarDialog
-from avernus.logger import Log
 from avernus.objects import controller
-import gtk
-import datetime
-import pango
+from avernus import pubsub
+from avernus import config
 
+import logging
+
+logger = logging.getLogger(__name__)
 
 class AccountTransactionTab(gtk.VBox):
 
@@ -114,7 +114,7 @@ class AccountTransactionTab(gtk.VBox):
         self.__on_pick(True)
             
     def __on_pick(self, start=False):
-        dialog = CalendarDialog()
+        dialog = dialogs.CalendarDialog()
         if dialog.selected_date:
             if start:
                 self.pick_start = dialog.selected_date
@@ -580,7 +580,7 @@ class CategoriesTree(gui_utils.Tree):
                     transaction = controller.AccountTransaction.getByPrimaryKey(int(id))
                     transaction.category = cat
             else:
-                Log.debug("NO CATEGORY")
+                logger.debug("NO CATEGORY")
         return
 
 
