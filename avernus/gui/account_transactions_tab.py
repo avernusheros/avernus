@@ -79,6 +79,9 @@ class AccountTransactionTab(gtk.VBox):
         self.transactionsCountLabel = gtk.Label('n/a')
         status_bar.pack_start(self.transactionsCountLabel, expand=False, fill=False)
         status_bar.pack_start(gtk.Label(_('Transactions')), expand=False, fill=False)
+        self.transactionsSumLabel = gtk.Label('n/a')
+        status_bar.pack_start(gtk.Label(_('Sum: ')), expand=False, fill=False)
+        status_bar.pack_start(self.transactionsSumLabel, expand=False, fill=False)
         self.pack_start(status_bar, expand=False, fill=False)
 
         uncategorized_button.connect('toggled', self.transactions_tree.on_toggle_uncategorized)
@@ -144,6 +147,7 @@ class AccountTransactionTab(gtk.VBox):
         
     def update_status_bar(self):
         self.transactionsCountLabel.set_text(str(len(self.transactions_tree.modelfilter)) + " ")
+        self.transactionsSumLabel.set_text(str(self.transactions_tree.get_filtered_transaction_value()))
 
     def show(self):
         self.transactions_tree.clear()
@@ -179,7 +183,7 @@ class TransactionsTree(gui_utils.Tree):
         self.range_start = datetime.datetime.min
         self.range_end = datetime.datetime.max
         gui_utils.Tree.__init__(self)
-
+        
         self.model = gtk.ListStore(object, str, float, str, object, str)
         self.modelfilter = self.model.filter_new()
         sorter = gtk.TreeModelSort(self.modelfilter)
@@ -258,6 +262,12 @@ class TransactionsTree(gui_utils.Tree):
         else:
             icon = ''
         return [ta, ta.description, ta.amount, cat, ta.date, icon]
+    
+    def get_filtered_transaction_value(self):
+        sum = 0
+        for row in self.modelfilter:
+            sum += row[0].amount
+        return sum
 
     def load_transactions(self):
         for ta in controller.getTransactionsForAccount(self.account):
@@ -407,6 +417,7 @@ class TransactionsTree(gui_utils.Tree):
 
     def clear(self):
         self.model.clear()
+        
 
 
 class CategoriesTree(gui_utils.Tree):
