@@ -104,7 +104,8 @@ class AccountTransactionTab(gtk.VBox):
         actiongroup.add_actions([
                 ('add',    gtk.STOCK_ADD,    'new category',    None, _('Add new category'), self.category_tree.on_add),
                 ('edit' ,  gtk.STOCK_EDIT,   'rename category',   None, _('Rename selected category'),   self.category_tree.on_edit),
-                ('remove', gtk.STOCK_DELETE, 'remove category', None, _('Remove selected category'), self.category_tree.on_remove)
+                ('remove', gtk.STOCK_DELETE, 'remove category', None, _('Remove selected category'), self.category_tree.on_remove),
+                ('unselect', gtk.STOCK_CLEAR,'unselect category', None, _('Unselect selected category'), self.category_tree.on_unselect),
                                 ])
         self.category_tree.on_unselect()
         sw.add(self.category_tree)
@@ -112,7 +113,7 @@ class AccountTransactionTab(gtk.VBox):
         toolbar = gtk.Toolbar()
         self.conditioned = ['remove', 'edit']
 
-        for action in ['add', 'remove', 'edit']:
+        for action in ['add', 'remove', 'edit','unselect']:
             button = actiongroup.get_action(action).create_tool_item()
             toolbar.insert(button, -1)
         vbox.pack_start(toolbar, expand=False, fill=False)
@@ -212,6 +213,7 @@ class TransactionsTree(gui_utils.Tree):
         search_entry.connect('changed', self.on_search_entry_changed)
         pubsub.subscribe('accountTransaction.created', self.on_transaction_created)
         pubsub.subscribe('CategoriesTree.onSelect', self.on_category_select)
+        pubsub.subscribe("CategoriesTree.onUnselect", self.on_category_unselect)
         self.single_category = None
         
         self.reset_filter_dates()
@@ -219,14 +221,20 @@ class TransactionsTree(gui_utils.Tree):
     def on_category_select(self, *args, **kwargs):
         self.single_category = kwargs['category']
         self.modelfilter.refilter()
+        
+    def on_category_unselect(self):
+        self.single_category = None
+        self.modelfilter.refilter()
 
     def visible_cb(self, model, iter):
         #transaction = model[iter][0]
         transaction = model[iter][0]
         if transaction:
             if self.single_category:
-                print transaction.category, self.single_category,transaction.category == self.single_category 
-                return transaction.category == self.single_category
+                # return False if the category does not match, move on to the
+                # other checks if it does
+                if not transaction.category == self.single_category:
+                    return False
             if (
                 self.searchstring in transaction.description.lower() \
                 or self.searchstring in str(transaction.amount) \
@@ -475,7 +483,7 @@ class CategoriesTree(gui_utils.Tree):
             for action in self.actiongroup.list_actions():
                 context_menu.add(action.create_menu_item())
             context_menu.show(event)
-
+            
     def on_add(self, widget=None):
         parent, selection_iter = self.get_selected_item()
         item = controller.newAccountCategory('new category', parent=parent)
@@ -546,9 +554,11 @@ class CategoriesTree(gui_utils.Tree):
         else:
             self.on_unselect()
 
-    def on_unselect(self):
+    def on_unselect(self, widget=None):
         for action in ['remove', 'edit']:
             self.actiongroup.get_action(action).set_sensitive(False)
+        self.get_selection().unselect_all()
+        pubsub.publish("CategoriesTree.onUnselect")
 
     def on_select(self, obj):
         pubsub.publish("CategoriesTree.onSelect",category=obj)
