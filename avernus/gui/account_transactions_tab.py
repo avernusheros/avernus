@@ -211,21 +211,31 @@ class TransactionsTree(gui_utils.Tree):
         self.connect('key_press_event', self.on_key_press)
         search_entry.connect('changed', self.on_search_entry_changed)
         pubsub.subscribe('accountTransaction.created', self.on_transaction_created)
+        pubsub.subscribe('CategoriesTree.onSelect', self.on_category_select)
+        self.single_category = None
         
         self.reset_filter_dates()
+        
+    def on_category_select(self, *args, **kwargs):
+        self.single_category = kwargs['category']
+        self.modelfilter.refilter()
 
     def visible_cb(self, model, iter):
         #transaction = model[iter][0]
         transaction = model[iter][0]
-        if transaction and (
+        if transaction:
+            if self.single_category:
+                print transaction.category, self.single_category,transaction.category == self.single_category 
+                return transaction.category == self.single_category
+            if (
                 self.searchstring in transaction.description.lower() \
                 or self.searchstring in str(transaction.amount) \
                 or (transaction.category and self.searchstring in transaction.category.name.lower())
                 )\
                 and (not self.only_transfer or transaction.is_transfer())\
                 and (not self.only_uncategorized or not transaction.has_category()):
-            if transaction.date >= self.range_start.date() and transaction.date <= self.range_end.date():
-                return True
+                if transaction.date >= self.range_start.date() and transaction.date <= self.range_end.date():
+                    return True
         return False
 
     def on_search_entry_changed(self, editable):
@@ -419,7 +429,6 @@ class TransactionsTree(gui_utils.Tree):
         self.model.clear()
         
 
-
 class CategoriesTree(gui_utils.Tree):
 
     TARGETS = [('MY_TREE_MODEL_ROW', gtk.TARGET_SAME_WIDGET, 0),
@@ -523,7 +532,7 @@ class CategoriesTree(gui_utils.Tree):
     def on_button_press(self, widget, event):
         if event.button == 3:
             self.show_context_menu(event)
-
+       
     def on_key_press(self, widget, event):
         if gtk.gdk.keyval_name(event.keyval) == 'Delete':
             self.on_remove()
@@ -542,6 +551,7 @@ class CategoriesTree(gui_utils.Tree):
             self.actiongroup.get_action(action).set_sensitive(False)
 
     def on_select(self, obj):
+        pubsub.publish("CategoriesTree.onSelect",category=obj)
         for action in ['remove', 'edit']:
             self.actiongroup.get_action(action).set_sensitive(True)
 
