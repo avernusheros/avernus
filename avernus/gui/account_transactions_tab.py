@@ -78,7 +78,7 @@ class AccountTransactionTab(gtk.VBox):
         status_bar = gtk.HBox()
         self.transactionsCountLabel = gtk.Label('n/a')
         status_bar.pack_start(self.transactionsCountLabel, expand=False, fill=False)
-        status_bar.pack_start(gtk.Label(_('Transactions')), expand=False, fill=False)
+        status_bar.pack_start(gtk.Label(_('Transactions ')), expand=False, fill=False)
         self.transactionsSumLabel = gtk.Label('n/a')
         status_bar.pack_start(gtk.Label(_('Sum: ')), expand=False, fill=False)
         status_bar.pack_start(self.transactionsSumLabel, expand=False, fill=False)
@@ -104,7 +104,8 @@ class AccountTransactionTab(gtk.VBox):
         actiongroup.add_actions([
                 ('add',    gtk.STOCK_ADD,    'new category',    None, _('Add new category'), self.category_tree.on_add),
                 ('edit' ,  gtk.STOCK_EDIT,   'rename category',   None, _('Rename selected category'),   self.category_tree.on_edit),
-                ('remove', gtk.STOCK_DELETE, 'remove category', None, _('Remove selected category'), self.category_tree.on_remove)
+                ('remove', gtk.STOCK_DELETE, 'remove category', None, _('Remove selected category'), self.category_tree.on_remove),
+                ('unselect', gtk.STOCK_CLEAR,'unselect category', None, _('Unselect selected category'), self.category_tree.on_unselect),
                                 ])
         self.category_tree.on_unselect()
         sw.add(self.category_tree)
@@ -112,10 +113,13 @@ class AccountTransactionTab(gtk.VBox):
         toolbar = gtk.Toolbar()
         self.conditioned = ['remove', 'edit']
 
-        for action in ['add', 'remove', 'edit']:
+        for action in ['add', 'remove', 'edit','unselect']:
             button = actiongroup.get_action(action).create_tool_item()
             toolbar.insert(button, -1)
         vbox.pack_start(toolbar, expand=False, fill=False)
+        
+        pubsub.subscribe("AccountTransactionsTab.UIupdate", self.update_ui)
+        
         self.connect("destroy", self.on_destroy)
         self.show_all()
         
@@ -130,7 +134,7 @@ class AccountTransactionTab(gtk.VBox):
             else:
                 self.pick_end = dialog.selected_date
             self.update_range()
-            self.update_status_bar()
+            self.update_ui()
         
     def on_pick_end(self, entry, icon_pos, event):
         self.__on_pick()
@@ -143,7 +147,10 @@ class AccountTransactionTab(gtk.VBox):
         self.end_entry.set_text(self.pick_end.strftime('%d.%m.%y'))
         self.transactions_tree.range_start = self.pick_start
         self.transactions_tree.range_end = self.pick_end
+        
+    def update_ui(self):
         self.transactions_tree.modelfilter.refilter()
+        self.update_status_bar()
         
     def update_status_bar(self):
         self.transactionsCountLabel.set_text(str(len(self.transactions_tree.modelfilter)) + " ")
@@ -211,27 +218,44 @@ class TransactionsTree(gui_utils.Tree):
         self.connect('key_press_event', self.on_key_press)
         search_entry.connect('changed', self.on_search_entry_changed)
         pubsub.subscribe('accountTransaction.created', self.on_transaction_created)
+        pubsub.subscribe('CategoriesTree.onSelect', self.on_category_select)
+        pubsub.subscribe("CategoriesTree.onUnselect", self.on_category_unselect)
+        self.single_category = None
         
         self.reset_filter_dates()
+        
+    def on_category_select(self, *args, **kwargs):
+        self.single_category = kwargs['category']
+        pubsub.publish("AccountTransactionsTab.UIupdate")
+        
+    def on_category_unselect(self):
+        self.single_category = None
+        pubsub.publish("AccountTransactionsTab.UIupdate")
 
     def visible_cb(self, model, iter):
         #transaction = model[iter][0]
         transaction = model[iter][0]
-        if transaction and (
+        if transaction:
+            if self.single_category:
+                # return False if the category does not match, move on to the
+                # other checks if it does
+                if not transaction.category == self.single_category:
+                    return False
+            if (
                 self.searchstring in transaction.description.lower() \
                 or self.searchstring in str(transaction.amount) \
                 or (transaction.category and self.searchstring in transaction.category.name.lower())
                 )\
                 and (not self.only_transfer or transaction.is_transfer())\
                 and (not self.only_uncategorized or not transaction.has_category()):
-            if transaction.date >= self.range_start.date() and transaction.date <= self.range_end.date():
-                return True
+                if transaction.date >= self.range_start.date() and transaction.date <= self.range_end.date():
+                    return True
         return False
 
     def on_search_entry_changed(self, editable):
         self.searchstring = editable.get_text().lower()
-        self.modelfilter.refilter()
-
+        pubsub.publish("AccountTransactionsTab.UIupdate")
+        
     def on_transaction_created(self, transaction):
         if transaction.account == self.account:
             self.insert_transaction(transaction)
@@ -394,14 +418,14 @@ class TransactionsTree(gui_utils.Tree):
             self.only_uncategorized=True
         else:
             self.only_uncategorized=False
-        self.modelfilter.refilter()
-
+        pubsub.publish("AccountTransactionsTab.UIupdate")
+        
     def on_toggle_transfer(self, button):
         if button.get_active():
             self.only_transfer=True
         else:
             self.only_transfer=False
-        self.modelfilter.refilter()
+        pubsub.publish("AccountTransactionsTab.UIupdate")
         
     def on_toggle_date(self, button, start, end):
         if button.get_active():
@@ -409,7 +433,7 @@ class TransactionsTree(gui_utils.Tree):
             self.end_filter = end
         else:
             self.reset_filter_dates()
-        self.modelfilter.refilter()
+        pubsub.publish("AccountTransactionsTab.UIupdate")
         
     def reset_filter_dates(self):
         self.start_filter = datetime.datetime(datetime.MINYEAR,1,1)
@@ -418,7 +442,6 @@ class TransactionsTree(gui_utils.Tree):
     def clear(self):
         self.model.clear()
         
-
 
 class CategoriesTree(gui_utils.Tree):
 
@@ -466,7 +489,7 @@ class CategoriesTree(gui_utils.Tree):
             for action in self.actiongroup.list_actions():
                 context_menu.add(action.create_menu_item())
             context_menu.show(event)
-
+            
     def on_add(self, widget=None):
         parent, selection_iter = self.get_selected_item()
         item = controller.newAccountCategory('new category', parent=parent)
@@ -523,7 +546,7 @@ class CategoriesTree(gui_utils.Tree):
     def on_button_press(self, widget, event):
         if event.button == 3:
             self.show_context_menu(event)
-
+       
     def on_key_press(self, widget, event):
         if gtk.gdk.keyval_name(event.keyval) == 'Delete':
             self.on_remove()
@@ -537,11 +560,14 @@ class CategoriesTree(gui_utils.Tree):
         else:
             self.on_unselect()
 
-    def on_unselect(self):
+    def on_unselect(self, widget=None):
         for action in ['remove', 'edit']:
             self.actiongroup.get_action(action).set_sensitive(False)
+        self.get_selection().unselect_all()
+        pubsub.publish("CategoriesTree.onUnselect")
 
     def on_select(self, obj):
+        pubsub.publish("CategoriesTree.onSelect",category=obj)
         for action in ['remove', 'edit']:
             self.actiongroup.get_action(action).set_sensitive(True)
 
