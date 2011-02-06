@@ -47,7 +47,6 @@ class avernusConfig():
     def create(self):
         if not os.path.exists(config_path):
             os.mkdir(config_path)
-
         if not self.parser.has_section('General'):
             self.parser.add_section('General')
         if not self.parser.has_section('Plugins'):

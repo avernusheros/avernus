@@ -24,10 +24,19 @@ class PrefDialog(gtk.Dialog):
         vbox.pack_start(notebook)
         notebook.append_page(PluginManager(pengine), gtk.Label('Plugins'))
         notebook.append_page(DimensionList(), gtk.Label('Dimensions'))
+        notebook.append_page(AccountPreferences(), gtk.Label('Account'))
         self.show_all()
         self.run()
         self.destroy()
         logger.debug("PrefDialog destroyed")
+        
+class AccountPreferences(gtk.VBox):
+    
+    def __init__(self):
+        gtk.VBox.__init__(self)
+        self.categoryChildrenButton = gtk.CheckButton(label=_('Include Child Categories'))
+        self.pack_start(self.categoryChildrenButton, expand=False, fill=False)
+        
 
 
 class DimensionList(gtk.VBox):
