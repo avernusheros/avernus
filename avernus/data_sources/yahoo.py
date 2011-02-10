@@ -44,11 +44,12 @@ class Yahoo():
         current_stock = -1
         len_ids = 0
         res = self.__request_csv(ids, 'l1d1d3c1x')
-        if not res:
+        if not res or len(stocks) == 0:
             return
         for row in csv.reader(res):
-            while len_ids == 0:
+            while len_ids == 0 and current_stock < len(stocks)-1:
                 current_stock += 1
+                #print current_stock, stocks
                 len_ids = len(controller.getSourceInfo(self.name, stocks[current_stock]))
             len_ids -= 1
             if len(row) > 1:
@@ -87,7 +88,11 @@ class Yahoo():
     def update_historical_prices(self, stock, start_date, end_date):
         #we should use a more intelligent way of choosing the exchange
         #e.g. the exchange with the highest volume for this stock
-        yid = controller.getSourceInfo(self.name, stock)[0].info
+        sourceInfo = controller.getSourceInfo(self.name, stock)
+        if sourceInfo == []:
+            print "crapballs... yahoo.update_historical_prices"
+            return
+        yid = sourceInfo[0].info
         url = 'http://download.finance.yahoo.com/d/quotes.csv?s=%s&' % yid + \
               'a=%s&' % str(start_date.month-1) + \
               'b=%s&' % str(start_date.day) + \
