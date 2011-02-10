@@ -44,11 +44,12 @@ class Yahoo():
         current_stock = -1
         len_ids = 0
         res = self.__request_csv(ids, 'l1d1d3c1x')
-        if not res:
+        if not res or len(stocks) == 0:
             return
         for row in csv.reader(res):
-            while len_ids == 0:
+            while len_ids == 0 and current_stock < len(stocks)-1:
                 current_stock += 1
+                #print current_stock, stocks
                 len_ids = len(controller.getSourceInfo(self.name, stocks[current_stock]))
             len_ids -= 1
             if len(row) > 1:
