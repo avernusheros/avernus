@@ -73,6 +73,7 @@ class AvernusConfig():
     def get_option(self, name, section = 'General'):
         if self.parser.has_option(section, name):
             return self.parser.get(section, name)
+        #print "unkown config request ", name, section
 
     def set_option(self, name, value, section = 'General'):
         if not self.parser.has_section(section):
