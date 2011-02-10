@@ -93,7 +93,9 @@ class AccountTransactionTab(gtk.VBox):
         frame.add(vbox)
         frame.set_shadow_type(gtk.SHADOW_IN)
         self.hpaned.pack2(frame, shrink=False, resize=True)
-        pos = self.config.get_option('account hpaned position', 'Gui') or 600
+        pre = self.config.get_option('account hpaned position', 'Gui')
+        print pre, type(pre)
+        pos = pre or 600
         self.hpaned.set_position(int(pos))
 
         sw = gtk.ScrolledWindow()
