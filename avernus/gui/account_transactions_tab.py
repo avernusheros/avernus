@@ -7,8 +7,8 @@ from avernus import pubsub
 from avernus import config
 
 import logging
-
 logger = logging.getLogger(__name__)
+
 
 class AccountTransactionTab(gtk.VBox):
 
@@ -35,8 +35,8 @@ class AccountTransactionTab(gtk.VBox):
         self.search_entry.connect('icon-press', self.on_clear_search)
         self.start_entry = gtk.Entry()
         self.end_entry = gtk.Entry()
-        self.pick_start = datetime.datetime(2000,1,1)
-        self.pick_end = datetime.datetime.today()
+        self.pick_start = item.birthday
+        self.pick_end = datetime.date.today()
         self.start_entry.set_icon_from_stock(1, gtk.STOCK_SELECT_COLOR)
         self.start_entry.set_property("secondary-icon-tooltip-text","Pick date")
         self.start_entry.connect('icon-press', self.on_pick_start)
@@ -124,29 +124,26 @@ class AccountTransactionTab(gtk.VBox):
         self.show_all()
         
     def on_pick_start(self, entry, icon_pos, event):
-        self.__on_pick(True)
-            
-    def __on_pick(self, start=False):
-        dialog = dialogs.CalendarDialog()
-        if dialog.selected_date:
-            if start:
-                self.pick_start = dialog.selected_date
-            else:
-                self.pick_end = dialog.selected_date
+        dialog = dialogs.CalendarDialog(self.transactions_tree.range_start)
+        if dialog.date:
+            self.transactions_tree.range_start = dialog.date
             self.update_range()
             self.update_ui()
+            
         
     def on_pick_end(self, entry, icon_pos, event):
-        self.__on_pick()
+        dialog = dialogs.CalendarDialog(self.transactions_tree.range_end)
+        if dialog.date:
+            self.transactions_tree.range_end = dialog.date
+            self.update_range()
+            self.update_ui()
 
     def on_clear_search(self, entry, icon_pos, event):
         self.search_entry.set_text('')
         
     def update_range(self):
-        self.start_entry.set_text(self.pick_start.strftime('%d.%m.%y'))
-        self.end_entry.set_text(self.pick_end.strftime('%d.%m.%y'))
-        self.transactions_tree.range_start = self.pick_start
-        self.transactions_tree.range_end = self.pick_end
+        self.start_entry.set_text(gui_utils.get_date_string(self.transactions_tree.range_start))
+        self.end_entry.set_text(gui_utils.get_date_string(self.transactions_tree.range_end))
         
     def update_ui(self):
         self.transactions_tree.modelfilter.refilter()
@@ -187,8 +184,8 @@ class TransactionsTree(gui_utils.Tree):
         self.searchstring = ''
         self.only_transfer = False
         self.only_uncategorized = False
-        self.range_start = datetime.datetime.min
-        self.range_end = datetime.datetime.max
+        self.range_start = account.birthday
+        self.range_end = datetime.date.today()
         gui_utils.Tree.__init__(self)
         
         self.model = gtk.ListStore(object, str, float, str, object, str)
@@ -233,7 +230,6 @@ class TransactionsTree(gui_utils.Tree):
         pubsub.publish("AccountTransactionsTab.UIupdate")
 
     def visible_cb(self, model, iter):
-        #transaction = model[iter][0]
         transaction = model[iter][0]
         if transaction:
             if self.single_category:
@@ -248,7 +244,8 @@ class TransactionsTree(gui_utils.Tree):
                 )\
                 and (not self.only_transfer or transaction.is_transfer())\
                 and (not self.only_uncategorized or not transaction.has_category()):
-                if transaction.date >= self.range_start.date() and transaction.date <= self.range_end.date():
+                
+                if transaction.date >= self.range_start and transaction.date <= self.range_end:
                     return True
         return False
 

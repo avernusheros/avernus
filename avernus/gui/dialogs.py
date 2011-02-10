@@ -5,6 +5,7 @@ from avernus.gui import gui_utils
 from avernus.objects import controller, stock
 from avernus.objects.position import MetaPosition
 from datetime import datetime
+import datetime
 import gtk
 
 
@@ -736,28 +737,39 @@ class PosSelector(gtk.ComboBox):
                 if pos.quantity > 0:
                     liststore.append([pos, pos.portfolio.name+": "+str(pos.quantity) +' ' +pos.name])
         self.set_model(liststore)
-        
+
+
 class CalendarDialog(gtk.Dialog):
     
-    def __init__(self):
+    def __init__(self, date=None):
         gtk.Dialog.__init__(self, _("Chose a date"), None
                             , gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
-                     (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
-                      gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
+                            (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
+                             gtk.STOCK_OK, gtk.RESPONSE_ACCEPT)
+                            )
         vbox = self.get_content_area()
         self.calendar = gtk.Calendar()
+        self.date = None
+        if date:
+            self.calendar.select_month(date.month, date.year)
+            self.calendar.select_day(date.day)
+        
         vbox.pack_start(self.calendar)
+        
+        self.calendar.connect("day-selected-double-click", self.on_day_selected)
         self.show_all()
         response = self.run()
         self.process_result(response)
-        self.destroy()
 
     def process_result(self, response):
         if response == gtk.RESPONSE_ACCEPT:
             y,m,d = self.calendar.get_date()
-            self.selected_date = datetime(y,m+1,d)
-        else:
-            self.selected_date = None
+            self.date = datetime.date(y,m+1,d)
+        self.destroy()
+        
+    def on_day_selected(self, cal):
+        self.process_result(gtk.RESPONSE_ACCEPT)
+
 
 class SplitDialog(gtk.Dialog):
     def __init__(self, pos):
