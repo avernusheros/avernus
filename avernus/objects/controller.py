@@ -383,6 +383,8 @@ def getAllDimensionValueForDimension(dim):
 
 def getAssetDimensionValueForStock(stock, dim):
     stockADVs = AssetDimensionValue.getAllFromOneColumn('stock', stock.id)
+    #for adv in stockADVs:
+    #    print adv, adv.dimensionValue
     stockADVs = filter(lambda adv: adv.dimensionValue.dimension == dim, stockADVs)
     return stockADVs
 

@@ -88,7 +88,11 @@ class Yahoo():
     def update_historical_prices(self, stock, start_date, end_date):
         #we should use a more intelligent way of choosing the exchange
         #e.g. the exchange with the highest volume for this stock
-        yid = controller.getSourceInfo(self.name, stock)[0].info
+        sourceInfo = controller.getSourceInfo(self.name, stock)
+        if sourceInfo == []:
+            print "crapballs... yahoo.update_historical_prices"
+            return
+        yid = sourceInfo[0].info
         url = 'http://download.finance.yahoo.com/d/quotes.csv?s=%s&' % yid + \
               'a=%s&' % str(start_date.month-1) + \
               'b=%s&' % str(start_date.day) + \
