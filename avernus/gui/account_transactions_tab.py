@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 
-import gtk, datetime, pango
+from avernus import config, pubsub
+from avernus.config import avernusConfig
 from avernus.gui import gui_utils, dialogs
 from avernus.objects import controller
-from avernus import pubsub
-from avernus import config
-
+import gtk
+import datetime
+import pango
 import logging
 logger = logging.getLogger(__name__)
 
@@ -93,7 +94,9 @@ class AccountTransactionTab(gtk.VBox):
         frame.add(vbox)
         frame.set_shadow_type(gtk.SHADOW_IN)
         self.hpaned.pack2(frame, shrink=False, resize=True)
-        pos = self.config.get_option('account hpaned position', 'Gui') or 600
+        pre = self.config.get_option('account hpaned position', 'Gui')
+        print pre, type(pre)
+        pos = pre or 600
         self.hpaned.set_position(int(pos))
 
         sw = gtk.ScrolledWindow()
@@ -235,8 +238,26 @@ class TransactionsTree(gui_utils.Tree):
             if self.single_category:
                 # return False if the category does not match, move on to the
                 # other checks if it does
-                if not transaction.category == self.single_category:
+                if not transaction.category:
+                    # if it does not have a category, it cannot be true
                     return False
+                if not transaction.category == self.single_category:
+                    # if the category does not match the selected there is still
+                    # the chance that recursive is activated
+                    config = avernusConfig()
+                    pre = config.get_option('categoryChildren', 'Account')
+                    #print pre
+                    pre = pre == "True"
+                    #print pre
+                    if pre:
+                        # recursive is activated
+                        #print "second chance", transaction
+                        if not self.single_category in transaction.category.parents: 
+                            # the selected category is also not one of the parents
+                            return False
+                    else:
+                        # recursive is deactivated, wrong category
+                        return False
             if (
                 self.searchstring in transaction.description.lower() \
                 or self.searchstring in str(transaction.amount) \

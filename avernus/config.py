@@ -35,8 +35,15 @@ plugins_path = [os.path.join(os.getcwd(), 'avernus/plugins'), os.path.join(confi
 #media_path = os.path.join(getdatapath(), 'media')
 timezone = 'CET'
 
+instance = None
 
-class avernusConfig():
+def avernusConfig():
+    global instance
+    if not instance:
+        instance = AvernusConfig()
+    return instance
+
+class AvernusConfig():
     def __init__(self):
         parser = self.parser = ConfigParser.ConfigParser()
         self.filename = os.path.join(config_path, 'avernus.conf')
@@ -47,30 +54,33 @@ class avernusConfig():
     def create(self):
         if not os.path.exists(config_path):
             os.mkdir(config_path)
-
         if not self.parser.has_section('General'):
             self.parser.add_section('General')
         if not self.parser.has_section('Plugins'):
             self.parser.add_section('Plugins')
         if not self.parser.has_section('Gui'):
             self.parser.add_section('Gui')
+        if not self.parser.has_section('Account'):
+            self.parser.add_section('Account')
         self.set_option('database file', os.path.join(config_path, 'avernus.db'))
         self.write()
 
     def write(self):
-        #print self
+        #print id(self)
         with open(self.filename, 'wb') as configfile:
             self.parser.write(configfile)
-
+            
     def get_option(self, name, section = 'General'):
         if self.parser.has_option(section, name):
             return self.parser.get(section, name)
+        #print "unkown config request ", name, section
 
     def set_option(self, name, value, section = 'General'):
         if not self.parser.has_section(section):
             self.parser.add_section(section)
         self.parser.set(section, name, value)
         self.write()
+        #print "written", name, value
 
     def __repr__(self):
         txt = ''

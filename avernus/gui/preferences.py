@@ -1,9 +1,10 @@
 # -*- Mode: Python; coding: utf-8; indent-tabs-mode: nil; tab-width: 4 -*-
-import sys
-import gtk
+from avernus.config import avernusConfig
 from avernus.gui import gui_utils
 from avernus.objects import controller
+import gtk
 import logging
+import sys
 logger = logging.getLogger(__name__)
 
 
@@ -24,10 +25,29 @@ class PrefDialog(gtk.Dialog):
         vbox.pack_start(notebook)
         notebook.append_page(PluginManager(pengine), gtk.Label('Plugins'))
         notebook.append_page(DimensionList(), gtk.Label('Dimensions'))
+        notebook.append_page(AccountPreferences(), gtk.Label('Account'))
         self.show_all()
         self.run()
         self.destroy()
         logger.debug("PrefDialog destroyed")
+        
+class AccountPreferences(gtk.VBox):
+    
+    def __init__(self):
+        gtk.VBox.__init__(self)
+        self.categoryChildrenButton = gtk.CheckButton(label=_('Include Child Categories'))
+        self.pack_start(self.categoryChildrenButton, expand=False, fill=False)
+        self.categoryChildrenButton.connect('toggled', self.onCategoryChildrenToggled)
+        self.configParser = avernusConfig()
+        pre = self.configParser.get_option('categoryChildren', 'Account')
+        pre = pre == "True"
+        self.categoryChildrenButton.set_active(pre)
+        
+    def onCategoryChildrenToggled(self, button):
+        self.configParser.set_option('categoryChildren', self.categoryChildrenButton.get_active(), 
+                                     'Account')
+        
+        
 
 
 class DimensionList(gtk.VBox):

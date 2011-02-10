@@ -165,6 +165,17 @@ class AccountCategory(SQLiteEntity):
         if self.parentid != -1:
             return self.getByPrimaryKey(self.parentid)
         return None
+    
+    def get_parents(self):
+        erg = []
+        current = self
+        while not current.parentid == -1:
+            p = current.get_parent()
+            erg.append(p)
+            current = p
+        return erg
+    
+    parents = property(get_parents)
 
     def set_parent(self, parent):
         if parent:
