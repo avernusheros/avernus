@@ -170,12 +170,19 @@ class QuotationTable(gtk.Table):
         self.count_label = gtk.Label()
         self.attach(self.count_label, 1,2,2,3, yoptions=gtk.FILL)
 
-        button = gtk.Button('Get quotations!')
-        button.connect('clicked', self.on_button_clicked)
+        button = gtk.Button(_('Get Quotations!'))
+        button.connect('clicked', self.on_get_button_clicked)
         self.attach(button, 0,2,4,5, yoptions=gtk.FILL)
+        button = gtk.Button(_('Delete Quotations'))
+        button.connect('clicked', self.on_delete_button_clicked)
+        self.attach(button, 0,2,5,6, yoptions=gtk.FILL)
+        self.update_labels()
+        
+    def on_delete_button_clicked(self, button):
+        controller.deleteAllQuotationsFromStock(self.stock)
         self.update_labels()
 
-    def on_button_clicked(self, button):
+    def on_get_button_clicked(self, button):
         controller.GeneratorTask(controller.datasource_manager.get_historical_prices, self.new_quotation_callback, complete_callback=self.update_labels).start(self.stock)
 
     def new_quotation_callback(self, qt):
