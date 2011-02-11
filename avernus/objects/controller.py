@@ -422,6 +422,11 @@ def deleteAllAssetDimensionValue(dimvalue):
     for adm in AssetDimensionValue.getAll():
         if adm.dimensionValue == dimvalue:
             del adm
+            
+def deleteAllQuotationsFromStock(stock):
+    quotations = Quotation.getByColumns({'stock': stock.id}, create=True)
+    for quotation in quotations:
+        quotation.delete()
 
 def getPositionForWatchlist(watchlist):
     key = watchlist.getPrimaryKey()
