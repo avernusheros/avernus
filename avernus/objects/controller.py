@@ -181,6 +181,7 @@ def newPortfolio(name, id=None, last_update = datetime.datetime.now(), comment="
 
 def newWatchlist(name, id=None, last_update = datetime.datetime.now(), comment=""):
     result = Watchlist(id=id, name=name,last_update=last_update,comment=comment)
+    result.controller = controller
     result.insert()
     return result
 

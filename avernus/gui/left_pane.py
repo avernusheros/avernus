@@ -161,13 +161,12 @@ class MainTree(gui_utils.Tree):
         self.on_unselect()
 
     def on_unselect(self):
-        for action in self.actiongroup.list_actions():
-            action.set_sensitive(False)
+        for action in ['remove', 'edit']:
+            self.actiongroup.get_action(action).set_sensitive(False)
 
     def on_select(self, obj):
         if isinstance(obj, Category):
             self.on_unselect()
-            self.actiongroup.get_action('add').set_sensitive(True)
         else:
             for action in ['remove', 'edit']:
                 self.actiongroup.get_action(action).set_sensitive(True)
@@ -188,18 +187,30 @@ class MainTree(gui_utils.Tree):
         m[path][0].name = m[path][2] = new_text
 
     def on_add(self, widget=None):
+        #FIXME sehr unschoen
         obj, row = self.selected_item
         model = self.get_model()
-        if obj.name == 'Portfolios':
-            cat_type = 'portfolio'
+        if isinstance(obj, Category):
+            if obj.name == 'Portfolios':
+                cat_type = 'portfolio'
+            elif obj.name == 'Watchlists':
+                cat_type = 'watchlist'
+            elif obj.name == 'Accounts':
+                cat_type = 'account'
+        else:
+            if obj.__name__ == 'Portfolio':
+                cat_type = 'portfolio'
+            elif obj.__name__ == 'Watchlist':
+                cat_type = 'watchlist'
+            elif obj.__name__ == 'Account':
+                cat_type = 'account'
+        if cat_type == 'portfolio':
             parent_iter = self.pf_iter
             item = controller.newPortfolio('new '+cat_type)
-        elif obj.name == 'Watchlists':
-            cat_type = 'watchlist'
+        elif cat_type == 'watchlist':
             parent_iter = self.wl_iter
             item = controller.newWatchlist('new '+cat_type)
-        elif obj.name == 'Accounts':
-            cat_type = 'account'
+        elif cat_type == 'account':
             parent_iter = self.accounts_iter
             item = controller.newAccount('new '+cat_type)
         iterator = model.append(parent_iter, [item, cat_type, item.name, ''])
