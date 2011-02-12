@@ -563,6 +563,9 @@ class CategoriesTree(gui_utils.Tree):
     def on_button_press(self, widget, event):
         if event.button == 3:
             self.show_context_menu(event)
+        else:
+            if not self.get_path_at_pos(int(event.x), int(event.y)):
+                self.on_unselect()
        
     def on_key_press(self, widget, event):
         if gtk.gdk.keyval_name(event.keyval) == 'Delete':
