@@ -95,7 +95,6 @@ class AccountTransactionTab(gtk.VBox):
         frame.set_shadow_type(gtk.SHADOW_IN)
         self.hpaned.pack2(frame, shrink=False, resize=True)
         pre = self.config.get_option('account hpaned position', 'Gui')
-        print pre, type(pre)
         pos = pre or 600
         self.hpaned.set_position(int(pos))
 

@@ -45,7 +45,7 @@ def avernusConfig():
 
 class AvernusConfig():
     def __init__(self):
-        parser = self.parser = ConfigParser.ConfigParser()
+        parser = self.parser = ConfigParser.SafeConfigParser()
         self.filename = os.path.join(config_path, 'avernus.conf')
         if not os.path.exists(self.filename):
             self.create()
@@ -66,7 +66,6 @@ class AvernusConfig():
         self.write()
 
     def write(self):
-        #print id(self)
         with open(self.filename, 'wb') as configfile:
             self.parser.write(configfile)
             
@@ -78,7 +77,7 @@ class AvernusConfig():
     def set_option(self, name, value, section = 'General'):
         if not self.parser.has_section(section):
             self.parser.add_section(section)
-        self.parser.set(section, name, value)
+        self.parser.set(section, name, str(value))
         self.write()
         #print "written", name, value
 
