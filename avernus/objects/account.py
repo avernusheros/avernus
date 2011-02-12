@@ -1,7 +1,8 @@
-from avernus.objects.model import SQLiteEntity
 from avernus import pubsub
-import datetime, calendar
+from avernus.objects.model import SQLiteEntity
 from dateutil.rrule import *
+import datetime
+import calendar
 
 
 class Account(SQLiteEntity):
@@ -34,10 +35,7 @@ class Account(SQLiteEntity):
 
     @property
     def transaction_count(self):
-        count = 0
-        for ta in self:
-            count+=1
-        return count
+        return self.controller.getTransactionsForAccount(self)
 
     def yield_matching_transfer_tranactions(self, transaction):
         for trans in self:
@@ -137,7 +135,9 @@ class Account(SQLiteEntity):
 
     @property
     def birthday(self):
-        return min(t.date for t in self)
+        if self.transaction_count==0:
+            return min(t.date for t in self)
+        return datetime.date.today()
 
     @property
     def lastday(self):
