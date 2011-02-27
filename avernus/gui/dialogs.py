@@ -4,7 +4,6 @@ from avernus import pubsub
 from avernus.gui import gui_utils
 from avernus.objects import controller, stock
 from avernus.objects.position import MetaPosition
-from datetime import datetime
 import datetime
 import gtk
 
@@ -291,7 +290,7 @@ class EditPositionTable(gtk.Table):
             self.pos.quantity = self.shares_entry.get_value()
             self.pos.price = self.price_entry.get_value()
             year, month, day = self.calendar.get_date()
-            self.pos.date = datetime(year, month+1, day)
+            self.pos.date = datetime.datetime(year, month+1, day)
             buffer = self.comment_entry.get_buffer()
             self.pos.comment = unicode(buffer.get_text(buffer.get_start_iter(), buffer.get_end_iter()))
             if hasattr(self.pos, "buy_transaction"):
@@ -456,7 +455,7 @@ class SellDialog(gtk.Dialog):
             shares = self.shares_entry.get_value()
             price = self.price_entry.get_value()
             year, month, day = self.calendar.get_date()
-            date = datetime(year, month+1, day)
+            date = datetime.datetime(year, month+1, day)
             ta_costs = self.tacosts_entry.get_value()
 
             if self.transaction is None:
@@ -517,7 +516,7 @@ class CashDialog(gtk.Dialog):
         if response == gtk.RESPONSE_ACCEPT:
             amount = self.amount_entry.get_value()
             year, month, day = self.calendar.get_date()
-            date = datetime(year, month+1, day)
+            date = datetime.datetime(year, month+1, day)
             if self.transaction is None:
                 if self.action_type == 0:
                     ta = controller.newTransaction(date=date, portfolio=self.pf, type=3, price=amount, quantity=1, costs=0.0)
@@ -624,7 +623,7 @@ class BuyDialog(gtk.Dialog):
 
     def on_calendar_day_selected(self, calendar):
         year, month, day = self.calendar.get_date()
-        date = datetime(year, month+1, day)
+        date = datetime.datetime(year, month+1, day)
         if date > datetime.today():
             self.infobar.show_all()
             self.date_ok = False
@@ -660,7 +659,7 @@ class BuyDialog(gtk.Dialog):
         if response == gtk.RESPONSE_ACCEPT:
             price = self.price_entry.get_value()
             year, month, day = self.calendar.get_date()
-            date = datetime(year, month+1, day)
+            date = datetime.datetime(year, month+1, day)
             ta_costs = self.tacosts_entry.get_value()
             shares = self.shares_entry.get_value()
 
@@ -813,7 +812,7 @@ class SplitDialog(gtk.Dialog):
             val1 = self.val1.get_value()
             val2 = self.val2.get_value()
             year, month, day = self.calendar.get_date()
-            self.pos.split(val1, val2, datetime(year, month+1, day))
+            self.pos.split(val1, val2, datetime.datetime(year, month+1, day))
 
 
 class DividendDialog(gtk.Dialog):
@@ -891,7 +890,7 @@ class DividendDialog(gtk.Dialog):
     def process_result(self, response):
         if response == gtk.RESPONSE_ACCEPT:
             year, month, day = self.calendar.get_date()
-            date = datetime(year, month+1, day)
+            date = datetime.datetime(year, month+1, day)
             value = self.value_entry.get_value()
             ta_costs = self.tacosts_entry.get_value()
             if self.dividend is None:

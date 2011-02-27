@@ -198,8 +198,7 @@ def get_datetime_string(datetime):
 #FIXME horizontal scrollbars are always shown
 #without the "+10" it crashes sometimes
 def resize_wrap(scroll, allocation, treeview, column, cell):
-    otherColumns = (c for c in treeview.get_columns() if c != column)
-    newWidth = allocation.width - sum(c.get_width() for c in otherColumns)
+    newWidth = allocation.width - sum(c.get_width() for c in treeview.get_columns() if c != column)
     newWidth -= treeview.style_get_property("horizontal-separator") * 4
     if cell.props.wrap_width == newWidth or newWidth <= 0:
         return
