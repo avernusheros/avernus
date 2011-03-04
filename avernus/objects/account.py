@@ -123,7 +123,7 @@ class Account(SQLiteEntity):
             days = list(rrule(MONTHLY, dtstart = start_date, until = end_date, bymonthday=-1))
         elif period == 'yearly':
             days = list(rrule(YEARLY, dtstart = start_date, until = end_date, bymonthday=-1, bymonth=12))
-        elif period == 'dayly':
+        elif period == 'daily':
             days = list(rrule(DAILY, dtstart = start_date, until = end_date))
         elif period == 'weekly':
             days = list(rrule(WEEKLY, dtstart = start_date, until = end_date, byweekday=SU))
