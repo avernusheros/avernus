@@ -87,8 +87,9 @@ class AccountTransactionTab(gtk.VBox):
 
         uncategorized_button.connect('toggled', self.transactions_tree.on_toggle_uncategorized)
         transfer_button.connect('toggled', self.transactions_tree.on_toggle_transfer)
+        
         self.update_range()
-                
+        
         vbox = gtk.VBox()
         frame = gtk.Frame()
         frame.add(vbox)
@@ -145,7 +146,9 @@ class AccountTransactionTab(gtk.VBox):
         self.search_entry.set_text('')
         
     def update_range(self):
-        self.start_entry.set_text(gui_utils.get_date_string(self.transactions_tree.range_start))
+        start = self.transactions_tree.range_start
+        #print "start date", start
+        self.start_entry.set_text(gui_utils.get_date_string(start))
         self.end_entry.set_text(gui_utils.get_date_string(self.transactions_tree.range_end))
         
     def update_ui(self):
