@@ -135,7 +135,7 @@ class Account(SQLiteEntity):
 
     @property
     def birthday(self):
-        if self.transaction_count==0:
+        if self.transaction_count>0:
             return min(t.date for t in self)
         return datetime.date.today()
 
