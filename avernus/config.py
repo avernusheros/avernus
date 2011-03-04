@@ -70,6 +70,7 @@ class AvernusConfig():
             self.parser.write(configfile)
             
     def get_option(self, name, section = 'General'):
+        #print name, type(name), section, type(section)
         if self.parser.has_option(section, name):
             return self.parser.get(section, name)
         #print "unkown config request ", name, section
