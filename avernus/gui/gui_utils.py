@@ -1,6 +1,7 @@
 import gtk, pytz
 from avernus import config, pubsub
 import locale
+import gobject
 
 
 class Tree(gtk.TreeView):
@@ -156,7 +157,7 @@ def date_to_string(column, cell, model, iter, user_data):
 def get_price_string(item):
     if item.price is None:
         return 'n/a'
-    return get_string_from_float(item.price) +'\n' +'<small>'+get_datetime_string(item.date)+'</small>'
+    return get_string_from_float(item.price) +'\n<small>'+get_datetime_string(item.date)+'</small>'
 
 def to_local_time(date):
     if date is not None:
@@ -165,7 +166,9 @@ def to_local_time(date):
         return date.replace(tzinfo = None)
 
 def get_name_string(stock):
-    return '<b>'+stock.name+'</b>' + '\n' + '<small>'+stock.isin+'</small>' + '\n' + '<small>'+stock.exchange+'</small>' 
+    return '<b>%s</b>\n<small>%s\n%s</small>' % (gobject.markup_escape_text(stock.name), 
+                                                 gobject.markup_escape_text(stock.isin), 
+                                                 gobject.markup_escape_text(stock.exchange))
 
 def get_green_red_string(num, string = None):
     if string is None:

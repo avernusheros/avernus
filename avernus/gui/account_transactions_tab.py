@@ -4,7 +4,7 @@ from avernus import config, pubsub
 from avernus.config import avernusConfig
 from avernus.gui import gui_utils, dialogs
 from avernus.objects import controller
-import gtk
+import gtk, gobject
 import datetime
 import pango
 import logging
@@ -171,7 +171,7 @@ class AccountTransactionTab(gtk.VBox):
 
 def desc_markup(column, cell, model, iter, user_data):
     text = model.get_value(iter, user_data)
-    markup =  '<span size="small">'+ text + '</span>'
+    markup =  '<span size="small">%s</span>' % (gobject.markup_escape_text(text),)
     cell.set_property('markup', markup)
 
 
@@ -533,7 +533,7 @@ class CategoriesTree(gui_utils.Tree):
         dlg = gtk.MessageDialog(None,
              gtk.DIALOG_DESTROY_WITH_PARENT, gtk.MESSAGE_QUESTION,
              gtk.BUTTONS_OK_CANCEL)
-        msg = _("Permanently delete category <b>")+obj.name+'</b>?'
+        msg = _("Permanently delete category <b>")+gobject.markup_escape_text(obj.name)+'</b>?'
         model = self.get_model()
         if model.iter_has_child(iterator):
                 msg += _("\nWill also delete subcategories")
@@ -545,7 +545,6 @@ class CategoriesTree(gui_utils.Tree):
 
             removeQueue = []
             while len(queue) > 0:
-                print queue
                 currIter, currObj = queue.pop()
                 #print "deleting from model ", currObj
                 currObj.delete()
