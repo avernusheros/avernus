@@ -12,7 +12,7 @@ def subscribe(message, subscriber):
 
 def publish(message, *args, **kwargs):
     if not message in subscriptions:
-        logger.info("Message with no Subscribers: " + str(message))
+        logger.debug("Message with no Subscribers: " + str(message))
         return
     for subscriber in subscriptions[message]:
         #try:
@@ -23,8 +23,8 @@ def publish(message, *args, **kwargs):
 
 def unsubscribe(message, subscriber):
     if not message in subscriptions:
-        logger.info("No Message to unsubscribe from: " + str(message))
+        logger.debug("No Message to unsubscribe from: " + str(message))
     elif not subscriber in subscriptions[message]:
-        logger.info("Subscriber " + str(subscriber) + " not subscribed for message " + str(message))
+        logger.debug("Subscriber " + str(subscriber) + " not subscribed for message " + str(message))
     else:
         subscriptions[message].remove(subscriber)

@@ -5,7 +5,7 @@ import gtk
 from avernus.objects import controller
 import datetime
 from avernus import date_utils
-from avernus.gui import gui_utils
+from avernus.gui import gui_utils, page
 from dateutil.relativedelta import relativedelta
 
 no_data_string = _('\nNo Data!\nAdd transactions first.\n\n')
@@ -38,7 +38,7 @@ def get_legend(smaller, bigger, step):
     return erg
 
 
-class AccountChartTab(gtk.ScrolledWindow):
+class AccountChartTab(gtk.ScrolledWindow, page.Page):
 
     TABLE_SPACINGS = 5
 
@@ -104,6 +104,7 @@ class AccountChartTab(gtk.ScrolledWindow):
         chart = CategoryPie(width/2, self.account, self.start_date, self.end_date, earnings=False)
         self.table.attach(chart,1,2,6,7)
         self.charts.append(chart)
+        self.update_page()
         self.show_all()
 
     def on_zoom_change(self, cb):

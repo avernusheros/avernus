@@ -2,7 +2,7 @@
 
 from avernus import config, pubsub
 from avernus.config import avernusConfig
-from avernus.gui import gui_utils, dialogs
+from avernus.gui import gui_utils, dialogs, page
 from avernus.objects import controller
 import gtk, gobject
 import datetime
@@ -11,7 +11,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-class AccountTransactionTab(gtk.VBox):
+class AccountTransactionTab(gtk.VBox, page.Page):
 
     BORDER_WIDTH = 5
 
@@ -75,15 +75,6 @@ class AccountTransactionTab(gtk.VBox):
         frame.add(sw)
         frame.set_shadow_type(gtk.SHADOW_IN)
         self.hpaned.pack1(frame, shrink=True, resize=True)
-        
-        status_bar = gtk.HBox()
-        self.transactionsCountLabel = gtk.Label('n/a')
-        status_bar.pack_start(self.transactionsCountLabel, expand=False, fill=False)
-        status_bar.pack_start(gtk.Label(_('Transactions ')), expand=False, fill=False)
-        self.transactionsSumLabel = gtk.Label('n/a')
-        status_bar.pack_start(gtk.Label(_('Sum: ')), expand=False, fill=False)
-        status_bar.pack_start(self.transactionsSumLabel, expand=False, fill=False)
-        self.pack_start(status_bar, expand=False, fill=False)
 
         uncategorized_button.connect('toggled', self.transactions_tree.on_toggle_uncategorized)
         transfer_button.connect('toggled', self.transactions_tree.on_toggle_transfer)
@@ -123,7 +114,6 @@ class AccountTransactionTab(gtk.VBox):
         vbox.pack_start(toolbar, expand=False, fill=False)
         
         pubsub.subscribe("AccountTransactionsTab.UIupdate", self.update_ui)
-        
         self.connect("destroy", self.on_destroy)
         self.show_all()
         
@@ -134,7 +124,6 @@ class AccountTransactionTab(gtk.VBox):
             self.update_range()
             self.update_ui()
             
-        
     def on_pick_end(self, entry, icon_pos, event):
         dialog = dialogs.CalendarDialog(self.transactions_tree.range_end)
         if dialog.date:
@@ -153,18 +142,18 @@ class AccountTransactionTab(gtk.VBox):
         
     def update_ui(self):
         self.transactions_tree.modelfilter.refilter()
-        self.update_status_bar()
-        
-    def update_status_bar(self):
-        self.transactionsCountLabel.set_text(str(len(self.transactions_tree.modelfilter)) + " ")
-        self.transactionsSumLabel.set_text(str(self.transactions_tree.get_filtered_transaction_value()))
+        self.update_page()
+    
+    def get_info(self):
+        return [('# transactions', len(self.transactions_tree.modelfilter)), 
+                ('Sum', self.transactions_tree.get_filtered_transaction_value())]
 
     def show(self):
         self.transactions_tree.clear()
         self.transactions_tree.load_transactions()
         self.category_tree.clear()
         self.category_tree.load_categories()
-        self.update_status_bar()
+        self.update_page()
 
     def on_destroy(self, widget):
         self.config.set_option('account hpaned position', self.hpaned.get_position(), 'Gui')

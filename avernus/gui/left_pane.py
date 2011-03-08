@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import gtk
+import pango
 from avernus import pubsub
 from avernus.gui import gui_utils, dialogs, progress_manager
 from avernus.gui.csv_import_dialog import CSVImportDialog
@@ -14,6 +15,7 @@ class Category(object):
 
 
 class MainTreeBox(gtk.VBox):
+    
     def __init__(self):
         gtk.VBox.__init__(self)
         actiongroup = gtk.ActionGroup('left_pane')
@@ -38,9 +40,50 @@ class MainTreeBox(gtk.VBox):
         vbox = gtk.VBox()
         self.pack_start(vbox, expand=False, fill=False)
         progress_manager.box = vbox
+        
+        self.pack_start(InfoBox(), expand=False, fill=False)
+
+
+class InfoBox(gtk.Table):
+    
+    def __init__(self):
+        gtk.Table.__init__(self)
+        self.line_count = 0
+        
+        pubsub.subscribe('update_page', self.on_update_page)
+        pubsub.subscribe('maintree.select', self.on_maintree_select)
+    
+    def add_line(self, label_text, info_text):
+        label = gtk.Label("")
+        info = gtk.Label(info_text)
+        label.set_justify(gtk.JUSTIFY_LEFT);
+        label.set_markup("<span font_weight=\"bold\">"+label_text+"</span>")
+        
+        info.set_ellipsize(pango.ELLIPSIZE_END)
+        info.set_selectable(True)
+        
+        self.attach(label, 0, 1, self.line_count, self.line_count + 1, xoptions=gtk.FILL, yoptions=gtk.FILL)
+        self.attach(info, 1, 2, self.line_count, self.line_count + 1)
+
+        self.line_count+=1
+    
+    def clear(self):
+        for child in self:
+            self.remove(child)
+        self.line_count = 0
+    
+    def on_update_page(self, page):
+        self.clear()
+        for label, info in page.get_info():
+            self.add_line(label, info)
+        self.show_all()
+        
+    def on_maintree_select(self, obj):
+        self.clear()
 
 
 class MainTree(gui_utils.Tree):
+    
     def __init__(self, actiongroup):
         gui_utils.Tree.__init__(self)
         self.actiongroup = actiongroup
@@ -219,6 +262,7 @@ class MainTree(gui_utils.Tree):
 
 
 class EditWatchlist(gtk.Dialog):
+    
     def __init__(self, wl):
         gtk.Dialog.__init__(self, _("Edit..."), None
                             , gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
@@ -247,6 +291,7 @@ class EditWatchlist(gtk.Dialog):
             self.wl.name = self.name_entry.get_text()
             pubsub.publish("container.edited", self.wl)
         self.destroy()
+        
         
 class EditAccount(gtk.Dialog):
     
