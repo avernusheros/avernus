@@ -54,9 +54,9 @@ class AccountChartTab(gtk.ScrolledWindow, page.Page):
         self.add_with_viewport(self.table)
         self.zooms = ['ACT','1m', '3m', '6m', 'YTD', '1y','2y','5y', 'all']
         self.show_all()
-    
+
     def show(self):
-        width = self.allocation[2]        
+        width = self.allocation[2]
         combobox = gtk.combo_box_new_text()
         for ch in self.zooms:
             combobox.append_text(ch)
@@ -136,7 +136,7 @@ class AccountChartTab(gtk.ScrolledWindow, page.Page):
 
 
 class Chart(object):
-    
+
     def __init__(self, width, account, start_date, end_date):
         self.start_date = start_date
         self.end_date = end_date
@@ -254,7 +254,7 @@ class CategoryPie(gtk.VBox, Chart):
         self.category = None
         self._init_widgets()
         Chart.__init__(self, width, account, start_date, end_date)
-    
+
     def _init_widgets(self):
         self.liststore = gtk.ListStore(object, str)
         combobox = gtk.ComboBox(self.liststore)

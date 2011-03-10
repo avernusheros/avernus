@@ -30,12 +30,15 @@ class Account(SQLiteEntity):
     def __iter__(self):
         return self.controller.getTransactionsForAccount(self).__iter__()
 
+    def __len__(self):
+        return self.transaction_count
+
     def has_transaction(self, transaction):
         return self.controller.check_duplicate(AccountTransaction, account=self.id, **transaction)
 
     @property
     def transaction_count(self):
-        return self.controller.getTransactionsForAccount(self)
+        return len(self.controller.getTransactionsForAccount(self))
 
     def yield_matching_transfer_tranactions(self, transaction):
         for trans in self:
@@ -141,7 +144,9 @@ class Account(SQLiteEntity):
 
     @property
     def lastday(self):
-        return max(t.date for t in self)
+        if self.transaction_count>0:
+            return max(t.date for t in self)
+        return datetime.date.today()
 
 
 class AccountCategory(SQLiteEntity):
@@ -157,7 +162,7 @@ class AccountCategory(SQLiteEntity):
         if other is None:
             return 1
         return cmp(self.name,other.name)
-    
+
     def __repr__(self):
         return SQLiteEntity.__repr__(self) + self.name
 
@@ -165,7 +170,7 @@ class AccountCategory(SQLiteEntity):
         if self.parentid != -1:
             return self.getByPrimaryKey(self.parentid)
         return None
-    
+
     def get_parents(self):
         erg = []
         current = self
@@ -174,7 +179,7 @@ class AccountCategory(SQLiteEntity):
             erg.append(p)
             current = p
         return erg
-    
+
     parents = property(get_parents)
 
     def set_parent(self, parent):
