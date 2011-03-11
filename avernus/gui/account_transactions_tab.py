@@ -146,7 +146,7 @@ class AccountTransactionTab(gtk.VBox, page.Page):
     
     def get_info(self):
         return [('# transactions', len(self.transactions_tree.modelfilter)), 
-                ('Sum', self.transactions_tree.get_filtered_transaction_value())]
+                ('Sum', gui_utils.get_currency_format_from_float(self.transactions_tree.get_filtered_transaction_value()))]
 
     def show(self):
         self.transactions_tree.clear()
@@ -300,7 +300,7 @@ class TransactionsTree(gui_utils.Tree):
     def get_filtered_transaction_value(self):
         sum = 0
         for row in self.modelfilter:
-            sum += row[0].amount
+            sum += row[self.AMOUNT]
         return sum
 
     def load_transactions(self):

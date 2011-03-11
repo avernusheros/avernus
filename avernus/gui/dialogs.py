@@ -624,7 +624,7 @@ class BuyDialog(gtk.Dialog):
     def on_calendar_day_selected(self, calendar):
         year, month, day = self.calendar.get_date()
         date = datetime.datetime(year, month+1, day)
-        if date > datetime.today():
+        if date > datetime.datetime.today():
             self.infobar.show_all()
             self.date_ok = False
         else:
