@@ -38,24 +38,28 @@ def get_legend(smaller, bigger, step):
     return erg
 
 
-class AccountChartTab(gtk.ScrolledWindow, page.Page):
+class AccountChartTab(gtk.VBox, page.Page):
 
     TABLE_SPACINGS = 5
 
     def __init__(self, account):
-        gtk.ScrolledWindow.__init__(self)
+        gtk.VBox.__init__(self)
         self.account = account
-        self.set_property('hscrollbar-policy', gtk.POLICY_AUTOMATIC)
-        self.set_property('vscrollbar-policy', gtk.POLICY_AUTOMATIC)
+        sw = gtk.ScrolledWindow()
+        sw.set_property('hscrollbar-policy', gtk.POLICY_AUTOMATIC)
+        sw.set_property('vscrollbar-policy', gtk.POLICY_AUTOMATIC)
         self.table = gtk.Table()
         self.table.set_col_spacings(self.TABLE_SPACINGS)
         self.table.set_row_spacings(self.TABLE_SPACINGS)
 
-        self.add_with_viewport(self.table)
+        sw.add_with_viewport(self.table)
+        self.pack_end(sw)
         self.zooms = ['ACT','1m', '3m', '6m', 'YTD', '1y','2y','5y', 'all']
         self.show_all()
 
     def show(self):
+        hbox = gtk.HBox()
+        self.pack_start(hbox, expand = False)
         width = self.allocation[2]
         combobox = gtk.combo_box_new_text()
         for ch in self.zooms:
@@ -65,7 +69,7 @@ class AccountChartTab(gtk.ScrolledWindow, page.Page):
         self.end_date = datetime.date.today()
         self._calc_start_date()
         combobox.connect('changed', self.on_zoom_change)
-        self.table.attach(combobox, 0,1,0,1)
+        hbox.pack_start(combobox)
 
         #FIXME macht das step einstellen wirklich sinn? alternative ist automatische einstellung
         #oder manuelle einstellung erlauben, aber sachen vorgeben, zb 1y und month
@@ -77,32 +81,32 @@ class AccountChartTab(gtk.ScrolledWindow, page.Page):
         combobox.set_active(active)
         self.current_step = self.steps[active]
         combobox.connect('changed', self.on_step_change)
-        self.table.attach(combobox,1,2,0,1)
+        hbox.pack_start(combobox)
 
         self.charts = []
         chart = EarningsVsSpendingsChart(width, self.account, self.start_date, self.end_date, self.current_step)
         self.charts.append(chart)
-        self.table.attach(chart,0,2,2,3)
+        self.table.attach(chart,0,2,0,1)
 
         label = gtk.Label()
         label.set_markup('<b>Balance over time</b>')
-        self.table.attach(label, 0,2,3,4)
+        self.table.attach(label, 0,2,1,2)
         chart = BalanceChart(width, self.account, self.start_date, self.end_date)
         self.charts.append(chart)
-        self.table.attach(chart,0,2,4,5)
+        self.table.attach(chart,0,2,2,3)
 
         label = gtk.Label()
         label.set_markup('<b>Earnings</b>')
-        self.table.attach(label,0,1,5,6)
+        self.table.attach(label,0,1,3,4)
         chart = CategoryPie(width/2, self.account, self.start_date, self.end_date, earnings=True)
         self.charts.append(chart)
-        self.table.attach(chart,0,1,6,7)
+        self.table.attach(chart,0,1,4,5)
 
         label = gtk.Label()
         label.set_markup('<b>Spendings</b>')
-        self.table.attach(label,1,2,5,6)
+        self.table.attach(label,1,2,3,4)
         chart = CategoryPie(width/2, self.account, self.start_date, self.end_date, earnings=False)
-        self.table.attach(chart,1,2,6,7)
+        self.table.attach(chart,1,2,4,5)
         self.charts.append(chart)
         self.update_page()
         self.show_all()
