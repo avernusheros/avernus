@@ -93,7 +93,9 @@ class Yahoo():
             print "crapballs... yahoo.update_historical_prices"
             return
         yid = sourceInfo[0].info
-        url = 'http://download.finance.yahoo.com/d/quotes.csv?s=%s&' % yid + \
+        
+        #url = 'http://download.finance.yahoo.com/d/quotes.csv?s=%s&' % yid + \
+        url = 'http://ichart.finance.yahoo.com/table.csv?s=%s&' % yid + \
               'a=%s&' % str(start_date.month-1) + \
               'b=%s&' % str(start_date.day) + \
               'c=%s&' % str(start_date.year) + \
@@ -157,5 +159,5 @@ class Yahoo():
 
 if __name__ == "__main__":
     y = Yahoo()
-    y.search('DE0009774794')
-    y.__request_csv('DE0009774794', 'l1d1d3c1x')
+    for item in y.search('DE0005229504'):
+        print item
