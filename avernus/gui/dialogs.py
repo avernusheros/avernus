@@ -300,9 +300,13 @@ class EditPositionTable(gtk.Table):
                 ta.date = self.pos.date
 
 
-SPINNER_SIZE = 40
+
 
 class StockSelector(gtk.VBox):
+    
+    SPINNER_SIZE = 40
+    WIDTH = 600
+    HEIGHT = 300
 
     def __init__(self):
         gtk.VBox.__init__(self)
@@ -320,15 +324,12 @@ class StockSelector(gtk.VBox):
         self.result_tree.set_model(self.result_tree.model)
         self.result_tree.create_icon_column(None, 1)
         col, cell = self.result_tree.create_column(_('Name'), 2)
+        cell.props.wrap_width = self.WIDTH/2
+        cell.props.wrap_mode = gtk.WRAP_WORD    
         self.result_tree.create_column('ISIN', 3)
         self.result_tree.create_column(_('Currency'), 4)
         self.result_tree.create_icon_column(_('Type'), 5,size= gtk.ICON_SIZE_DND)
-        self.result_tree.set_size_request(600,300)
-        sw.connect_after('size-allocate',
-                         gui_utils.resize_wrap,
-                         self.result_tree,
-                         col,
-                         cell)
+        self.result_tree.set_size_request(self.WIDTH, self.HEIGHT)
         sw.add(self.result_tree)
         self.pack_end(sw)
         self.spinner = None
@@ -341,7 +342,7 @@ class StockSelector(gtk.VBox):
         self.spinner = gtk.Spinner()
         self.pack_start(self.spinner, fill=True, expand=False)
         self.spinner.show()
-        self.spinner.set_size_request(SPINNER_SIZE, SPINNER_SIZE)
+        self.spinner.set_size_request(self.SPINNER_SIZE, self.SPINNER_SIZE)
         self.spinner.start()
 
     def _hide_spinner(self):
