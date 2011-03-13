@@ -66,11 +66,6 @@ class AccountTransactionTab(gtk.VBox, page.Page):
                 ('dividend', gtk.STOCK_CONVERT, 'dividend payment', None, _('Create dividend from transaction'), self.transactions_tree.on_dividend)
                                 ])
         sw.add(self.transactions_tree)
-        sw.connect_after('size-allocate',
-                         gui_utils.resize_wrap,
-                         self.transactions_tree,
-                         self.transactions_tree.dynamicWrapColumn,
-                         self.transactions_tree.dynamicWrapCell)
         frame = gtk.Frame()
         frame.add(sw)
         frame.set_shadow_type(gtk.SHADOW_IN)
@@ -146,7 +141,7 @@ class AccountTransactionTab(gtk.VBox, page.Page):
     
     def get_info(self):
         return [('# transactions', len(self.transactions_tree.modelfilter)), 
-                ('Sum', self.transactions_tree.get_filtered_transaction_value())]
+                ('Sum', gui_utils.get_currency_format_from_float(self.transactions_tree.get_filtered_transaction_value()))]
 
     def show(self):
         self.transactions_tree.clear()
@@ -192,9 +187,8 @@ class TransactionsTree(gui_utils.Tree):
         self.create_column(_('Date'), self.DATE, func=gui_utils.date_to_string)
         sorter.set_sort_func(self.DATE, gui_utils.sort_by_time, self.DATE)
         col, cell = self.create_column(_('Description'), self.DESCRIPTION, func=desc_markup)
-        self.dynamicWrapColumn = col
-        self.dynamicWrapCell = cell
         cell.props.wrap_mode = pango.WRAP_WORD
+        cell.props.wrap_width = 500
         self.create_column(_('Amount'), self.AMOUNT, func=gui_utils.currency_format)
         self.create_column(_('Category'), self.CATEGORY)
         self.set_rules_hint(True)
@@ -215,7 +209,7 @@ class TransactionsTree(gui_utils.Tree):
         self.single_category = None
         
         self.reset_filter_dates()
-        
+    
     def on_category_select(self, *args, **kwargs):
         self.single_category = kwargs['category']
         pubsub.publish("AccountTransactionsTab.UIupdate")
@@ -300,7 +294,7 @@ class TransactionsTree(gui_utils.Tree):
     def get_filtered_transaction_value(self):
         sum = 0
         for row in self.modelfilter:
-            sum += row[0].amount
+            sum += row[self.AMOUNT]
         return sum
 
     def load_transactions(self):
@@ -451,7 +445,7 @@ class TransactionsTree(gui_utils.Tree):
 
     def clear(self):
         self.model.clear()
-        
+    
 
 class CategoriesTree(gui_utils.Tree):
 

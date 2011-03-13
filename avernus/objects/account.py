@@ -4,7 +4,6 @@ from dateutil.rrule import *
 import datetime
 import calendar
 
-
 class Account(SQLiteEntity):
 
     __primaryKey__ = 'id'
@@ -165,7 +164,7 @@ class AccountCategory(SQLiteEntity):
 
     def __repr__(self):
         return SQLiteEntity.__repr__(self) + self.name
-
+    
     def get_parent(self):
         if self.parentid != -1:
             return self.getByPrimaryKey(self.parentid)
