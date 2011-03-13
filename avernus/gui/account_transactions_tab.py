@@ -2,16 +2,16 @@
 
 from avernus import config, pubsub
 from avernus.config import avernusConfig
-from avernus.gui import gui_utils, dialogs
+from avernus.gui import gui_utils, dialogs, page
 from avernus.objects import controller
-import gtk
+import gtk, gobject
 import datetime
 import pango
 import logging
 logger = logging.getLogger(__name__)
 
 
-class AccountTransactionTab(gtk.VBox):
+class AccountTransactionTab(gtk.VBox, page.Page):
 
     BORDER_WIDTH = 5
 
@@ -75,15 +75,6 @@ class AccountTransactionTab(gtk.VBox):
         frame.add(sw)
         frame.set_shadow_type(gtk.SHADOW_IN)
         self.hpaned.pack1(frame, shrink=True, resize=True)
-        
-        status_bar = gtk.HBox()
-        self.transactionsCountLabel = gtk.Label('n/a')
-        status_bar.pack_start(self.transactionsCountLabel, expand=False, fill=False)
-        status_bar.pack_start(gtk.Label(_('Transactions ')), expand=False, fill=False)
-        self.transactionsSumLabel = gtk.Label('n/a')
-        status_bar.pack_start(gtk.Label(_('Sum: ')), expand=False, fill=False)
-        status_bar.pack_start(self.transactionsSumLabel, expand=False, fill=False)
-        self.pack_start(status_bar, expand=False, fill=False)
 
         uncategorized_button.connect('toggled', self.transactions_tree.on_toggle_uncategorized)
         transfer_button.connect('toggled', self.transactions_tree.on_toggle_transfer)
@@ -123,7 +114,6 @@ class AccountTransactionTab(gtk.VBox):
         vbox.pack_start(toolbar, expand=False, fill=False)
         
         pubsub.subscribe("AccountTransactionsTab.UIupdate", self.update_ui)
-        
         self.connect("destroy", self.on_destroy)
         self.show_all()
         
@@ -134,7 +124,6 @@ class AccountTransactionTab(gtk.VBox):
             self.update_range()
             self.update_ui()
             
-        
     def on_pick_end(self, entry, icon_pos, event):
         dialog = dialogs.CalendarDialog(self.transactions_tree.range_end)
         if dialog.date:
@@ -153,25 +142,25 @@ class AccountTransactionTab(gtk.VBox):
         
     def update_ui(self):
         self.transactions_tree.modelfilter.refilter()
-        self.update_status_bar()
-        
-    def update_status_bar(self):
-        self.transactionsCountLabel.set_text(str(len(self.transactions_tree.modelfilter)) + " ")
-        self.transactionsSumLabel.set_text(str(self.transactions_tree.get_filtered_transaction_value()))
+        self.update_page()
+    
+    def get_info(self):
+        return [('# transactions', len(self.transactions_tree.modelfilter)), 
+                ('Sum', self.transactions_tree.get_filtered_transaction_value())]
 
     def show(self):
         self.transactions_tree.clear()
         self.transactions_tree.load_transactions()
         self.category_tree.clear()
         self.category_tree.load_categories()
-        self.update_status_bar()
+        self.update_page()
 
     def on_destroy(self, widget):
         self.config.set_option('account hpaned position', self.hpaned.get_position(), 'Gui')
 
 def desc_markup(column, cell, model, iter, user_data):
     text = model.get_value(iter, user_data)
-    markup =  '<span size="small">'+ text + '</span>'
+    markup =  '<span size="small">%s</span>' % (gobject.markup_escape_text(text),)
     cell.set_property('markup', markup)
 
 
@@ -533,7 +522,7 @@ class CategoriesTree(gui_utils.Tree):
         dlg = gtk.MessageDialog(None,
              gtk.DIALOG_DESTROY_WITH_PARENT, gtk.MESSAGE_QUESTION,
              gtk.BUTTONS_OK_CANCEL)
-        msg = _("Permanently delete category <b>")+obj.name+'</b>?'
+        msg = _("Permanently delete category <b>")+gobject.markup_escape_text(obj.name)+'</b>?'
         model = self.get_model()
         if model.iter_has_child(iterator):
                 msg += _("\nWill also delete subcategories")
@@ -545,7 +534,6 @@ class CategoriesTree(gui_utils.Tree):
 
             removeQueue = []
             while len(queue) > 0:
-                print queue
                 currIter, currObj = queue.pop()
                 #print "deleting from model ", currObj
                 currObj.delete()
@@ -567,6 +555,9 @@ class CategoriesTree(gui_utils.Tree):
     def on_button_press(self, widget, event):
         if event.button == 3:
             self.show_context_menu(event)
+        else:
+            if not self.get_path_at_pos(int(event.x), int(event.y)):
+                self.on_unselect()
        
     def on_key_press(self, widget, event):
         if gtk.gdk.keyval_name(event.keyval) == 'Delete':

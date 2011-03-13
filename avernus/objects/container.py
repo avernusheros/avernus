@@ -7,6 +7,12 @@ from datetime import datetime, date
 
 class Container(object):
 
+    def __len__(self):
+        count = 0
+        for pos in self:
+            count+=1
+        return count
+
     @property
     def ter(self):
         ter = 0
@@ -95,12 +101,7 @@ class Portfolio(SQLiteEntity, Container):
                    "comment":       "TEXT",
                    "cash":          "FLOAT",
                    }
-
-    def __len__(self):
-        count = 0
-        for pos in self:
-            count+=1
-        return count
+    container_type = 'portfolio'
 
     def __iter__(self):
         return self.controller.getPositionForPortfolio(self).__iter__()
@@ -163,11 +164,11 @@ class Portfolio(SQLiteEntity, Container):
 
     __callbacks__ = {
                      'onUpdate':onUpdate,
-                     'onInsert':onInsert,
+                     #'onInsert':onInsert,
                      'onDelete':onDelete,
-                     'onRemoveRelationEntry':onRemoveRelationEntry,
-                     'onAddRelationEntry':onAddRelationEntry,
-                     'onRetrieveComposite':onRetrieveComposite,
+                     #'onRemoveRelationEntry':onRemoveRelationEntry,
+                     #'onAddRelationEntry':onAddRelationEntry,
+                     #'onRetrieveComposite':onRetrieveComposite,
                      }
 
 
@@ -181,6 +182,7 @@ class Watchlist(SQLiteEntity, Container):
                    'last_update':'TIMESTAMP',
                    'comment':'TEXT',
                   }
+    container_type = 'watchlist'
 
     def __iter__(self):
         return self.controller.getPositionForWatchlist(self).__iter__()

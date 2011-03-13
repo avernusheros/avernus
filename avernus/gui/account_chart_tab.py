@@ -5,7 +5,7 @@ import gtk
 from avernus.objects import controller
 import datetime
 from avernus import date_utils
-from avernus.gui import gui_utils
+from avernus.gui import gui_utils, page
 from dateutil.relativedelta import relativedelta
 
 no_data_string = _('\nNo Data!\nAdd transactions first.\n\n')
@@ -38,7 +38,7 @@ def get_legend(smaller, bigger, step):
     return erg
 
 
-class AccountChartTab(gtk.ScrolledWindow):
+class AccountChartTab(gtk.ScrolledWindow, page.Page):
 
     TABLE_SPACINGS = 5
 
@@ -54,9 +54,9 @@ class AccountChartTab(gtk.ScrolledWindow):
         self.add_with_viewport(self.table)
         self.zooms = ['ACT','1m', '3m', '6m', 'YTD', '1y','2y','5y', 'all']
         self.show_all()
-    
+
     def show(self):
-        width = self.allocation[2]        
+        width = self.allocation[2]
         combobox = gtk.combo_box_new_text()
         for ch in self.zooms:
             combobox.append_text(ch)
@@ -104,6 +104,7 @@ class AccountChartTab(gtk.ScrolledWindow):
         chart = CategoryPie(width/2, self.account, self.start_date, self.end_date, earnings=False)
         self.table.attach(chart,1,2,6,7)
         self.charts.append(chart)
+        self.update_page()
         self.show_all()
 
     def on_zoom_change(self, cb):
@@ -135,7 +136,7 @@ class AccountChartTab(gtk.ScrolledWindow):
 
 
 class Chart(object):
-    
+
     def __init__(self, width, account, start_date, end_date):
         self.start_date = start_date
         self.end_date = end_date
@@ -178,6 +179,22 @@ class BalanceChart(gtk.VBox, Chart):
         self.chart = plot.handler
         self.pack_start(self.chart)
 
+class CategoryOverTimeChart(gtk.VBox, Chart):
+    
+    def __init__(self, width, account, start_date, end_date):
+        gtk.VBox.__init__(self)
+        hbox = gtk.HBox()
+        label = gtk.Label()
+        label.set_markup('<span weight="bold">Category</span> over time')
+        hbox.pack_start(label)
+        self.type_cb = gtk.combo_box_new_text()
+        for chart_type in ['bar chart', 'line chart']:
+            self.type_cb.append_text(chart_type)
+        self.type_cb.set_active(0)
+        self.type_cb.connect('changed', self.on_type_change)
+        hbox.pack_start(self.type_cb)
+        self.pack_start(hbox)
+        Chart.__init__(self, width, account, start_date, end_date)
 
 class EarningsVsSpendingsChart(gtk.VBox, Chart):
 
@@ -253,7 +270,7 @@ class CategoryPie(gtk.VBox, Chart):
         self.category = None
         self._init_widgets()
         Chart.__init__(self, width, account, start_date, end_date)
-    
+
     def _init_widgets(self):
         self.liststore = gtk.ListStore(object, str)
         combobox = gtk.ComboBox(self.liststore)

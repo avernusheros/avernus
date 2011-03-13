@@ -5,7 +5,7 @@ from avernus import pubsub
 from avernus.gui.plot import ChartWindow
 from avernus.gui.dialogs import SellDialog, NewWatchlistPositionDialog, BuyDialog, EditPositionDialog
 from avernus.gui.gui_utils import Tree, ContextMenu, get_name_string, datetime_format
-from avernus.gui import gui_utils, dialogs, progress_manager
+from avernus.gui import gui_utils, dialogs, progress_manager, page
 from avernus.objects.position import MetaPosition
 from avernus.objects import controller
 
@@ -172,7 +172,7 @@ class PositionsTree(Tree):
                 row[self.COLS['mkt_value']] = item.cvalue
                 if not self.watchlist:
                     row[self.COLS['pf_percent']] = item.portfolio_fraction
-    
+
     def on_update_positions(self, *args):
         def finished_cb():
             progress_manager.remove_monitor(555)
@@ -320,23 +320,16 @@ class PositionsTree(Tree):
 
 
 class InfoBar(gtk.HBox):
+
     def __init__(self, container):
         gtk.HBox.__init__(self)
         self.container = container
-        self.total_label = label = gtk.Label()
-        self.pack_start(label)
-        self.pack_start(gtk.VSeparator(), expand = False, fill = False)
 
         self.today_label = label = gtk.Label()
         self.pack_start(label)
         self.pack_start(gtk.VSeparator(), expand = True, fill = True)
         self.overall_label = label = gtk.Label()
         self.pack_start(label, expand = False, fill = False)
-
-        if container.__name__ == 'Portfolio' or container.__name__ == 'Watchlist':
-            self.pack_start(gtk.VSeparator(), expand = True, fill = True)
-            self.last_update_label = label = gtk.Label()
-            self.pack_start(label, expand = True, fill = False)
 
         self.on_container_update(self.container)
         pubsub.subscribe('position.created', self.on_container_update)
@@ -346,22 +339,11 @@ class InfoBar(gtk.HBox):
 
     def on_container_update(self, container, position=None):
         if self.container == container:
-            text = '<b>' + _('Day\'s gain')+'</b>\n'+self.get_change_string(self.container.current_change)
+            text = '<b>' + _('Day\'s gain')+'</b>\t'+self.get_change_string(self.container.current_change)
             self.today_label.set_markup(text)
-            text = '<b>'+_('Gain')+'</b>\n'+self.get_change_string(self.container.overall_change)
+            text = '<b>'+_('Gain')+'</b>\t'+self.get_change_string(self.container.overall_change)
             self.overall_label.set_markup(text)
 
-            if container.__name__ == 'Portfolio':
-                text = '<b>'+_('Investments')+'</b> :'+gui_utils.get_currency_format_from_float(container.cvalue)
-                text += '\n<b>'+_('Cash')+'</b> :'+gui_utils.get_currency_format_from_float(container.cash)
-                self.total_label.set_markup(text)
-            else:
-                text = '<b>'+_('Total')+'</b>\n'+gui_utils.get_currency_format_from_float(container.cvalue)
-                self.total_label.set_markup(text)
-
-            if container.__name__ == 'Portfolio' or container.__name__ == 'Watchlist':
-                text = '<b>'+_('Last update')+'</b>\n'+datetime_format(self.container.last_update, False)
-                self.last_update_label.set_markup(text)
 
     def get_change_string(self, item):
         change, percent = item
@@ -375,16 +357,18 @@ class InfoBar(gtk.HBox):
         return text
 
 
-class PositionsTab(gtk.VBox):
+class PositionsTab(gtk.VBox, page.Page):
+
     def __init__(self, container):
         gtk.VBox.__init__(self)
+        self.container = container
         actiongroup = gtk.ActionGroup('position_tab')
         positions_tree = PositionsTree(container, actiongroup, use_metapositions = container.__name__ == 'Portfolio')
         tb = gtk.Toolbar()
 
-        if container.__name__ == 'Portfolio':
+        if container.container_type == 'portfolio':
             buttons = ['add', 'remove', 'edit', 'chart', '---', 'update']
-        elif container.__name__ == 'Watchlist':
+        else:
             buttons = ['add', 'remove', 'edit', 'chart', '---', 'update']
 
         for action in buttons:
@@ -402,4 +386,20 @@ class PositionsTab(gtk.VBox):
         sw.add(positions_tree)
         self.pack_start(InfoBar(container), expand=False, fill=True)
         self.pack_start(sw)
+        self.update_page()
+        pubsub.subscribe('position.created', self.update_page)
+        pubsub.subscribe('stocks.updated', self.update_page)
+        pubsub.subscribe('container.updated', self.update_page)
+        pubsub.subscribe('container.position.added', self.update_page)
         self.show_all()
+
+    def get_info(self):
+        if self.container.container_type == 'portfolio':
+            return [('Investments', gui_utils.get_currency_format_from_float(self.container.cvalue)),
+                    ('Cash', gui_utils.get_currency_format_from_float(self.container.cash)),
+                    ('# positions', len(self.container)),
+                    ('Last update', gui_utils.datetime_format(self.container.last_update, False))
+                    ]
+        else:
+            return [('# positions', len(self.container)),
+                    ('Last update', gui_utils.datetime_format(self.container.last_update, False))]
