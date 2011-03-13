@@ -20,6 +20,15 @@ import threading
 
 import logging
 
+import itertools
+
+# don't know where else to put this...
+def pairwise(iterable):
+    "s -> (s0,s1), (s1,s2), (s2, s3), ..."
+    a, b = itertools.tee(iterable)
+    next(b, None)
+    return itertools.izip(a, b)
+
 logger = logging.getLogger(__name__)
 
 
@@ -381,6 +390,12 @@ def getAllDimensionValueForDimension(dim):
     for value in DimensionValue.getAll():
         if value.dimension == dim:
             yield value
+            
+def getAccountCategoryForName(name):
+    cats = getAllAccountCategories()
+    for cat in cats:
+        if cat.name == name:
+            return cat
 
 def getAssetDimensionValueForStock(stock, dim):
     stockADVs = AssetDimensionValue.getAllFromOneColumn('stock', stock.id)
