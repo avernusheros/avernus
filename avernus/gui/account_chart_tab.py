@@ -46,6 +46,16 @@ class AccountChartTab(gtk.VBox, page.Page):
     def __init__(self, account):
         gtk.VBox.__init__(self)
         self.account = account
+        
+        self.zooms = ['ACT','1m', '3m', '6m', 'YTD', '1y','2y','5y', 'all']
+        self.show_all()
+
+    def clear(self):
+        for child in self.get_children():
+            self.remove(child)
+
+    def show(self):
+        self.clear()
         sw = gtk.ScrolledWindow()
         sw.set_property('hscrollbar-policy', gtk.POLICY_AUTOMATIC)
         sw.set_property('vscrollbar-policy', gtk.POLICY_AUTOMATIC)
@@ -55,10 +65,6 @@ class AccountChartTab(gtk.VBox, page.Page):
 
         sw.add_with_viewport(self.table)
         self.pack_end(sw)
-        self.zooms = ['ACT','1m', '3m', '6m', 'YTD', '1y','2y','5y', 'all']
-        self.show_all()
-
-    def show(self):
         hbox = gtk.HBox()
         self.pack_start(hbox, expand = False)
         width = self.allocation[2]
@@ -236,23 +242,28 @@ class CategoryOverTimeChart(gtk.VBox, Chart):
         self.active_category = controller.getAccountCategoryForName(self.category_cb.get_active_text())
         transactions = self.account.get_transactions_in_period(self.start_date, self.end_date)
         transactions = filter(lambda trans:trans.category == self.active_category, transactions) 
-        time_points = list(rrule.rrule(rrule.MONTHLY, dtstart = self.start_date, until = self.end_date, bymonthday=-1))
+        time_points = list(rrule.rrule(rrule.MONTHLY, dtstart = self.start_date, until = self.end_date, bymonthday=1))
         legend = [d.strftime("%b %y") for d in time_points]
         sums = {}
         for tp in time_points:
             sums[tp] = 0
+        print "Transactions: ", transactions
+        print "Time Points: ",time_points
         for trans in transactions:
-            key = time_points[0]
-            index = 0
-            while trans.date > key.date():
-                index += 1
-                key = time_points[index]
-            sums[key] += trans.amount
+            for start,end in controller.pairwise(time_points):
+                if start.date() < trans.date and end.date() >= trans.date:
+                    print trans.date , " between ", start, end
+                    sums[start] += trans.amount
+                    break
+            if trans.date > time_points[-1].date():
+                sums[time_points[-1]] += trans.amount
+        #del sums[time_points[0]]
         #print legend
-        #print sums
+        data = [sums[d] for d in time_points]
+        print "Chart data: ", data
         if chart_type == 'line chart':
             plot = cairoplot.plots.DotLinePlot('gtk',
-                            data=sums.values(),
+                            data=data,
                             width=self.width,
                             height=300,
                             x_labels=legend,
@@ -265,7 +276,7 @@ class CategoryOverTimeChart(gtk.VBox, Chart):
                             dash=False)
         else:
             plot = cairoplot.plots.VerticalBarPlot('gtk',
-                            data=sums.values(),
+                            data=data,
                             width=self.width,
                             height=300,
                             #series_labels = ['earnings', 'spendings'],
