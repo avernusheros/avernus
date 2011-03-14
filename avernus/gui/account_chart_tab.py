@@ -46,6 +46,16 @@ class AccountChartTab(gtk.VBox, page.Page):
     def __init__(self, account):
         gtk.VBox.__init__(self)
         self.account = account
+        
+        self.zooms = ['ACT','1m', '3m', '6m', 'YTD', '1y','2y','5y', 'all']
+        self.show_all()
+
+    def clear(self):
+        for child in self.get_children():
+            self.remove(child)
+
+    def show(self):
+        self.clear()
         sw = gtk.ScrolledWindow()
         sw.set_property('hscrollbar-policy', gtk.POLICY_AUTOMATIC)
         sw.set_property('vscrollbar-policy', gtk.POLICY_AUTOMATIC)
@@ -55,10 +65,6 @@ class AccountChartTab(gtk.VBox, page.Page):
 
         sw.add_with_viewport(self.table)
         self.pack_end(sw)
-        self.zooms = ['ACT','1m', '3m', '6m', 'YTD', '1y','2y','5y', 'all']
-        self.show_all()
-
-    def show(self):
         hbox = gtk.HBox()
         self.pack_start(hbox, expand = False)
         width = self.allocation[2]
