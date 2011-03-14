@@ -242,23 +242,28 @@ class CategoryOverTimeChart(gtk.VBox, Chart):
         self.active_category = controller.getAccountCategoryForName(self.category_cb.get_active_text())
         transactions = self.account.get_transactions_in_period(self.start_date, self.end_date)
         transactions = filter(lambda trans:trans.category == self.active_category, transactions) 
-        time_points = list(rrule.rrule(rrule.MONTHLY, dtstart = self.start_date, until = self.end_date, bymonthday=-1))
+        time_points = list(rrule.rrule(rrule.MONTHLY, dtstart = self.start_date, until = self.end_date, bymonthday=1))
         legend = [d.strftime("%b %y") for d in time_points]
         sums = {}
         for tp in time_points:
             sums[tp] = 0
+        #print "Transactions: ", transactions
+        #print "Time Points: ",time_points
         for trans in transactions:
-            key = time_points[0]
-            index = 0
-            while trans.date > key.date():
-                index += 1
-                key = time_points[index]
-            sums[key] += trans.amount
+            for start,end in controller.pairwise(time_points):
+                if start.date() < trans.date and end.date() >= trans.date:
+                    #print trans.date , " between ", start, end
+                    sums[start] += trans.amount
+                    break
+            if trans.date > time_points[-1].date():
+                sums[time_points[-1]] += trans.amount
+        #del sums[time_points[0]]
         #print legend
-        #print sums
+        data = [sums[d] for d in time_points]
+        #print "Chart data: ", data
         if chart_type == 'line chart':
             plot = cairoplot.plots.DotLinePlot('gtk',
-                            data=sums.values(),
+                            data=data,
                             width=self.width,
                             height=300,
                             x_labels=legend,
@@ -270,19 +275,20 @@ class CategoryOverTimeChart(gtk.VBox, Chart):
                             #series_colors=['blue','green'],
                             dash=False)
         else:
+            labels = data
+            data.append(0)
             plot = cairoplot.plots.VerticalBarPlot('gtk',
-                            data=sums.values(),
+                            data=[data],
                             width=self.width,
                             height=300,
                             #series_labels = ['earnings', 'spendings'],
                             x_labels=legend,
-                            y_labels=['0', str(max(sums.values()))],
-                            #display_values=True,
-                            #y_title='Amount',
-                            background="white light_gray",
+                            y_labels=[str(min(labels)), str(max(labels))],
+                            display_values=True,
                             grid=True,
                             #series_colors=['blue','green'],
                             )
+            #print plot
         self.chart = plot.handler
         self.chart.show()
         self.pack_start(self.chart)
