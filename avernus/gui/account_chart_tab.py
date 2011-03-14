@@ -247,12 +247,12 @@ class CategoryOverTimeChart(gtk.VBox, Chart):
         sums = {}
         for tp in time_points:
             sums[tp] = 0
-        print "Transactions: ", transactions
-        print "Time Points: ",time_points
+        #print "Transactions: ", transactions
+        #print "Time Points: ",time_points
         for trans in transactions:
             for start,end in controller.pairwise(time_points):
                 if start.date() < trans.date and end.date() >= trans.date:
-                    print trans.date , " between ", start, end
+                    #print trans.date , " between ", start, end
                     sums[start] += trans.amount
                     break
             if trans.date > time_points[-1].date():
@@ -260,7 +260,7 @@ class CategoryOverTimeChart(gtk.VBox, Chart):
         #del sums[time_points[0]]
         #print legend
         data = [sums[d] for d in time_points]
-        print "Chart data: ", data
+        #print "Chart data: ", data
         if chart_type == 'line chart':
             plot = cairoplot.plots.DotLinePlot('gtk',
                             data=data,
@@ -275,19 +275,20 @@ class CategoryOverTimeChart(gtk.VBox, Chart):
                             #series_colors=['blue','green'],
                             dash=False)
         else:
+            labels = data
+            data.append(0)
             plot = cairoplot.plots.VerticalBarPlot('gtk',
-                            data=data,
+                            data=[data],
                             width=self.width,
                             height=300,
                             #series_labels = ['earnings', 'spendings'],
                             x_labels=legend,
-                            y_labels=['0', str(max(sums.values()))],
-                            #display_values=True,
-                            #y_title='Amount',
-                            background="white light_gray",
+                            y_labels=[str(min(labels)), str(max(labels))],
+                            display_values=True,
                             grid=True,
                             #series_colors=['blue','green'],
                             )
+            #print plot
         self.chart = plot.handler
         self.chart.show()
         self.pack_start(self.chart)
