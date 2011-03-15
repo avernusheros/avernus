@@ -94,12 +94,7 @@ class AccountChartTab(gtk.VBox, page.Page):
         
         y = 0
         
-        chart = CategoryOverTimeChart(width, self.account, self.start_date, self.end_date)
-        self.charts.append(chart)
-        self.table.attach(chart,0,2,y,y+1)
-        y += 1
-        
-        chart = EarningsVsSpendingsChart(width, self.account, self.start_date, self.end_date, self.current_step)
+        chart = TransactionsChart(width, self.account, self.start_date, self.end_date, self.current_step)
         self.charts.append(chart)
         self.table.attach(chart,0,2,y,y+1)
         y += 1
@@ -203,131 +198,70 @@ class BalanceChart(gtk.VBox, Chart):
         self.chart = plot.handler
         self.pack_start(self.chart)
         
-class CategoryOverTimeChart(gtk.VBox, Chart):
-    
-    def __init__(self, width, account, start_date, end_date):
-        self.active_category = None
-        gtk.VBox.__init__(self)
-        hbox = gtk.HBox()
-        label = gtk.Label()
-        label.set_markup('<span weight="bold">Category</span> over time')
-        hbox.pack_start(label)
-        self.pack_start(hbox)
-        hbox = gtk.HBox()
-        self.category_cb = gtk.combo_box_new_text()
-        for category in controller.getAllAccountCategories():
-            self.category_cb.append_text(category.name)
-        self.category_cb.set_active(0)
-        self.category_cb.connect('changed', self.on_category_change)
-        hbox.pack_start(self.category_cb)
-        self.type_cb = gtk.combo_box_new_text()
-        for chart_type in ['bar chart', 'line chart']:
-            self.type_cb.append_text(chart_type)
-        self.type_cb.set_active(0)
-        self.type_cb.connect('changed', self.on_type_change)
-        hbox.pack_start(self.type_cb)
-        self.pack_start(hbox)
-        Chart.__init__(self, width, account, start_date, end_date)
-        
-    def on_category_change(self, widget):
-        self.remove(self.chart)
-        self._draw_chart()
 
-    def on_type_change(self, widget):
-        self.remove(self.chart)
-        self._draw_chart()
-        
-    def _draw_chart(self):
-        chart_type = self.type_cb.get_active_text()
-        self.active_category = controller.getAccountCategoryForName(self.category_cb.get_active_text())
-        transactions = self.account.get_transactions_in_period(self.start_date, self.end_date)
-        transactions = filter(lambda trans:trans.category == self.active_category, transactions) 
-        time_points = list(rrule.rrule(rrule.MONTHLY, dtstart = self.start_date, until = self.end_date, bymonthday=1))
-        legend = [d.strftime("%b %y") for d in time_points]
-        sums = {}
-        for tp in time_points:
-            sums[tp] = 0
-        #print "Transactions: ", transactions
-        #print "Time Points: ",time_points
-        for trans in transactions:
-            for start,end in controller.pairwise(time_points):
-                if start.date() < trans.date and end.date() >= trans.date:
-                    #print trans.date , " between ", start, end
-                    sums[start] += trans.amount
-                    break
-            if trans.date > time_points[-1].date():
-                sums[time_points[-1]] += trans.amount
-        #del sums[time_points[0]]
-        #print legend
-        data = [sums[d] for d in time_points]
-        #print "Chart data: ", data
-        if chart_type == 'line chart':
-            plot = cairoplot.plots.DotLinePlot('gtk',
-                            data=data,
-                            width=self.width,
-                            height=300,
-                            x_labels=legend,
-                            y_title='Sum',
-                            y_formatter=gui_utils.get_currency_format_from_float,
-                            background="white light_gray",
-                            grid=True,
-                            dots=2,
-                            #series_colors=['blue','green'],
-                            dash=False)
-        else:
-            labels = data
-            data.append(0)
-            plot = cairoplot.plots.VerticalBarPlot('gtk',
-                            data=[data],
-                            width=self.width,
-                            height=300,
-                            #series_labels = ['earnings', 'spendings'],
-                            x_labels=legend,
-                            y_labels=[str(min(labels)), str(max(labels))],
-                            display_values=True,
-                            grid=True,
-                            #series_colors=['blue','green'],
-                            )
-            #print plot
-        self.chart = plot.handler
-        self.chart.show()
-        self.pack_start(self.chart)
-        
-class EarningsVsSpendingsChart(gtk.VBox, Chart):
+class TransactionsChart(gtk.VBox, Chart):
 
     def __init__(self, width, account, start_date, end_date, step='day'):
         gtk.VBox.__init__(self)
         self.step = step
         hbox = gtk.HBox()
-        markup = '<span weight="bold" color="blue">Earnings</span>'+' vs '+'<span weight="bold" color="darkgreen">Spendings</span>'
-        label = gtk.Label()
-        label.set_markup(markup)
-        hbox.pack_start(label)
+        #markup = '<span weight="bold" color="blue">Earnings</span>'+' vs '+'<span weight="bold" color="darkgreen">Spendings</span>'
+        #label = gtk.Label()
+        #label.set_markup(markup)
+        #hbox.pack_start(label)
+        
         self.type_cb = gtk.combo_box_new_text()
-        for chart_type in ['bar chart', 'line chart']:
+        for chart_type in ['Earnings vs Spendings', 'Transactions Summed']:
             self.type_cb.append_text(chart_type)
         self.type_cb.set_active(0)
-        self.type_cb.connect('changed', self.on_type_change)
+        self.type_cb.connect('changed', self.on_change)
         hbox.pack_start(self.type_cb)
+        
+        liststore = gtk.ListStore(object, str)
+        self.category_cb = gtk.ComboBox(liststore)
+        cell = gtk.CellRendererText()
+        self.category_cb.pack_start(cell, True)
+        self.category_cb.add_attribute(cell, 'text', 1)
+        liststore.append([None, _('All')])
+        for category in sorted(controller.getAllAccountCategories()):
+            liststore.append([category, category.name])
+        self.category_cb.set_active(0)
+        self.category_cb.connect('changed', self.on_change)
+        hbox.pack_start(self.category_cb)
+        
+        self.style_cb = gtk.combo_box_new_text()
+        for chart_style in ['bar chart', 'line chart']:
+            self.style_cb.append_text(chart_style)
+        self.style_cb.set_active(0)
+        self.style_cb.connect('changed', self.on_change)
+        hbox.pack_start(self.style_cb)
 
         self.pack_start(hbox)
         Chart.__init__(self, width, account, start_date, end_date)
     
-    def on_type_change(self, widget):
+    def on_change(self, widget=None):
         self.remove(self.chart)
         self._draw_chart()
 
     def on_step_change(self, step):
         self.step = step
-        self.remove(self.chart)
-        self._draw_chart()
+        self.on_change()
 
     def _draw_chart(self):
         chart_type = self.type_cb.get_active_text()
+        if chart_type == 'Earnings vs Spendings':
+            self._draw_chart1()
+        else:
+            self._draw_chart2()
+        self.chart.show()
+        self.pack_start(self.chart)
+
+    def _draw_chart1(self):
+        chart_style = self.style_cb.get_active_text()
         earnings = self.account.get_earnings_summed(self.end_date, self.start_date, self.step)
         spendings = self.account.get_spendings_summed(self.end_date, self.start_date, self.step)
         legend = get_legend(self.start_date, self.end_date, self.step)
-        if chart_type == 'line chart':
+        if chart_style == 'line chart':
             plot = cairoplot.plots.DotLinePlot('gtk',
                                 data=[earnings, spendings],
                                 width=self.width,
@@ -345,7 +279,7 @@ class EarningsVsSpendingsChart(gtk.VBox, Chart):
                                 data=[[earnings[i], spendings[i]] for i in range(len(earnings))],
                                 width=self.width,
                                 height=300,
-                                #series_labels = ['earnings', 'spendings'],
+                                series_labels = ['earnings', 'spendings'],
                                 x_labels=legend,
                                 y_labels=['0', str(max(max(earnings),max(spendings)))],
                                 #display_values=True,
@@ -355,8 +289,54 @@ class EarningsVsSpendingsChart(gtk.VBox, Chart):
                                 series_colors=['blue','green'],
                                 )
         self.chart = plot.handler
-        self.chart.show()
-        self.pack_start(self.chart)
+    
+    def _draw_chart2(self):
+        chart_style = self.style_cb.get_active_text()
+        active_category = self.category_cb.get_model()[self.category_cb.get_active()][0]
+        transactions = self.account.get_transactions_in_period(self.start_date, self.end_date)
+        transactions = filter(lambda trans:trans.category == active_category, transactions) 
+        time_points = list(rrule.rrule(rrule.MONTHLY, dtstart = self.start_date, until = self.end_date, bymonthday=1))
+        legend = [d.strftime("%b %y") for d in time_points]
+        sums = {}
+        for tp in time_points:
+            sums[tp] = 0
+        for trans in transactions:
+            for start,end in controller.pairwise(time_points):
+                if start.date() < trans.date and end.date() >= trans.date:
+                    sums[start] += trans.amount
+                    break
+            if trans.date > time_points[-1].date():
+                sums[time_points[-1]] += trans.amount
+        data = [sums[d] for d in time_points]
+        if chart_style == 'line chart':
+            plot = cairoplot.plots.DotLinePlot('gtk',
+                            data=data,
+                            width=self.width,
+                            height=300,
+                            x_labels=legend,
+                            y_title='Sum',
+                            y_formatter=gui_utils.get_currency_format_from_float,
+                            background="white light_gray",
+                            grid=True,
+                            dots=2,
+                            series_colors=['blue'],
+                            dash=False)
+        else:
+            labels = data
+            #WHY?
+            data.append(0)
+            plot = cairoplot.plots.VerticalBarPlot('gtk',
+                            data=[data],
+                            width=self.width,
+                            height=300,
+                            #series_labels = ['earnings', 'spendings'],
+                            x_labels=legend,
+                            y_labels=[str(min(labels)), str(max(labels))],
+                            display_values=True,
+                            grid=True,
+                            series_colors=['blue' for i in range(len(data))],
+                            )
+        self.chart = plot.handler
 
 
 class CategoryPie(gtk.VBox, Chart):
