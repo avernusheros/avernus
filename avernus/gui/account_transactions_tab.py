@@ -188,7 +188,7 @@ class TransactionsTree(gui_utils.Tree):
         sorter.set_sort_func(self.DATE, gui_utils.sort_by_time, self.DATE)
         col, cell = self.create_column(_('Description'), self.DESCRIPTION, func=desc_markup)
         cell.props.wrap_mode = pango.WRAP_WORD
-        cell.props.wrap_width = 500
+        cell.props.wrap_width = 300
         self.create_column(_('Amount'), self.AMOUNT, func=gui_utils.currency_format)
         self.create_column(_('Category'), self.CATEGORY)
         self.set_rules_hint(True)
