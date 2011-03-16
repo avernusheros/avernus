@@ -229,19 +229,18 @@ class Onvista():
             # we have a single page
             # determine whether its an etf or a fonds
             html = page.read()
-            if received_url.find("etf")>-1:
+            if "etf" in received_url:
                 # etf
                 #print "found ETF-onepage"
                 for item in self._parse_kurse_html(html, tdInd=etfTDS, stockType=stock.ETF):
-                    print "Yield ", item
+                    #print "Yield ", item
                     yield (item, self)
-            elif received_url.find("anleihen")>-1:
+            elif "anleihen" in received_url:
                 #bond
                 for item in self._parse_kurse_html(html, tdInd=bondTDS, stockType=stock.BOND):
                     yield (item, self)
-            else:
+            elif "fond" in received_url:
                 # aktive fonds
-                #print "found aktiveFonds-onepage"
                 for item in self._parse_kurse_html(html):
                     yield (item, self)
         logger.debug("Finished Searching " + searchstring)
