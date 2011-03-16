@@ -205,11 +205,6 @@ class TransactionsChart(gtk.VBox, Chart):
         gtk.VBox.__init__(self)
         self.step = step
         hbox = gtk.HBox()
-        #markup = '<span weight="bold" color="blue">Earnings</span>'+' vs '+'<span weight="bold" color="darkgreen">Spendings</span>'
-        #label = gtk.Label()
-        #label.set_markup(markup)
-        #hbox.pack_start(label)
-        
         self.type_cb = gtk.combo_box_new_text()
         for chart_type in ['Earnings vs Spendings', 'Transactions Summed']:
             self.type_cb.append_text(chart_type)
@@ -308,18 +303,28 @@ class TransactionsChart(gtk.VBox, Chart):
             if trans.date > time_points[-1].date():
                 sums[time_points[-1]] += trans.amount
         data = [sums[d] for d in time_points]
+        display = {'actual':data}
+        colors = ['blue']
+        if len(data)>10:
+            avgs = []
+            avgs.append(data[0])
+            avgs.append((data[0] + data[1])/2)
+            for i in range(2,len(data)):
+                avgs.append((data[i]+data[i-1]+data[i-2])/3)
+            display['3 floating average'] = avgs
+            colors.insert(0,'yellow')
         if chart_style == 'line chart':
             plot = cairoplot.plots.DotLinePlot('gtk',
-                            data=data,
+                            data=display,
                             width=self.width,
                             height=300,
                             x_labels=legend,
-                            y_title='Sum',
                             y_formatter=gui_utils.get_currency_format_from_float,
                             background="white light_gray",
                             grid=True,
                             dots=2,
-                            series_colors=['blue'],
+                            series_colors=colors,
+                            series_legend =True,
                             dash=False)
         else:
             labels = data

@@ -320,7 +320,7 @@ class StockSelector(gtk.VBox):
         sw.set_property('hscrollbar-policy', gtk.POLICY_AUTOMATIC)
         sw.set_property('vscrollbar-policy', gtk.POLICY_AUTOMATIC)
         self.result_tree = gui_utils.Tree()
-        self.result_tree.model = gtk.TreeStore(object, str, str,str,str,str)
+        self.result_tree.model = gtk.TreeStore(object, str, str,str,str,str,str)
         self.result_tree.set_model(self.result_tree.model)
         self.result_tree.create_icon_column(None, 1)
         col, cell = self.result_tree.create_column(_('Name'), 2)
@@ -329,6 +329,7 @@ class StockSelector(gtk.VBox):
         self.result_tree.create_column('ISIN', 3)
         self.result_tree.create_column(_('Currency'), 4)
         self.result_tree.create_icon_column(_('Type'), 5,size= gtk.ICON_SIZE_DND)
+        self.result_tree.create_column('Exchange', 6)
         self.result_tree.set_size_request(self.WIDTH, self.HEIGHT)
         sw.add(self.result_tree)
         self.pack_end(sw)
@@ -377,7 +378,8 @@ class StockSelector(gtk.VBox):
                                        stock.name,
                                        stock.isin,
                                        stock.currency,
-                                       icons[stock.type]
+                                       icons[stock.type],
+                                       stock.exchange,
                                        ])
 
 
