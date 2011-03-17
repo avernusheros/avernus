@@ -49,6 +49,12 @@ class AccountChartTab(gtk.VBox, page.Page):
         
         self.zooms = ['ACT','1m', '3m', '6m', 'YTD', '1y','2y','5y', 'all']
         self.show_all()
+        
+        #test/debug
+        from avernus.controller import chartController
+        transOverTime = chartController.TransactionValueOverTimeChartController([t for t in account])
+        print transOverTime.x_values
+        print transOverTime.y_values
 
     def clear(self):
         for child in self.get_children():
