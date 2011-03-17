@@ -4,7 +4,7 @@ import gtk
 from datetime import datetime
 from avernus.gui.gui_utils import Tree, get_name_string
 from avernus.gui.dialogs import PosSelector
-from avernus.objects import controller
+from avernus.controller import controller
 from avernus.gui import gui_utils, dialogs
 
 

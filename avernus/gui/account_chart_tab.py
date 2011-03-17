@@ -2,7 +2,7 @@
 
 from avernus import cairoplot
 import gtk
-from avernus.objects import controller
+from avernus.controller import controller
 import datetime
 from avernus import date_utils
 from avernus.gui import gui_utils, page

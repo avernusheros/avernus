@@ -97,7 +97,8 @@ def start(db_file = None):
         configs = config.avernusConfig()
         db_file = configs.get_option('database file')
 
-    from avernus.objects import model, controller, store
+    from avernus.objects import model, store
+    from avernus.controller import controller
     model.store = store.Store(db_file)
     controller.createTables()
     controller.initialLoading()

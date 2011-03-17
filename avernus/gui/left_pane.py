@@ -5,7 +5,7 @@ import pango
 from avernus import pubsub
 from avernus.gui import gui_utils, dialogs, progress_manager
 from avernus.gui.csv_import_dialog import CSVImportDialog
-from avernus.objects import controller
+from avernus.controller import controller
 
 
 class Category(object):

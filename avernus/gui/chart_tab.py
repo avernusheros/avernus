@@ -1,14 +1,15 @@
 #!/usr/bin/env python
 
+from account_chart_tab import get_legend
 from avernus import cairoplot, date_utils
-import gtk, gobject
-from avernus.objects import controller
 from avernus.gui import gui_utils
+from avernus.controller import controller
 from dateutil.rrule import *
 import datetime
+import gtk
+import gobject
 
 #FIXME
-from account_chart_tab import get_legend
 
 NO_DATA_STRING = '\nNo Data!\nAdd positions to portfolio first.\n\n'
 

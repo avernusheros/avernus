@@ -6,7 +6,7 @@ import codecs, csv, re
 from cStringIO import StringIO
 import chardet
 
-from avernus.objects import controller
+from avernus.controller import controller
 from avernus import pubsub
 
 

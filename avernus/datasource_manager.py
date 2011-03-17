@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from avernus.objects import controller
+from avernus.controller import controller
 from avernus.objects.stock import Stock
 from avernus import pubsub
 from avernus.data_sources import yahoo, onvista

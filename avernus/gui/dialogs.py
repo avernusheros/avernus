@@ -2,7 +2,8 @@
 
 from avernus import pubsub
 from avernus.gui import gui_utils
-from avernus.objects import controller, stock
+from avernus.controller import controller
+from avernus.objects import stock
 from avernus.objects.position import MetaPosition
 import datetime
 import gtk

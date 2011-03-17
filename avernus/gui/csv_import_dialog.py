@@ -3,7 +3,7 @@
 import gtk, os, pango
 from avernus.gui import gui_utils
 from avernus import csvimporter, config
-from avernus.objects import controller
+from avernus.controller import controller
 
 
 class CSVImportDialog(gtk.Dialog):
