@@ -3,7 +3,7 @@
 from avernus import config, pubsub
 from avernus.config import avernusConfig
 from avernus.gui import gui_utils, dialogs, page
-from avernus.objects import controller
+from avernus.controller import controller
 import gtk, gobject
 import datetime
 import pango

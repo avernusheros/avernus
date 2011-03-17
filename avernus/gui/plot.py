@@ -5,7 +5,7 @@ from datetime import date
 from avernus import cairoplot
 from avernus.gui import gui_utils
 from avernus.objects.quotation import Quotation
-from avernus.objects import controller
+from avernus.controller import controller
 
 
 class ChartWindow(gtk.Window):

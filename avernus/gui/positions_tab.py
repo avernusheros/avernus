@@ -7,7 +7,7 @@ from avernus.gui.dialogs import SellDialog, NewWatchlistPositionDialog, BuyDialo
 from avernus.gui.gui_utils import Tree, ContextMenu, get_name_string, datetime_format
 from avernus.gui import gui_utils, dialogs, progress_manager, page
 from avernus.objects.position import MetaPosition
-from avernus.objects import controller
+from avernus.controller import controller
 
 gain_thresholds = {
                    (-sys.maxint,-0.5):'arrow_down',

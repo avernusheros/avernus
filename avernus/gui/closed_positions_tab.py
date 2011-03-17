@@ -3,7 +3,7 @@
 import gtk
 from avernus import pubsub
 from avernus.gui import gui_utils
-from avernus.objects import controller
+from avernus.controller import controller
 
 
 class ClosedPositionsTab(gtk.ScrolledWindow):

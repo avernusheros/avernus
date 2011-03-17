@@ -1,7 +1,7 @@
 # -*- Mode: Python; coding: utf-8; indent-tabs-mode: nil; tab-width: 4 -*-
 from avernus.config import avernusConfig
 from avernus.gui import gui_utils
-from avernus.objects import controller
+from avernus.controller import controller
 import gtk
 import logging
 import sys

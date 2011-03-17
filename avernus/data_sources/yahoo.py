@@ -4,7 +4,8 @@ from urllib import urlopen
 import csv, pytz, re, json
 from datetime import datetime
 from avernus import config
-from avernus.objects import stock, controller
+from avernus.objects import stock
+from avernus.controller import controller
 
 import logging
 logger = logging.getLogger(__name__)
