@@ -8,6 +8,7 @@ from avernus import date_utils
 from avernus.gui import gui_utils, page
 from dateutil.relativedelta import relativedelta
 import dateutil.rrule as rrule
+from avernus.controller import chartController
 
 no_data_string = _('\nNo Data!\nAdd transactions first.\n\n')
 MONTHS = {
@@ -50,12 +51,7 @@ class AccountChartTab(gtk.VBox, page.Page):
         self.zooms = ['ACT','1m', '3m', '6m', 'YTD', '1y','2y','5y', 'all']
         self.show_all()
         
-        #test/debug
-        from avernus.controller import chartController
-        transOverTime = chartController.TransactionValueOverTimeChartController([t for t in account])
-        print transOverTime.x_values
-        print transOverTime.y_values
-
+        
     def clear(self):
         for child in self.get_children():
             self.remove(child)
@@ -100,9 +96,10 @@ class AccountChartTab(gtk.VBox, page.Page):
         
         y = 0
         
-        chart = TransactionsChart(width, self.account, self.start_date, self.end_date, self.current_step)
-        self.charts.append(chart)
-        self.table.attach(chart,0,2,y,y+1)
+        #chart = TransactionsChart(width, self.account, self.start_date, self.end_date, self.current_step)
+        #self.charts.append(chart)
+        chart = chartController.TransactionValueOverTimeChartController([t for t in self.account])
+        self.table.attach(SimpleLineChart(chart,width),0,2,y,y+1)
         y += 1
 
         label = gtk.Label()
@@ -158,7 +155,29 @@ class AccountChartTab(gtk.VBox, page.Page):
             self.start_date = date_utils.get_ytd_first()
         elif self.zoom == 'all':
             self.start_date = self.account.birthday
-
+            
+class SimpleLineChart(gtk.VBox):
+    
+    def __init__(self, chartController, width):
+        gtk.VBox.__init__(self)
+        self.controller = chartController
+        self.width = width
+        self.draw_chart()
+        
+    def draw_chart(self):
+        plot = cairoplot.plots.DotLinePlot('gtk',
+                                data=self.controller.y_values,
+                                width=self.width,
+                                height=300,
+                                x_labels=self.controller.legend,
+                                y_formatter=gui_utils.get_currency_format_from_float,
+                                y_title='Amount',
+                                background="white light_gray",
+                                grid=True,
+                                dots=2,
+                                series_colors=['blue','green'])
+        self.chart = plot.handler
+        self.pack_start(self.chart)
 
 class Chart(object):
 

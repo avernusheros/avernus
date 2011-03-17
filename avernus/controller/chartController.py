@@ -4,6 +4,7 @@ Created on 17.03.2011
 @author: bastian
 '''
 
+from avernus.gui import gui_utils
 from dateutil.relativedelta import relativedelta
 
 def get_step_for_range(start,end):
@@ -30,18 +31,23 @@ class TransactionChartController:
             self.x_values.append(current)
             current += self.step
         self.x_values.append(self.end_date)
+        self.legend = [gui_utils.get_date_string(x) for x in self.x_values]
         
 class TransactionValueOverTimeChartController(TransactionChartController):
     
     def __init__(self, transactions):
         TransactionChartController.__init__(self, transactions)
-        self.y_values = {}
+        self.y_values = []
+        temp = {}
         i = 0
         x = self.x_values[i]
-        self.y_values[x] = 0
+        temp[x] = 0
         for t in self.transactions:
             if t.date > x:
                 i +=1
                 x = self.x_values[i]
-                self.y_values[x] = self.y_values[self.x_values[i-1]]
-            self.y_values[x] += t.amount
+                temp[x] = temp[self.x_values[i-1]]
+            temp[x] += t.amount
+        for x in self.x_values:
+            self.y_values.append(temp[x])
+            
