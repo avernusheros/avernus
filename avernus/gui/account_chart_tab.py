@@ -96,10 +96,15 @@ class AccountChartTab(gtk.VBox, page.Page):
         
         y = 0
         
-        #chart = TransactionsChart(width, self.account, self.start_date, self.end_date, self.current_step)
+        chart = TransactionsChart(width, self.account, self.start_date, self.end_date, self.current_step)
+        self.table.attach(chart,0,2,y,y+1)
+        self.charts.append(chart)
+        y +=1 
+        
+        chart_controller = chartController.TransactionValueOverTimeChartController([t for t in self.account])
+        chart = SimpleLineChart(chart_controller,width)
+        self.table.attach(chart,0,2,y,y+1)
         #self.charts.append(chart)
-        chart = chartController.TransactionValueOverTimeChartController([t for t in self.account])
-        self.table.attach(SimpleLineChart(chart,width),0,2,y,y+1)
         y += 1
 
         label = gtk.Label()
