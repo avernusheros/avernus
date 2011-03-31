@@ -12,11 +12,11 @@ class DividendsTab(gtk.VBox):
     def __init__(self, item):
         gtk.VBox.__init__(self)
         actiongroup = gtk.ActionGroup('dividend_tab')
-        tree = DividendsTree(item, actiongroup)
+        self.tree = DividendsTree(item, actiongroup)
         actiongroup.add_actions([
-                ('add',    gtk.STOCK_ADD,     'add',    None, _('Add new dividend'),         tree.on_add),
-                ('remove', gtk.STOCK_DELETE,  'remove', None, _('Delete selected dividend'), tree.on_remove),
-                ('edit', gtk.STOCK_EDIT,  'remove', None, _('Edit selected dividend'), tree.on_edit),
+                ('add',    gtk.STOCK_ADD,     'add',    None, _('Add new dividend'),         self.tree.on_add),
+                ('remove', gtk.STOCK_DELETE,  'remove', None, _('Delete selected dividend'), self.tree.on_remove),
+                ('edit', gtk.STOCK_EDIT,  'remove', None, _('Edit selected dividend'), self.tree.on_edit),
                  ])
         actiongroup.get_action('remove').set_sensitive(False)
         actiongroup.get_action('edit').set_sensitive(False)
@@ -30,11 +30,14 @@ class DividendsTab(gtk.VBox):
         sw = gtk.ScrolledWindow()
         sw.set_property('hscrollbar-policy', gtk.POLICY_AUTOMATIC)
         sw.set_property('vscrollbar-policy', gtk.POLICY_AUTOMATIC)
-        sw.add(tree)
+        sw.add(self.tree)
         self.pack_start(tb, expand = False, fill = False)
         self.pack_start(sw)
         self.show_all()
-
+    
+    def show(self):
+        self.tree.load_dividends()
+    
 
 class DividendsTree(Tree):
     
@@ -68,6 +71,7 @@ class DividendsTree(Tree):
         self.actiongroup.get_action('edit').set_sensitive(False)
 
     def load_dividends(self):
+        self.clear()
         for pos in self.portfolio:
             for div in pos.dividends:
                 self.insert_dividend(div)
