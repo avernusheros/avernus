@@ -12,11 +12,11 @@ class DividendsTab(gtk.VBox):
     def __init__(self, item):
         gtk.VBox.__init__(self)
         actiongroup = gtk.ActionGroup('dividend_tab')
-        tree = DividendsTree(item, actiongroup)
+        self.tree = DividendsTree(item, actiongroup)
         actiongroup.add_actions([
-                ('add',    gtk.STOCK_ADD,     'add',    None, _('Add new dividend'),         tree.on_add),
-                ('remove', gtk.STOCK_DELETE,  'remove', None, _('Delete selected dividend'), tree.on_remove),
-                ('edit', gtk.STOCK_EDIT,  'remove', None, _('Edit selected dividend'), tree.on_edit),
+                ('add',    gtk.STOCK_ADD,     'add',    None, _('Add new dividend'),         self.tree.on_add),
+                ('remove', gtk.STOCK_DELETE,  'remove', None, _('Delete selected dividend'), self.tree.on_remove),
+                ('edit', gtk.STOCK_EDIT,  'remove', None, _('Edit selected dividend'), self.tree.on_edit),
                  ])
         actiongroup.get_action('remove').set_sensitive(False)
         actiongroup.get_action('edit').set_sensitive(False)
@@ -30,13 +30,19 @@ class DividendsTab(gtk.VBox):
         sw = gtk.ScrolledWindow()
         sw.set_property('hscrollbar-policy', gtk.POLICY_AUTOMATIC)
         sw.set_property('vscrollbar-policy', gtk.POLICY_AUTOMATIC)
-        sw.add(tree)
+        sw.add(self.tree)
         self.pack_start(tb, expand = False, fill = False)
         self.pack_start(sw)
         self.show_all()
-
+    
+    def show(self):
+        self.tree.load_dividends()
+    
 
 class DividendsTree(Tree):
+    
+    DATE=2
+    
     def __init__(self, portfolio, actiongroup):
         self.portfolio = portfolio
         self.actiongroup = actiongroup
@@ -49,10 +55,11 @@ class DividendsTree(Tree):
     def _init_widgets(self):
         self.set_model(gtk.ListStore(object, str, object, float, float, float))
         self.create_column(_('Position'), 1)
-        self.create_column(_('Date'), 2, func=gui_utils.date_to_string)
+        self.create_column(_('Date'), self.DATE, func=gui_utils.date_to_string)
         self.create_column(_('Amount'), 3, func=gui_utils.currency_format)
         self.create_column(_('Transaction costs'), 4, func=gui_utils.currency_format)
         self.create_column(_('Total'), 5, func = gui_utils.currency_format)
+        self.get_model().set_sort_func(self.DATE, gui_utils.sort_by_time, self.DATE)
 
     def on_cursor_changed(self, widget):
         obj, iterator = self.get_selected_item()
@@ -64,6 +71,7 @@ class DividendsTree(Tree):
         self.actiongroup.get_action('edit').set_sensitive(False)
 
     def load_dividends(self):
+        self.clear()
         for pos in self.portfolio:
             for div in pos.dividends:
                 self.insert_dividend(div)
