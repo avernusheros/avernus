@@ -37,6 +37,9 @@ class DividendsTab(gtk.VBox):
 
 
 class DividendsTree(Tree):
+    
+    DATE=2
+    
     def __init__(self, portfolio, actiongroup):
         self.portfolio = portfolio
         self.actiongroup = actiongroup
@@ -49,10 +52,11 @@ class DividendsTree(Tree):
     def _init_widgets(self):
         self.set_model(gtk.ListStore(object, str, object, float, float, float))
         self.create_column(_('Position'), 1)
-        self.create_column(_('Date'), 2, func=gui_utils.date_to_string)
+        self.create_column(_('Date'), self.DATE, func=gui_utils.date_to_string)
         self.create_column(_('Amount'), 3, func=gui_utils.currency_format)
         self.create_column(_('Transaction costs'), 4, func=gui_utils.currency_format)
         self.create_column(_('Total'), 5, func = gui_utils.currency_format)
+        self.get_model().set_sort_func(self.DATE, gui_utils.sort_by_time, self.DATE)
 
     def on_cursor_changed(self, widget):
         obj, iterator = self.get_selected_item()
