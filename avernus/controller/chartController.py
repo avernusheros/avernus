@@ -17,6 +17,7 @@ def get_step_for_range(start,end):
     #print "delta month"
     return relativedelta(months=1)
 
+
 class TransactionChartController:
     
     def __init__(self, transactions):
@@ -32,6 +33,7 @@ class TransactionChartController:
             current += self.step
         self.x_values.append(self.end_date)
         self.legend = [gui_utils.get_date_string(x) for x in self.x_values]
+
         
 class TransactionValueOverTimeChartController(TransactionChartController):
     
@@ -50,4 +52,3 @@ class TransactionValueOverTimeChartController(TransactionChartController):
             temp[x] += t.amount
         for x in self.x_values:
             self.y_values.append(temp[x])
-            

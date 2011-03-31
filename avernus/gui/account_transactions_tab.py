@@ -70,7 +70,9 @@ class AccountTransactionTab(gtk.VBox, page.Page):
         frame.add(sw)
         frame.set_shadow_type(gtk.SHADOW_IN)
         self.hpaned.pack1(frame, shrink=True, resize=True)
-
+        
+        
+        
         uncategorized_button.connect('toggled', self.transactions_tree.on_toggle_uncategorized)
         transfer_button.connect('toggled', self.transactions_tree.on_toggle_transfer)
         
@@ -109,6 +111,11 @@ class AccountTransactionTab(gtk.VBox, page.Page):
         vbox.pack_start(toolbar, expand=False, fill=False)
         
         pubsub.subscribe("AccountTransactionsTab.UIupdate", self.update_ui)
+        
+        vbox = gtk.VBox()
+        self.pack_start(vbox, expand=False, fill=False)
+        print "weitermachen! account_transaction_tab init"
+        
         self.connect("destroy", self.on_destroy)
         self.show_all()
         
