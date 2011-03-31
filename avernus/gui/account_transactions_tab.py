@@ -4,8 +4,6 @@ from avernus import config, pubsub
 from avernus.config import avernusConfig
 from avernus.gui import gui_utils, dialogs, page
 from avernus.controller import controller
-from avernus.controller import chartController
-from avernus.gui.account_chart_tab import SimpleLineChart
 import gtk, gobject
 import datetime
 import pango
@@ -72,9 +70,7 @@ class AccountTransactionTab(gtk.VBox, page.Page):
         frame.add(sw)
         frame.set_shadow_type(gtk.SHADOW_IN)
         self.hpaned.pack1(frame, shrink=True, resize=True)
-        
-        
-        
+
         uncategorized_button.connect('toggled', self.transactions_tree.on_toggle_uncategorized)
         transfer_button.connect('toggled', self.transactions_tree.on_toggle_transfer)
         
@@ -113,35 +109,8 @@ class AccountTransactionTab(gtk.VBox, page.Page):
         vbox.pack_start(toolbar, expand=False, fill=False)
         
         pubsub.subscribe("AccountTransactionsTab.UIupdate", self.update_ui)
-        
-        self.chart_box = gtk.VBox()
-        self.pack_start(self.chart_box, expand=False, fill=False)
-        chart_toggle_button = gtk.CheckButton(label="Show Chart")
-        chart_toggle_button.connect("toggled", self.on_show_chart_toggle)
-        self.chart_box.pack_start(chart_toggle_button)
-        
-        self.transaction_chart = None
-        
         self.connect("destroy", self.on_destroy)
         self.show_all()
-        
-    def on_show_chart_toggle(self, widget):
-        if widget.get_active():
-            self.show_current_transaction_chart()
-        else:
-            self.remove_current_transaction_chart()
-        self.show_all()
-            
-    def show_current_transaction_chart(self):
-        #self.transaction_chart = gtk.Label("Hallo")
-        transactions = self.transactions_tree.get_current_displayed_transactions()
-        chart_controller = chartController.TransactionValueOverTimeChartController(transactions)
-        self.transaction_chart = SimpleLineChart(chart_controller,600)
-        self.chart_box.pack_start(self.transaction_chart)
-            
-    def remove_current_transaction_chart(self):
-        if self.transaction_chart:
-            self.chart_box.remove(self.transaction_chart)
         
     def on_pick_start(self, entry, icon_pos, event):
         dialog = dialogs.CalendarDialog(self.transactions_tree.range_start)
@@ -240,12 +209,6 @@ class TransactionsTree(gui_utils.Tree):
         self.single_category = None
         
         self.reset_filter_dates()
-        
-    def get_current_displayed_transactions(self):
-        erg = []
-        for row in self.modelfilter:
-            erg.append(row[self.OBJECT])
-        return erg
     
     def on_category_select(self, *args, **kwargs):
         self.single_category = kwargs['category']

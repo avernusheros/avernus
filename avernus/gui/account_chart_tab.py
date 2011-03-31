@@ -165,16 +165,16 @@ class SimpleLineChart(gtk.VBox):
     
     def __init__(self, chartController, width):
         gtk.VBox.__init__(self)
-        self.control = chartController
+        self.controller = chartController
         self.width = width
         self.draw_chart()
         
     def draw_chart(self):
         plot = cairoplot.plots.DotLinePlot('gtk',
-                                data=self.control.y_values,
+                                data=self.controller.y_values,
                                 width=self.width,
                                 height=300,
-                                x_labels=self.control.legend,
+                                x_labels=self.controller.legend,
                                 y_formatter=gui_utils.get_currency_format_from_float,
                                 y_title='Amount',
                                 background="white light_gray",
