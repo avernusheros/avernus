@@ -1,10 +1,5 @@
-'''
-Created on 17.03.2011
-
-@author: bastian
-'''
-
 from avernus.gui import gui_utils
+from avernus import date_utils
 from dateutil.relativedelta import relativedelta
 
 def get_step_for_range(start,end):
@@ -52,3 +47,34 @@ class TransactionValueOverTimeChartController(TransactionChartController):
             temp[x] += t.amount
         for x in self.x_values:
             self.y_values.append(temp[x])
+
+
+class DividendsPerYearChartController():
+    
+    def __init__(self, portfolio):
+        data = {}
+        for year in date_utils.get_years(portfolio.birthday):
+            data[str(year)] = 0.0
+        for pos in portfolio:
+            for div in pos.dividends:
+                data[str(div.date.year)]+=div.total
+        self.x_values = sorted(data.keys())
+        self.y_values = []
+        for x_value in self.x_values:
+            self.y_values.append([data[x_value]])
+
+
+class DividendsPerPositionChartController():
+    
+    def __init__(self, portfolio):
+        data = {}
+        for pos in portfolio:
+            for div in pos.dividends:
+                try:
+                    data[pos.name]+=div.total
+                except:
+                    data[pos.name]=div.total
+        self.x_values = sorted(data.keys())
+        self.y_values = []
+        for x_value in self.x_values:
+            self.y_values.append([data[x_value]])
