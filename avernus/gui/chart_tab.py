@@ -5,6 +5,7 @@ from avernus import cairoplot, date_utils
 from avernus.controller import chartController
 from avernus.gui import gui_utils
 from avernus.controller import controller
+from avernus.gui.charts import SimpleLineChart
 from dateutil.rrule import *
 import datetime
 import gtk
@@ -115,22 +116,22 @@ class ValueChart(gtk.VBox):
         self.portfolio = portfolio
         self.width = width
         self.chart = None
-        
+
         hbox = gtk.HBox()
         self.pack_start(hbox, fill=False, expand=False)
         label = gtk.Label()
         label.set_markup(_('<b>Value over time</b>'))
         hbox.pack_start(label, fill=True, expand=True)
-        
+
         combobox = gtk.combo_box_new_text()
         for st in ['daily', 'weekly', 'monthly', 'yearly']:
             combobox.append_text(st)
         combobox.set_active(2)
         combobox.connect('changed', self.on_zoom_change)
         hbox.pack_start(combobox, fill=False, expand=False)
-  
+
         self.on_zoom_change(combobox)
-    
+
     def on_zoom_change(self, cb):
         self.step = cb.get_active_text()
         if self.step == 'daily':
@@ -142,7 +143,7 @@ class ValueChart(gtk.VBox):
         elif self.step == 'yearly':
             self.days = list(rrule(YEARLY, dtstart = self.portfolio.birthday, until = datetime.date.today(), bymonthday=-1, bymonth=12))[-self.MAX_VALUES:]
         self.redraw()
-    
+
     def redraw(self):
         if self.chart:
             self.remove(self.chart)
@@ -152,11 +153,11 @@ class ValueChart(gtk.VBox):
         self.spinner.show()
         self.spinner.start()
         controller.GeneratorTask(self._get_data, complete_callback=self._show_chart).start()
-    
+
     def _get_data(self):
         self.data = [self.portfolio.get_value_at_date(t) for t in self.days]
         yield 1
-                
+
     def _show_chart(self):
         self.remove(self.spinner)
         plot = cairoplot.plots.DotLinePlot('gtk',
@@ -176,7 +177,7 @@ class ValueChart(gtk.VBox):
 
 
 class BarChart(gtk.VBox):
-    
+
     def __init__(self, chart_controller, width):
         gtk.VBox.__init__(self)
         self.chart_controller = chart_controller
