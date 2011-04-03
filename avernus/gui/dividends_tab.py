@@ -3,12 +3,12 @@
 import gtk
 from datetime import datetime
 from avernus.gui.gui_utils import Tree, get_name_string
-from avernus.gui.dialogs import PosSelector
 from avernus.controller import controller
 from avernus.gui import gui_utils, dialogs
 
 
 class DividendsTab(gtk.VBox):
+    
     def __init__(self, item):
         gtk.VBox.__init__(self)
         actiongroup = gtk.ActionGroup('dividend_tab')
@@ -41,7 +41,11 @@ class DividendsTab(gtk.VBox):
 
 class DividendsTree(Tree):
     
+    POSITION=1
     DATE=2
+    AMOUNT=3
+    TA_COSTS=4
+    TOTAL=5
     
     def __init__(self, portfolio, actiongroup):
         self.portfolio = portfolio
@@ -53,12 +57,12 @@ class DividendsTree(Tree):
         self.connect('cursor_changed', self.on_cursor_changed)
 
     def _init_widgets(self):
-        self.set_model(gtk.ListStore(object, str, object, float, float, float))
-        self.create_column(_('Position'), 1)
+        self.set_model(gtk.TreeStore(object, str, object, float, float, float))
+        self.create_column(_('Position'), self.POSITION)
         self.create_column(_('Date'), self.DATE, func=gui_utils.date_to_string)
-        self.create_column(_('Amount'), 3, func=gui_utils.currency_format)
-        self.create_column(_('Transaction costs'), 4, func=gui_utils.currency_format)
-        self.create_column(_('Total'), 5, func = gui_utils.currency_format)
+        self.create_column(_('Amount'), self.AMOUNT, func=gui_utils.currency_format)
+        self.create_column(_('Transaction costs'), self.TA_COSTS, func=gui_utils.currency_format)
+        self.create_column(_('Total'), self.TOTAL, func = gui_utils.currency_format)
         self.get_model().set_sort_func(self.DATE, gui_utils.sort_by_time, self.DATE)
 
     def on_cursor_changed(self, widget):
@@ -77,8 +81,22 @@ class DividendsTree(Tree):
                 self.insert_dividend(div)
 
     def insert_dividend(self, div):
-        self.get_model().append([
-                div,
+        model = self.get_model()
+        parent_row = self.find_item(div.position)
+        if parent_row is None:
+            parent = model.append(None, [div.position, 
+                            get_name_string(div.position.stock),
+                            None,
+                            div.price,
+                            div.costs,
+                            div.total])
+        else:
+            parent_row[self.AMOUNT] += div.price
+            parent_row[self.TA_COSTS] += div.costs
+            parent_row[self.TOTAL] += div.total
+            parent = parent_row.iter
+        model.append(parent,
+                [div,
                 get_name_string(div.position.stock),
                 div.date,
                 div.price,

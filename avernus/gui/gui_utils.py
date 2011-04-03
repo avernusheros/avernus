@@ -188,6 +188,8 @@ def datetime_format(datetime, nl = True):
     return 'never'
 
 def get_date_string(date):
+    if date is None:
+        return ''
     return date.strftime(locale.nl_langinfo(locale.D_FMT))
 
 def get_datetime_string(datetime):

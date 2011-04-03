@@ -97,7 +97,6 @@ class DividendsPerPositionChartController():
 class StockChartPlotController():
     
     def __init__(self, quotations):
-       
         self.y_values = [d.close for d in quotations]
         quotation_count = len(quotations)
         self.x_values = [gui_utils.get_date_string(quotations[int(quotation_count/18 *i)].date) for i in range(18)]
