@@ -92,3 +92,14 @@ class DividendsPerPositionChartController():
         self.y_values = []
         for x_value in self.x_values:
             self.y_values.append([data[x_value]])
+
+
+class StockChartPlotController():
+    
+    def __init__(self, quotations):
+       
+        self.y_values = [d.close for d in quotations]
+        quotation_count = len(quotations)
+        self.x_values = [gui_utils.get_date_string(quotations[int(quotation_count/18 *i)].date) for i in range(18)]
+        self.x_values.insert(0,str(quotations[0].date))
+        self.x_values.insert(len(self.x_values),str(quotations[-1].date))

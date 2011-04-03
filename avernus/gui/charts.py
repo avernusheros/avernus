@@ -2,13 +2,15 @@ import gtk
 from avernus.gui import gui_utils
 from avernus import cairoplot
 
+
 class SimpleLineChart(gtk.VBox):
 
-    def __init__(self, chartController, width):
+    def __init__(self, chartController, width, dots=2):
         gtk.VBox.__init__(self)
         self.controller = chartController
         self.width = width
         self.chart = None
+        self.dots = dots
         self.draw_chart()
 
     def remove_chart(self):
@@ -26,7 +28,7 @@ class SimpleLineChart(gtk.VBox):
                                 y_title='Amount',
                                 background="white light_gray",
                                 grid=True,
-                                dots=2,
+                                dots=self.dots,
                                 series_colors=['blue','green'])
         self.chart = plot.handler
         self.pack_start(self.chart)
