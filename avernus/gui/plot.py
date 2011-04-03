@@ -110,28 +110,7 @@ class Chart(gtk.VBox):
         label.set_markup(str(date2)+' - '+str(date1)+'     '+change_str)
         vbox.add(label)
         vbox.add(plot.handler)
-        vbox.add(gtk.Label(_('Trade Volume')))
 
-        vols = [d.volume for d in data]
-        volLegend = []
-        maxVol = max(vols)
-        if maxVol > 0:
-            split = 3
-            slice = maxVol / (split+1)
-            volLegend.append('0')
-            for i in range(split):
-                volLegend.append(str((i+1)*slice))
-        #[str(max(vols)), str(min(vols))]
-        plot = cairoplot.plots.VerticalBarPlot('gtk',
-                        data=vols,
-                        width=600,
-                        height=100,
-                        background="white light_gray",
-                        grid=True,
-                        y_labels=volLegend,
-                        series_colors=['blue' for i in range(len(vols))],
-                        )
-        vbox.add(plot.handler)
         self.current_chart = vbox
         self.add(vbox)
         self.show_all()
