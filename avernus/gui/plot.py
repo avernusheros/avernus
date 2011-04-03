@@ -105,9 +105,9 @@ class Chart(gtk.VBox):
             safeDiv = 1
         else:
             safeDiv = quotes[0]
-        change_str = gui_utils.get_green_red_string(change, str(change)+' ('+str(round(change/safeDiv*100,2))+'%)')
+        change_str = gui_utils.get_green_red_string(change, gui_utils.get_currency_format_from_float(change)+' ('+str(round(change/safeDiv*100,2))+'%)')
         label = gtk.Label()
-        label.set_markup(str(date2)+' - '+str(date1)+'     '+change_str)
+        label.set_markup(gui_utils.get_date_string(date2)+' - '+gui_utils.get_date_string(date1)+'     '+change_str)
         vbox.add(label)
         vbox.add(plot.handler)
 
