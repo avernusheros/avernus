@@ -50,7 +50,7 @@ class CSVImportDialog(gtk.Dialog):
                 active = i
             i+=1   
         self.account_cb = gtk.ComboBox(model)
-        if active>0:
+        if active>-1:
             self.account_cb.set_active(active)
         cell = gtk.CellRendererText()
         self.account_cb.pack_start(cell, True)
