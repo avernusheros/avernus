@@ -4,17 +4,24 @@ import gtk
 from datetime import datetime
 from avernus.gui.gui_utils import Tree, get_name_string
 from avernus.controller import controller
-from avernus.gui import gui_utils, dialogs
+from avernus.gui import gui_utils, dialogs, page
 
 
-class DividendsTab(gtk.VBox):
+class DividendsTab(gtk.VBox, page.Page):
     
-    def __init__(self, item):
+    def __init__(self, portfolio):
         gtk.VBox.__init__(self)
+        self.portfolio = portfolio
+        self._init_widgets()
+        self.update_page()
+        self.show_all()
+    
+    def _init_widgets(self):
         actiongroup = gtk.ActionGroup('dividend_tab')
-        self.tree = DividendsTree(item, actiongroup)
+        self.tree = DividendsTree(self.portfolio, actiongroup)
+        
         actiongroup.add_actions([
-                ('add',    gtk.STOCK_ADD,     'add',    None, _('Add new dividend'),         self.tree.on_add),
+                ('add',    gtk.STOCK_ADD,     'add',    None, _('Add new dividend'),         self.on_add),
                 ('remove', gtk.STOCK_DELETE,  'remove', None, _('Delete selected dividend'), self.tree.on_remove),
                 ('edit', gtk.STOCK_EDIT,  'remove', None, _('Edit selected dividend'), self.tree.on_edit),
                  ])
@@ -33,10 +40,18 @@ class DividendsTab(gtk.VBox):
         sw.add(self.tree)
         self.pack_start(tb, expand = False, fill = False)
         self.pack_start(sw)
-        self.show_all()
+    
+    def on_add(self, widget = None):
+        dialogs.DividendDialog(self.portfolio, tree = self.tree)
+        self.update_page()
     
     def show(self):
         self.tree.load_dividends()
+    
+    def get_info(self):
+        return [('# dividends', self.portfolio.dividends_count),
+                ('Sum', gui_utils.get_currency_format_from_float(self.portfolio.dividends_sum)),
+                ('Last dividend', gui_utils.get_date_string(self.portfolio.date_of_last_dividend))]
     
 
 class DividendsTree(Tree):
@@ -103,9 +118,6 @@ class DividendsTree(Tree):
                 div.costs,
                 div.total])
 
-    def on_add(self, widget=None):
-        dialogs.DividendDialog(self.portfolio, tree = self)
-    
     def on_edit(self, widget):
         obj, iterator = self.get_selected_item()
         if obj:
