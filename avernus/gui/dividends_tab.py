@@ -13,7 +13,6 @@ class DividendsTab(gtk.VBox, page.Page):
         gtk.VBox.__init__(self)
         self.portfolio = portfolio
         self._init_widgets()
-        self.update_page()
         self.show_all()
     
     def _init_widgets(self):
@@ -47,6 +46,7 @@ class DividendsTab(gtk.VBox, page.Page):
     
     def show(self):
         self.tree.load_dividends()
+        self.update_page()
     
     def get_info(self):
         return [('# dividends', self.portfolio.dividends_count),

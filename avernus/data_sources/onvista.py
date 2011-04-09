@@ -246,8 +246,7 @@ class Onvista():
         logger.debug("Finished Searching " + searchstring)
 
     def _parse_kurse_html(self, kursPage, tdInd=fondTDS, stockType = stock.FUND):
-        base = BeautifulSoup(kursPage).find('div', 'content')
-        #print base
+        base = BeautifulSoup(kursPage).find('div', 'INHALT')
         regex404 = re.compile("http://www\\.onvista\\.de/404\\.html")
         if regex404.search(str(base)):
             logger.info("Encountered 404 while Searching")
@@ -259,16 +258,21 @@ class Onvista():
             currency = temp[9]
         else:
             isin = str(base.findAll('tr','hgrau2')[1].findAll('td', text=True)[1])
-            try:
-                yearTable = base.find('div','tt_hl').findNextSibling('table','weiss abst').find('tr','hgrau2')
-            except:
-                print "Error getting year in ", kursPage
-                yearTable = None
-            if yearTable:
-                year = yearTable.td.string.split(".")[2]
-            else:
-                #fallback to the hardcoded current year
-                year = unicode(str(date.today().year)[2:])
+            
+            #getting the year
+            #FIXME
+            #try:
+            #    yearTable = base.find('div','tt_hl').findNextSibling('table','weiss abst').find('tr','hgrau2')
+            #except:
+            #    print "Error getting year in ", kursPage
+            #    yearTable = None
+            #if yearTable:
+            #    print yearTable.td
+            #    year = yearTable.td.string.split(".")[2]
+            #else:
+            #    #fallback to the hardcoded current year
+            year = unicode(str(date.today().year)[2:])
+            
         for row in base.findAll('div',tdInd['table_class'])[tdInd['table']].find('table'):
             tds = row.findAll('td')
             if len(tds)>3:
@@ -302,7 +306,7 @@ class Onvista():
                 file = opener.open("http://www.onvista.de/etf/kurse.html", urllib.urlencode({"ISIN": st.isin}))
                 generator = self._parse_kurse_html(file, tdInd=etfTDS, stockType=stock.ETF)
             elif st.type == stock.BOND:
-                file = opener.open("http://anleihen.onvista.de/kurse.html", urllib.urlencode({"ISIN": st.isin}))
+                file = opener.open("http://www.onvista.de/anleihen/kurse.html", urllib.urlencode({"ISIN": st.isin}))
                 generator = self._parse_kurse_html(file, tdInd=bondTDS, stockType=stock.BOND)
             else:
                 print "Unknown stock type in onvistaplugin.update_stocks: ", st.type
@@ -403,5 +407,5 @@ if __name__ == "__main__":
     #print plugin.search_kurse(s1)
     #print plugin.search_kurse(s3)
     #test_parse_kurse()
-    #test_update(s3)
-    test_historicals()
+    test_update(s3)
+    #test_historicals()

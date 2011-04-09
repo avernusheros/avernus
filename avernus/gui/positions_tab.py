@@ -386,12 +386,15 @@ class PositionsTab(gtk.VBox, page.Page):
         sw.add(positions_tree)
         self.pack_start(InfoBar(container), expand=False, fill=True)
         self.pack_start(sw)
-        self.update_page()
+        
         pubsub.subscribe('position.created', self.update_page)
         pubsub.subscribe('stocks.updated', self.update_page)
         pubsub.subscribe('container.updated', self.update_page)
         pubsub.subscribe('container.position.added', self.update_page)
         self.show_all()
+
+    def show(self):
+        self.update_page()
 
     def get_info(self):
         if self.container.container_type == 'portfolio':
