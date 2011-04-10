@@ -65,8 +65,19 @@ class AccountTransactionTab(gtk.VBox, page.Page):
                 ('dividend', gtk.STOCK_CONVERT, 'dividend payment', None, _('Create dividend from transaction'), self.transactions_tree.on_dividend)
                                 ])
         sw.add(self.transactions_tree)
+        self.no_trans_infobar = gtk.InfoBar()
+        self.no_trans_infobar.set_no_show_all(True)
+        no_trans_label = gtk.Label(_("no transactions match your selection"))
+        area = self.no_trans_infobar.get_content_area()
+        area.pack_start(no_trans_label)
+        no_trans_label.show()
+        self.no_trans_infobar.add_button(gtk.STOCK_OK, gtk.RESPONSE_OK)
+        self.no_trans_infobar.connect('response',lambda x,y,z:self.no_trans_infobar.hide(),None)
         frame = gtk.Frame()
-        frame.add(sw)
+        vbox = gtk.VBox()
+        vbox.pack_start(self.no_trans_infobar,expand=False, fill=False)
+        vbox.pack_start(sw)
+        frame.add(vbox)
         frame.set_shadow_type(gtk.SHADOW_IN)
         self.hpaned.pack1(frame, shrink=True, resize=True)
 
@@ -134,8 +145,18 @@ class AccountTransactionTab(gtk.VBox, page.Page):
         self.end_entry.set_text(gui_utils.get_date_string(self.transactions_tree.range_end))
 
     def update_ui(self):
-        self.transactions_tree.modelfilter.refilter()
+        self.refilter()
         self.update_page()
+        
+    def refilter(self):
+        self.transactions_tree.modelfilter.refilter()
+        count = len(self.transactions_tree.modelfilter)
+        if count == 0:
+            self.transactions_tree.hide()
+            self.no_trans_infobar.show()
+        else:
+            self.no_trans_infobar.hide()
+            self.transactions_tree.show()
 
     def get_info(self):
         return [('# transactions', len(self.transactions_tree.modelfilter)),

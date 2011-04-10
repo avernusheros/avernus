@@ -2,6 +2,8 @@ from avernus.gui import gui_utils
 from avernus import date_utils
 from dateutil.relativedelta import relativedelta
 import datetime
+import logging
+logger = logging.getLogger(__name__)
 
 def get_step_for_range(start,end):
     if start + relativedelta(months=+1) > end:
@@ -37,7 +39,6 @@ class TransactionValueOverTimeChartController(TransactionChartController):
         
     def calculate_values(self):
         self.calculate_x_values()
-        
         self.y_values = []
         #FIXME do we need this temp dict?
         temp = {}
@@ -51,10 +52,10 @@ class TransactionValueOverTimeChartController(TransactionChartController):
                 temp[x] = temp[self.x_values_all[i-1]]
             temp[x] += t.amount
         if len(self.x_values_all) > len(temp):
-            print "more x than y, defaulting to the value of the last"
+            logger.debug("more x than y, defaulting to the value of the last")
             for x in self.x_values_all:
                 if not x in temp:
-                    print "X: ", x, " index ", self.x_values_all.index(x)
+                    logger.debug("X: " + str(x) +  " index " + str(self.x_values_all.index(x)))
                     temp[x] = temp[self.x_values_all[self.x_values_all.index(x)-1]]
         for x in self.x_values_all:
             value = x
