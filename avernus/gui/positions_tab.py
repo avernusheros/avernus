@@ -319,44 +319,6 @@ class PositionsTree(Tree):
         return search(self.model)
 
 
-class InfoBar(gtk.HBox):
-
-    def __init__(self, container):
-        gtk.HBox.__init__(self)
-        self.container = container
-
-        self.today_label = label = gtk.Label()
-        self.pack_start(label)
-        self.pack_start(gtk.VSeparator(), expand = True, fill = True)
-        self.overall_label = label = gtk.Label()
-        self.pack_start(label, expand = False, fill = False)
-
-        self.on_container_update(self.container)
-        pubsub.subscribe('position.created', self.on_container_update)
-        pubsub.subscribe('stocks.updated', self.on_container_update)
-        pubsub.subscribe('container.updated', self.on_container_update)
-        pubsub.subscribe('container.position.added', self.on_container_update)
-
-    def on_container_update(self, container, position=None):
-        if self.container == container:
-            text = '<b>' + _('Day\'s gain')+'</b>\t'+self.get_change_string(self.container.current_change)
-            self.today_label.set_markup(text)
-            text = '<b>'+_('Gain')+'</b>\t'+self.get_change_string(self.container.overall_change)
-            self.overall_label.set_markup(text)
-
-
-    def get_change_string(self, item):
-        change, percent = item
-        if change is None:
-            return 'n/a'
-        text = gui_utils.get_string_from_float(percent) + '%' + ' | ' + gui_utils.get_currency_format_from_float(change)
-        if change < 0.0:
-            text = '<span foreground="red">'+ text + '</span>'
-        else:
-            text = '<span foreground="dark green">'+ text + '</span>'
-        return text
-
-
 class PositionsTab(gtk.VBox, page.Page):
 
     def __init__(self, container):
@@ -384,22 +346,30 @@ class PositionsTab(gtk.VBox, page.Page):
         sw.set_property('hscrollbar-policy', gtk.POLICY_AUTOMATIC)
         sw.set_property('vscrollbar-policy', gtk.POLICY_AUTOMATIC)
         sw.add(positions_tree)
-        self.pack_start(InfoBar(container), expand=False, fill=True)
         self.pack_start(sw)
-        self.update_page()
+        
         pubsub.subscribe('position.created', self.update_page)
         pubsub.subscribe('stocks.updated', self.update_page)
         pubsub.subscribe('container.updated', self.update_page)
         pubsub.subscribe('container.position.added', self.update_page)
         self.show_all()
 
+    def show(self):
+        self.update_page()
+
     def get_info(self):
         if self.container.container_type == 'portfolio':
-            return [('Investments', gui_utils.get_currency_format_from_float(self.container.cvalue)),
+            change, percent = self.container.current_change
+            change_text = gui_utils.get_string_from_float(percent) + '%' + ' | ' + gui_utils.get_currency_format_from_float(change)
+            o_change, o_percent = self.container.overall_change
+            o_change_text = gui_utils.get_string_from_float(o_percent) + '%' + ' | ' + gui_utils.get_currency_format_from_float(o_change)
+            return [(_('Day\'s gain'), gui_utils.get_green_red_string(change, change_text)),
+                    (_('Overall gain'), gui_utils.get_green_red_string(o_change, o_change_text)),
+                    ('Investments', gui_utils.get_currency_format_from_float(self.container.cvalue)),
                     ('Cash', gui_utils.get_currency_format_from_float(self.container.cash)),
                     ('# positions', len(self.container)),
                     ('Last update', gui_utils.datetime_format(self.container.last_update, False))
                     ]
-        else:
+        else: #watchlist
             return [('# positions', len(self.container)),
                     ('Last update', gui_utils.datetime_format(self.container.last_update, False))]

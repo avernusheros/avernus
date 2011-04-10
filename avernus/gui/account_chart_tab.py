@@ -3,6 +3,7 @@
 from avernus import cairoplot
 import gtk
 from avernus.controller import controller
+from avernus.gui.charts import SimpleLineChart
 import datetime
 from avernus import date_utils
 from avernus.gui import gui_utils, page
@@ -47,11 +48,11 @@ class AccountChartTab(gtk.VBox, page.Page):
     def __init__(self, account):
         gtk.VBox.__init__(self)
         self.account = account
-        
+
         self.zooms = ['ACT','1m', '3m', '6m', 'YTD', '1y','2y','5y', 'all']
         self.show_all()
-        
-        
+
+
     def clear(self):
         for child in self.get_children():
             self.remove(child)
@@ -93,25 +94,35 @@ class AccountChartTab(gtk.VBox, page.Page):
         hbox.pack_start(combobox)
 
         self.charts = []
-        
+
         y = 0
-        
+
+        label = gtk.Label()
+        label.set_markup('<b>transactions chart</b>')
+        self.table.attach(label, 0,2,y,y+1)
         chart = TransactionsChart(width, self.account, self.start_date, self.end_date, self.current_step)
-        self.table.attach(chart,0,2,y,y+1)
+        self.table.attach(chart,0,2,y+1,y+2)
         self.charts.append(chart)
-        y +=1 
-        
+        y +=2
+
+        #FIXME currently not working
+        label = gtk.Label()
+        label.set_markup('<b>transaction value using chartcontroller</b>')
+        self.table.attach(label, 0,2,y,y+1)
         chart_controller = chartController.TransactionValueOverTimeChartController([t for t in self.account])
         chart = SimpleLineChart(chart_controller,width)
-        self.table.attach(chart,0,2,y,y+1)
-        #self.charts.append(chart)
-        y += 1
+        self.table.attach(chart,0,2,y+1,y+2)
+        self.charts.append(chart)
+        y += 2
+
+        self.updateable_charts = []
 
         label = gtk.Label()
         label.set_markup('<b>Balance over time</b>')
         self.table.attach(label, 0,2,y,y+1)
-        chart = BalanceChart(width, self.account, self.start_date, self.end_date)
-        self.charts.append(chart)
+        chart_controller = chartController.AccountBalanceOverTimeChartController([t for t in self.account])
+        chart = SimpleLineChart(chart_controller,width)
+        self.updateable_charts.append((chart, chart_controller))
         self.table.attach(chart,0,2,y+1,y+2)
         y += 2
 
@@ -121,7 +132,7 @@ class AccountChartTab(gtk.VBox, page.Page):
         chart = CategoryPie(width/2, self.account, self.start_date, self.end_date, earnings=True)
         self.charts.append(chart)
         self.table.attach(chart,0,1,y+1,y+2)
-        
+
 
         label = gtk.Label()
         label.set_markup('<b>Spendings</b>')
@@ -130,7 +141,7 @@ class AccountChartTab(gtk.VBox, page.Page):
         self.table.attach(chart,1,2,y+1,y+2)
         self.charts.append(chart)
         y += 2
-        
+
         self.update_page()
         self.show_all()
 
@@ -141,6 +152,10 @@ class AccountChartTab(gtk.VBox, page.Page):
             self._calc_start_date()
             for chart in self.charts:
                 chart.on_zoom_change(self.start_date)
+            for chart, controller in self.updateable_charts:
+                controller.start_date = self.start_date
+                controller.calculate_values()
+                chart.draw_chart()
             self.show_all()
 
     def on_step_change(self, cb):
@@ -160,29 +175,7 @@ class AccountChartTab(gtk.VBox, page.Page):
             self.start_date = date_utils.get_ytd_first()
         elif self.zoom == 'all':
             self.start_date = self.account.birthday
-            
-class SimpleLineChart(gtk.VBox):
-    
-    def __init__(self, chartController, width):
-        gtk.VBox.__init__(self)
-        self.control = chartController
-        self.width = width
-        self.draw_chart()
-        
-    def draw_chart(self):
-        plot = cairoplot.plots.DotLinePlot('gtk',
-                                data=self.control.y_values,
-                                width=self.width,
-                                height=300,
-                                x_labels=self.control.legend,
-                                y_formatter=gui_utils.get_currency_format_from_float,
-                                y_title='Amount',
-                                background="white light_gray",
-                                grid=True,
-                                dots=2,
-                                series_colors=['blue','green'])
-        self.chart = plot.handler
-        self.pack_start(self.chart)
+
 
 class Chart(object):
 
@@ -202,33 +195,6 @@ class Chart(object):
         pass
 
 
-class BalanceChart(gtk.VBox, Chart):
-
-    def __init__(self, width, account, start_date, end_date):
-        gtk.VBox.__init__(self)
-        Chart.__init__(self, width, account, start_date, end_date)
-
-    def _draw_chart(self):
-        balance = self.account.get_balance_over_time(self.start_date)
-        #ugly line of code
-        #selects every 20. date for the legend
-        #legend = [gui_utils.get_date_string(balance[int(len(balance)/20 *i)][0]) for i in range(20)]
-        legend = [gui_utils.get_date_string(balance[i][0]) for i in range(0,len(balance))]
-        plot = cairoplot.plots.DotLinePlot('gtk',
-                                data=[item[1] for item in balance],
-                                width=self.width,
-                                height=300,
-                                x_labels=legend,
-                                y_formatter=gui_utils.get_currency_format_from_float,
-                                y_title='Amount',
-                                background="white light_gray",
-                                grid=True,
-                                dots=2,
-                                series_colors=['blue','green'])
-        self.chart = plot.handler
-        self.pack_start(self.chart)
-        
-
 class TransactionsChart(gtk.VBox, Chart):
 
     def __init__(self, width, account, start_date, end_date, step='day'):
@@ -241,7 +207,7 @@ class TransactionsChart(gtk.VBox, Chart):
         self.type_cb.set_active(0)
         self.type_cb.connect('changed', self.on_change)
         hbox.pack_start(self.type_cb)
-        
+
         liststore = gtk.ListStore(object, str)
         self.category_cb = gtk.ComboBox(liststore)
         cell = gtk.CellRendererText()
@@ -253,7 +219,7 @@ class TransactionsChart(gtk.VBox, Chart):
         self.category_cb.set_active(0)
         self.category_cb.connect('changed', self.on_change)
         hbox.pack_start(self.category_cb)
-        
+
         self.style_cb = gtk.combo_box_new_text()
         for chart_style in ['bar chart', 'line chart']:
             self.style_cb.append_text(chart_style)
@@ -263,7 +229,7 @@ class TransactionsChart(gtk.VBox, Chart):
 
         self.pack_start(hbox)
         Chart.__init__(self, width, account, start_date, end_date)
-    
+
     def on_change(self, widget=None):
         self.remove(self.chart)
         self._draw_chart()
@@ -314,12 +280,12 @@ class TransactionsChart(gtk.VBox, Chart):
                                 series_colors=['blue','green'],
                                 )
         self.chart = plot.handler
-    
+
     def _draw_chart2(self):
         chart_style = self.style_cb.get_active_text()
         active_category = self.category_cb.get_model()[self.category_cb.get_active()][0]
         transactions = self.account.get_transactions_in_period(self.start_date, self.end_date)
-        transactions = filter(lambda trans:trans.category == active_category, transactions) 
+        transactions = filter(lambda trans:trans.category == active_category, transactions)
         time_points = list(rrule.rrule(rrule.MONTHLY, dtstart = self.start_date, until = self.end_date, bymonthday=1))
         legend = [d.strftime("%b %y") for d in time_points]
         sums = {}

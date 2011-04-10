@@ -54,8 +54,11 @@ class InfoBox(gtk.Table):
         pubsub.subscribe('maintree.select', self.on_maintree_select)
     
     def add_line(self, label_text, info_text):
-        label = gtk.Label("")
-        info = gtk.Label(info_text)
+        if not isinstance(info_text, str):
+            info_text = str(info_text)
+        label = gtk.Label()
+        info = gtk.Label()
+        info.set_markup(info_text)
         label.set_justify(gtk.JUSTIFY_LEFT);
         label.set_markup("<span font_weight=\"bold\">"+label_text+"</span>")
         

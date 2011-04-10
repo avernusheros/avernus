@@ -138,6 +138,26 @@ class Portfolio(SQLiteEntity, Container):
                 yield ClosedPosition(tran)
 
     @property
+    def dividends(self):
+        for pos in self:
+            for div in pos.dividends:
+                yield div
+    
+    @property
+    def dividends_count(self):
+        return sum(1 for div in self.dividends)
+    
+    @property
+    def dividends_sum(self):
+        return sum(div.total for div in self.dividends)
+    
+    @property
+    def date_of_last_dividend(self):
+        if self.dividends_count == 0:
+            return None
+        return max(div.date for div in self.dividends)
+
+    @property
     def birthday(self):
         return min(t.date for t in self.transactions)
 

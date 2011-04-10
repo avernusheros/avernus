@@ -4,8 +4,6 @@ from avernus import config, pubsub
 from avernus.config import avernusConfig
 from avernus.gui import gui_utils, dialogs, page
 from avernus.controller import controller
-from avernus.controller import chartController
-from avernus.gui.account_chart_tab import SimpleLineChart
 import gtk, gobject
 import datetime
 import pango
@@ -20,7 +18,6 @@ class AccountTransactionTab(gtk.VBox, page.Page):
     def __init__(self, item):
         gtk.VBox.__init__(self)
         self.config = config.avernusConfig()
-        #print id(self.config)
         hbox = gtk.HBox()
         uncategorized_button = gtk.ToggleButton(_('uncategorized'))
         hbox.pack_start(uncategorized_button, expand=False, fill=False)
@@ -50,7 +47,7 @@ class AccountTransactionTab(gtk.VBox, page.Page):
         hbox.pack_start(self.start_entry, expand=False, fill=False)
         hbox.pack_start(gtk.Label(_('End')), expand=False, fill=False)
         hbox.pack_start(self.end_entry, expand=False, fill=False)
-        
+
         self.pack_start(hbox, expand=False, fill=False)
 
         self.hpaned = gtk.HPaned()
@@ -72,14 +69,12 @@ class AccountTransactionTab(gtk.VBox, page.Page):
         frame.add(sw)
         frame.set_shadow_type(gtk.SHADOW_IN)
         self.hpaned.pack1(frame, shrink=True, resize=True)
-        
-        
-        
+
         uncategorized_button.connect('toggled', self.transactions_tree.on_toggle_uncategorized)
         transfer_button.connect('toggled', self.transactions_tree.on_toggle_transfer)
-        
+
         self.update_range()
-        
+
         vbox = gtk.VBox()
         frame = gtk.Frame()
         frame.add(vbox)
@@ -111,45 +106,18 @@ class AccountTransactionTab(gtk.VBox, page.Page):
             button = actiongroup.get_action(action).create_tool_item()
             toolbar.insert(button, -1)
         vbox.pack_start(toolbar, expand=False, fill=False)
-        
+
         pubsub.subscribe("AccountTransactionsTab.UIupdate", self.update_ui)
-        
-        self.chart_box = gtk.VBox()
-        self.pack_start(self.chart_box, expand=False, fill=False)
-        chart_toggle_button = gtk.CheckButton(label="Show Chart")
-        chart_toggle_button.connect("toggled", self.on_show_chart_toggle)
-        self.chart_box.pack_start(chart_toggle_button)
-        
-        self.transaction_chart = None
-        
         self.connect("destroy", self.on_destroy)
         self.show_all()
-        
-    def on_show_chart_toggle(self, widget):
-        if widget.get_active():
-            self.show_current_transaction_chart()
-        else:
-            self.remove_current_transaction_chart()
-        self.show_all()
-            
-    def show_current_transaction_chart(self):
-        #self.transaction_chart = gtk.Label("Hallo")
-        transactions = self.transactions_tree.get_current_displayed_transactions()
-        chart_controller = chartController.TransactionValueOverTimeChartController(transactions)
-        self.transaction_chart = SimpleLineChart(chart_controller,600)
-        self.chart_box.pack_start(self.transaction_chart)
-            
-    def remove_current_transaction_chart(self):
-        if self.transaction_chart:
-            self.chart_box.remove(self.transaction_chart)
-        
+
     def on_pick_start(self, entry, icon_pos, event):
         dialog = dialogs.CalendarDialog(self.transactions_tree.range_start)
         if dialog.date:
             self.transactions_tree.range_start = dialog.date
             self.update_range()
             self.update_ui()
-            
+
     def on_pick_end(self, entry, icon_pos, event):
         dialog = dialogs.CalendarDialog(self.transactions_tree.range_end)
         if dialog.date:
@@ -159,19 +127,18 @@ class AccountTransactionTab(gtk.VBox, page.Page):
 
     def on_clear_search(self, entry, icon_pos, event):
         self.search_entry.set_text('')
-        
+
     def update_range(self):
         start = self.transactions_tree.range_start
-        #print "start date", start
         self.start_entry.set_text(gui_utils.get_date_string(start))
         self.end_entry.set_text(gui_utils.get_date_string(self.transactions_tree.range_end))
-        
+
     def update_ui(self):
         self.transactions_tree.modelfilter.refilter()
         self.update_page()
-    
+
     def get_info(self):
-        return [('# transactions', len(self.transactions_tree.modelfilter)), 
+        return [('# transactions', len(self.transactions_tree.modelfilter)),
                 ('Sum', gui_utils.get_currency_format_from_float(self.transactions_tree.get_filtered_transaction_value()))]
 
     def show(self):
@@ -205,10 +172,10 @@ class TransactionsTree(gui_utils.Tree):
         self.searchstring = ''
         self.only_transfer = False
         self.only_uncategorized = False
-        self.range_start = account.birthday
-        self.range_end = datetime.date.today()
+        self.range_start = None
+        self.range_end = None
         gui_utils.Tree.__init__(self)
-        
+
         self.model = gtk.ListStore(object, str, float, str, object, str)
         self.modelfilter = self.model.filter_new()
         sorter = gtk.TreeModelSort(self.modelfilter)
@@ -238,19 +205,13 @@ class TransactionsTree(gui_utils.Tree):
         pubsub.subscribe('CategoriesTree.onSelect', self.on_category_select)
         pubsub.subscribe("CategoriesTree.onUnselect", self.on_category_unselect)
         self.single_category = None
-        
+
         self.reset_filter_dates()
-        
-    def get_current_displayed_transactions(self):
-        erg = []
-        for row in self.modelfilter:
-            erg.append(row[self.OBJECT])
-        return erg
-    
+
     def on_category_select(self, *args, **kwargs):
         self.single_category = kwargs['category']
         pubsub.publish("AccountTransactionsTab.UIupdate")
-        
+
     def on_category_unselect(self):
         self.single_category = None
         pubsub.publish("AccountTransactionsTab.UIupdate")
@@ -275,7 +236,7 @@ class TransactionsTree(gui_utils.Tree):
                     if pre:
                         # recursive is activated
                         #print "second chance", transaction
-                        if not self.single_category in transaction.category.parents: 
+                        if not self.single_category in transaction.category.parents:
                             # the selected category is also not one of the parents
                             return False
                     else:
@@ -288,15 +249,16 @@ class TransactionsTree(gui_utils.Tree):
                 )\
                 and (not self.only_transfer or transaction.is_transfer())\
                 and (not self.only_uncategorized or not transaction.has_category()):
-                
-                if transaction.date >= self.range_start and transaction.date <= self.range_end:
+
+                if (self.range_start is None or transaction.date >= self.range_start) \
+                    and (self.range_end is None or transaction.date <= self.range_end):
                     return True
         return False
 
     def on_search_entry_changed(self, editable):
         self.searchstring = editable.get_text().lower()
         pubsub.publish("AccountTransactionsTab.UIupdate")
-        
+
     def on_transaction_created(self, transaction):
         if transaction.account == self.account:
             self.insert_transaction(transaction)
@@ -327,7 +289,7 @@ class TransactionsTree(gui_utils.Tree):
         else:
             icon = ''
         return [ta, ta.description, ta.amount, cat, ta.date, icon]
-    
+
     def get_filtered_transaction_value(self):
         sum = 0
         for row in self.modelfilter:
@@ -460,14 +422,14 @@ class TransactionsTree(gui_utils.Tree):
         else:
             self.only_uncategorized=False
         pubsub.publish("AccountTransactionsTab.UIupdate")
-        
+
     def on_toggle_transfer(self, button):
         if button.get_active():
             self.only_transfer=True
         else:
             self.only_transfer=False
         pubsub.publish("AccountTransactionsTab.UIupdate")
-        
+
     def on_toggle_date(self, button, start, end):
         if button.get_active():
             self.start_filter = start
@@ -475,14 +437,14 @@ class TransactionsTree(gui_utils.Tree):
         else:
             self.reset_filter_dates()
         pubsub.publish("AccountTransactionsTab.UIupdate")
-        
+
     def reset_filter_dates(self):
         self.start_filter = datetime.datetime(datetime.MINYEAR,1,1)
         self.end_filter = datetime.datetime.now()
 
     def clear(self):
         self.model.clear()
-    
+
 
 class CategoriesTree(gui_utils.Tree):
 
@@ -530,7 +492,7 @@ class CategoriesTree(gui_utils.Tree):
             for action in self.actiongroup.list_actions():
                 context_menu.add(action.create_menu_item())
             context_menu.show(event)
-            
+
     def on_add(self, widget=None):
         parent, selection_iter = self.get_selected_item()
         item = controller.newAccountCategory('new category', parent=parent)
@@ -589,7 +551,7 @@ class CategoriesTree(gui_utils.Tree):
         else:
             if not self.get_path_at_pos(int(event.x), int(event.y)):
                 self.on_unselect()
-       
+
     def on_key_press(self, widget, event):
         if gtk.gdk.keyval_name(event.keyval) == 'Delete':
             self.on_remove()

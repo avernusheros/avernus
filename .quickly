@@ -1,4 +1,4 @@
 project = avernus
 template = ubuntu-application
 lp_id = stocktracker
-version = 0.6.1
+version = 11.04

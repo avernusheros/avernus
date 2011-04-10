@@ -2,8 +2,10 @@
 
 from account_chart_tab import get_legend
 from avernus import cairoplot, date_utils
+from avernus.controller import chartController
 from avernus.gui import gui_utils
 from avernus.controller import controller
+from avernus.gui.charts import SimpleLineChart
 from dateutil.rrule import *
 import datetime
 import gtk
@@ -66,12 +68,16 @@ class ChartTab(gtk.ScrolledWindow):
         label = gtk.Label()
         label.set_markup(_('<b>Dividends per Year</b>'))
         table.attach(label,0,2,row,row+1)
-        table.attach(DividendsPerYearChart(width, self.pf), 0,2,row+2,row+3)
+        chart_controller = chartController.DividendsPerYearChartController(self.pf)
+        chart = BarChart(chart_controller,width)
+        table.attach(chart, 0,2,row+2,row+3)
 
         label = gtk.Label()
         label.set_markup(_('<b>Dividends</b>'))
         table.attach(label,0,2,row+3,row+4)
-        table.attach(DividendsChart(width, self.pf), 0,2,row+4,row+5)
+        chart_controller = chartController.DividendsPerPositionChartController(self.pf)
+        chart = BarChart(chart_controller,width)
+        table.attach(chart, 0,2,row+4,row+5)
 
         self.add_with_viewport(table)
         self.show_all()
@@ -110,22 +116,22 @@ class ValueChart(gtk.VBox):
         self.portfolio = portfolio
         self.width = width
         self.chart = None
-        
+
         hbox = gtk.HBox()
         self.pack_start(hbox, fill=False, expand=False)
         label = gtk.Label()
         label.set_markup(_('<b>Value over time</b>'))
         hbox.pack_start(label, fill=True, expand=True)
-        
+
         combobox = gtk.combo_box_new_text()
         for st in ['daily', 'weekly', 'monthly', 'yearly']:
             combobox.append_text(st)
         combobox.set_active(2)
         combobox.connect('changed', self.on_zoom_change)
         hbox.pack_start(combobox, fill=False, expand=False)
-  
+
         self.on_zoom_change(combobox)
-    
+
     def on_zoom_change(self, cb):
         self.step = cb.get_active_text()
         if self.step == 'daily':
@@ -137,7 +143,7 @@ class ValueChart(gtk.VBox):
         elif self.step == 'yearly':
             self.days = list(rrule(YEARLY, dtstart = self.portfolio.birthday, until = datetime.date.today(), bymonthday=-1, bymonth=12))[-self.MAX_VALUES:]
         self.redraw()
-    
+
     def redraw(self):
         if self.chart:
             self.remove(self.chart)
@@ -147,11 +153,11 @@ class ValueChart(gtk.VBox):
         self.spinner.show()
         self.spinner.start()
         controller.GeneratorTask(self._get_data, complete_callback=self._show_chart).start()
-    
+
     def _get_data(self):
         self.data = [self.portfolio.get_value_at_date(t) for t in self.days]
         yield 1
-                
+
     def _show_chart(self):
         self.remove(self.spinner)
         plot = cairoplot.plots.DotLinePlot('gtk',
@@ -170,21 +176,20 @@ class ValueChart(gtk.VBox):
         self.chart.show()
 
 
-class DividendsPerYearChart(gtk.VBox):
+class BarChart(gtk.VBox):
 
-    def __init__(self, width, portfolio):
+    def __init__(self, chart_controller, width):
         gtk.VBox.__init__(self)
-        data = {}
-        for year in date_utils.get_years(portfolio.birthday):
-            data[str(year)] = 0.0
-        for pos in portfolio:
-            for div in pos.dividends:
-                data[str(div.date.year)]+=div.total
+        self.chart_controller = chart_controller
+        self.width = width
+        self.draw()
+
+    def draw(self):
         plot = cairoplot.plots.VerticalBarPlot('gtk',
-                                        data=data,
-                                        width=width,
+                                        data=self.chart_controller.y_values,
+                                        width=self.width,
                                         height=300,
-                                        x_labels=data.keys(),
+                                        x_labels=self.chart_controller.x_values,
                                         display_values=True,
                                         background="white light_gray",
                                         value_formatter = gui_utils.get_currency_format_from_float,
@@ -192,34 +197,6 @@ class DividendsPerYearChart(gtk.VBox):
         chart = plot.handler
         chart.show()
         self.pack_start(chart)
-
-
-class DividendsChart(gtk.VBox):
-
-    def __init__(self, width, portfolio):
-        gtk.VBox.__init__(self)
-        data = {}
-        for pos in portfolio:
-            for div in pos.dividends:
-                try:
-                    data[pos.name]+=div.total
-                except:
-                    data[pos.name]=div.total
-        if len(data) == 0:
-            self.pack_start(gtk.Label('No dividends...'))
-        else:
-            plot = cairoplot.plots.VerticalBarPlot('gtk',
-                                            data=data.values(),
-                                            width=width,
-                                            height=300,
-                                            x_labels=data.keys(),
-                                            display_values=True,
-                                            background="white light_gray",
-                                            value_formatter = gui_utils.get_currency_format_from_float,
-                                            )
-            chart = plot.handler
-            chart.show()
-            self.pack_start(chart)
 
 
 class Pie(gtk.VBox):

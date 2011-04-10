@@ -7,9 +7,9 @@ from avernus.controller import controller
 
 
 class CSVImportDialog(gtk.Dialog):
-    
+
     TITLE = _("Import CSV")
-    
+
     def __init__(self, widget=None, account=None):
         gtk.Dialog.__init__(self, self.TITLE, None
                             , gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
@@ -20,8 +20,11 @@ class CSVImportDialog(gtk.Dialog):
         self.importer = csvimporter.CsvImporter()
         self.profile = {}
         self.b_file = False
-        self.b_account = account or False
-        response = self.run()  
+        if account is None:
+            self.b_account = False
+        else:
+            self.b_account = True
+        response = self.run()
         self.process_result(response = response)
 
     def _init_widgets(self):
@@ -48,9 +51,9 @@ class CSVImportDialog(gtk.Dialog):
             model.append([account, account.name])
             if self.account == account:
                 active = i
-            i+=1   
+            i+=1
         self.account_cb = gtk.ComboBox(model)
-        if active>0:
+        if active>-1:
             self.account_cb.set_active(active)
         cell = gtk.CellRendererText()
         self.account_cb.pack_start(cell, True)
@@ -61,13 +64,13 @@ class CSVImportDialog(gtk.Dialog):
         sw = gtk.ScrolledWindow()
         sw.set_policy(gtk.POLICY_AUTOMATIC,gtk.POLICY_AUTOMATIC)
         self.tree = PreviewTree()
-        sw.connect_after('size-allocate', 
-                         gui_utils.resize_wrap, 
-                         self.tree, 
-                         self.tree.dynamicWrapColumn, 
+        sw.connect_after('size-allocate',
+                         gui_utils.resize_wrap,
+                         self.tree,
+                         self.tree.dynamicWrapColumn,
                          self.tree.dynamicWrapCell)
         frame.add(sw)
-        
+
         sw.add(self.tree)
         vbox.pack_start(frame)
         self.show_all()
@@ -76,7 +79,7 @@ class CSVImportDialog(gtk.Dialog):
         if response == gtk.RESPONSE_ACCEPT:
             model = self.account_cb.get_model()
             self.importer.create_transactions(self.account)
-        self.destroy()  
+        self.destroy()
 
     def _on_file_set(self, button):
         self.b_file = True
@@ -89,7 +92,7 @@ class CSVImportDialog(gtk.Dialog):
             self.import_button.set_sensitive(True)
             self.importer.check_duplicates(self.account)
         self.tree.reload(self.importer.results)
-    
+
     def _on_account_changed(self, *args):
         self.b_account = True
         self.account = self.account_cb.get_model()[self.account_cb.get_active()][0]
@@ -101,15 +104,15 @@ class CSVImportDialog(gtk.Dialog):
 
 class PreviewTree(gui_utils.Tree):
     COLOR_DUPLICATES = 'grey'
-    
+
     def __init__(self):
         gui_utils.Tree.__init__(self)
         self.set_rules_hint(True)
-        
+
         self.set_size_request(700,400)
         self.model = gtk.ListStore(str, str, float, bool, str)
         self.set_model(self.model)
-        
+
         column, cell = self.create_check_column('import?', 3)
         cell.connect("toggled", self.on_toggled)
         column, cell = self.create_column('date', 0)
@@ -124,7 +127,7 @@ class PreviewTree(gui_utils.Tree):
         column, cell = self.create_column('amount', 2, func=gui_utils.currency_format)
         column.add_attribute(cell, 'foreground', 4)
         cell.set_property('foreground-set', True)
-    
+
     def reload(self, transactions):
         self.transactions = transactions
         self.clear()

@@ -2,27 +2,23 @@
 
 import gtk
 from datetime import date
-from avernus import cairoplot
-from avernus.gui import gui_utils
-from avernus.objects.quotation import Quotation
-from avernus.controller import controller
+from avernus.gui import gui_utils, charts
+from avernus.controller import controller, chartController
 
 
 class ChartWindow(gtk.Window):
+    
     def __init__ (self, stock):
         gtk.Window.__init__(self)
-        self.add(Chart(stock))
-        self.show_all()
-
-class Chart(gtk.VBox):
-    def __init__(self, stock):
-        gtk.VBox.__init__(self)
         self.stock = stock
-
+        self._init_widgets()
+        
+    def _init_widgets(self):
+        self.vbox = gtk.VBox()
         hbox = gtk.HBox()
-        self.add(hbox)
+        self.vbox.pack_start(hbox)
         label = gtk.Label()
-        label.set_markup('<b>'+stock.name+'</b>\n'+stock.exchange)
+        label.set_markup('<b>'+self.stock.name+'</b>\n'+self.stock.exchange)
         hbox.add(label)
         hbox.add(gtk.VSeparator())
         hbox.add(gtk.Label('Zoom:'))
@@ -36,9 +32,13 @@ class Chart(gtk.VBox):
         hbox.add(combobox)
         self.noDataLabelShown = False
         self.current_chart = gtk.Label('Fetching data...')
-        self.add(self.current_chart)
+        self.change_label = gtk.Label('')
+        self.vbox.pack_start(self.change_label)
+        self.vbox.pack_end(self.current_chart)
         self.current_zoom = 'YTD'
-        controller.GeneratorTask(controller.datasource_manager.update_historical_prices, complete_callback=self.add_chart).start(stock)
+        controller.GeneratorTask(controller.datasource_manager.update_historical_prices, complete_callback=self.add_chart).start(self.stock)
+        self.add(self.vbox)
+        self.show_all()
 
     def get_date2(self, zoom, date1):
         ret = None
@@ -68,72 +68,29 @@ class Chart(gtk.VBox):
         return ret
 
     def add_chart(self):
-        self.remove(self.current_chart)
-        vbox = gtk.VBox()
+        self.vbox.remove(self.current_chart)
         date1 = date.today()
         date2 = self.get_date2(self.current_zoom, date1)
-
+        
         data = controller.getQuotationsFromStock(self.stock, date2)
         if len(data) == 0:
             if not self.noDataLabelShown:
                 self.noDataLabelShown = True
-                self.add(gtk.Label('No historical data found!'))
+                self.vbox.pack_end(gtk.Label('No historical data found!'))
                 self.show_all()
             return
-        quotes = [d.close for d in data]
-        y_min = 0.95*min(quotes)
-        y_max = 1.05*max(quotes)
-
-        legend = [gui_utils.get_date_string(data[int(len(data)/18 *i)].date) for i in range(18)]
-        legend.insert(0,str(data[0].date))
-        legend.insert(len(legend),str(data[-1].date))
-
-        plot = cairoplot.plots.DotLinePlot('gtk',
-                        data=quotes,
-                        x_labels=legend,
-                        y_title='Share Price',
-                        y_formatter = gui_utils.get_currency_format_from_float,
-                        width=600,
-                        height=250,
-                        background="white light_gray",
-                        grid=True,
-                        series_colors=['blue'],
-                        y_bounds=(y_min, y_max)
-                        )
-        change = quotes[-1] - quotes[0]
-        if quotes[0] == 0:
+        chart_controller = chartController.StockChartPlotController(data)
+        self.current_chart = charts.SimpleLineChart(chart_controller, 600, dots=0)
+        self.vbox.pack_end(self.current_chart)
+        
+        change = chart_controller.y_values[-1] - chart_controller.y_values[0]
+        if chart_controller.y_values[0] == 0:
             safeDiv = 1
         else:
-            safeDiv = quotes[0]
-        change_str = gui_utils.get_green_red_string(change, str(change)+' ('+str(round(change/safeDiv*100,2))+'%)')
-        label = gtk.Label()
-        label.set_markup(str(date2)+' - '+str(date1)+'     '+change_str)
-        vbox.add(label)
-        vbox.add(plot.handler)
-        vbox.add(gtk.Label(_('Trade Volume')))
-
-        vols = [d.volume for d in data]
-        volLegend = []
-        maxVol = max(vols)
-        if maxVol > 0:
-            split = 3
-            slice = maxVol / (split+1)
-            volLegend.append('0')
-            for i in range(split):
-                volLegend.append(str((i+1)*slice))
-        #[str(max(vols)), str(min(vols))]
-        plot = cairoplot.plots.VerticalBarPlot('gtk',
-                        data=vols,
-                        width=600,
-                        height=100,
-                        background="white light_gray",
-                        grid=True,
-                        y_labels=volLegend,
-                        series_colors=['blue' for i in range(len(vols))],
-                        )
-        vbox.add(plot.handler)
-        self.current_chart = vbox
-        self.add(vbox)
+            safeDiv = chart_controller.y_values[0]
+        change_str = gui_utils.get_green_red_string(change, gui_utils.get_currency_format_from_float(change)+' ('+str(round(change/safeDiv*100,2))+'%)')
+        self.change_label.set_markup(gui_utils.get_date_string(date2)+' - '+gui_utils.get_date_string(date1)+'     '+change_str)
+        
         self.show_all()
 
     def on_zoom_change(self, cb):

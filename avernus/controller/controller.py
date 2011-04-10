@@ -432,12 +432,12 @@ def deleteAllPositionTransaction(position):
 def deleteAllDimensionValue(dimension):
     for val in getAllDimensionValueForDimension(dimension):
         deleteAllAssetDimensionValue(val)
-        del val
+        val.delete()
 
 def deleteAllAssetDimensionValue(dimvalue):
     for adm in AssetDimensionValue.getAll():
         if adm.dimensionValue == dimvalue:
-            del adm
+            adm.delete()
             
 def deleteAllQuotationsFromStock(stock):
     query = """

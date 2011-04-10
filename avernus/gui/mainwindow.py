@@ -27,6 +27,7 @@ from avernus.gui import progress_manager
 from webbrowser import open as web
 import avernus
 from avernus.objects import model
+from avernus.controller import controller
 
 class AboutDialog(gtk.AboutDialog):
     def __init__(self, *arg, **args):
@@ -207,11 +208,11 @@ class MainWindow(gtk.Window):
         def finished_cb():
             progress_manager.remove_monitor(42)
         m = progress_manager.add_monitor(42, _('downloading quotations...'), gtk.STOCK_REFRESH)
-        avernus.objects.controller.GeneratorTask(avernus.objects.controller.update_historical_prices, m.progress_update, complete_callback=finished_cb).start()
+        controller.GeneratorTask(controller.update_historical_prices, m.progress_update, complete_callback=finished_cb).start()
 
     def on_update_all(self, *args):
         def finished_cb():
             progress_manager.remove_monitor(11)
         m = progress_manager.add_monitor(11, _('updating stocks...'), gtk.STOCK_REFRESH)
         m.progress_update_auto()
-        avernus.objects.controller.GeneratorTask(avernus.objects.controller.update_all, complete_callback=finished_cb).start()
+        controller.GeneratorTask(controller.update_all, complete_callback=finished_cb).start()
