@@ -71,8 +71,6 @@ class AccountTransactionTab(gtk.VBox, page.Page):
         area = self.no_trans_infobar.get_content_area()
         area.pack_start(no_trans_label)
         no_trans_label.show()
-        self.no_trans_infobar.add_button(gtk.STOCK_OK, gtk.RESPONSE_OK)
-        self.no_trans_infobar.connect('response',lambda x,y,z:self.no_trans_infobar.hide(),None)
         frame = gtk.Frame()
         vbox = gtk.VBox()
         vbox.pack_start(self.no_trans_infobar,expand=False, fill=False)
