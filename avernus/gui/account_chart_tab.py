@@ -106,14 +106,14 @@ class AccountChartTab(gtk.VBox, page.Page):
         y +=2
 
         #FIXME currently not working
-        #label = gtk.Label()
-        #label.set_markup('<b>transaction value using chartcontroller</b>')
-        #self.table.attach(label, 0,2,y,y+1)
-        #chart_controller = chartController.TransactionValueOverTimeChartController([t for t in self.account])
-        #chart = SimpleLineChart(chart_controller,width)
-        #self.table.attach(chart,0,2,y+1,y+2)
-        #self.charts.append(chart)
-        #y += 2
+        label = gtk.Label()
+        label.set_markup('<b>transaction value using chartcontroller</b>')
+        self.table.attach(label, 0,2,y,y+1)
+        chart_controller = chartController.TransactionValueOverTimeChartController([t for t in self.account])
+        chart = SimpleLineChart(chart_controller,width)
+        self.table.attach(chart,0,2,y+1,y+2)
+        self.charts.append(chart)
+        y += 2
 
         self.updateable_charts = []
 

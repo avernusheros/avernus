@@ -45,8 +45,15 @@ class TransactionValueOverTimeChartController(TransactionChartController):
                 x = self.x_values_all[i]
                 temp[x] = temp[self.x_values_all[i-1]]
             temp[x] += t.amount
+        if len(self.x_values_all) > len(temp):
+            print "more x than y, defaulting to the value of the last"
+            for x in self.x_values_all:
+                if not x in temp:
+                    print "X: ", x, " index ", self.x_values_all.index(x)
+                    temp[x] = temp[self.x_values_all[self.x_values_all.index(x)-1]]
         for x in self.x_values_all:
-            self.y_values.append(temp[x])
+            value = x
+            self.y_values.append(temp[value])
 
 
 class AccountBalanceOverTimeChartController():
