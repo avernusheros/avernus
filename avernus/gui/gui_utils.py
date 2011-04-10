@@ -170,13 +170,13 @@ def get_name_string(stock):
                                                  gobject.markup_escape_text(stock.isin), 
                                                  gobject.markup_escape_text(stock.exchange))
 
-def get_green_red_string(num, string = None):
-    if string is None:
-        string = str(num)
+def get_green_red_string(num, text = None):
+    if text is None:
+        text = str(num)
     if num < 0.0:
-        text = '<span foreground="red">'+ string + '</span>'
-    else:
-        text = '<span foreground="dark green">'+ string + '</span>'
+        text = '<span foreground="red">'+ text + '</span>'
+    elif num > 0.0:
+        text = '<span foreground="dark green">'+ text + '</span>'
     return text
     
 def datetime_format(datetime, nl = True):

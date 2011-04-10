@@ -32,6 +32,3 @@ class SimpleLineChart(gtk.VBox):
                                 series_colors=['blue','green'])
         self.chart = plot.handler
         self.pack_start(self.chart)
-        
-    def on_zoom_change(self, start_date):
-        print "unimplemented stub:SimpleLineChart.on_zoom_change"

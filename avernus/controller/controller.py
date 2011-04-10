@@ -466,20 +466,6 @@ def getTransactionsForAccount(account):
     key = account.getPrimaryKey()
     return AccountTransaction.getAllFromOneColumn("account",key)
 
-def getAccountChangeInPeriodPerDay(account, start_date, end_date):
-    query = """
-    SELECT sum(trans.amount), trans.date
-    FROM accounttransaction as trans, account
-    WHERE account.id == ?
-    AND account.id == trans.account
-    AND trans.date <= ?
-    AND trans.date >= ?
-    GROUP BY trans.date
-    ORDER BY trans.date DESC
-    """
-    for change, date in model.store.select(query, (account.id, end_date, start_date)):
-        yield change, date
-
 def getEarningsOrSpendingsSummedInPeriod(account, start_date, end_date, earnings=True, transfers=False):
     if earnings: operator = '>'
     else: operator = '<'
