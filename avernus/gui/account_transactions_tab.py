@@ -26,6 +26,7 @@ class AccountTransactionTab(gtk.VBox, page.Page):
         image = gtk.Image()
         image.set_from_stock('gtk-convert', gtk.ICON_SIZE_BUTTON)
         transfer_button.add(image)
+        transfer_button.set_tooltip_text(_('Show transfers'))
         hbox.pack_start(transfer_button, expand=False, fill=False)
 
         self.search_entry = gtk.Entry()
