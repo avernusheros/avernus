@@ -86,26 +86,6 @@ class ChartTab(gtk.ScrolledWindow):
         for child in self.get_children():
             self.remove(child)
 
-    def cash_chart(self):
-        #FIXME stufenchart?
-        cot = self.pf.get_cash_over_time()
-        cot.reverse()
-
-        data = [b for a, b, in cot]
-        legend = [str(a) for a,b in cot]
-
-        chart = gtk_dot_line_plot()
-        chart.set_args({'data':data,
-                     'x_labels':legend,
-                     'y_title': 'Cash',
-                     'series_colors': ['blue'],
-                     'grid': True,
-                     'width':600,
-                     'height':300,
-                     'y_formatters':gui_utils.get_string_from_float
-                     })
-        return chart
-
 
 class ValueChart(gtk.VBox):
     SPINNER_SIZE = 40

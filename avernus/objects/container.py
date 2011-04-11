@@ -106,22 +106,6 @@ class Portfolio(SQLiteEntity, Container):
     def __iter__(self):
         return self.controller.getPositionForPortfolio(self).__iter__()
 
-    def get_cash_over_time(self):
-        cash = self.cash
-        res = []
-        for ta in self.transactions:
-            if ta.type == 1 or ta.type == 4:
-                res.append((ta.date.date(), cash))
-                cash += ta.quantity*ta.price+ta.ta_costs
-            if ta.type == 2 or ta.type == 3 or ta.type == 10:
-                res.append((ta.date.date(), cash))
-                cash -= ta.quantity*ta.price-ta.ta_costs
-        if len(self.transactions)>0:
-            last_date = self.transactions[-1].date
-            #should be last day - 1 day
-            res.append((date(last_date.year, last_date.month, 1) , cash))
-        return res
-
     def get_value_at_date(self, t):
         #FIXME
         #does not consider sold positions
@@ -142,15 +126,15 @@ class Portfolio(SQLiteEntity, Container):
         for pos in self:
             for div in pos.dividends:
                 yield div
-    
+
     @property
     def dividends_count(self):
         return sum(1 for div in self.dividends)
-    
+
     @property
     def dividends_sum(self):
         return sum(div.total for div in self.dividends)
-    
+
     @property
     def date_of_last_dividend(self):
         if self.dividends_count == 0:
