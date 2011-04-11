@@ -3,19 +3,41 @@ from avernus.gui import gui_utils
 from avernus import cairoplot
 
 
-class SimpleLineChart(gtk.VBox):
+class ChartBase(gtk.VBox):
 
-    def __init__(self, chartController, width, dots=2):
+    def __init__(self, controller, width):
         gtk.VBox.__init__(self)
-        self.controller = chartController
+        self.controller = controller
         self.width = width
         self.chart = None
-        self.dots = dots
         self.draw_chart()
 
     def remove_chart(self):
         if self.chart:
-            self.remove(self.chart)
+            self.remove(chart)
+
+
+class Pie(ChartBase):
+
+    def draw_chart(self):
+        self.remove_chart()
+        plot = cairoplot.plots.PiePlot('gtk',
+                                        data=self.controller.values,
+                                        width=self.width,
+                                        height=300,
+                                        gradient=True,
+                                        values=True
+                                        )
+        self.chart = plot.handler
+        self.pack_start(self.chart)
+
+
+
+class SimpleLineChart(ChartBase):
+
+    def __init__(self, chartController, width, dots=2):
+        self.dots = dots
+        ChartBase.__init__(self, chartController, width)
 
     def draw_chart(self):
         self.remove_chart()

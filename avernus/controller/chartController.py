@@ -36,7 +36,7 @@ class TransactionValueOverTimeChartController(TransactionChartController):
         self.transactions = sorted(transactions, key=lambda t: t.date)
         self.start_date = start_date
         self.calculate_values()
-        
+
     def calculate_values(self):
         self.calculate_x_values()
         self.y_values = []
@@ -72,7 +72,7 @@ class AccountBalanceOverTimeChartController(TransactionChartController):
 
     def calculate_values(self):
         self.calculate_x_values()
-        
+
         count = 1
         trans_count = len(self.transactions)
         iterator = self.transactions.__iter__()
@@ -85,8 +85,8 @@ class AccountBalanceOverTimeChartController(TransactionChartController):
                 current_trans = iterator.next()
                 count += 1
             self.y_values.append(amount)
-        self.y_values.reverse()     
-        
+        self.y_values.reverse()
+
 
 class DividendsPerYearChartController():
 
@@ -120,10 +120,32 @@ class DividendsPerPositionChartController():
 
 
 class StockChartPlotController():
-    
+
     def __init__(self, quotations):
         self.y_values = [d.close for d in quotations]
         quotation_count = len(quotations)
         self.x_values = [gui_utils.get_date_string(quotations[int(quotation_count/18 *i)].date) for i in range(18)]
         self.x_values.insert(0,str(quotations[0].date))
         self.x_values.insert(len(self.x_values),str(quotations[-1].date))
+
+
+class DimensionChartController():
+
+    def __init__(self, portfolio, dimension):
+        self.portfolio = portfolio
+        self.dimension = dimension
+        self.calculate_values()
+
+    def calculate_values(self):
+        data = {}
+        for val in self.dimension.values:
+            data[val.name] = 0
+        for pos in self.portfolio:
+            for adv in pos.stock.getAssetDimensionValue(self.dimension):
+                data[adv.dimensionValue.name] += adv.value * pos.cvalue
+        #remove unused dimvalues
+        data = dict((k, v) for k, v in data.iteritems() if v != 0.0)
+        if sum(data.values()) == 0:
+            self.values = {' ':1}
+        else:
+            self.values = data

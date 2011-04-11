@@ -3,15 +3,13 @@
 from account_chart_tab import get_legend
 from avernus import cairoplot, date_utils
 from avernus.controller import chartController
-from avernus.gui import gui_utils
+from avernus.gui import gui_utils, charts
 from avernus.controller import controller
-from avernus.gui.charts import SimpleLineChart
 from dateutil.rrule import *
 import datetime
 import gtk
 import gobject
 
-#FIXME
 
 NO_DATA_STRING = '\nNo Data!\nAdd positions to portfolio first.\n\n'
 
@@ -54,7 +52,9 @@ class ChartTab(gtk.ScrolledWindow):
             label = gtk.Label()
             label.set_markup(_('<b>'+dim.name+'</b>'))
             table.attach(label, col,col+1,row,row+1)
-            table.attach(DimensionPie(width/2, self.pf, dim),col,col+1,row+1,row+2)
+            chart_controller = chartController.DimensionChartController(self.pf, dim)
+            chart = charts.Pie(chart_controller, width/2)
+            table.attach(chart, col, col+1, row+1, row+2)
             if switch:
                 col = 1
             else:
@@ -219,36 +219,6 @@ class Pie(gtk.VBox):
                     data[item] = pos.cvalue
         if sum(data.values()) == 0:
             self.pack_start(gtk.Label(NO_DATA_STRING))
-        else:
-            plot = cairoplot.plots.PiePlot('gtk',
-                                        data=data,
-                                        width=width,
-                                        height=300,
-                                        gradient=True,
-                                        values=True
-                                        )
-            self.chart = plot.handler
-            self.chart.show()
-            self.pack_start(self.chart)
-
-
-class DimensionPie(gtk.VBox):
-
-    #FIXME show how many positions of portfolio are considered
-
-    def __init__(self, width, portfolio, dimension):
-        gtk.VBox.__init__(self)
-        self.portfolio = portfolio
-        data = {}
-        for val in dimension.values:
-            data[val.name] = 0
-        for pos in self.portfolio:
-            for adv in pos.stock.getAssetDimensionValue(dimension):
-                data[adv.dimensionValue.name] += adv.value * pos.cvalue
-        #remove unused dimvalues
-        data = dict((k, v) for k, v in data.iteritems() if v != 0.0)
-        if sum(data.values()) == 0:
-            self.pack_start(gtk.Label('No positions assigned to dimension!'))
         else:
             plot = cairoplot.plots.PiePlot('gtk',
                                         data=data,
