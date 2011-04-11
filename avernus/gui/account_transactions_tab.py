@@ -26,6 +26,7 @@ class AccountTransactionTab(gtk.VBox, page.Page):
         image = gtk.Image()
         image.set_from_stock('gtk-convert', gtk.ICON_SIZE_BUTTON)
         transfer_button.add(image)
+        transfer_button.set_tooltip_text(_('Show transfers'))
         hbox.pack_start(transfer_button, expand=False, fill=False)
 
         self.search_entry = gtk.Entry()
@@ -38,10 +39,10 @@ class AccountTransactionTab(gtk.VBox, page.Page):
         self.pick_start = item.birthday
         self.pick_end = datetime.date.today()
         self.start_entry.set_icon_from_stock(1, gtk.STOCK_SELECT_COLOR)
-        self.start_entry.set_property("secondary-icon-tooltip-text","Pick date")
+        self.start_entry.set_property("secondary-icon-tooltip-text","Pick Start date")
         self.start_entry.connect('icon-press', self.on_pick_start)
         self.end_entry.set_icon_from_stock(1, gtk.STOCK_SELECT_COLOR)
-        self.end_entry.set_property("secondary-icon-tooltip-text","Pick date")
+        self.end_entry.set_property("secondary-icon-tooltip-text","Pick End date")
         self.end_entry.connect('icon-press', self.on_pick_end)
         hbox.pack_start(gtk.Label(_('Start')), expand=False, fill=False)
         hbox.pack_start(self.start_entry, expand=False, fill=False)
