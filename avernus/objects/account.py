@@ -47,13 +47,6 @@ class Account(SQLiteEntity):
                     if transaction.date-fivedays < trans.date and transaction.date+fivedays > trans.date:
                         yield trans
 
-    def get_transactions_in_period(self, start_date, end_date, transfers=False):
-        res = []
-        for trans in self:
-            if trans.date >= start_date and trans.date <= end_date:
-                res.append(trans)
-        return res
-
     def yield_earnings_in_period(self, start_date, end_date, transfers=False):
         for trans in self:
             if transfers or trans.transfer is None:
