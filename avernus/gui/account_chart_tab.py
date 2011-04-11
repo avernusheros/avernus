@@ -1,15 +1,13 @@
 #!/usr/bin/env python
 
-from avernus import cairoplot
-import gtk
-from avernus.controller import controller
-from avernus.gui.charts import SimpleLineChart
-import datetime
-from avernus import date_utils
+from avernus import cairoplot, date_utils
+from avernus.controller import chartController, controller, accountController
 from avernus.gui import gui_utils, page
+from avernus.gui.charts import SimpleLineChart
 from dateutil.relativedelta import relativedelta
+import datetime
 import dateutil.rrule as rrule
-from avernus.controller import chartController
+import gtk
 
 no_data_string = _('\nNo Data!\nAdd transactions first.\n\n')
 MONTHS = {
@@ -185,6 +183,7 @@ class Chart(object):
         self.end_date = end_date
         self.width = width
         self.account = account
+        self.accountController = accountController.AccountController(account)
         self._draw_chart()
 
     def on_zoom_change(self, start_date):
@@ -230,6 +229,7 @@ class TransactionsChart(gtk.VBox, Chart):
 
         self.pack_start(hbox)
         Chart.__init__(self, width, account, start_date, end_date)
+        
 
     def on_change(self, widget=None):
         self.remove(self.chart)
@@ -285,8 +285,8 @@ class TransactionsChart(gtk.VBox, Chart):
     def _draw_chart2(self):
         chart_style = self.style_cb.get_active_text()
         active_category = self.category_cb.get_model()[self.category_cb.get_active()][0]
-        transactions = self.account.get_transactions_in_period(self.start_date, self.end_date)
-        transactions = filter(lambda trans:trans.category == active_category, transactions)
+        transactions = self.accountController.get_transactions_by_period_category(\
+                       self.start_date, self.end_date, active_category)
         time_points = list(rrule.rrule(rrule.MONTHLY, dtstart = self.start_date, until = self.end_date, bymonthday=1))
         legend = [d.strftime("%b %y") for d in time_points]
         sums = {}
