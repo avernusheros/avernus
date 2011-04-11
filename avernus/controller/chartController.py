@@ -149,3 +149,30 @@ class DimensionChartController():
             self.values = {' ':1}
         else:
             self.values = data
+
+
+class PositionAttributeChartController():
+
+    def __init__(self, portfolio, attribute):
+        self.portfolio = portfolio
+        self.attribute = attribute
+        self.calculate_values()
+
+    def calculate_values(self):
+        data = {}
+        for pos in self.portfolio:
+            if getattr(pos.stock, self.attribute) is None:
+                try:
+                    data['None'] += pos.cvalue
+                except:
+                    data['None'] = pos.cvalue
+            else:
+                item = str(getattr(pos.stock, self.attribute))
+                try:
+                    data[item] += pos.cvalue
+                except:
+                    data[item] = pos.cvalue
+        if sum(data.values()) == 0:
+            self.values = {' ':1}
+        else:
+            self.values = data

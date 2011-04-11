@@ -11,9 +11,6 @@ import gtk
 import gobject
 
 
-NO_DATA_STRING = '\nNo Data!\nAdd positions to portfolio first.\n\n'
-
-
 class ChartTab(gtk.ScrolledWindow):
 
     def __init__(self, pf):
@@ -25,7 +22,7 @@ class ChartTab(gtk.ScrolledWindow):
 
     def show(self):
         if len(self.pf) == 0:
-            self.add_with_viewport(gtk.Label(NO_DATA_STRING))
+            self.add_with_viewport(gtk.Label('\nNo Data!\nAdd positions to portfolio first.\n\n'))
             self.show_all()
             return
 
@@ -38,12 +35,16 @@ class ChartTab(gtk.ScrolledWindow):
         label = gtk.Label()
         label.set_markup(_('<b>Market value</b>'))
         table.attach(label, 0,1,1,2)
-        table.attach(Pie(width/2, self.pf, 'name'),0,1,2,3)
+        chart_controller = chartController.PositionAttributeChartController(self.pf, 'name')
+        chart = charts.Pie(chart_controller, width/2)
+        table.attach(chart, 0,1,2,3)
 
         label = gtk.Label()
         label.set_markup(_('<b>Investment types</b>'))
         table.attach(label,1,2,1,2)
-        table.attach(Pie(width/2, self.pf, 'type_string'),1,2,2,3)
+        chart_controller = chartController.PositionAttributeChartController(self.pf, 'type_string')
+        chart = charts.Pie(chart_controller, width/2)
+        table.attach(chart, 1,2,2,3)
 
         row = 3
         col = 0
@@ -154,36 +155,3 @@ class ValueChart(gtk.VBox):
         self.chart = plot.handler
         self.pack_start(self.chart)
         self.chart.show()
-
-
-class Pie(gtk.VBox):
-
-    def __init__(self, width, portfolio, attribute):
-        gtk.VBox.__init__(self)
-        self.portfolio = portfolio
-        data = {}
-        for pos in self.portfolio:
-            if getattr(pos.stock, attribute) is None:
-                try:
-                    data['None'] += pos.cvalue
-                except:
-                    data['None'] = pos.cvalue
-            else:
-                item = str(getattr(pos.stock, attribute))
-                try:
-                    data[item] += pos.cvalue
-                except:
-                    data[item] = pos.cvalue
-        if sum(data.values()) == 0:
-            self.pack_start(gtk.Label(NO_DATA_STRING))
-        else:
-            plot = cairoplot.plots.PiePlot('gtk',
-                                        data=data,
-                                        width=width,
-                                        height=300,
-                                        gradient=True,
-                                        values=True
-                                        )
-            self.chart = plot.handler
-            self.chart.show()
-            self.pack_start(self.chart)
