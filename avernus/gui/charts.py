@@ -32,6 +32,22 @@ class Pie(ChartBase):
         self.pack_start(self.chart)
 
 
+class BarChart(ChartBase):
+
+    def draw_chart(self):
+        plot = cairoplot.plots.VerticalBarPlot('gtk',
+                                        data=self.controller.y_values,
+                                        width=self.width,
+                                        height=300,
+                                        x_labels=self.controller.x_values,
+                                        display_values=True,
+                                        background="white light_gray",
+                                        value_formatter = gui_utils.get_currency_format_from_float,
+                                        )
+        chart = plot.handler
+        chart.show()
+        self.pack_start(chart)
+
 
 class SimpleLineChart(ChartBase):
 

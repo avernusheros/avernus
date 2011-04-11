@@ -69,14 +69,14 @@ class ChartTab(gtk.ScrolledWindow):
         label.set_markup(_('<b>Dividends per Year</b>'))
         table.attach(label,0,2,row,row+1)
         chart_controller = chartController.DividendsPerYearChartController(self.pf)
-        chart = BarChart(chart_controller,width)
+        chart = charts.BarChart(chart_controller,width)
         table.attach(chart, 0,2,row+2,row+3)
 
         label = gtk.Label()
         label.set_markup(_('<b>Dividends</b>'))
         table.attach(label,0,2,row+3,row+4)
         chart_controller = chartController.DividendsPerPositionChartController(self.pf)
-        chart = BarChart(chart_controller,width)
+        chart = charts.BarChart(chart_controller,width)
         table.attach(chart, 0,2,row+4,row+5)
 
         self.add_with_viewport(table)
@@ -154,29 +154,6 @@ class ValueChart(gtk.VBox):
         self.chart = plot.handler
         self.pack_start(self.chart)
         self.chart.show()
-
-
-class BarChart(gtk.VBox):
-
-    def __init__(self, chart_controller, width):
-        gtk.VBox.__init__(self)
-        self.chart_controller = chart_controller
-        self.width = width
-        self.draw()
-
-    def draw(self):
-        plot = cairoplot.plots.VerticalBarPlot('gtk',
-                                        data=self.chart_controller.y_values,
-                                        width=self.width,
-                                        height=300,
-                                        x_labels=self.chart_controller.x_values,
-                                        display_values=True,
-                                        background="white light_gray",
-                                        value_formatter = gui_utils.get_currency_format_from_float,
-                                        )
-        chart = plot.handler
-        chart.show()
-        self.pack_start(chart)
 
 
 class Pie(gtk.VBox):
