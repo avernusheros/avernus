@@ -66,18 +66,6 @@ class Account(SQLiteEntity):
                 if trans.date >= start_date and trans.date <= end_date and trans.amount < 0.0:
                     yield trans
 
-    def get_balance_over_time(self, start_date):
-        today = datetime.date.today()
-        one_day = datetime.timedelta(days=1)
-        amount = self.amount
-        res = [(today, amount)]
-        for change, date in self.controller.getAccountChangeInPeriodPerDay(self, start_date, today):
-            #print date, change
-            res.append((date, amount))
-            amount -= change
-        res.reverse()
-        return res
-
     def get_sum_in_period_by_category(self, start_date, end_date, parent_category=None, b_earnings=False, transfers=False):
         #sum for all categories including subcategories
         if parent_category:

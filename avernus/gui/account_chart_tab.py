@@ -104,7 +104,7 @@ class AccountChartTab(gtk.VBox, page.Page):
         self.table.attach(chart,0,2,y+1,y+2)
         self.charts.append(chart)
         y +=2
-        
+ 
         self.updateable_charts = []
 
         trans = [t for t in self.account]
@@ -112,18 +112,16 @@ class AccountChartTab(gtk.VBox, page.Page):
             label = gtk.Label()
             label.set_markup('<b>transaction value using chartcontroller</b>')
             self.table.attach(label, 0,2,y,y+1)
-            chart_controller = chartController.TransactionValueOverTimeChartController()
+            chart_controller = chartController.TransactionValueOverTimeChartController(trans, self.start_date)
             chart = SimpleLineChart(chart_controller,width)
             self.table.attach(chart,0,2,y+1,y+2)
-            self.charts.append(chart)
+            self.updateable_charts.append((chart, chart_controller))
             y += 2
-
-        
 
             label = gtk.Label()
             label.set_markup('<b>Balance over time</b>')
             self.table.attach(label, 0,2,y,y+1)
-            chart_controller = chartController.AccountBalanceOverTimeChartController(trans)
+            chart_controller = chartController.AccountBalanceOverTimeChartController(trans, self.start_date)
             chart = SimpleLineChart(chart_controller,width)
             self.updateable_charts.append((chart, chart_controller))
             self.table.attach(chart,0,2,y+1,y+2)

@@ -1,6 +1,7 @@
 from avernus.gui import gui_utils
 from avernus import date_utils
 from dateutil.relativedelta import relativedelta
+import datetime
 import logging
 logger = logging.getLogger(__name__)
 
@@ -17,11 +18,8 @@ def get_step_for_range(start,end):
 
 class TransactionChartController:
 
-    def __init__(self, transactions):
-        self.transactions = sorted(transactions, key=lambda t: t.date)
-        self.start_date = self.transactions[0].date
-        self.end_date = self.transactions[-1].date
-        #print "start, end ", self.start_date, self.end_date
+    def calculate_x_values(self):
+        self.end_date = datetime.date.today()
         self.step = get_step_for_range(self.start_date, self.end_date)
         self.x_values_all = []
         current = self.start_date
@@ -34,9 +32,15 @@ class TransactionChartController:
 
 class TransactionValueOverTimeChartController(TransactionChartController):
 
-    def __init__(self, transactions):
-        TransactionChartController.__init__(self, transactions)
+    def __init__(self, transactions, start_date):
+        self.transactions = sorted(transactions, key=lambda t: t.date)
+        self.start_date = start_date
+        self.calculate_values()
+
+    def calculate_values(self):
+        self.calculate_x_values()
         self.y_values = []
+        #FIXME do we need this temp dict?
         temp = {}
         i = 0
         x = self.x_values_all[i]
@@ -58,18 +62,30 @@ class TransactionValueOverTimeChartController(TransactionChartController):
             self.y_values.append(temp[value])
 
 
-class AccountBalanceOverTimeChartController():
+class AccountBalanceOverTimeChartController(TransactionChartController):
 
-    def __init__(self, transactions):
+    def __init__(self, transactions, start_date):
+        self.transactions = sorted(transactions, key=lambda t: t.date, reverse=True)
+        self.start_date = start_date
         self.account = transactions[0].account
-        self.start_date = transactions[0].date
         self.calculate_values()
 
     def calculate_values(self):
-        #FIXME remove some code from account
-        balance = self.account.get_balance_over_time(self.start_date)
-        self.x_values = [gui_utils.get_date_string(balance[i][0]) for i in range(0,len(balance))]
-        self.y_values = [item[1] for item in balance]
+        self.calculate_x_values()
+
+        count = 1
+        trans_count = len(self.transactions)
+        iterator = self.transactions.__iter__()
+        current_trans = iterator.next()
+        amount = self.account.amount
+        self.y_values = []
+        for current_date in reversed(self.x_values_all):
+            while current_trans.date > current_date and count != trans_count:
+                amount -= current_trans.amount
+                current_trans = iterator.next()
+                count += 1
+            self.y_values.append(amount)
+        self.y_values.reverse()
 
 
 class DividendsPerYearChartController():
@@ -104,10 +120,59 @@ class DividendsPerPositionChartController():
 
 
 class StockChartPlotController():
-    
+
     def __init__(self, quotations):
         self.y_values = [d.close for d in quotations]
         quotation_count = len(quotations)
         self.x_values = [gui_utils.get_date_string(quotations[int(quotation_count/18 *i)].date) for i in range(18)]
         self.x_values.insert(0,str(quotations[0].date))
         self.x_values.insert(len(self.x_values),str(quotations[-1].date))
+
+
+class DimensionChartController():
+
+    def __init__(self, portfolio, dimension):
+        self.portfolio = portfolio
+        self.dimension = dimension
+        self.calculate_values()
+
+    def calculate_values(self):
+        data = {}
+        for val in self.dimension.values:
+            data[val.name] = 0
+        for pos in self.portfolio:
+            for adv in pos.stock.getAssetDimensionValue(self.dimension):
+                data[adv.dimensionValue.name] += adv.value * pos.cvalue
+        #remove unused dimvalues
+        data = dict((k, v) for k, v in data.iteritems() if v != 0.0)
+        if sum(data.values()) == 0:
+            self.values = {' ':1}
+        else:
+            self.values = data
+
+
+class PositionAttributeChartController():
+
+    def __init__(self, portfolio, attribute):
+        self.portfolio = portfolio
+        self.attribute = attribute
+        self.calculate_values()
+
+    def calculate_values(self):
+        data = {}
+        for pos in self.portfolio:
+            if getattr(pos.stock, self.attribute) is None:
+                try:
+                    data['None'] += pos.cvalue
+                except:
+                    data['None'] = pos.cvalue
+            else:
+                item = str(getattr(pos.stock, self.attribute))
+                try:
+                    data[item] += pos.cvalue
+                except:
+                    data[item] = pos.cvalue
+        if sum(data.values()) == 0:
+            self.values = {' ':1}
+        else:
+            self.values = data
