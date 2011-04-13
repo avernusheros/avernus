@@ -1,13 +1,11 @@
 import unittest
 import avernus.objects.store as store
 import avernus.objects.model as model
-import avernus.objects.controller as controller
+from avernus.controller import controller
 import avernus.objects.container as container
 from avernus.objects.position import PortfolioPosition as Position
-#from avernus.objects.stock import Stock
 import datetime
 
-#dbfile = "avernus/tests/stockmodel.db"
 dbfile = ":memory:"
 create = True
 
@@ -53,7 +51,7 @@ class Test(unittest.TestCase):
             print "Data Created"
         self.portfolios = controller.getAllPortfolio()
         self.positions = controller.getAllPosition()
-        
+
 
     def tearDown(self):
         pass
