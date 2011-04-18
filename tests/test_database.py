@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 
 import unittest
-from avernus.objects import model, store, controller
+from avernus.objects import model, store
+from avernus.controller import controller
 
 class A(model.SQLiteEntity):
     __primaryKey__ = "id"
@@ -11,7 +12,7 @@ class A(model.SQLiteEntity):
                    "name": "VARCHAR",
                    "comment": "VARCHAR"
                    }
-    
+
 class B(model.SQLiteEntity):
     __primaryKey__ = "id"
     __tableName__ = "b"
@@ -24,14 +25,14 @@ class B(model.SQLiteEntity):
 
 
 class TestDatabase(unittest.TestCase):
-    
+
     def setUp(self, path=":memory:"):
         model.store = store.Store(path)
         for cl in [A,B]:
             cl.createTable()
         a = A(id=0, name='foo', comment='')
         a.insert()
-    
+
     def test_one2one(self):
         a = A(id= 1, name='foo', comment='bar')
         b = B(id = 2, name="test", link=a)
@@ -40,21 +41,21 @@ class TestDatabase(unittest.TestCase):
         self.assertEquals(b.link,a)
         b2 = B.getByPrimaryKey(b.id)
         self.assertEquals(b.link,a)
-       
+
     def test_change_comment(self):
         a = A.getByPrimaryKey(1)
         self.assertEqual(a.comment, "")
         a.comment = "bla bla"
         a.update()
         self.assertEqual(a.comment, "bla bla")
-    
+
     def test_remove(self):
-        id = 42
-        b = B(name="foo", link=None, id=42)
+        b = B(name="foo", link=None)
         b.insert()
+        id = b.id
         b.delete()
         self.assertEqual(B.getByPrimaryKey(id), None)
-                
+
     def test_relations(self):
         anA = A(id=33, name='foo', comment='bar')
         anotherA = A(id=44, name='foo2', comment='bar2')

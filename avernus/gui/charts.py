@@ -14,7 +14,7 @@ class ChartBase(gtk.VBox):
 
     def remove_chart(self):
         if self.chart:
-            self.remove(chart)
+            self.remove(self.chart)
 
 
 class Pie(ChartBase):
@@ -69,4 +69,5 @@ class SimpleLineChart(ChartBase):
                                 dots=self.dots,
                                 series_colors=['blue','green'])
         self.chart = plot.handler
+        self.chart.show()
         self.pack_start(self.chart)

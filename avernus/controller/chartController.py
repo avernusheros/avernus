@@ -1,6 +1,7 @@
 from avernus.gui import gui_utils
 from avernus import date_utils
 from dateutil.relativedelta import relativedelta
+from dateutil.rrule import *
 import datetime
 import logging
 logger = logging.getLogger(__name__)
@@ -14,6 +15,28 @@ def get_step_for_range(start,end):
         return relativedelta(weeks=1)
     #print "delta month"
     return relativedelta(months=1)
+
+
+def get_legend(smaller, bigger, step):
+    erg = []
+    if step == 'monthly':
+        delta = relativedelta(months=+1)
+        formatstring = "%b %y"
+    elif step == 'yearly':
+        delta = relativedelta(years=+1)
+        formatstring = "%Y"
+    elif step == 'daily':
+        delta = relativedelta(days=+1)
+        formatstring = "%x"
+    elif step == 'weekly':
+        delta = relativedelta(weeks=+1)
+        formatstring = "%U"
+    while smaller <= bigger:
+        erg.append(smaller.strftime(formatstring))
+        smaller+=delta
+    return erg
+
+
 
 
 class TransactionChartController:
@@ -129,6 +152,30 @@ class StockChartPlotController():
         self.x_values.insert(len(self.x_values),str(quotations[-1].date))
 
 
+class PortfolioValueChartController():
+    MAX_VALUES = 25
+
+    def __init__(self, portfolio, step):
+        self.portfolio = portfolio
+        self.step = step
+        self.calculate_values()
+
+    def _calc_days(self):
+        if self.step == 'daily':
+            self.days = list(rrule(DAILY, dtstart = self.portfolio.birthday, until = datetime.date.today()))[-self.MAX_VALUES:]
+        elif self.step == 'weekly':
+            self.days = list(rrule(WEEKLY, dtstart = self.portfolio.birthday, until = datetime.date.today(), byweekday=FR))[-self.MAX_VALUES:]
+        elif self.step == 'monthly':
+            self.days = list(rrule(MONTHLY, dtstart = self.portfolio.birthday, until = datetime.date.today(), bymonthday=-1))[-self.MAX_VALUES:]
+        elif self.step == 'yearly':
+            self.days = list(rrule(YEARLY, dtstart = self.portfolio.birthday, until = datetime.date.today(), bymonthday=-1, bymonth=12))[-self.MAX_VALUES:]
+
+    def calculate_values(self):
+        #FIXME do more stuff here, less in portfolio
+        self._calc_days()
+        self.y_values = [self.portfolio.get_value_at_date(t) for t in self.days]
+        self.x_values = get_legend(self.days[0], self.days[-1], self.step)
+
 class DimensionChartController():
 
     def __init__(self, portfolio, dimension):
@@ -161,17 +208,11 @@ class PositionAttributeChartController():
     def calculate_values(self):
         data = {}
         for pos in self.portfolio:
-            if getattr(pos.stock, self.attribute) is None:
-                try:
-                    data['None'] += pos.cvalue
-                except:
-                    data['None'] = pos.cvalue
-            else:
-                item = str(getattr(pos.stock, self.attribute))
-                try:
-                    data[item] += pos.cvalue
-                except:
-                    data[item] = pos.cvalue
+            item = str(getattr(pos.stock, self.attribute))
+            try:
+                data[item] += pos.cvalue
+            except:
+                data[item] = pos.cvalue
         if sum(data.values()) == 0:
             self.values = {' ':1}
         else:

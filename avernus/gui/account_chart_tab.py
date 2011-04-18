@@ -19,25 +19,6 @@ MONTHS = {
         '5y':60,
         }
 
-def get_legend(smaller, bigger, step):
-    erg = []
-    if step == 'monthly':
-        delta = relativedelta(months=+1)
-        formatstring = "%b %y"
-    elif step == 'yearly':
-        delta = relativedelta(years=+1)
-        formatstring = "%Y"
-    elif step == 'daily':
-        delta = relativedelta(days=+1)
-        formatstring = "%x"
-    elif step == 'weekly':
-        delta = relativedelta(weeks=+1)
-        formatstring = "%U"
-    while smaller <= bigger:
-        erg.append(smaller.strftime(formatstring))
-        smaller+=delta
-    return erg
-
 
 class AccountChartTab(gtk.VBox, page.Page):
 
@@ -102,7 +83,7 @@ class AccountChartTab(gtk.VBox, page.Page):
         self.table.attach(chart,0,2,y+1,y+2)
         self.charts.append(chart)
         y +=2
- 
+
         self.updateable_charts = []
 
         trans = [t for t in self.account]
@@ -229,7 +210,7 @@ class TransactionsChart(gtk.VBox, Chart):
 
         self.pack_start(hbox)
         Chart.__init__(self, width, account, start_date, end_date)
-        
+
 
     def on_change(self, widget=None):
         self.remove(self.chart)
@@ -252,7 +233,7 @@ class TransactionsChart(gtk.VBox, Chart):
         chart_style = self.style_cb.get_active_text()
         earnings = self.account.get_earnings_summed(self.end_date, self.start_date, self.step)
         spendings = self.account.get_spendings_summed(self.end_date, self.start_date, self.step)
-        legend = get_legend(self.start_date, self.end_date, self.step)
+        legend = chartController.get_legend(self.start_date, self.end_date, self.step)
         if chart_style == 'line chart':
             plot = cairoplot.plots.DotLinePlot('gtk',
                                 data=[earnings, spendings],
