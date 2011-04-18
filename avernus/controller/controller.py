@@ -6,21 +6,22 @@ from avernus.objects.container import Portfolio, Watchlist
 from avernus.objects.dimension import Dimension, DimensionValue, \
     AssetDimensionValue
 from avernus.objects.dividend import Dividend
+from avernus.objects.filter import CategoryFilter
 from avernus.objects.model import Meta
 from avernus.objects.position import PortfolioPosition, WatchlistPosition
 from avernus.objects.quotation import Quotation
+from avernus.objects.source_info import SourceInfo
 from avernus.objects.stock import Stock
 from avernus.objects.transaction import Transaction
-from avernus.objects.source_info import SourceInfo
 import datetime
 import gobject
+import itertools
+import logging
 import sys
 import thread
 import threading
 
-import logging
 
-import itertools
 
 # don't know where else to put this...
 def pairwise(iterable):
@@ -35,7 +36,7 @@ logger = logging.getLogger(__name__)
 modelClasses = [Portfolio, Transaction, Watchlist, Dividend, SourceInfo,
                 PortfolioPosition, WatchlistPosition, AccountCategory,
                 Quotation, Stock, Meta, Account, AccountTransaction,
-                Dimension, DimensionValue, AssetDimensionValue]
+                Dimension, DimensionValue, AssetDimensionValue, CategoryFilter]
 
 #these classes will be loaded with one single call and will also load composite
 #relations. therefore it is important that the list is complete in the sense
