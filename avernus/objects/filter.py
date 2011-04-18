@@ -16,3 +16,4 @@ class CategoryFilter(SQLiteEntity):
                    'priority': 'INTEGER',
                    'category': AccountCategory
                   }    
+    __comparisonPositives__ = ['rule']
