@@ -1,4 +1,23 @@
 #!/usr/bin/env python
+from avernus import pubsub, config
+from avernus.controller import controller
+from avernus.gui import chart_tab, progress_manager
+from avernus.gui.account_chart_tab import AccountChartTab
+from avernus.gui.account_transactions_tab import AccountTransactionTab
+from avernus.gui.closed_positions_tab import ClosedPositionsTab
+from avernus.gui.container_overview_tab import ContainerOverviewTab
+from avernus.gui.csv_import_dialog import CSVImportDialog
+from avernus.gui.dividends_tab import DividendsTab
+from avernus.gui.filterDialog import FilterDialog
+from avernus.gui.left_pane import MainTreeBox
+from avernus.gui.positions_tab import PositionsTab
+from avernus.gui.preferences import PrefDialog
+from avernus.gui.transactions_tab import TransactionsTab
+from avernus.objects import model
+from webbrowser import open as web
+import avernus
+import gtk
+import gobject
 
 try:
     import pygtk
@@ -10,24 +29,6 @@ if __name__ == '__main__':
     import sys
     sys.path.append('..')
 
-import gtk, gobject
-from avernus import pubsub, config
-from avernus.gui import chart_tab
-from avernus.gui.positions_tab import PositionsTab
-from avernus.gui.left_pane import MainTreeBox
-from avernus.gui.dividends_tab import DividendsTab
-from avernus.gui.transactions_tab import TransactionsTab
-from avernus.gui.container_overview_tab import ContainerOverviewTab
-from avernus.gui.closed_positions_tab import ClosedPositionsTab
-from avernus.gui.preferences import PrefDialog
-from avernus.gui.account_transactions_tab import AccountTransactionTab
-from avernus.gui.account_chart_tab import AccountChartTab
-from avernus.gui.csv_import_dialog import CSVImportDialog
-from avernus.gui import progress_manager
-from webbrowser import open as web
-import avernus
-from avernus.objects import model
-from avernus.controller import controller
 
 class AboutDialog(gtk.AboutDialog):
     def __init__(self, *arg, **args):
@@ -62,12 +63,13 @@ class MenuBar(gtk.MenuBar):
              ('quit'          , gtk.STOCK_QUIT       , '_Quit'              , '<Control>q', None, parent.on_destroy),
              ('prefs'         , gtk.STOCK_PREFERENCES, '_Preferences'       , None        , None, parent.on_prefs),
              ('update'        , gtk.STOCK_REFRESH    , '_Update all stocks' , 'F5'        , None, parent.on_update_all),
-             ('historical'    ,gtk.STOCK_REFRESH     ,'Get _historical data', None       , None,  parent.on_historical),
+             ('historical'    , gtk.STOCK_REFRESH     ,'Get _historical data', None       , None,  parent.on_historical),
              ('help'          , gtk.STOCK_HELP       , '_Help'              , 'F1'        , None, lambda x:web("https://answers.launchpad.net/avernus")),
              ('website'       , None                 , '_Website'           , None        , None, lambda x:web("https://launchpad.net/avernus")),
              ('feature'       , None                 , 'Request a _Feature' , None        , None, lambda x:web("https://blueprints.launchpad.net/avernus")),
              ('bug'           , None                 , 'Report a _Bug'      , None        , None, lambda x:web("https://bugs.launchpad.net/avernus")),
              ('about'         , gtk.STOCK_ABOUT      , '_About'             , None        , None, AboutDialog),
+             ('filter'        , None                 , '_Category Filters'  , None        , None, FilterDialog),
              ])
 
         for action in actiongroup.list_actions():
@@ -75,7 +77,7 @@ class MenuBar(gtk.MenuBar):
 
         file_menu_items  = ['import', '---', 'quit']
         edit_menu_items = ['prefs']
-        tools_menu_items = ['update', 'historical']
+        tools_menu_items = ['update', 'historical','filter']
         help_menu_items  = ['help', 'website', 'feature', 'bug', '---', 'about']
 
         self._create_menu('avernus', file_menu_items)
