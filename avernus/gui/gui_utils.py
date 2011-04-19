@@ -61,7 +61,7 @@ class Tree(gtk.TreeView):
         column = gtk.TreeViewColumn(name)
         self.append_column(column)
         cell = gtk.CellRendererToggle()
-        column.pack_start(cell, expand = True)
+        column.pack_start(cell, expand = False)
         column.add_attribute(cell, 'active', attribute)
         return column, cell    
         

@@ -8,9 +8,10 @@ from avernus.objects.model import SQLiteEntity
 
 class CategoryFilter(SQLiteEntity):
     
-    __primaryKey__ = 'rule'
-    __tableName__ = "categoryFilter"
+    __primaryKey__ = 'id'
+    __tableName__ = "transactionFilter"
     __columns__ = {
+                   'id': 'INTEGER',
                    'rule': 'VARCHAR',
                    'active': 'BOOLEAN',
                    'priority': 'INTEGER',
