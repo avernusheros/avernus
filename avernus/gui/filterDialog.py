@@ -68,16 +68,17 @@ class FilterTree(Tree):
         cell.set_property('editable', True)
         cell.connect('edited', self.on_cell_edited)
         
-        column = gtk.TreeViewColumn(_('Category'))
+        
         cell = gtk.CellRendererCombo()
         cell.connect('changed', self.on_category_changed)
-        cb_model = gtk.ListStore(object, str)
+        self.cb_model = gtk.ListStore(object, str)
         self.categories = controller.getAllAccountCategories()
         for category in self.categories:
-            cb_model.append([category, category.name])
-        cell.set_property('model', cb_model)
+            self.cb_model.append([category, category.name])
+        cell.set_property('model', self.cb_model)
         cell.set_property('text-column', 1)
         cell.set_property('editable', True)
+        column = gtk.TreeViewColumn(_('Category'), cell, text = self.CATEGORY_STR)
         column.pack_start(cell, expand = False)
         self.append_column(column)
         
@@ -87,8 +88,10 @@ class FilterTree(Tree):
         for rule in filterController.get_all():
             self.insert_rule(rule)
     
-    def on_category_changed(self, combo, path, new_iter):
-        print "do something"
+    def on_category_changed(self, cellrenderertext, path, new_iter):
+        category = self.cb_model[new_iter][0]
+        self.model[path][self.CATEGORY_STR] = category.name
+        self.model[path][self.OBJECT].category = category
     
     def on_cell_edited(self, cellrenderertext, path, new_text):
         self.model[path][self.FILTER_STR] = new_text 
