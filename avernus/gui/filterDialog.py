@@ -37,6 +37,16 @@ class FilterDialog(gtk.Dialog):
             toolbar.insert(button, -1)
         vbox.pack_start(toolbar, expand=False, fill=True)
         
+        self.account_cb = gtk.combo_box_entry_new_text()
+        self.account_cb.connect('changed', self.on_account_changed)
+        self.accounts = controller.getAllAccount()
+        for acc in self.accounts:
+            self.account_cb.append_text(acc.name)
+        hbox = gtk.HBox()
+        hbox.pack_start(gtk.Label(_('Preview Account')))
+        hbox.pack_start(self.account_cb)
+        vbox.pack_start(hbox, expand=False, fill=False)
+        
         frame = gtk.Frame('Preview')
         sw = gtk.ScrolledWindow()
         sw.set_policy(gtk.POLICY_AUTOMATIC,gtk.POLICY_AUTOMATIC)
@@ -44,6 +54,13 @@ class FilterDialog(gtk.Dialog):
         frame.add(sw)
         #sw.add(self.preview_tree)
         vbox.pack_start(frame)
+        
+    def on_account_changed(self, action):
+        account_name = self.account_cb.get_active_text()
+        for acc in self.accounts:
+            if acc.name == account_name:
+                print "Load Preview Tree for account ", acc
+                print "first task: Make the transaction list in the tab a class"
                 
     def process_result(self, response):
         if response == gtk.RESPONSE_ACCEPT:
