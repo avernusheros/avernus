@@ -105,7 +105,10 @@ class FilterTree(Tree):
         self.insert_rule(rule)
         
     def on_remove(self, widget):
-        print "remove..."
+        item, iter = self.get_selected_item()
+        if item is not None:
+            item.delete()
+            self.model.remove(iter)
     
     def insert_rule(self, rule):
         self.model.append([rule, rule.active, rule.rule, rule.category, rule.category.name])
