@@ -146,7 +146,7 @@ class AccountTransactionTab(gtk.VBox, page.Page):
     def update_ui(self):
         self.refilter()
         self.update_page()
-        
+
     def refilter(self):
         self.transactions_tree.modelfilter.refilter()
         count = len(self.transactions_tree.modelfilter)
@@ -171,10 +171,7 @@ class AccountTransactionTab(gtk.VBox, page.Page):
     def on_destroy(self, widget):
         self.config.set_option('account hpaned position', self.hpaned.get_position(), 'Gui')
 
-def desc_markup(column, cell, model, iter, user_data):
-    text = model.get_value(iter, user_data)
-    markup =  '<span size="small">%s</span>' % (gobject.markup_escape_text(text),)
-    cell.set_property('markup', markup)
+
 
 
 class TransactionsTree(gui_utils.Tree):
@@ -204,7 +201,7 @@ class TransactionsTree(gui_utils.Tree):
         self.create_icon_column('', self.ICON)
         self.create_column(_('Date'), self.DATE, func=gui_utils.date_to_string)
         sorter.set_sort_func(self.DATE, gui_utils.sort_by_time, self.DATE)
-        col, cell = self.create_column(_('Description'), self.DESCRIPTION, func=desc_markup)
+        col, cell = self.create_column(_('Description'), self.DESCRIPTION, func=gui_utils.transaction_desc_markup)
         cell.props.wrap_mode = pango.WRAP_WORD
         cell.props.wrap_width = 300
         self.create_column(_('Amount'), self.AMOUNT, func=gui_utils.currency_format)
