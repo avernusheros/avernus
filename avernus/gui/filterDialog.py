@@ -39,13 +39,15 @@ class FilterDialog(gtk.Dialog):
         actiongroup.add_actions([
                 ('add',     gtk.STOCK_ADD,    'new transaction filter',    None, _('Add new transaction filter'), self.filter_tree.on_add),
                 ('remove',  gtk.STOCK_DELETE, 'remove transaction filter', None, _('Remove selected transaction filter'), self.filter_tree.on_remove),
-                ('refresh', gtk.STOCK_REFRESH,'reload preview tree',       None, _('Reload preview tree'), self.refresh_preview)
+                ('refresh', gtk.STOCK_REFRESH,'reload preview tree',       None, _('Reload preview tree'), self.refresh_preview),
+                ('reset',   gtk.STOCK_CLEAR,  'reset preview tree',        None, _('Reset the preview tree'), self.reset_preview),
                      ])
         toolbar = gtk.Toolbar()
         toolbar.insert(actiongroup.get_action('add').create_tool_item(), -1)
         toolbar.insert(actiongroup.get_action('remove').create_tool_item(), -1)
         toolbar.insert(gtk.SeparatorToolItem(), -1)
         toolbar.insert(actiongroup.get_action('refresh').create_tool_item(), -1)
+        toolbar.insert(actiongroup.get_action('reset').create_tool_item(), -1)
         vbox.pack_start(toolbar, expand=False, fill=True)
 
         self.show_all()
@@ -53,8 +55,11 @@ class FilterDialog(gtk.Dialog):
     def refresh_preview(self, widget):
         # get the active rule and refresh the preview tree with it
         active_rule = self.filter_tree.get_active_filter()
-        self.preview_tree.on_refresh(active_rule)
+        if active_rule:
+            self.preview_tree.on_refresh(active_rule)
         
+    def reset_preview(self, widget):
+        self.preview_tree.reset()
 
     def process_result(self, response):
         if response == gtk.RESPONSE_ACCEPT:
@@ -109,6 +114,11 @@ class PreviewTree(gui_utils.Tree):
         self.filter_active = True
         self.filterController = FilterController(filter)
         self.modelfilter.refilter()
+        
+    def reset(self):
+        self.filter_active = False
+        self.filterController = None
+        self.modelfilter.refilter()
 
 
 class FilterTree(gui_utils.Tree):
@@ -145,7 +155,9 @@ class FilterTree(gui_utils.Tree):
         
     def get_active_filter(self):
         iter = self.get_selection().get_selected()[1]
-        selection = self.model.get_value(iter, self.OBJECT)
+        selection = None
+        if iter:
+            selection = self.model.get_value(iter, self.OBJECT)
         return selection
 
     def load_rules(self):
