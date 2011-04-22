@@ -1,6 +1,8 @@
 from avernus.controller import controller, filterController
-import gtk, pango
+from avernus.controller.filterController import FilterController
 from avernus.gui import gui_utils
+import gtk
+import pango
 
 
 class FilterDialog(gtk.Dialog):
@@ -37,20 +39,33 @@ class FilterDialog(gtk.Dialog):
         actiongroup.add_actions([
                 ('add',     gtk.STOCK_ADD,    'new transaction filter',    None, _('Add new transaction filter'), self.filter_tree.on_add),
                 ('remove',  gtk.STOCK_DELETE, 'remove transaction filter', None, _('Remove selected transaction filter'), self.filter_tree.on_remove),
-                ('refresh', gtk.STOCK_REFRESH,'reload preview tree',       None, _('Reload preview tree'), self.preview_tree.on_refresh)
+                ('refresh', gtk.STOCK_REFRESH,'reload preview tree',       None, _('Reload preview tree'), self.refresh_preview),
+                ('reset',   gtk.STOCK_CLEAR,  'reset preview tree',        None, _('Reset the preview tree'), self.reset_preview),
                      ])
         toolbar = gtk.Toolbar()
         toolbar.insert(actiongroup.get_action('add').create_tool_item(), -1)
         toolbar.insert(actiongroup.get_action('remove').create_tool_item(), -1)
         toolbar.insert(gtk.SeparatorToolItem(), -1)
         toolbar.insert(actiongroup.get_action('refresh').create_tool_item(), -1)
+        toolbar.insert(actiongroup.get_action('reset').create_tool_item(), -1)
         vbox.pack_start(toolbar, expand=False, fill=True)
 
         self.show_all()
+        
+    def refresh_preview(self, widget):
+        # get the active rule and refresh the preview tree with it
+        active_rule = self.filter_tree.get_active_filter()
+        if active_rule:
+            self.preview_tree.on_refresh(active_rule)
+        
+    def reset_preview(self, widget):
+        self.preview_tree.reset()
 
     def process_result(self, response):
         if response == gtk.RESPONSE_ACCEPT:
             print "D'accord"
+        else:
+            print "Mince alors"
 
 
 class PreviewTree(gui_utils.Tree):
@@ -64,7 +79,10 @@ class PreviewTree(gui_utils.Tree):
     def __init__(self):
         gui_utils.Tree.__init__(self)
         self.model = gtk.ListStore(object, str, float, str, object, str)
-        self.set_model(self.model)
+        self.modelfilter = self.model.filter_new()
+        sorter = gtk.TreeModelSort(self.modelfilter)
+        self.set_model(sorter)
+        self.modelfilter.set_visible_func(self.visible_cb)
         self.create_column(_('Date'), self.DATE, func=gui_utils.date_to_string, expand=False)
         col, cell = self.create_column(_('Description'), self.DESCRIPTION, func=gui_utils.transaction_desc_markup)
         cell.props.wrap_mode = pango.WRAP_WORD
@@ -73,8 +91,18 @@ class PreviewTree(gui_utils.Tree):
         self.create_column(_('Category'), self.CATEGORY, expand=False)
         self.create_column(_('Account'), self.ACCOUNT, expand=False)
         self.set_rules_hint(True)
-
+        
+        self.filter_active = False
+        self.filterController = None
         self.load_all()
+        
+    def visible_cb(self, model, iter):
+        transaction = model[iter][self.OBJECT]
+        if transaction and transaction.is_transfer():
+            return False
+        if self.filter_active:
+            return self.filterController.match_transaction(transaction)
+        return True
 
     def load_all(self):
         for trans in controller.getAllAccountTransactions():
@@ -84,8 +112,15 @@ class PreviewTree(gui_utils.Tree):
                 cat = ''
             self.model.append([trans, trans.description, trans.amount, cat, trans.date, trans.account.name])
 
-    def on_refresh(self, widget):
-        print "refresh tree"
+    def on_refresh(self, filter):
+        self.filter_active = True
+        self.filterController = FilterController(filter)
+        self.modelfilter.refilter()
+        
+    def reset(self):
+        self.filter_active = False
+        self.filterController = None
+        self.modelfilter.refilter()
 
 
 class FilterTree(gui_utils.Tree):
@@ -119,6 +154,13 @@ class FilterTree(gui_utils.Tree):
         self.append_column(column)
 
         self.load_rules()
+        
+    def get_active_filter(self):
+        iter = self.get_selection().get_selected()[1]
+        selection = None
+        if iter:
+            selection = self.model.get_value(iter, self.OBJECT)
+        return selection
 
     def load_rules(self):
         for rule in filterController.get_all():
