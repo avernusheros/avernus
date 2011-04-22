@@ -98,6 +98,8 @@ class PreviewTree(gui_utils.Tree):
         
     def visible_cb(self, model, iter):
         transaction = model[iter][self.OBJECT]
+        if transaction and transaction.is_transfer():
+            return False
         if self.filter_active:
             return self.filterController.match_transaction(transaction)
         return True
