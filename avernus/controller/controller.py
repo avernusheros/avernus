@@ -370,6 +370,9 @@ def getAllWatchlist():
 def getAllAccount():
     return Account.getAll()
 
+def getAllAccountTransactions():
+    return AccountTransaction.getAll()
+
 def getAllAccountCategories():
     return AccountCategory.getAll()
 
@@ -391,7 +394,7 @@ def getAllDimensionValueForDimension(dim):
     for value in DimensionValue.getAll():
         if value.dimension == dim:
             yield value
-            
+
 def getAccountCategoryForName(name):
     cats = getAllAccountCategories()
     for cat in cats:
@@ -439,10 +442,10 @@ def deleteAllAssetDimensionValue(dimvalue):
     for adm in AssetDimensionValue.getAll():
         if adm.dimensionValue == dimvalue:
             adm.delete()
-            
+
 def deleteAllQuotationsFromStock(stock):
     query = """
-    DELETE FROM quotation 
+    DELETE FROM quotation
     WHERE stock = ?
     """
     model.store.execute(query, [stock.id])
