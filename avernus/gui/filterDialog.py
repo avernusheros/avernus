@@ -1,5 +1,4 @@
 from avernus.controller import controller, filterController
-from avernus.controller.filterController import FilterController
 from avernus.gui import gui_utils
 import gtk
 import pango
@@ -92,16 +91,15 @@ class PreviewTree(gui_utils.Tree):
         self.create_column(_('Account'), self.ACCOUNT, expand=False)
         self.set_rules_hint(True)
         
-        self.filter_active = False
-        self.filterController = None
+        self.active_filter = None
         self.load_all()
         
     def visible_cb(self, model, iter):
         transaction = model[iter][self.OBJECT]
         if transaction and transaction.is_transfer():
             return False
-        if self.filter_active:
-            return self.filterController.match_transaction(transaction)
+        if self.active_filter:
+            return filterController.match_transaction(self.active_filter, transaction)
         return True
 
     def load_all(self):
@@ -113,13 +111,11 @@ class PreviewTree(gui_utils.Tree):
             self.model.append([trans, trans.description, trans.amount, cat, trans.date, trans.account.name])
 
     def on_refresh(self, filter):
-        self.filter_active = True
-        self.filterController = FilterController(filter)
+        self.active_filter = filter
         self.modelfilter.refilter()
         
     def reset(self):
-        self.filter_active = False
-        self.filterController = None
+        self.active_filter = None
         self.modelfilter.refilter()
 
 
@@ -156,11 +152,8 @@ class FilterTree(gui_utils.Tree):
         self.load_rules()
         
     def get_active_filter(self):
-        iter = self.get_selection().get_selected()[1]
-        selection = None
-        if iter:
-            selection = self.model.get_value(iter, self.OBJECT)
-        return selection
+        item, iter = self.get_selected_item()
+        return item
 
     def load_rules(self):
         for rule in filterController.get_all():
