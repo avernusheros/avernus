@@ -59,16 +59,17 @@ class CSVImportDialog(gtk.Dialog):
         self.account_cb.pack_start(cell, True)
         self.account_cb.add_attribute(cell, 'text', 1)
         self.account_cb.connect('changed', self._on_account_changed)
-        accBox.pack_start(self.account_cb, fill=False, expand=False)
+        accBox.pack_start(self.account_cb, fill=False, expand=True)
+
+        category_assignment_button = gtk.CheckButton(label=_('Do category assignments'))
+        accBox.pack_start(category_assignment_button)
+        category_assignment_button.connect('toggled', self.on_toggle_assignments)
+        self.b_assignments = False
+
         frame = gtk.Frame('Preview')
         sw = gtk.ScrolledWindow()
         sw.set_policy(gtk.POLICY_AUTOMATIC,gtk.POLICY_AUTOMATIC)
         self.tree = PreviewTree()
-        sw.connect_after('size-allocate',
-                         gui_utils.resize_wrap,
-                         self.tree,
-                         self.tree.dynamicWrapColumn,
-                         self.tree.dynamicWrapCell)
         frame.add(sw)
 
         sw.add(self.tree)
@@ -80,6 +81,9 @@ class CSVImportDialog(gtk.Dialog):
             model = self.account_cb.get_model()
             self.importer.create_transactions(self.account)
         self.destroy()
+
+    def on_toggle_assignments(self, button):
+        self.b_assignments = button.get_active()
 
     def _on_file_set(self, button):
         self.b_file = True
@@ -110,7 +114,7 @@ class PreviewTree(gui_utils.Tree):
         self.set_rules_hint(True)
 
         self.set_size_request(700,400)
-        self.model = gtk.ListStore(str, str, float, bool, str)
+        self.model = gtk.ListStore(str, str, float, bool, str, str)
         self.set_model(self.model)
 
         column, cell = self.create_check_column('import?', 3)
@@ -121,10 +125,12 @@ class PreviewTree(gui_utils.Tree):
         column, cell = self.create_column('description', 1)
         column.add_attribute(cell, 'foreground', 4)
         cell.set_property('foreground-set', True)
-        self.dynamicWrapColumn = column
-        self.dynamicWrapCell = cell
         cell.props.wrap_mode = pango.WRAP_WORD
+        cell.props.wrap_width = 300
         column, cell = self.create_column('amount', 2, func=gui_utils.currency_format)
+        column.add_attribute(cell, 'foreground', 4)
+        cell.set_property('foreground-set', True)
+        column, cell = self.create_column('category', 5)
         column.add_attribute(cell, 'foreground', 4)
         cell.set_property('foreground-set', True)
 
@@ -137,7 +143,7 @@ class PreviewTree(gui_utils.Tree):
                 color = 'black'
             else:
                 color = self.COLOR_DUPLICATES
-            model.append(trans+[color])
+            model.append(trans+[color, ""])
 
     def on_toggled(self, cellrenderertoggle, path):
         self.model[path][3] = self.transactions[int(path)][3] = not self.model[path][3]

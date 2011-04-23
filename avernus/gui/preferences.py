@@ -30,9 +30,10 @@ class PrefDialog(gtk.Dialog):
         self.run()
         self.destroy()
         logger.debug("PrefDialog destroyed")
-        
+
+
 class AccountPreferences(gtk.VBox):
-    
+
     def __init__(self):
         gtk.VBox.__init__(self)
         self.categoryChildrenButton = gtk.CheckButton(label=_('Include Child Categories'))
@@ -42,12 +43,12 @@ class AccountPreferences(gtk.VBox):
         pre = self.configParser.get_option('categoryChildren', 'Account')
         pre = pre == "True"
         self.categoryChildrenButton.set_active(pre)
-        
+
     def onCategoryChildrenToggled(self, button):
-        self.configParser.set_option('categoryChildren', self.categoryChildrenButton.get_active(), 
+        self.configParser.set_option('categoryChildren', self.categoryChildrenButton.get_active(),
                                      'Account')
-        
-        
+
+
 
 
 class DimensionList(gtk.VBox):
