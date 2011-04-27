@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from avernus import pubsub, config
-from avernus.controller import controller
+from avernus.controller import controller, filterController
 from avernus.gui import chart_tab, progress_manager
 from avernus.gui.account_chart_tab import AccountChartTab
 from avernus.gui.account_transactions_tab import AccountTransactionTab
@@ -70,6 +70,7 @@ class MenuBar(gtk.MenuBar):
              ('bug'           , None                 , 'Report a _Bug'      , None        , None, lambda x:web("https://bugs.launchpad.net/avernus")),
              ('about'         , gtk.STOCK_ABOUT      , '_About'             , None        , None, AboutDialog),
              ('filter'        , None                 , '_Category Filters'  , None        , None, FilterDialog),
+             ('do_assignments', None                 , '_Run auto-assignments', None      , None, parent.on_do_category_assignments)
              ])
 
         for action in actiongroup.list_actions():
@@ -77,7 +78,7 @@ class MenuBar(gtk.MenuBar):
 
         file_menu_items  = ['import', '---', 'quit']
         edit_menu_items = ['prefs']
-        tools_menu_items = ['update', 'historical','filter']
+        tools_menu_items = ['update', 'historical','filter', 'do_assignments']
         help_menu_items  = ['help', 'website', 'feature', 'bug', '---', 'about']
 
         self._create_menu('avernus', file_menu_items)
@@ -205,7 +206,10 @@ class MainWindow(gtk.Window):
 
     def on_prefs(self, *args):
         PrefDialog(self.pengine)
-    
+
+    def on_do_category_assignments(self, *args):
+        filterController.run_auto_assignments()
+
     def on_historical(self, *args):
         def finished_cb():
             progress_manager.remove_monitor(42)
