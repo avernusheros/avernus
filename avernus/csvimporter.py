@@ -6,7 +6,7 @@ import codecs, csv, re
 from cStringIO import StringIO
 import chardet
 
-from avernus.controller import controller
+from avernus.controller import controller, filterController
 from avernus import pubsub
 
 
@@ -14,12 +14,19 @@ FORMATS = ['%Y-%m-%d',
            '%d.%m.%Y']
 
 
+class TempTransaction(object):
+
+    def create(self, account):
+        if self.b_import:
+            ta = controller.newAccountTransaction(date=self.date, description=self.description, amount=self.amount, account=account, category=self.category)
+            pubsub.publish('accountTransaction.created', ta)
+
 
 class CsvImporter:
-    
+
     def __init__(self):
         self.results = []
-        
+
     def _sniff_csv(self, filename):
         profile = {}
         #csv dialect
@@ -47,16 +54,16 @@ class CsvImporter:
             if t[-1] == t[-2] == t[-3] == t[-4]:
                 profile['row length'] = t[-1]
                 break
-        
+
         #detect header
-        csvdata.seek(0)  
+        csvdata.seek(0)
         profile['header'] = self._has_header(csvdata, profile)
-        
+
         #columns
         profile['saldo indicator'] = None
         csvdata.seek(0)
         first_line_skipped = False
-        for row in UnicodeReader(csvdata, profile['dialect'], profile['encoding']):  
+        for row in UnicodeReader(csvdata, profile['dialect'], profile['encoding']):
             if len(row) == profile['row length']:
                 profile['description column'] = []
                 if not first_line_skipped and profile['header']:
@@ -83,8 +90,8 @@ class CsvImporter:
                     else:
                         profile['description column'].append(col_count)
                     col_count+=1
-                
-                #check if profile contains the required info, otherwise check the next row   
+
+                #check if profile contains the required info, otherwise check the next row
                 required = ['description column', 'date column', 'amount column']
                 complete = True
                 for req in required:
@@ -123,7 +130,7 @@ class CsvImporter:
                 checked += 1
 
                 for col in columnTypes.keys():
-                    
+
                     for thisType in [int, long, float, complex]:
                         try:
                             thisType(row[col])
@@ -136,7 +143,7 @@ class CsvImporter:
                     # treat longs as ints
                     if thisType == long:
                         thisType = int
-    
+
                     if thisType != columnTypes[col]:
                         if columnTypes[col] is None: # add new column type
                             columnTypes[col] = thisType
@@ -144,7 +151,7 @@ class CsvImporter:
                             # type is inconsistent, remove column from
                             # consideration
                             del columnTypes[col]
-                    
+
             #If we find a blank line, assume we've hit the end of the transactions.
             if checked > 20 or (not row and started):
                 break
@@ -175,7 +182,7 @@ class CsvImporter:
                 return format
             except:
                 pass
-         
+
     def _parse_date(self, datestring, dateformat):
         return datetime.strptime(datestring, dateformat).date()
 
@@ -195,43 +202,49 @@ class CsvImporter:
         csvdata = StringIO(open(filename, 'rb').read())
         result = []
         first_line_skipped = False
-        for row in UnicodeReader(csvdata, profile['dialect'], profile['encoding']):            
+        for row in UnicodeReader(csvdata, profile['dialect'], profile['encoding']):
             if len(row) == profile['row length']:
                 if not first_line_skipped and profile['header']:
                     first_line_skipped = True
                     continue
+                tran = TempTransaction()
                 if profile['saldo indicator']:
-                    amount = self._parse_amount(row[profile['amount column']], 
-                                           profile['decimal separator'], 
+                    tran.amount = self._parse_amount(row[profile['amount column']],
+                                           profile['decimal separator'],
                                            row[profile['saldo indicator']])
                 else:
-                    amount = self._parse_amount(row[profile['amount column']], 
+                    tran.amount = self._parse_amount(row[profile['amount column']],
                                            profile['decimal separator'])
-                    
-                tran = [self._parse_date(row[profile['date column']].strip(' '), profile['date format']), 
-                        ' - '.join([row[d] for d in profile['description column'] if len(row[d])>0]),
-                        amount, True
-                        
-                        ]    
+
+                tran.date = self._parse_date(row[profile['date column']].strip(' '), profile['date format'])
+                tran.description = ' - '.join([row[d] for d in profile['description column'] if len(row[d])>0])
+                tran.category = None
+                tran.b_import = True
                 result.append(tran)
             #If we find a blank line, assume we've hit the end of the transactions.
             if not row and not len(result)==0:
                 break
         self.results = result
-        
+
     def check_duplicates(self, account):
         for trans in self.results:
-            if account.has_transaction({'date':trans[0],'amount':trans[2],'description':trans[1]}):
-                trans[-1] = False
+            if account.has_transaction({'date':trans.date,'amount':trans.amount,'description':trans.description}):
+                trans.b_import = False
             else:
-                trans[-1] = True    
+                trans.b_import = True
+
+    def set_categories(self, do_check):
+        if do_check:
+            for trans in self.results:
+                trans.category = filterController.get_category(trans)
+        else:
+            for trans in self.results:
+                trans.category = None
 
     def create_transactions(self, account):
-        for result in self.results:
-            if result[-1]:
-                ta = controller.newAccountTransaction(date=result[0], description=result[1], amount=result[2], account=account)
-                pubsub.publish('accountTransaction.created', ta)
-       
+        for temp_trans in self.results:
+            temp_trans.create(account)
+
 
 class UnicodeReader:
     """
@@ -278,8 +291,8 @@ class UTF8Recoder:
 
     def next(self):
         return self.reader.next().encode('utf-8')
-    
-    
+
+
 if __name__ == "__main__":
     import sys
     if len(sys.argv[:])>1 and sys.argv[1]:

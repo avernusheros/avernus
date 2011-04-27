@@ -84,6 +84,9 @@ class CSVImportDialog(gtk.Dialog):
 
     def on_toggle_assignments(self, button):
         self.b_assignments = button.get_active()
+        if self.b_file:
+            self.importer.set_categories(self.b_assignments)
+            self.tree.reload(self.importer.results)
 
     def _on_file_set(self, button):
         self.b_file = True
@@ -95,6 +98,7 @@ class CSVImportDialog(gtk.Dialog):
         if self.b_account:
             self.import_button.set_sensitive(True)
             self.importer.check_duplicates(self.account)
+            self.importer.set_categories(self.b_assignments)
         self.tree.reload(self.importer.results)
 
     def _on_account_changed(self, *args):
@@ -103,6 +107,7 @@ class CSVImportDialog(gtk.Dialog):
         if self.b_file:
             self.import_button.set_sensitive(True)
             self.importer.check_duplicates(self.account)
+            self.importer.set_categories(self.b_assignments)
             self.tree.reload(self.importer.results)
 
 
@@ -120,18 +125,18 @@ class PreviewTree(gui_utils.Tree):
         column, cell = self.create_check_column('import?', 3)
         cell.connect("toggled", self.on_toggled)
         column, cell = self.create_column('date', 0)
-        column.add_attribute(cell, 'foreground', 4)
+        column.add_attribute(cell, 'foreground', 5)
         cell.set_property('foreground-set', True)
         column, cell = self.create_column('description', 1)
-        column.add_attribute(cell, 'foreground', 4)
+        column.add_attribute(cell, 'foreground', 5)
         cell.set_property('foreground-set', True)
         cell.props.wrap_mode = pango.WRAP_WORD
         cell.props.wrap_width = 300
         column, cell = self.create_column('amount', 2, func=gui_utils.currency_format)
-        column.add_attribute(cell, 'foreground', 4)
+        column.add_attribute(cell, 'foreground', 5)
         cell.set_property('foreground-set', True)
-        column, cell = self.create_column('category', 5)
-        column.add_attribute(cell, 'foreground', 4)
+        column, cell = self.create_column('category', 4)
+        column.add_attribute(cell, 'foreground', 5)
         cell.set_property('foreground-set', True)
 
     def reload(self, transactions):
@@ -139,11 +144,11 @@ class PreviewTree(gui_utils.Tree):
         self.clear()
         model = self.get_model()
         for trans in transactions:
-            if trans[-1]:
+            if trans.b_import:
                 color = 'black'
             else:
                 color = self.COLOR_DUPLICATES
-            model.append(trans+[color, ""])
+            model.append([trans.date, trans.description, trans.amount, trans.b_import, trans.category, color])
 
     def on_toggled(self, cellrenderertoggle, path):
-        self.model[path][3] = self.transactions[int(path)][3] = not self.model[path][3]
+        self.model[path][3] = self.transactions[int(path)].b_import = not self.model[path][3]

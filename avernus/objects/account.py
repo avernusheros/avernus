@@ -145,7 +145,10 @@ class AccountCategory(SQLiteEntity):
 
     def __repr__(self):
         return SQLiteEntity.__repr__(self) + self.name
-    
+
+    def __str__(self):
+        return self.name
+
     def get_parent(self):
         if self.parentid != -1:
             return self.getByPrimaryKey(self.parentid)
