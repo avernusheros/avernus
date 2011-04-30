@@ -2,8 +2,8 @@
 
 from avernus import config, pubsub
 from avernus.config import avernusConfig
-from avernus.gui import gui_utils, dialogs, page
-from avernus.controller import controller
+from avernus.gui import gui_utils, dialogs, page, charts
+from avernus.controller import controller, chartController
 import gtk, gobject
 import datetime
 import pango
@@ -18,6 +18,15 @@ class AccountTransactionTab(gtk.VBox, page.Page):
     def __init__(self, item):
         gtk.VBox.__init__(self)
         self.config = config.avernusConfig()
+        
+        label = gtk.Label()
+        label.set_markup('<b>transaction value using chartcontroller</b>')
+        #self.pack_start(label, expand = False, fill = False)
+        chart_controller = chartController.TransactionValueOverTimeChartController(item, item.birthday)
+        chart = charts.SimpleLineChart(chart_controller,300)
+        self.pack_start(chart)
+        
+        
         hbox = gtk.HBox()
         uncategorized_button = gtk.ToggleButton(_('uncategorized'))
         hbox.pack_start(uncategorized_button, expand=False, fill=False)
