@@ -18,15 +18,16 @@ class AccountTransactionTab(gtk.VBox, page.Page):
     def __init__(self, item):
         gtk.VBox.__init__(self)
         self.config = config.avernusConfig()
-        
+        self.vpaned = gtk.VPaned()
+        self.pack_start(self.vpaned)
         label = gtk.Label()
         label.set_markup('<b>transaction value using chartcontroller</b>')
         #self.pack_start(label, expand = False, fill = False)
         chart_controller = chartController.TransactionValueOverTimeChartController(item, item.birthday)
         chart = charts.SimpleLineChart(chart_controller,300)
-        self.pack_start(chart)
+        self.vpaned.pack1(chart)
         
-        
+        vbox = gtk.VBox()
         hbox = gtk.HBox()
         uncategorized_button = gtk.ToggleButton(_('uncategorized'))
         hbox.pack_start(uncategorized_button, expand=False, fill=False)
@@ -58,10 +59,11 @@ class AccountTransactionTab(gtk.VBox, page.Page):
         hbox.pack_start(gtk.Label(_('End')), expand=False, fill=False)
         hbox.pack_start(self.end_entry, expand=False, fill=False)
 
-        self.pack_start(hbox, expand=False, fill=False)
+        vbox.pack_start(hbox, expand=False, fill=False)
 
         self.hpaned = gtk.HPaned()
-        self.pack_start(self.hpaned)
+        vbox.pack_start(self.hpaned)
+        self.vpaned.pack2(vbox)
         self.hpaned.set_border_width(self.BORDER_WIDTH)
         sw = gtk.ScrolledWindow()
         sw.set_property('hscrollbar-policy', gtk.POLICY_AUTOMATIC)
