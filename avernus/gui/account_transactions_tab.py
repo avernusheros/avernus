@@ -8,6 +8,9 @@ import gtk, gobject
 import datetime
 import pango
 import logging
+
+#FIXME
+from avernus.gui.account_chart_tab import CategoryPie
 logger = logging.getLogger(__name__)
 
 
@@ -20,12 +23,33 @@ class AccountTransactionTab(gtk.VBox, page.Page):
         self.config = config.avernusConfig()
         self.vpaned = gtk.VPaned()
         self.pack_start(self.vpaned)
-        label = gtk.Label()
-        label.set_markup('<b>transaction value using chartcontroller</b>')
-        #self.pack_start(label, expand = False, fill = False)
-        chart_controller = chartController.TransactionValueOverTimeChartController(item, item.birthday)
+        
+        notebook = gtk.Notebook()
+        notebook.set_property('tab_pos', gtk.POS_LEFT)
+        chart_controller = chartController.TransactionValueOverTimeChartController(item.transactions, item.birthday)
         chart = charts.SimpleLineChart(chart_controller,300)
-        self.vpaned.pack1(chart)
+        notebook.append_page(chart)
+        
+        chart_controller = chartController.AccountBalanceOverTimeChartController(item.transactions, item.birthday)
+        chart = charts.SimpleLineChart(chart_controller,300)
+        notebook.append_page(chart)
+        
+        table = gtk.Table()
+        y = 0
+        label = gtk.Label()
+        label.set_markup('<b>Earnings</b>')
+        table.attach(label,0,1,y,y+1)
+        chart = CategoryPie(300/2, item, item.birthday, datetime.date.today(), earnings=True)
+        table.attach(chart,0,1,y+1,y+2)
+
+        label = gtk.Label()
+        label.set_markup('<b>Spendings</b>')
+        table.attach(label,1,2,y,y+1)
+        chart = CategoryPie(300/2, item, item.birthday, datetime.date.today(), earnings=False)
+        table.attach(chart,1,2,y+1,y+2)
+        notebook.append_page(table)
+        
+        self.vpaned.pack1(notebook)
         
         vbox = gtk.VBox()
         hbox = gtk.HBox()

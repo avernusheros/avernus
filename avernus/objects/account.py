@@ -29,6 +29,10 @@ class Account(SQLiteEntity):
     def __iter__(self):
         return self.controller.getTransactionsForAccount(self).__iter__()
 
+    @property
+    def transactions(self):
+        return self.controller.getTransactionsForAccount(self)
+
     def __len__(self):
         return self.transaction_count
 
