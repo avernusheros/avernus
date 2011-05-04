@@ -56,6 +56,11 @@ class TransactionValueOverTimeChartController(TransactionChartController):
 
     def __init__(self, transactions, date_range):
         self.update(transactions, date_range)
+        self.monthly = False
+        
+    def set_monthly(self, monthly):
+        self.monthly = monthly
+        print "Set monthly to ", monthly
 
     def update(self, transactions, date_range):
         self.transactions = sorted(transactions, key=lambda t: t.date)

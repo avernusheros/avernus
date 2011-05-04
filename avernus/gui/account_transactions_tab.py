@@ -129,15 +129,26 @@ class AccountTransactionTab(gtk.VBox, page.Page):
         pubsub.subscribe("AccountTransactionsTab.UIupdate", self.update_ui)
         self.connect("destroy", self.on_destroy)
         self.show_all()
+        
+    def on_toggled(self, widget, chart):
+        chart_controller = chart.controller
+        active = widget.get_active()
+        chart_controller.set_monthly(active)
+        chart.draw_chart()
 
     def _init_charts(self):
         self.charts = []
         notebook = gtk.Notebook()
         notebook.set_property('tab_pos', gtk.POS_LEFT)
         chart_controller = chartController.TransactionValueOverTimeChartController(self.account.transactions, (self.transactions_tree.range_start, self.transactions_tree.range_end))
-        chart = charts.SimpleLineChart(chart_controller,300)
-        self.charts.append((chart, chart_controller))
-        notebook.append_page(chart)
+        categoryChart = charts.SimpleLineChart(chart_controller,300)
+        self.charts.append((categoryChart, chart_controller))
+        vbox = gtk.VBox()
+        vbox.pack_start(categoryChart, expand=True, fill=True)
+        monthlyBtn = gtk.CheckButton(label=_('monthly'))
+        monthlyBtn.connect('toggled',lambda x: self.on_toggled(x,categoryChart))
+        vbox.pack_end(monthlyBtn, expand=False, fill=False)
+        notebook.append_page(vbox)
         
         chart_controller = chartController.AccountBalanceOverTimeChartController(self.account, (self.transactions_tree.range_start, self.transactions_tree.range_end))
         chart = charts.SimpleLineChart(chart_controller,300)
