@@ -9,12 +9,14 @@ def create(rule, category, priority = 10, active = False):
 def get_all():
     return CategoryFilter.getAll()
 
+def get_all_active_by_priority():
+    return sorted([f for f in get_all() if f.active], key=lambda f: f.priority)
+
 def match_transaction(filter, transaction):
     return filter.rule in transaction.description
 
 def get_category(transaction):
-    #FIXME process filter by priority
-    for filter in get_all():
+    for filter in get_all_active_by_priority():
         if match_transaction(filter, transaction):
             return filter.category
     return None
