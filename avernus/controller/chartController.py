@@ -99,6 +99,24 @@ class TransactionValueOverTimeChartController(TransactionChartController):
         for x in self.x_values_all:
             value = x
             self.y_values.append(temp[value])
+            
+class TransactionStepValueChartController(TransactionValueOverTimeChartController):
+    
+    def calculate_values(self):
+        self.calculate_x_values()
+        self.y_values = []
+        temp = {}
+        # initialize to zero
+        for x in self.x_values_all:
+            temp[x] = 0
+        for t in self.transactions:
+            # find the right slot for t
+            i = 0
+            while t.date > self.x_values_all[i]:
+                i += 1
+            temp[self.x_values_all[i]] += t.amount
+        for x in self.x_values_all:
+            self.y_values.append(temp[x])
 
 
 class AccountBalanceOverTimeChartController(TransactionChartController):

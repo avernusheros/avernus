@@ -148,12 +148,17 @@ class AccountTransactionTab(gtk.VBox, page.Page):
         monthlyBtn = gtk.CheckButton(label=_('monthly'))
         monthlyBtn.connect('toggled',lambda x: self.on_toggled(x,categoryChart))
         vbox.pack_end(monthlyBtn, expand=False, fill=False)
-        notebook.append_page(vbox)
+        notebook.append_page(vbox, tab_label=gtk.Label(_('Over Time')))
         
-        chart_controller = chartController.AccountBalanceOverTimeChartController(self.account, (self.transactions_tree.range_start, self.transactions_tree.range_end))
-        chart = charts.SimpleLineChart(chart_controller,300)
-        self.charts.append((chart, chart_controller))
-        notebook.append_page(chart)
+        chart_controller = chartController.TransactionStepValueChartController(self.account.transactions, (self.transactions_tree.range_start, self.transactions_tree.range_end))
+        valueChart = charts.SimpleLineChart(chart_controller,300)
+        self.charts.append((valueChart, chart_controller))
+        vbox = gtk.VBox()
+        vbox.pack_start(valueChart, expand=True, fill=True)
+        monthlyBtn = gtk.CheckButton(label=_('monthly'))
+        monthlyBtn.connect('toggled',lambda x: self.on_toggled(x,valueChart))
+        vbox.pack_end(monthlyBtn, expand=False, fill=False)
+        notebook.append_page(vbox, tab_label=gtk.Label(_('Step Value')))
         
         table = gtk.Table()
         y = 0
