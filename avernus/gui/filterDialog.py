@@ -140,7 +140,7 @@ class FilterTree(gui_utils.Tree):
         cell = gtk.CellRendererCombo()
         cell.connect('changed', self.on_category_changed)
         self.cb_model = gtk.ListStore(object, str)
-        self.categories = controller.getAllAccountCategories()
+        self.categories = sorted(controller.getAllAccountCategories())
         for category in self.categories:
             self.cb_model.append([category, category.name])
         cell.set_property('model', self.cb_model)
