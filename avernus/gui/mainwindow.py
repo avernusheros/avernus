@@ -1,18 +1,16 @@
 #!/usr/bin/env python
 from avernus import pubsub, config
 from avernus.controller import controller, filterController
-from avernus.gui import chart_tab, progress_manager
+from avernus.gui import progress_manager
 from avernus.gui.account_chart_tab import AccountChartTab
 from avernus.gui.account_transactions_tab import AccountTransactionTab
-from avernus.gui.closed_positions_tab import ClosedPositionsTab
 from avernus.gui.container_overview_tab import ContainerOverviewTab
 from avernus.gui.csv_import_dialog import CSVImportDialog
-from avernus.gui.dividends_tab import DividendsTab
 from avernus.gui.filterDialog import FilterDialog
 from avernus.gui.left_pane import MainTreeBox
+from avernus.gui.portfolio_notebook import PortfolioNotebook
 from avernus.gui.positions_tab import PositionsTab
 from avernus.gui.preferences import PrefDialog
-from avernus.gui.transactions_tab import TransactionsTab
 from avernus.objects import model
 from webbrowser import open as web
 import avernus
@@ -123,26 +121,18 @@ class MainWindow(gtk.Window):
 
         self.hpaned.pack1(MainTreeBox())
 
-        self.notebook = gtk.Notebook()
-        self.hpaned.pack2(self.notebook)
-
-        self.notebook.connect('switch-page', self.on_notebook_selection)
         self.connect("destroy", self.on_destroy)
         self.connect('size_allocate', self.on_size_allocate)
         self.connect('window-state-event', self.on_window_state_event)
         pubsub.subscribe('maintree.select', self.on_maintree_select)
         pubsub.subscribe('maintree.unselect', self.on_maintree_unselect)
 
-        self.tabs = {}
-        self.tabs['Portfolio'] = [(PositionsTab, 'Positions'),
-                                  (TransactionsTab, 'Transactions'),
-                                  (DividendsTab, 'Dividends'),
-                                  (ClosedPositionsTab, 'Closed positions'),
-                                  (chart_tab.ChartTab, 'Charts')]
-        self.tabs['Watchlist'] = [(PositionsTab, 'Positions')]
-        self.tabs['Category']  = [(ContainerOverviewTab, 'Overview')]
-        self.tabs['Account']   = [(AccountTransactionTab, 'Transactions'),
-                                  (AccountChartTab, 'Charts')]
+        self.pages = {}
+        self.pages['Portfolio'] = PortfolioNotebook
+        self.pages['Watchlist'] = PositionsTab
+        self.pages['Category']  = ContainerOverviewTab
+        self.pages['Account']   = AccountTransactionTab
+                                  #(AccountChartTab, 'Charts')]
 
         #set min size
         screen = self.get_screen()
@@ -188,21 +178,15 @@ class MainWindow(gtk.Window):
         model.store.close()
         gtk.main_quit()
 
-    def clear_notebook(self):
-        for child in self.notebook.get_children():
-            self.notebook.remove_page(-1)
-            child.destroy()
-
-    def on_notebook_selection(self, notebook, page, page_num):
-        notebook.get_nth_page(page_num).show()
-
     def on_maintree_select(self, item):
-        self.clear_notebook()
-        for tab, name in self.tabs[item.__name__]:
-            self.notebook.append_page(tab(item), gtk.Label(name))
+        self.on_maintree_unselect()
+        self.hpaned.pack2(self.pages[item.__name__](item))
 
     def on_maintree_unselect(self):
-        self.clear_notebook()
+        page = self.hpaned.get_child2()
+        if page:
+            self.hpaned.remove(page)
+            del page
 
     def on_prefs(self, *args):
         PrefDialog(self.pengine)

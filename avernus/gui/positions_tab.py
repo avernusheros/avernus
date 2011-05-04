@@ -108,7 +108,6 @@ class PositionsTree(Tree):
     def _connect_signals(self):
         self.connect('button-press-event', self.on_button_press_event)
         self.connect('cursor_changed', self.on_cursor_changed)
-        self.connect("destroy", self.on_destroy)
         self.subscriptions = (
             ('stocks.updated', self.on_stocks_updated),
             ('container.position.added', self.on_position_added)
@@ -145,10 +144,6 @@ class PositionsTree(Tree):
     def on_select(self, obj):
         for action in ['edit', 'remove', 'chart']:
             self.actiongroup.get_action(action).set_sensitive(True)
-
-    def on_destroy(self, x):
-        for topic, callback in self.subscriptions:
-            pubsub.unsubscribe(topic, callback)
 
     def load_positions(self):
         for pos in self.container:
@@ -347,7 +342,7 @@ class PositionsTab(gtk.VBox, page.Page):
         sw.set_property('vscrollbar-policy', gtk.POLICY_AUTOMATIC)
         sw.add(positions_tree)
         self.pack_start(sw)
-        
+
         pubsub.subscribe('position.created', self.update_page)
         pubsub.subscribe('stocks.updated', self.update_page)
         pubsub.subscribe('container.updated', self.update_page)
