@@ -40,9 +40,12 @@ def get_legend(smaller, bigger, step):
 
 
 class TransactionChartController:
+    
+    def get_step(self):
+        return get_step_for_range(self.start_date, self.end_date)
 
     def calculate_x_values(self):
-        self.step = get_step_for_range(self.start_date, self.end_date)
+        self.step = self.get_step()
         self.x_values_all = []
         current = self.start_date
         while current < self.end_date:
@@ -55,12 +58,18 @@ class TransactionChartController:
 class TransactionValueOverTimeChartController(TransactionChartController):
 
     def __init__(self, transactions, date_range):
-        self.update(transactions, date_range)
         self.monthly = False
+        self.update(transactions, date_range)
+        
+    def get_step(self):
+        if self.monthly:
+            return relativedelta(months=1)
+        return TransactionChartController.get_step(self)
         
     def set_monthly(self, monthly):
         self.monthly = monthly
-        print "Set monthly to ", monthly
+        self.calculate_values()
+        #print "Set monthly to ", monthly
 
     def update(self, transactions, date_range):
         self.transactions = sorted(transactions, key=lambda t: t.date)
