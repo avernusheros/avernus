@@ -42,7 +42,6 @@ def get_legend(smaller, bigger, step):
 class TransactionChartController:
 
     def calculate_x_values(self):
-        self.end_date = datetime.date.today()
         self.step = get_step_for_range(self.start_date, self.end_date)
         self.x_values_all = []
         current = self.start_date
@@ -55,9 +54,12 @@ class TransactionChartController:
 
 class TransactionValueOverTimeChartController(TransactionChartController):
 
-    def __init__(self, transactions, start_date):
+    def __init__(self, transactions, date_range):
+        self.update(transactions, date_range)
+
+    def update(self, transactions, date_range):
         self.transactions = sorted(transactions, key=lambda t: t.date)
-        self.start_date = start_date
+        self.start_date, self.end_date = date_range
         self.calculate_values()
 
     def calculate_values(self):
@@ -87,20 +89,27 @@ class TransactionValueOverTimeChartController(TransactionChartController):
 
 class AccountBalanceOverTimeChartController(TransactionChartController):
 
-    def __init__(self, transactions, start_date):
-        self.transactions = sorted(transactions, key=lambda t: t.date, reverse=True)
-        self.start_date = start_date
-        self.account = transactions[0].account
+    def __init__(self, account, date_range):
+        self.account = account
+        self.update(None, date_range)
+
+    def update(self, transactions, date_range):
+        self.start_date, self.end_date = date_range
         self.calculate_values()
 
     def calculate_values(self):
         self.calculate_x_values()
-
+        transactions = [t for t in self.account if t.date >= self.start_date]
+        transactions.sort(key=lambda t: t.date, reverse=True)
         count = 1
-        trans_count = len(self.transactions)
-        iterator = self.transactions.__iter__()
-        current_trans = iterator.next()
         amount = self.account.amount
+        trans_count = len(transactions)
+        if trans_count == 0:
+            self.y_values = [amount for x in self.x_values]
+            return
+        iterator = transactions.__iter__()
+        current_trans = iterator.next()
+        
         self.y_values = []
         for current_date in reversed(self.x_values_all):
             while current_trans.date > current_date and count != trans_count:

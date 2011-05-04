@@ -8,6 +8,9 @@ import gtk, gobject
 import datetime
 import pango
 import logging
+
+#FIXME
+from avernus.gui.account_chart_tab import CategoryPie
 logger = logging.getLogger(__name__)
 
 
@@ -15,17 +18,12 @@ class AccountTransactionTab(gtk.VBox, page.Page):
 
     BORDER_WIDTH = 5
 
-    def __init__(self, item):
+    def __init__(self, account):
         gtk.VBox.__init__(self)
+        self.account = account
         self.config = config.avernusConfig()
         self.vpaned = gtk.VPaned()
         self.pack_start(self.vpaned)
-        label = gtk.Label()
-        label.set_markup('<b>transaction value using chartcontroller</b>')
-        #self.pack_start(label, expand = False, fill = False)
-        chart_controller = chartController.TransactionValueOverTimeChartController(item, item.birthday)
-        chart = charts.SimpleLineChart(chart_controller,300)
-        self.vpaned.pack1(chart)
         
         vbox = gtk.VBox()
         hbox = gtk.HBox()
@@ -46,8 +44,6 @@ class AccountTransactionTab(gtk.VBox, page.Page):
         self.search_entry.connect('icon-press', self.on_clear_search)
         self.start_entry = gtk.Entry()
         self.end_entry = gtk.Entry()
-        self.pick_start = item.birthday
-        self.pick_end = datetime.date.today()
         self.start_entry.set_icon_from_stock(1, gtk.STOCK_SELECT_COLOR)
         self.start_entry.set_property("secondary-icon-tooltip-text","Pick Start date")
         self.start_entry.connect('icon-press', self.on_pick_start)
@@ -69,7 +65,7 @@ class AccountTransactionTab(gtk.VBox, page.Page):
         sw.set_property('hscrollbar-policy', gtk.POLICY_AUTOMATIC)
         sw.set_property('vscrollbar-policy', gtk.POLICY_AUTOMATIC)
         actiongroup = gtk.ActionGroup('transactions')
-        self.transactions_tree = TransactionsTree(item, actiongroup, self.search_entry)
+        self.transactions_tree = TransactionsTree(account, actiongroup, self.search_entry)
         actiongroup.add_actions([
                 ('add',    gtk.STOCK_ADD,    'new transaction',    None, _('Add new transaction'), self.transactions_tree.on_add),
                 ('edit' ,  gtk.STOCK_EDIT,   'edit transaction',   None, _('Edit selected transaction'),   self.transactions_tree.on_edit),
@@ -128,9 +124,42 @@ class AccountTransactionTab(gtk.VBox, page.Page):
             toolbar.insert(button, -1)
         vbox.pack_start(toolbar, expand=False, fill=False)
 
+        self._init_charts()
+
         pubsub.subscribe("AccountTransactionsTab.UIupdate", self.update_ui)
         self.connect("destroy", self.on_destroy)
         self.show_all()
+
+    def _init_charts(self):
+        self.charts = []
+        notebook = gtk.Notebook()
+        notebook.set_property('tab_pos', gtk.POS_LEFT)
+        chart_controller = chartController.TransactionValueOverTimeChartController(self.account.transactions, (self.transactions_tree.range_start, self.transactions_tree.range_end))
+        chart = charts.SimpleLineChart(chart_controller,300)
+        self.charts.append((chart, chart_controller))
+        notebook.append_page(chart)
+        
+        chart_controller = chartController.AccountBalanceOverTimeChartController(self.account, (self.transactions_tree.range_start, self.transactions_tree.range_end))
+        chart = charts.SimpleLineChart(chart_controller,300)
+        self.charts.append((chart, chart_controller))
+        notebook.append_page(chart)
+        
+        table = gtk.Table()
+        y = 0
+        label = gtk.Label()
+        label.set_markup('<b>Earnings</b>')
+        table.attach(label,0,1,y,y+1)
+        chart = CategoryPie(300/2, self.account, self.account.birthday, datetime.date.today(), earnings=True)
+        table.attach(chart,0,1,y+1,y+2)
+
+        label = gtk.Label()
+        label.set_markup('<b>Spendings</b>')
+        table.attach(label,1,2,y,y+1)
+        chart = CategoryPie(300/2, self.account, self.account.birthday, datetime.date.today(), earnings=False)
+        table.attach(chart,1,2,y+1,y+2)
+        notebook.append_page(table)
+        
+        self.vpaned.pack1(notebook)
 
     def on_pick_start(self, entry, icon_pos, event):
         dialog = dialogs.CalendarDialog(self.transactions_tree.range_start)
@@ -156,6 +185,10 @@ class AccountTransactionTab(gtk.VBox, page.Page):
 
     def update_ui(self):
         self.refilter()
+        transactions = [row[0] for row in self.transactions_tree.modelfilter]
+        for chart, chart_controller in self.charts:
+            chart_controller.update(transactions, (self.transactions_tree.range_start, self.transactions_tree.range_end))
+            chart.draw_chart()
         self.update_page()
 
     def refilter(self):
@@ -200,8 +233,8 @@ class TransactionsTree(gui_utils.Tree):
         self.searchstring = ''
         self.only_transfer = False
         self.only_uncategorized = False
-        self.range_start = None
-        self.range_end = None
+        self.range_start = account.birthday
+        self.range_end = datetime.date.today()
         gui_utils.Tree.__init__(self)
 
         self.model = gtk.ListStore(object, str, float, str, object, str)
@@ -278,8 +311,8 @@ class TransactionsTree(gui_utils.Tree):
                 and (not self.only_transfer or transaction.is_transfer())\
                 and (not self.only_uncategorized or not transaction.has_category()):
 
-                if (self.range_start is None or transaction.date >= self.range_start) \
-                    and (self.range_end is None or transaction.date <= self.range_end):
+                if transaction.date >= self.range_start \
+                    and transaction.date <= self.range_end:
                     return True
         return False
 
