@@ -61,10 +61,11 @@ class CSVImportDialog(gtk.Dialog):
         self.account_cb.connect('changed', self._on_account_changed)
         accBox.pack_start(self.account_cb, fill=False, expand=True)
 
+        self.b_assignments = eval(self.config.get_option('category_assignments_on_import')) or False
         category_assignment_button = gtk.CheckButton(label=_('Do category assignments'))
+        category_assignment_button.set_active(self.b_assignments)
         accBox.pack_start(category_assignment_button)
         category_assignment_button.connect('toggled', self.on_toggle_assignments)
-        self.b_assignments = False
 
         frame = gtk.Frame('Preview')
         sw = gtk.ScrolledWindow()
@@ -84,6 +85,7 @@ class CSVImportDialog(gtk.Dialog):
 
     def on_toggle_assignments(self, button):
         self.b_assignments = button.get_active()
+        self.config.set_option('category_assignments_on_import', self.b_assignments)
         if self.b_file:
             self.importer.set_categories(self.b_assignments)
             self.tree.reload(self.importer.results)
