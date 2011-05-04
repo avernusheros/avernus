@@ -160,6 +160,11 @@ class AccountTransactionTab(gtk.VBox, page.Page):
         vbox.pack_end(monthlyBtn, expand=False, fill=False)
         notebook.append_page(vbox, tab_label=gtk.Label(_('Step Value')))
         
+        chart_controller = chartController.AccountBalanceOverTimeChartController(self.account, (self.transactions_tree.range_start, self.transactions_tree.range_end))
+        chart = charts.SimpleLineChart(chart_controller,300)
+        self.charts.append((chart, chart_controller))
+        notebook.append_page(chart, tab_label=gtk.Label(_('Account balance')))
+        
         table = gtk.Table()
         y = 0
         label = gtk.Label()
