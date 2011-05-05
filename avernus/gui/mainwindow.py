@@ -53,7 +53,7 @@ class MenuBar(gtk.MenuBar):
         # Create actions
         #item: name, stockid, label, accel, tooltip, callback
         actiongroup.add_actions(
-            [('avernus'  , None                 , '_avernus'),
+            [('Avernus'  , None                 , '_Avernus'),
              ('Edit'          , None                 , '_Edit'),
              ('Tools'         , None                 , '_Tools'),
              ('Help'          , None                 , '_Help'),
@@ -79,7 +79,7 @@ class MenuBar(gtk.MenuBar):
         tools_menu_items = ['update', 'historical','filter', 'do_assignments']
         help_menu_items  = ['help', 'website', 'feature', 'bug', '---', 'about']
 
-        self._create_menu('avernus', file_menu_items)
+        self._create_menu('Avernus', file_menu_items)
         self._create_menu('Edit', edit_menu_items)
         self._create_menu('Tools', tools_menu_items)
         self._create_menu('Help', help_menu_items)

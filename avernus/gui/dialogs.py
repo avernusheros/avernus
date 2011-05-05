@@ -177,7 +177,7 @@ class QuotationTable(gtk.Table):
         button.connect('clicked', self.on_delete_button_clicked)
         self.attach(button, 0,2,5,6, yoptions=gtk.FILL)
         self.update_labels()
-        
+
     def on_delete_button_clicked(self, button):
         controller.deleteAllQuotationsFromStock(self.stock)
         self.update_labels()
@@ -304,7 +304,7 @@ class EditPositionTable(gtk.Table):
 
 
 class StockSelector(gtk.VBox):
-    
+
     SPINNER_SIZE = 40
     WIDTH = 600
     HEIGHT = 300
@@ -326,7 +326,7 @@ class StockSelector(gtk.VBox):
         self.result_tree.create_icon_column(None, 1)
         col, cell = self.result_tree.create_column(_('Name'), 2)
         cell.props.wrap_width = self.WIDTH/2
-        cell.props.wrap_mode = gtk.WRAP_WORD    
+        cell.props.wrap_mode = gtk.WRAP_WORD
         self.result_tree.create_column('ISIN', 3)
         self.result_tree.create_column(_('Currency'), 4)
         self.result_tree.create_icon_column(_('Type'), 5,size= gtk.ICON_SIZE_DND)
@@ -748,7 +748,7 @@ class PosSelector(gtk.ComboBox):
 
 
 class CalendarDialog(gtk.Dialog):
-    
+
     def __init__(self, date=None):
         gtk.Dialog.__init__(self, _("Chose a date"), None
                             , gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
@@ -759,11 +759,11 @@ class CalendarDialog(gtk.Dialog):
         self.calendar = gtk.Calendar()
         self.date = None
         if date:
-            self.calendar.select_month(date.month, date.year)
+            self.calendar.select_month(date.month-1, date.year)
             self.calendar.select_day(date.day)
-        
+
         vbox.pack_start(self.calendar)
-        
+
         self.calendar.connect("day-selected-double-click", self.on_day_selected)
         self.show_all()
         response = self.run()
@@ -774,7 +774,7 @@ class CalendarDialog(gtk.Dialog):
             y,m,d = self.calendar.get_date()
             self.date = datetime.date(y,m+1,d)
         self.destroy()
-        
+
     def on_day_selected(self, cal):
         self.process_result(gtk.RESPONSE_ACCEPT)
 

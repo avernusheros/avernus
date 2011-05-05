@@ -1,4 +1,4 @@
-__appname__ = 'avernus'
+__appname__ = 'Avernus'
 __version__ = '0.7.0'
 __description__ = 'A simple program to easily manage your investments.'
 __url__='https://launchpad.net/avernus'
