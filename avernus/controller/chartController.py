@@ -54,7 +54,7 @@ class TransactionChartController:
         while current < self.end_date:
             self.x_values_all.append(current)
             current += self.step
-        self.x_values_all.append(self.end_date)
+        self.x_values_all.append(current)
         self.x_values = [gui_utils.get_date_string(x) for x in self.x_values_all]
 
 
@@ -120,11 +120,15 @@ class TransactionStepValueChartController(TransactionValueOverTimeChartControlle
         for t in self.transactions:
             # find the right slot for t
             i = 0
-            while t.date > self.x_values_all[i]:
+            while t.date >= self.x_values_all[i]:
+                print t.date , " > ", self.x_values_all[i]
                 i += 1
+            #print "vorher: ", temp[self.x_values_all[i]]
             temp[self.x_values_all[i]] += t.amount
+            #print "nachher: ", temp[self.x_values_all[i]]
         for x in self.x_values_all:
             self.y_values.append(temp[x])
+        #print "fertsch: ", self.y_values
 
 
 class AccountBalanceOverTimeChartController(TransactionChartController):
