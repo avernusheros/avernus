@@ -1,5 +1,9 @@
 from avernus.objects.filter import CategoryFilter
 from avernus.controller import controller
+from avernus.config import avernusConfig
+
+config = avernusConfig()
+
 
 def create(rule, category, priority = 10, active = False):
     result = CategoryFilter(rule=rule, category=category, active=active, priority=priority)
@@ -22,6 +26,10 @@ def get_category(transaction):
     return None
 
 def run_auto_assignments():
+    if config.get_option('assignments categorized transactions', 'Account') == 'True':
+        b_include_categorized = True
+    else:
+        b_include_categorized = False
     for transaction in controller.getAllAccountTransactions():
-        if transaction.category is None:
+        if b_include_categorized or transaction.category is None:
             transaction.category = get_category(transaction)

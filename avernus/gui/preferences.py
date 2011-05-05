@@ -23,9 +23,10 @@ class PrefDialog(gtk.Dialog):
         vbox = self.get_content_area()
         notebook = gtk.Notebook()
         vbox.pack_start(notebook)
-        notebook.append_page(PluginManager(pengine), gtk.Label('Plugins'))
         notebook.append_page(DimensionList(), gtk.Label('Dimensions'))
         notebook.append_page(AccountPreferences(), gtk.Label('Account'))
+        notebook.append_page(PluginManager(pengine), gtk.Label('Plugins'))
+
         self.show_all()
         self.run()
         self.destroy()
@@ -36,19 +37,28 @@ class AccountPreferences(gtk.VBox):
 
     def __init__(self):
         gtk.VBox.__init__(self)
-        self.categoryChildrenButton = gtk.CheckButton(label=_('Include Child Categories'))
-        self.pack_start(self.categoryChildrenButton, expand=False, fill=False)
-        self.categoryChildrenButton.connect('toggled', self.onCategoryChildrenToggled)
         self.configParser = avernusConfig()
-        pre = self.configParser.get_option('categoryChildren', 'Account')
+        self._init_widgets()
+
+    def _init_widgets(self):
+        button = gtk.CheckButton(label=_('Include Child Categories'))
+        self.pack_start(button, expand=False, fill=False)
+        option = "categoryChildren"
+        button.connect('toggled', self.on_toggled, option)
+        pre = self.configParser.get_option(option, 'Account')
         pre = pre == "True"
-        self.categoryChildrenButton.set_active(pre)
+        button.set_active(pre)
 
-    def onCategoryChildrenToggled(self, button):
-        self.configParser.set_option('categoryChildren', self.categoryChildrenButton.get_active(),
-                                     'Account')
+        button = gtk.CheckButton(label=_('Include already categorized transactions'))
+        self.pack_start(button, expand=False, fill=False)
+        option = 'assignments categorized transactions'
+        button.connect('toggled', self.on_toggled, option)
+        pre = self.configParser.get_option(option, 'Account')
+        pre = pre == "True"
+        button.set_active(pre)
 
-
+    def on_toggled(self, button, option):
+        self.configParser.set_option(option, button.get_active(), 'Account')
 
 
 class DimensionList(gtk.VBox):
