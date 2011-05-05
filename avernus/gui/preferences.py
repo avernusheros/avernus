@@ -38,24 +38,32 @@ class AccountPreferences(gtk.VBox):
     def __init__(self):
         gtk.VBox.__init__(self)
         self.configParser = avernusConfig()
-        self._init_widgets()
 
-    def _init_widgets(self):
-        button = gtk.CheckButton(label=_('Include Child Categories'))
-        self.pack_start(button, expand=False, fill=False)
-        option = "categoryChildren"
+        section = self._add_section('Charts')
+        self._add_option(section, _('Include child categories'), 'categoryChildren')
+
+        section = self._add_section('Category Assignments')
+        self._add_option(section, _('Include already categorized transactions'), 'assignments categorized transactions')
+
+    def _add_option(self, allignment, name, option):
+        button = gtk.CheckButton(label = name)
+        allignment.add(button)
         button.connect('toggled', self.on_toggled, option)
         pre = self.configParser.get_option(option, 'Account')
         pre = pre == "True"
         button.set_active(pre)
 
-        button = gtk.CheckButton(label=_('Include already categorized transactions'))
-        self.pack_start(button, expand=False, fill=False)
-        option = 'assignments categorized transactions'
-        button.connect('toggled', self.on_toggled, option)
-        pre = self.configParser.get_option(option, 'Account')
-        pre = pre == "True"
-        button.set_active(pre)
+    def _add_section(self, name):
+        frame = gtk.Frame()
+        frame.set_shadow_type(gtk.SHADOW_NONE)
+        label = gtk.Label()
+        label.set_markup('<b>'+name+'</b>')
+        frame.set_label_widget(label)
+        self.pack_start(frame, expand=False, fill=False, padding=10)
+        alignment = gtk.Alignment(xalign=0.5, yalign=0.5, xscale=1.0, yscale=1.0)
+        alignment.set_property("left-padding", 12)
+        frame.add(alignment)
+        return alignment
 
     def on_toggled(self, button, option):
         self.configParser.set_option(option, button.get_active(), 'Account')
