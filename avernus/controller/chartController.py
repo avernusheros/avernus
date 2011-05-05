@@ -43,11 +43,14 @@ class TransactionChartController:
     
     def get_step(self):
         return get_step_for_range(self.start_date, self.end_date)
+        
+    def get_start_date(self):
+        return self.start_date
 
     def calculate_x_values(self):
         self.step = self.get_step()
         self.x_values_all = []
-        current = self.start_date
+        current = self.get_start_date()
         while current < self.end_date:
             self.x_values_all.append(current)
             current += self.step
@@ -60,6 +63,11 @@ class TransactionValueOverTimeChartController(TransactionChartController):
     def __init__(self, transactions, date_range):
         self.monthly = False
         self.update(transactions, date_range)
+        
+    def get_start_date(self):
+        if self.monthly:
+            return datetime.date(self.start_date.year, self.start_date.month, 1)
+        return self.start_date
         
     def get_step(self):
         if self.monthly:
