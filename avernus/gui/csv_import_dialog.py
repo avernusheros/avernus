@@ -61,7 +61,10 @@ class CSVImportDialog(gtk.Dialog):
         self.account_cb.connect('changed', self._on_account_changed)
         accBox.pack_start(self.account_cb, fill=False, expand=True)
 
-        self.b_assignments = eval(self.config.get_option('category_assignments_on_import')) or False
+        if self.config.get_option('category_assignments_on_import') == 'True':
+            self.b_assignments = True
+        else:
+            self.b_assignments = False
         category_assignment_button = gtk.CheckButton(label=_('Do category assignments'))
         category_assignment_button.set_active(self.b_assignments)
         accBox.pack_start(category_assignment_button)

@@ -24,7 +24,7 @@ class AccountTransactionTab(gtk.VBox, page.Page):
         self.config = config.avernusConfig()
         self.vpaned = gtk.VPaned()
         self.pack_start(self.vpaned)
-        
+
         vbox = gtk.VBox()
         hbox = gtk.HBox()
         uncategorized_button = gtk.ToggleButton(_('uncategorized'))
@@ -125,11 +125,14 @@ class AccountTransactionTab(gtk.VBox, page.Page):
         vbox.pack_start(toolbar, expand=False, fill=False)
 
         self._init_charts()
+        self.transactions_tree.load_transactions()
+        self.category_tree.load_categories()
+        self.update_page()
 
         pubsub.subscribe("AccountTransactionsTab.UIupdate", self.update_ui)
         self.connect("destroy", self.on_destroy)
         self.show_all()
-        
+
     def on_toggled(self, widget, chart):
         chart_controller = chart.controller
         active = widget.get_active()
@@ -149,7 +152,7 @@ class AccountTransactionTab(gtk.VBox, page.Page):
         monthlyBtn.connect('toggled',lambda x: self.on_toggled(x,categoryChart))
         vbox.pack_end(monthlyBtn, expand=False, fill=False)
         notebook.append_page(vbox, tab_label=gtk.Label(_('Over Time')))
-        
+
         chart_controller = chartController.TransactionStepValueChartController(self.account.transactions, (self.transactions_tree.range_start, self.transactions_tree.range_end))
         valueChart = charts.SimpleLineChart(chart_controller,300)
         self.charts.append((valueChart, chart_controller))
@@ -159,12 +162,12 @@ class AccountTransactionTab(gtk.VBox, page.Page):
         monthlyBtn.connect('toggled',lambda x: self.on_toggled(x,valueChart))
         vbox.pack_end(monthlyBtn, expand=False, fill=False)
         notebook.append_page(vbox, tab_label=gtk.Label(_('Step Value')))
-        
+
         chart_controller = chartController.AccountBalanceOverTimeChartController(self.account, (self.transactions_tree.range_start, self.transactions_tree.range_end))
         chart = charts.SimpleLineChart(chart_controller,300)
         self.charts.append((chart, chart_controller))
         notebook.append_page(chart, tab_label=gtk.Label(_('Account balance')))
-        
+
         table = gtk.Table()
         y = 0
         label = gtk.Label()
@@ -179,7 +182,7 @@ class AccountTransactionTab(gtk.VBox, page.Page):
         chart = CategoryPie(300/2, self.account, self.account.birthday, datetime.date.today(), earnings=False)
         table.attach(chart,1,2,y+1,y+2)
         notebook.append_page(table)
-        
+
         self.vpaned.pack1(notebook)
 
     def on_pick_start(self, entry, icon_pos, event):
@@ -226,17 +229,8 @@ class AccountTransactionTab(gtk.VBox, page.Page):
         return [('# transactions', len(self.transactions_tree.modelfilter)),
                 ('Sum', gui_utils.get_currency_format_from_float(self.transactions_tree.get_filtered_transaction_value()))]
 
-    def show(self):
-        self.transactions_tree.clear()
-        self.transactions_tree.load_transactions()
-        self.category_tree.clear()
-        self.category_tree.load_categories()
-        self.update_page()
-
     def on_destroy(self, widget):
         self.config.set_option('account hpaned position', self.hpaned.get_position(), 'Gui')
-
-
 
 
 class TransactionsTree(gui_utils.Tree):
