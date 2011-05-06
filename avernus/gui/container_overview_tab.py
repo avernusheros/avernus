@@ -33,8 +33,8 @@ class AccountOverviewTree(gui_utils.Tree):
         self.create_column(_('Name'), 1)
         self.create_column(_('Amount'), 2, func=gui_utils.currency_format)
         self.create_column(_('# Transactions'), 3)
-        self.create_column(_('First transaction'), 4, func = gui_utils.date_to_string)
-        self.create_column(_('Last transaction'), 5, func =gui_utils.date_to_string)
+        self.create_column(_('First transaction'), 4, func=gui_utils.date_to_string)
+        self.create_column(_('Last transaction'), 5, func=gui_utils.date_to_string)
         self._load_accounts()
 
     def _load_accounts(self):

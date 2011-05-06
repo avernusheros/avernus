@@ -19,14 +19,14 @@ class Tree(gtk.TreeView):
             return treestore[selection_iter][0], selection_iter
         return None, None
 
-    def create_column(self, name, attribute, func=None, expand=True):
-        column = gtk.TreeViewColumn(name)
-        self.append_column(column)
+    def create_column(self, name, attribute, func=None):
         cell = gtk.CellRendererText()
-        column.pack_start(cell, expand = expand)
-        column.add_attribute(cell, "markup", attribute)
+        column = gtk.TreeViewColumn(name, cell)
+        self.append_column(column)
         if func is not None:
             column.set_cell_data_func(cell, func, attribute)
+        else:
+            column.add_attribute(cell, "markup", attribute)
         column.set_sort_column_id(attribute)
         return column, cell
 

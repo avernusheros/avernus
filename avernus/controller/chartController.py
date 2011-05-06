@@ -121,7 +121,7 @@ class TransactionStepValueChartController(TransactionValueOverTimeChartControlle
             # find the right slot for t
             i = 0
             while t.date >= self.x_values_all[i]:
-                print t.date , " > ", self.x_values_all[i]
+                #print t.date , " > ", self.x_values_all[i]
                 i += 1
             #print "vorher: ", temp[self.x_values_all[i]]
             temp[self.x_values_all[i]] += t.amount
