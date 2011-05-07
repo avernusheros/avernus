@@ -110,6 +110,10 @@ class TransactionValueOverTimeChartController(TransactionChartController):
             
 class TransactionStepValueChartController(TransactionValueOverTimeChartController):
     
+    def __init__(self, transactions, date_range):
+        self.rolling_avg = True
+        TransactionValueOverTimeChartController.__init__(self, transactions, date_range)
+    
     def calculate_values(self):
         self.calculate_x_values()
         self.y_values = []
@@ -128,6 +132,16 @@ class TransactionStepValueChartController(TransactionValueOverTimeChartControlle
             #print "nachher: ", temp[self.x_values_all[i]]
         for x in self.x_values_all:
             self.y_values.append(temp[x])
+        if self.rolling_avg:
+            temp_values = [self.y_values[:],[]]
+            for i in range(0,len(self.y_values)):
+                current_avg = self.y_values[0]
+                current_sum = 1
+                for j in range(0,i):
+                    current_avg += j+1 * self.y_values[j]
+                    current_sum += j+1
+                temp_values[1].append(current_avg/current_sum)
+            self.y_values = temp_values
         #print "fertsch: ", self.y_values
 
 
