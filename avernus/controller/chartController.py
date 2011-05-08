@@ -104,7 +104,15 @@ class TransactionValueOverTimeChartController(TransactionChartController):
             self.calculate_total_average()
             
     def remove_zero(self):
-        pass
+        # if the second is the same as the first or the last the same as the one before
+        # only do it if we have more than 4
+        if len(self.y_values[0])>4:
+            if (self.y_values[0][0] == self.y_values[0][1]):
+                del self.y_values[0][0]
+                del self.x_values[0]
+            if (self.y_values[0][-1] == self.y_values[0][-2]):
+                del self.y_values[0][-1]
+                del self.x_values[-1]
         
     def calculate_y_values(self):
         self.y_values = [[]]
