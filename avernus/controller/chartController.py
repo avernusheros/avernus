@@ -64,6 +64,7 @@ class TransactionValueOverTimeChartController(TransactionChartController):
         self.monthly = False
         self.rolling_avg = False
         self.total_avg = False
+        self.average_y = 0
         self.update(transactions, date_range)
         
     def get_start_date(self):
@@ -138,8 +139,8 @@ class TransactionValueOverTimeChartController(TransactionChartController):
             self.y_values[0].append(temp[value])
             
     def calculate_total_average(self):
-        value = sum(self.y_values[0]) / len(self.y_values[0])
-        self.y_values.append([value for y in self.y_values[0]])
+        self.average_y = sum(self.y_values[0]) / len(self.y_values[0])
+        self.y_values.append([self.average_y for y in self.y_values[0]])
             
     def calculate_rolling_average(self):
         temp_values = []
