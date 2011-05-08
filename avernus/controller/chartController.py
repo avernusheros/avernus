@@ -134,16 +134,12 @@ class TransactionStepValueChartController(TransactionValueOverTimeChartControlle
             self.y_values.append(temp[x])
         if self.rolling_avg:
             temp_values = [self.y_values[:],[]]
-            for i in range(0,len(self.y_values)):
-                current_avg = self.y_values[0]
-                current_sum = 1
-                for j in range(0,i):
-                    current_avg += j+1 * self.y_values[j]
-                    current_sum += j+1
-                temp_values[1].append(current_avg/current_sum)
+            for y in self.y_values:
+                if len(temp_values[1]) == 0:
+                    temp_values[1].append(y)
+                else:
+                    temp_values[1].append((y+temp_values[1][-1])/2)
             self.y_values = temp_values
-        #print "fertsch: ", self.y_values
-
 
 class AccountBalanceOverTimeChartController(TransactionChartController):
 
