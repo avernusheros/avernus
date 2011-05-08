@@ -62,6 +62,7 @@ class TransactionValueOverTimeChartController(TransactionChartController):
 
     def __init__(self, transactions, date_range):
         self.monthly = False
+        self.rolling_avg = True
         self.update(transactions, date_range)
         
     def get_start_date(self):
@@ -107,13 +108,20 @@ class TransactionValueOverTimeChartController(TransactionChartController):
         for x in self.x_values_all:
             value = x
             self.y_values.append(temp[value])
+        if self.rolling_avg:
+            self.calculate_rolling_average()
+            
+    def calculate_rolling_average(self):
+        temp_values = [self.y_values[:],[]]
+        for y in self.y_values:
+            if len(temp_values[1]) == 0:
+                temp_values[1].append(y)
+            else:
+                temp_values[1].append((y+temp_values[1][-1])/2)
+        self.y_values = temp_values
             
 class TransactionStepValueChartController(TransactionValueOverTimeChartController):
-    
-    def __init__(self, transactions, date_range):
-        self.rolling_avg = True
-        TransactionValueOverTimeChartController.__init__(self, transactions, date_range)
-    
+      
     def calculate_values(self):
         self.calculate_x_values()
         self.y_values = []
@@ -133,13 +141,7 @@ class TransactionStepValueChartController(TransactionValueOverTimeChartControlle
         for x in self.x_values_all:
             self.y_values.append(temp[x])
         if self.rolling_avg:
-            temp_values = [self.y_values[:],[]]
-            for y in self.y_values:
-                if len(temp_values[1]) == 0:
-                    temp_values[1].append(y)
-                else:
-                    temp_values[1].append((y+temp_values[1][-1])/2)
-            self.y_values = temp_values
+            self.calculate_rolling_average()
 
 class AccountBalanceOverTimeChartController(TransactionChartController):
 
