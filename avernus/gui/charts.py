@@ -67,7 +67,7 @@ class SimpleLineChart(ChartBase):
                                 background="white light_gray",
                                 grid=True,
                                 dots=self.dots,
-                                series_colors=['blue','green'])
+                                series_colors=['blue','green','red'])
         self.chart = plot.handler
         self.chart.show()
         self.pack_start(self.chart)

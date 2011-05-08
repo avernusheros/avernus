@@ -156,6 +156,9 @@ class AccountTransactionTab(gtk.VBox, page.Page):
         rollingAvgBtn = gtk.CheckButton(label=_('rolling average'))
         rollingAvgBtn.connect('toggled', lambda x: self.on_toggled(x, categoryChart, over_time_controller.set_rolling_average))
         hbox.pack_start(rollingAvgBtn, expand=False, fill=False)
+        totalAvgBtn = gtk.CheckButton(label=_('total average'))
+        totalAvgBtn.connect('toggled', lambda x: self.on_toggled(x, categoryChart, over_time_controller.set_total_average))
+        hbox.pack_start(totalAvgBtn, expand=False, fill=False)
         vbox.pack_end(hbox, expand=False, fill=False)
         notebook.append_page(vbox, tab_label=gtk.Label(_('Over Time')))
 
@@ -171,6 +174,9 @@ class AccountTransactionTab(gtk.VBox, page.Page):
         rollingAvgBtn = gtk.CheckButton(label=_('rolling average'))
         rollingAvgBtn.connect('toggled', lambda x: self.on_toggled(x, valueChart, step_controller.set_rolling_average))
         hbox.pack_start(rollingAvgBtn, expand=False, fill=False)
+        totalAvgBtn = gtk.CheckButton(label=_('total average'))
+        totalAvgBtn.connect('toggled', lambda x: self.on_toggled(x, valueChart, step_controller.set_total_average))
+        hbox.pack_start(totalAvgBtn, expand=False, fill=False)
         vbox.pack_end(hbox, expand=False, fill=False)
         notebook.append_page(vbox, tab_label=gtk.Label(_('Step Value')))
 

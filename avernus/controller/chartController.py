@@ -103,7 +103,7 @@ class TransactionValueOverTimeChartController(TransactionChartController):
             self.calculate_total_average()
             
     def calculate_y_values(self):
-        self.y_values = []
+        self.y_values = [[]]
         #FIXME do we need this temp dict?
         temp = {}
         i = 0
@@ -123,24 +123,25 @@ class TransactionValueOverTimeChartController(TransactionChartController):
                     temp[x] = temp[self.x_values_all[self.x_values_all.index(x)-1]]
         for x in self.x_values_all:
             value = x
-            self.y_values.append(temp[value])
+            self.y_values[0].append(temp[value])
             
     def calculate_total_average(self):
-        print "Dizzl ma shizzle"
+        value = sum(self.y_values[0]) / len(self.y_values[0])
+        self.y_values.append([value for y in self.y_values[0]])
             
     def calculate_rolling_average(self):
-        temp_values = [self.y_values[:],[]]
-        for y in self.y_values:
-            if len(temp_values[1]) == 0:
-                temp_values[1].append(y)
+        temp_values = []
+        for y in self.y_values[0]:
+            if len(temp_values) == 0:
+                temp_values.append(y)
             else:
-                temp_values[1].append((y+temp_values[1][-1])/2)
-        self.y_values = temp_values
+                temp_values.append((y+temp_values[-1])/2)
+        self.y_values.append(temp_values)
             
 class TransactionStepValueChartController(TransactionValueOverTimeChartController):
       
     def calculate_y_values(self):
-        self.y_values = []
+        self.y_values = [[]]
         temp = {}
         # initialize to zero
         for x in self.x_values_all:
@@ -155,7 +156,7 @@ class TransactionStepValueChartController(TransactionValueOverTimeChartControlle
             temp[self.x_values_all[i]] += t.amount
             #print "nachher: ", temp[self.x_values_all[i]]
         for x in self.x_values_all:
-            self.y_values.append(temp[x])
+            self.y_values[0].append(temp[x])
 
 class AccountBalanceOverTimeChartController(TransactionChartController):
 
