@@ -71,3 +71,26 @@ class SimpleLineChart(ChartBase):
         self.chart = plot.handler
         self.chart.show()
         self.pack_start(self.chart)
+        
+class TransactionChart(SimpleLineChart):
+    
+    def __init__(self, chartController, width, dots=2):
+        SimpleLineChart.__init__(self, chartController, width, dots=dots)
+        hbox = gtk.HBox()
+        monthlyBtn = gtk.CheckButton(label=_('monthly'))
+        monthlyBtn.connect('toggled',lambda x: self.on_combo_toggled(x, self.controller.set_monthly))
+        hbox.pack_start(monthlyBtn, expand=False, fill=False)
+        rollingAvgBtn = gtk.CheckButton(label=_('rolling average'))
+        rollingAvgBtn.connect('toggled', lambda x: self.on_combo_toggled(x, self.controller.set_rolling_average))
+        hbox.pack_start(rollingAvgBtn, expand=False, fill=False)
+        totalAvgBtn = gtk.CheckButton(label=_('total average'))
+        totalAvgBtn.connect('toggled', lambda x: self.on_combo_toggled(x, self.controller.set_total_average))
+        hbox.pack_start(totalAvgBtn, expand=False, fill=False)
+        self.pack_end(hbox, expand=False, fill=False)
+        
+    
+    def on_combo_toggled(self, widget, setter):
+        active = widget.get_active()
+        setter(active)
+        self.draw_chart()
+        
