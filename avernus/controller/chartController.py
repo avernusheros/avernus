@@ -63,6 +63,7 @@ class TransactionValueOverTimeChartController(TransactionChartController):
     def __init__(self, transactions, date_range):
         self.monthly = False
         self.rolling_avg = False
+        self.total_avg = False
         self.update(transactions, date_range)
         
     def get_start_date(self):
@@ -83,6 +84,10 @@ class TransactionValueOverTimeChartController(TransactionChartController):
     def set_rolling_average(self, avg):
         self.rolling_avg = avg
         self.calculate_values()
+        
+    def set_total_average(self, avg):
+        self.total_avg = avg
+        self.calculate_values()
 
     def update(self, transactions, date_range):
         self.transactions = sorted(transactions, key=lambda t: t.date)
@@ -91,6 +96,13 @@ class TransactionValueOverTimeChartController(TransactionChartController):
 
     def calculate_values(self):
         self.calculate_x_values()
+        self.calculate_y_values()
+        if self.rolling_avg:
+            self.calculate_rolling_average()
+        if self.total_avg:
+            self.calculate_total_average()
+            
+    def calculate_y_values(self):
         self.y_values = []
         #FIXME do we need this temp dict?
         temp = {}
@@ -112,8 +124,9 @@ class TransactionValueOverTimeChartController(TransactionChartController):
         for x in self.x_values_all:
             value = x
             self.y_values.append(temp[value])
-        if self.rolling_avg:
-            self.calculate_rolling_average()
+            
+    def calculate_total_average(self):
+        print "Dizzl ma shizzle"
             
     def calculate_rolling_average(self):
         temp_values = [self.y_values[:],[]]
@@ -126,8 +139,7 @@ class TransactionValueOverTimeChartController(TransactionChartController):
             
 class TransactionStepValueChartController(TransactionValueOverTimeChartController):
       
-    def calculate_values(self):
-        self.calculate_x_values()
+    def calculate_y_values(self):
         self.y_values = []
         temp = {}
         # initialize to zero
@@ -144,8 +156,6 @@ class TransactionStepValueChartController(TransactionValueOverTimeChartControlle
             #print "nachher: ", temp[self.x_values_all[i]]
         for x in self.x_values_all:
             self.y_values.append(temp[x])
-        if self.rolling_avg:
-            self.calculate_rolling_average()
 
 class AccountBalanceOverTimeChartController(TransactionChartController):
 
