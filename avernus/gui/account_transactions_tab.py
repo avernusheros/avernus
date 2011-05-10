@@ -253,7 +253,8 @@ class TransactionsTree(gui_utils.Tree):
         sorter.set_sort_func(self.DATE, gui_utils.sort_by_time, self.DATE)
         col, cell = self.create_column(_('Description'), self.DESCRIPTION, func=gui_utils.transaction_desc_markup)
         cell.props.wrap_mode = pango.WRAP_WORD
-        cell.props.wrap_width = 300
+        cell.props.wrap_width = 400
+        col.set_expand(True)
         self.create_column(_('Amount'), self.AMOUNT, func=gui_utils.currency_format)
         self.create_column(_('Category'), self.CATEGORY)
         self.set_rules_hint(True)
@@ -272,7 +273,6 @@ class TransactionsTree(gui_utils.Tree):
         pubsub.subscribe('CategoriesTree.onSelect', self.on_category_select)
         pubsub.subscribe("CategoriesTree.onUnselect", self.on_category_unselect)
         self.single_category = None
-
         self.reset_filter_dates()
 
     def on_category_select(self, *args, **kwargs):

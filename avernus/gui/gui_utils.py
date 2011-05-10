@@ -19,7 +19,8 @@ class Tree(gtk.TreeView):
             return treestore[selection_iter][0], selection_iter
         return None, None
 
-    def create_column(self, name, attribute, func=None):
+    def create_column(self, name, attribute, func=None, expand=False):
+        #FIXME keyword expand is unused
         cell = gtk.CellRendererText()
         column = gtk.TreeViewColumn(name, cell)
         self.append_column(column)
@@ -28,6 +29,7 @@ class Tree(gtk.TreeView):
         else:
             column.add_attribute(cell, "markup", attribute)
         column.set_sort_column_id(attribute)
+        column.set_expand(expand)
         return column, cell
 
     def create_icon_column(self, name, attribute, size=None):
