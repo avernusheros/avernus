@@ -75,6 +75,7 @@ class SimpleLineChart(ChartBase):
 class TransactionChart(SimpleLineChart):
     
     def __init__(self, chartController, width, dots=2):
+        self.totalAvgLabel = gtk.Label()
         SimpleLineChart.__init__(self, chartController, width, dots=dots)
         hbox = gtk.HBox()
         monthlyBtn = gtk.CheckButton(label=_('monthly'))
@@ -86,6 +87,7 @@ class TransactionChart(SimpleLineChart):
         totalAvgBtn = gtk.CheckButton(label=_('total average'))
         totalAvgBtn.connect('toggled', lambda x: self.on_combo_toggled(x, self.controller.set_total_average))
         hbox.pack_start(totalAvgBtn, expand=False, fill=False)
+        hbox.pack_end(self.totalAvgLabel, expand=False, fill=False)
         self.pack_end(hbox, expand=False, fill=False)
         
     
@@ -94,3 +96,14 @@ class TransactionChart(SimpleLineChart):
         setter(active)
         self.draw_chart()
         
+    def draw_chart(self):
+        SimpleLineChart.draw_chart(self)
+        if self.controller.total_avg:
+            self.totalAvgLabel.set_text(_('Average ') + str(self.controller.average_y))
+            self.totalAvgLabel.show()
+        
+    def remove_chart(self):
+        if self.chart:
+            self.remove(self.chart)
+        if not self.controller.total_avg:
+            self.totalAvgLabel.hide()

@@ -64,6 +64,7 @@ class TransactionValueOverTimeChartController(TransactionChartController):
         self.monthly = False
         self.rolling_avg = False
         self.total_avg = False
+        self.average_y = 0
         self.update(transactions, date_range)
         
     def get_start_date(self):
@@ -97,11 +98,23 @@ class TransactionValueOverTimeChartController(TransactionChartController):
     def calculate_values(self):
         self.calculate_x_values()
         self.calculate_y_values()
+        self.remove_zero()
         if self.rolling_avg:
             self.calculate_rolling_average()
         if self.total_avg:
             self.calculate_total_average()
             
+    def remove_zero(self):
+        # if the second is the same as the first or the last the same as the one before
+        # only do it if we have more than 4
+        if len(self.y_values[0])>4:
+            if (self.y_values[0][0] == self.y_values[0][1]):
+                del self.y_values[0][0]
+                del self.x_values[0]
+            if (self.y_values[0][-1] == self.y_values[0][-2]):
+                del self.y_values[0][-1]
+                del self.x_values[-1]
+        
     def calculate_y_values(self):
         self.y_values = [[]]
         #FIXME do we need this temp dict?
@@ -126,8 +139,8 @@ class TransactionValueOverTimeChartController(TransactionChartController):
             self.y_values[0].append(temp[value])
             
     def calculate_total_average(self):
-        value = sum(self.y_values[0]) / len(self.y_values[0])
-        self.y_values.append([value for y in self.y_values[0]])
+        self.average_y = sum(self.y_values[0]) / len(self.y_values[0])
+        self.y_values.append([self.average_y for y in self.y_values[0]])
             
     def calculate_rolling_average(self):
         temp_values = []
@@ -150,13 +163,20 @@ class TransactionStepValueChartController(TransactionValueOverTimeChartControlle
             # find the right slot for t
             i = 0
             while t.date >= self.x_values_all[i]:
-                #print t.date , " > ", self.x_values_all[i]
                 i += 1
-            #print "vorher: ", temp[self.x_values_all[i]]
             temp[self.x_values_all[i]] += t.amount
-            #print "nachher: ", temp[self.x_values_all[i]]
+        # see if the first or last x is zero
         for x in self.x_values_all:
             self.y_values[0].append(temp[x])
+            
+    def remove_zero(self):
+        if self.y_values[0][0] == 0:
+            del self.y_values[0][0]
+            del self.x_values[0]
+        if self.y_values[0][-1] == 0:
+            del self.y_values[0][-1]
+            del self.x_values[-1]
+        
 
 class AccountBalanceOverTimeChartController(TransactionChartController):
 
