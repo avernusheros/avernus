@@ -64,7 +64,6 @@ def init_translations():
 
     gettext.bindtextdomain(GETTEXT_DOMAIN, LOCALE_PATH)
     gettext.textdomain(GETTEXT_DOMAIN)
-
     translation = gettext.translation(GETTEXT_DOMAIN, LOCALE_PATH,
                                       languages=languages_used,
                                       fallback=True)
