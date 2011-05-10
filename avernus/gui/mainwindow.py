@@ -86,7 +86,7 @@ class MenuBar(gtk.MenuBar):
 
     def _create_menu(self, action, items):
         menu_item = self.actiongroup.get_action(action).create_menu_item()
-        menu_item.mname = action #used in plugin api
+        #menu_item.mname = action #used in plugin api
         self.append(menu_item)
         menu = gtk.Menu()
         menu_item.set_submenu(menu)
@@ -189,7 +189,7 @@ class MainWindow(gtk.Window):
             del page
 
     def on_prefs(self, *args):
-        PrefDialog(self.pengine)
+        PrefDialog()
 
     def on_do_category_assignments(self, *args):
         filterController.run_auto_assignments()

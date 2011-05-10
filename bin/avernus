@@ -27,8 +27,6 @@ if python_path:
 
 import avernus
 from avernus import config
-from avernus.plugin_engine import PluginEngine
-from avernus.plugin_api    import PluginAPI
 
 
 def init_logger(debug=False):
@@ -80,7 +78,7 @@ def init_icons():
     iconNames = [
     'avernus','tags','tag','watchlists','watchlist','portfolio',
     'portfolios', 'index', 'indices','arrow_down','arrow_med_down',
-    'arrow_up','arrow_med_up','arrow_right','A','F','plugin','fund','stock',
+    'arrow_up','arrow_med_up','arrow_right','A','F','fund','stock',
     'etf','accounts','account','onvista','yahoo'
     ]
     for name in iconNames:
@@ -89,13 +87,6 @@ def init_icons():
     #icons.add_icon_name_from_directory('tags', path)
     #icons.add_stock_from_directory('avernus-chart', path)
     gtk.window_set_default_icon_name('avernus')
-
-
-def init_plugin_engine(api):
-    pengine = PluginEngine(config.plugins_path, api)
-    pengine.load_plugins()
-    pengine.enable_from_config()
-    return pengine
 
 
 def start(db_file = None):
@@ -116,8 +107,6 @@ def start(db_file = None):
     from avernus.datasource_manager import DatasourceManager
     dsm = DatasourceManager()
     window = MainWindow()
-    api = PluginAPI(window, dsm)
-    window.pengine = init_plugin_engine(api)
     controller.datasource_manager = dsm
 
     from avernus.network_manager import DBusNetwork
