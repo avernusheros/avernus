@@ -1,16 +1,7 @@
 #!/usr/bin/env python
 # -*- Mode: Python; coding: utf-8; indent-tabs-mode: nil; tab-width: 4 -*-
 
-###################### DO NOT TOUCH THIS (HEAD TO THE SECOND PART) ######################
-
-try:
-    import DistUtilsExtra.auto
-except ImportError:
-    import sys
-    print >> sys.stderr, 'To build avernus you need https://launchpad.net/python-distutils-extra'
-    sys.exit(1)
-
-assert DistUtilsExtra.auto.__version__ >= '2.10', 'needs DistUtilsExtra.auto >= 2.10'
+import DistUtilsExtra.auto
 import os
 
 
@@ -20,7 +11,7 @@ def update_data_path(prefix, oldvalue=None):
         fin = file('avernus/config.py', 'r')
         fout = file(fin.name + '.new', 'w')
 
-        for line in fin:            
+        for line in fin:
             fields = line.split(' = ') # Separate variable from value
             if fields[0] == '__avernus_data_directory__':
                 # update to prefix, store oldvalue
@@ -48,7 +39,7 @@ def update_desktop_file(datadir):
         fin = file('avernus.desktop.in', 'r')
         fout = file(fin.name + '.new', 'w')
 
-        for line in fin:            
+        for line in fin:
             if 'Icon=' in line:
                 line = "Icon=%s\n" % (datadir + 'images/icon.png')
             fout.write(line)
@@ -72,10 +63,7 @@ class InstallAndUpdateDataDirectory(DistUtilsExtra.auto.install_auto):
         DistUtilsExtra.auto.install_auto.run(self)
         update_data_path(self.prefix, previous_value)
 
-        
-##################################################################################
-###################### YOU SHOULD MODIFY ONLY WHAT IS BELOW ######################
-##################################################################################
+
 
 import avernus
 DistUtilsExtra.auto.setup(

@@ -1,4 +1,0 @@
-project = avernus
-template = ubuntu-application
-lp_id = stocktracker
-version = 11.04
