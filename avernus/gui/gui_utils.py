@@ -123,7 +123,10 @@ def get_string_from_float(number):
     return locale.format('%g', round(number,2), grouping=False, monetary=True)
 
 def get_currency_format_from_float(number):
-    return locale.currency(number)
+    try:
+        return locale.currency(number)
+    except:
+        return str(round(number,2))
 
 def float_to_red_green_string_currency(column, cell, model, iter, user_data):
     num = model.get_value(iter, user_data)
@@ -192,7 +195,10 @@ def datetime_format(datetime, nl = True):
 def get_date_string(date):
     if date is None:
         return ''
-    return date.strftime(locale.nl_langinfo(locale.D_FMT))
+    try:
+        return date.strftime(locale.nl_langinfo(locale.D_FMT))
+    except:
+        return str(date)
 
 def get_datetime_string(datetime):
     if datetime is not None:

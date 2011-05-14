@@ -1,3 +1,4 @@
+
 [Desktop Entry]
 Name=avernus
 Comment=avernus finance application
@@ -6,3 +7,4 @@ Exec=avernus
 Icon=/usr/share/avernus/images/icon.png
 Terminal=false
 Type=Application
+Name[en_US]=avernus.desktop.in
