@@ -3,7 +3,7 @@
 
 from __future__ import with_statement
 import os, glib
-__avernus_data_directory__ = '../data/'
+__avernus_data_directory__ = '/usr/share/avernus/'
 import ConfigParser
 
 
@@ -27,12 +27,10 @@ def getdatapath():
     if os.path.exists(abs_data_path):
         return abs_data_path
     else:
-        raise project_path_not_found
+        raise project_path_not_found, abs_data_path
 
 data_path = glib.get_user_data_dir()
 config_path = os.path.join( glib.get_user_config_dir(), 'avernus')
-plugins_path = [os.path.join(os.getcwd(), 'avernus/plugins'), os.path.join(config_path,'plugins') ]
-#media_path = os.path.join(getdatapath(), 'media')
 timezone = 'CET'
 
 instance = None
@@ -56,8 +54,6 @@ class AvernusConfig():
             os.mkdir(config_path)
         if not self.parser.has_section('General'):
             self.parser.add_section('General')
-        if not self.parser.has_section('Plugins'):
-            self.parser.add_section('Plugins')
         if not self.parser.has_section('Gui'):
             self.parser.add_section('Gui')
         if not self.parser.has_section('Account'):

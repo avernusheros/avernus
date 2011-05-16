@@ -1,10 +1,9 @@
 
 [Desktop Entry]
-Name=avernus
+Name=avernus Personal Finance
 Comment=avernus finance application
 Categories=GNOME;Office;
 Exec=avernus
 Icon=/usr/share/avernus/images/icon.png
 Terminal=false
 Type=Application
-Name[en_US]=avernus.desktop.in
