@@ -85,7 +85,6 @@ def init_icons():
     'etf','accounts','account','onvista','yahoo'
     ]
     for name in iconNames:
-        print name, path
         icons.add_icon_name_from_directory(name, path)
     #icons.add_icon_name_from_directory('tag', path)
     #icons.add_icon_name_from_directory('tags', path)

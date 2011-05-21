@@ -180,7 +180,7 @@ class PositionsTree(Tree):
             self.insert_position(item)
             if not self.watchlist:
                 #update portfolio fractions
-                for row in self.get_model():
+                for row in self.model:
                     row[self.COLS['pf_percent']] = row[self.COLS['obj']].portfolio_fraction
 
     def on_remove(self, widget):

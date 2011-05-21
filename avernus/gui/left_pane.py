@@ -50,6 +50,10 @@ class InfoBox(gtk.Table):
         gtk.Table.__init__(self)
         self.line_count = 0
         
+        self.set_col_spacings(6)
+        self.set_homogeneous(False)
+        self.set_border_width(6)
+        
         pubsub.subscribe('update_page', self.on_update_page)
         pubsub.subscribe('maintree.select', self.on_maintree_select)
     
@@ -59,8 +63,12 @@ class InfoBox(gtk.Table):
         label = gtk.Label()
         info = gtk.Label()
         info.set_markup(info_text)
-        label.set_justify(gtk.JUSTIFY_LEFT);
-        label.set_markup("<span font_weight=\"bold\">"+label_text+"</span>")
+        label.set_justify(gtk.JUSTIFY_RIGHT)
+        info.set_justify(gtk.JUSTIFY_LEFT)
+        label.set_markup("<span font_weight=\"bold\">"+label_text+':'+"</span>")
+        
+        label.set_alignment(1, 0);
+        info.set_alignment(0, 0);
         
         info.set_ellipsize(pango.ELLIPSIZE_END)
         info.set_selectable(True)

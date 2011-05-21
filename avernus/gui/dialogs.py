@@ -6,6 +6,7 @@ from avernus.controller import controller
 from avernus.objects import stock
 from avernus.objects.position import MetaPosition
 import datetime
+import locale
 import gtk
 
 
@@ -68,6 +69,7 @@ class DimensionComboBox(gtk.ComboBoxEntry):
 
     COL_OBJ  = 0
     COL_TEXT = 1
+    SEPARATOR = ';'
 
     def __init__(self, dimension, asset, dialog):
         self.dimension = dimension
@@ -76,7 +78,7 @@ class DimensionComboBox(gtk.ComboBoxEntry):
         gtk.ComboBoxEntry.__init__(self, liststore, self.COL_TEXT)
         for dimVal in dimension.values:
             liststore.append([dimVal, dimVal.name])
-        self.child.set_text(asset.getDimensionText(dimension))
+        self.child.set_text(self.get_dimension_text(asset, dimension))
         completion = gtk.EntryCompletion()
         completion.set_model(liststore)
         completion.set_text_column(self.COL_TEXT)
@@ -87,6 +89,26 @@ class DimensionComboBox(gtk.ComboBoxEntry):
         self.child.set_property('secondary-icon-tooltip-markup', '<b>ValueA</b> or <b>ValueA:40, ValueB:30 ...</b>')
         completion.connect("match-selected", self.on_completion_match)
         self.connect('changed', self.on_entry_changed)
+
+    def get_dimension_text(self, asset, dim):
+        advs = asset.getAssetDimensionValue(dim)
+        if len(advs) == 1:
+            # we have 100% this value in its dimension
+            return str(advs.pop(0))
+        erg = ""
+        i = 0
+        for adv in advs:
+            i += 1
+            erg += self.get_adv_text(adv)
+            if i<len(advs):
+                erg += self.SEPARATOR+" "
+        return erg
+
+    def get_adv_text(self, adv):
+        erg = adv.dimensionValue.name
+        if adv.value != 100:
+            erg += ":"+locale.str(adv.value)
+        return erg
 
     def on_entry_changed(self, editable):
         parse = self.parse()
@@ -100,14 +122,14 @@ class DimensionComboBox(gtk.ComboBoxEntry):
     def match_func(self, completion, key, iter):
         model = completion.get_model()
         text = model.get_value(iter, self.COL_TEXT).lower()
-        key = key.split(',')[-1].strip().lower()
+        key = key.split(self.SEPARATOR)[-1].strip().lower()
         if text.startswith(key):
             return True
         return False
 
     def on_completion_match(self, completion, model, iter):
         current_text = self.get_active_text()
-        current_text = current_text[:-len(current_text.split(',')[-1])]
+        current_text = current_text[:-len(current_text.split(self.SEPARATOR)[-1])]
         if len(current_text) == 0:
             self.child.set_text(model[iter][self.COL_TEXT])
         else:
@@ -120,7 +142,7 @@ class DimensionComboBox(gtk.ComboBoxEntry):
         iterator = self.get_active_iter()
         if iterator is None:
             name = self.get_active_text()
-            portions = name.split(",")
+            portions = name.split(self.SEPARATOR)
             sum = 0
             erg = []
             for portion in portions:
@@ -134,7 +156,7 @@ class DimensionComboBox(gtk.ComboBoxEntry):
                     else:
                         continue # no name, no entry
                 try:
-                    value = float(value) # try parsing a float out of the number
+                    value = locale.atof(value) # try parsing a float out of the number
                 except:
                     return False # failure
                 sum += value
