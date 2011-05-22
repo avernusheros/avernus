@@ -66,6 +66,7 @@ class SimpleLineChart(ChartBase):
                                 y_title='Amount',
                                 background="white light_gray",
                                 grid=True,
+                                series_legend=True,
                                 dots=self.dots,
                                 series_colors=['blue','green','red'])
         self.chart = plot.handler
