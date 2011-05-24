@@ -8,18 +8,18 @@ msgstr ""
 "Project-Id-Version: avernus\n"
 "Report-Msgid-Bugs-To: FULL NAME <EMAIL@ADDRESS>\n"
 "POT-Creation-Date: 2011-05-21 13:36+0200\n"
-"PO-Revision-Date: 2011-05-17 09:15+0000\n"
-"Last-Translator: simpsus <bastian.kennel@gmail.com>\n"
+"PO-Revision-Date: 2011-05-23 09:34+0000\n"
+"Last-Translator: wolfer <Unknown>\n"
 "Language-Team: German <de@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Launchpad-Export-Date: 2011-05-22 05:58+0000\n"
+"X-Launchpad-Export-Date: 2011-05-24 06:03+0000\n"
 "X-Generator: Launchpad (build 12959)\n"
 
 #: avernus/controller/controller.py:55
 msgid "Region"
-msgstr ""
+msgstr "Region"
 
 #: avernus/controller/controller.py:55
 msgid "Emerging markets"
@@ -27,15 +27,15 @@ msgstr ""
 
 #: avernus/controller/controller.py:55
 msgid "America"
-msgstr ""
+msgstr "Amerika"
 
 #: avernus/controller/controller.py:55
 msgid "Europe"
-msgstr ""
+msgstr "Europa"
 
 #: avernus/controller/controller.py:55
 msgid "Pacific"
-msgstr ""
+msgstr "Pazifik"
 
 #: avernus/controller/controller.py:56
 msgid "Asset Class"
@@ -55,35 +55,35 @@ msgstr ""
 
 #: avernus/controller/controller.py:57
 msgid "Risk"
-msgstr ""
+msgstr "Risiko"
 
 #: avernus/controller/controller.py:57
 msgid "high"
-msgstr ""
+msgstr "hoch"
 
 #: avernus/controller/controller.py:57 avernus/controller/controller.py:59
 msgid "medium"
-msgstr ""
+msgstr "mittel"
 
 #: avernus/controller/controller.py:57
 msgid "low"
-msgstr ""
+msgstr "niedrig"
 
 #: avernus/controller/controller.py:58 avernus/gui/dialogs.py:353
 msgid "Currency"
-msgstr ""
+msgstr "Währung"
 
 #: avernus/controller/controller.py:58
 msgid "Euro"
-msgstr ""
+msgstr "Euro"
 
 #: avernus/controller/controller.py:58
 msgid "Dollar"
-msgstr ""
+msgstr "Dollar"
 
 #: avernus/controller/controller.py:58
 msgid "Yen"
-msgstr ""
+msgstr "Yen"
 
 #: avernus/controller/controller.py:59
 msgid "Company Size"
@@ -91,15 +91,15 @@ msgstr ""
 
 #: avernus/controller/controller.py:59
 msgid "large"
-msgstr ""
+msgstr "groß"
 
 #: avernus/controller/controller.py:59
 msgid "small"
-msgstr ""
+msgstr "klein"
 
 #: avernus/controller/controller.py:60
 msgid "Sector"
-msgstr ""
+msgstr "Sektor"
 
 #: avernus/controller/controller.py:63
 msgid "Utilities"
@@ -107,43 +107,43 @@ msgstr ""
 
 #: avernus/controller/controller.py:63
 msgid "Gas"
-msgstr ""
+msgstr "Gas"
 
 #: avernus/controller/controller.py:63
 msgid "Phone"
-msgstr ""
+msgstr "Telefon"
 
 #: avernus/controller/controller.py:63
 msgid "Water"
-msgstr ""
+msgstr "Wasser"
 
 #: avernus/controller/controller.py:63
 msgid "Electricity"
-msgstr ""
+msgstr "Elektrizität"
 
 #: avernus/controller/controller.py:64
 msgid "Entertainment"
-msgstr ""
+msgstr "Unterhaltung"
 
 #: avernus/controller/controller.py:64
 msgid "Books"
-msgstr ""
+msgstr "Bücher"
 
 #: avernus/controller/controller.py:64
 msgid "Movies"
-msgstr ""
+msgstr "Filme"
 
 #: avernus/controller/controller.py:64
 msgid "Music"
-msgstr ""
+msgstr "Musik"
 
 #: avernus/controller/controller.py:64
 msgid "Amusement"
-msgstr ""
+msgstr "Unterhaltung"
 
 #: avernus/controller/controller.py:65
 msgid "Fees"
-msgstr ""
+msgstr "Gebühren"
 
 #: avernus/controller/controller.py:66
 msgid "Gifts"
@@ -167,11 +167,11 @@ msgstr ""
 
 #: avernus/controller/controller.py:68
 msgid "Food"
-msgstr ""
+msgstr "Essen"
 
 #: avernus/controller/controller.py:68
 msgid "Groceries"
-msgstr ""
+msgstr "Lebensmittel"
 
 #: avernus/controller/controller.py:68
 msgid "Restaurants"
@@ -179,27 +179,27 @@ msgstr ""
 
 #: avernus/controller/controller.py:68
 msgid "Coffee"
-msgstr ""
+msgstr "Kaffee"
 
 #: avernus/controller/controller.py:69
 msgid "Transport"
-msgstr ""
+msgstr "Transport"
 
 #: avernus/controller/controller.py:69
 msgid "Car"
-msgstr ""
+msgstr "Auto"
 
 #: avernus/controller/controller.py:69
 msgid "Train"
-msgstr ""
+msgstr "Zug"
 
 #: avernus/controller/controller.py:69
 msgid "Fuel"
-msgstr ""
+msgstr "Treibstoff"
 
 #: avernus/controller/controller.py:70
 msgid "Services"
-msgstr ""
+msgstr "Dienstleistungen"
 
 #: avernus/controller/controller.py:70
 msgid "Shipping"
@@ -211,7 +211,7 @@ msgstr ""
 
 #: avernus/controller/controller.py:71
 msgid "Rent"
-msgstr ""
+msgstr "Miete"
 
 #: avernus/controller/controller.py:71
 msgid "Home improvements"
@@ -223,27 +223,27 @@ msgstr ""
 
 #: avernus/controller/controller.py:73
 msgid "Taxes"
-msgstr ""
+msgstr "Steuern"
 
 #: avernus/controller/controller.py:74
 msgid "Income"
-msgstr ""
+msgstr "Einkommen"
 
 #: avernus/controller/controller.py:75
 msgid "Shopping"
-msgstr ""
+msgstr "Einkaufen"
 
 #: avernus/controller/controller.py:75
 msgid "Clothes"
-msgstr ""
+msgstr "Kleidung"
 
 #: avernus/controller/controller.py:75
 msgid "Electronics"
-msgstr ""
+msgstr "Elektronik"
 
 #: avernus/controller/controller.py:75
 msgid "Hobbies"
-msgstr ""
+msgstr "Hobbies"
 
 #: avernus/controller/controller.py:75
 msgid "Sporting Goods"
@@ -251,7 +251,7 @@ msgstr ""
 
 #: avernus/controller/controller.py:76
 msgid "Travel"
-msgstr ""
+msgstr "Reisen"
 
 #: avernus/controller/controller.py:76
 msgid "Lodging"
@@ -259,7 +259,7 @@ msgstr ""
 
 #: avernus/controller/controller.py:76
 msgid "Transportation"
-msgstr ""
+msgstr "Verkehrsmittel"
 
 #: avernus/controller/controller.py:164
 msgid "sample account"
@@ -518,15 +518,15 @@ msgstr ""
 
 #: avernus/gui/filterDialog.py:131
 msgid "Active"
-msgstr ""
+msgstr "Aktiviert"
 
 #: avernus/gui/filterDialog.py:139
 msgid "Priority"
-msgstr ""
+msgstr "Prorität"
 
 #: avernus/gui/filterDialog.py:142
 msgid "Filter"
-msgstr ""
+msgstr "Filter"
 
 #: avernus/gui/dialogs.py:16
 msgid "Edit position - "
@@ -580,7 +580,7 @@ msgstr ""
 #: avernus/gui/dialogs.py:286 avernus/gui/dialogs.py:436
 #: avernus/gui/dialogs.py:592 avernus/gui/transactions_tab.py:36
 msgid "Shares"
-msgstr ""
+msgstr "Anteile"
 
 #: avernus/gui/dialogs.py:291 avernus/gui/closed_positions_tab.py:34
 msgid "Buy price"
@@ -592,7 +592,7 @@ msgstr ""
 
 #: avernus/gui/dialogs.py:302
 msgid "Comment"
-msgstr ""
+msgstr "Kommentar"
 
 #: avernus/gui/dialogs.py:410
 msgid "Sell position"
@@ -604,7 +604,7 @@ msgstr ""
 
 #: avernus/gui/dialogs.py:442
 msgid "Price:"
-msgstr ""
+msgstr "Preis:"
 
 #: avernus/gui/dialogs.py:448 avernus/gui/dialogs.py:604
 #: avernus/gui/transactions_tab.py:38
@@ -621,7 +621,7 @@ msgstr ""
 
 #: avernus/gui/dialogs.py:522
 msgid "Amount:"
-msgstr ""
+msgstr "Menge:"
 
 #: avernus/gui/dialogs.py:562
 msgid "Buy a position"
@@ -629,7 +629,7 @@ msgstr ""
 
 #: avernus/gui/dialogs.py:598 avernus/gui/transactions_tab.py:37
 msgid "Price"
-msgstr ""
+msgstr "Preis"
 
 #: avernus/gui/dialogs.py:712
 msgid "Add watchlist position"
@@ -674,7 +674,7 @@ msgstr ""
 
 #: avernus/gui/positions_tab.py:105
 msgid "Today"
-msgstr ""
+msgstr "Heute"
 
 #: avernus/gui/positions_tab.py:119
 msgid "Add new position"
@@ -726,7 +726,7 @@ msgstr ""
 
 #: avernus/gui/overview_tab.py:64
 msgid "Loss"
-msgstr ""
+msgstr "Verlust"
 
 #: avernus/gui/account_chart_tab.py:12
 msgid ""
@@ -779,7 +779,7 @@ msgstr ""
 
 #: avernus/gui/left_pane.py:158
 msgid "<b>Accounts</b>"
-msgstr ""
+msgstr "<b>Konten</b>"
 
 #: avernus/gui/left_pane.py:178
 msgid "Permanently delete <b>"
@@ -787,16 +787,16 @@ msgstr ""
 
 #: avernus/gui/left_pane.py:278 avernus/gui/left_pane.py:348
 msgid "Edit..."
-msgstr ""
+msgstr "Bearbeiten …"
 
 #: avernus/gui/left_pane.py:289 avernus/gui/left_pane.py:320
 #: avernus/gui/left_pane.py:359
 msgid "Name:"
-msgstr ""
+msgstr "Name:"
 
 #: avernus/gui/left_pane.py:310
 msgid "Edit Account"
-msgstr ""
+msgstr "Konto bearbeiten"
 
 #: avernus/gui/left_pane.py:327
 msgid "Current balance:"
