@@ -2,7 +2,6 @@
 from avernus import pubsub, config
 from avernus.controller import controller, filterController
 from avernus.gui import progress_manager
-from avernus.gui.account_chart_tab import AccountChartTab
 from avernus.gui.account_transactions_tab import AccountTransactionTab
 from avernus.gui.container_overview_tab import ContainerOverviewTab
 from avernus.gui.csv_import_dialog import CSVImportDialog

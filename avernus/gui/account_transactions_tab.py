@@ -9,8 +9,6 @@ import datetime
 import pango
 import logging
 
-#FIXME
-from avernus.gui.account_chart_tab import CategoryPie
 logger = logging.getLogger(__name__)
 
 

@@ -1,6 +1,5 @@
 from avernus import pubsub
 from avernus.objects.model import SQLiteEntity
-from dateutil.rrule import *
 import datetime
 
 
@@ -98,27 +97,6 @@ class Account(SQLiteEntity):
                             sums[cat] += trans.amount
         return sums
 
-    def get_earnings_summed(self, end_date, start_date, period='monthly', transfers=False):
-        return self._get_earnings_or_spendings_summed(start_date, end_date, period, earnings=True)
-
-    def get_spendings_summed(self, end_date, start_date, period='monthly', transfers=False):
-        return self._get_earnings_or_spendings_summed(start_date, end_date, period, earnings=False, transfers=False)
-
-    def _get_earnings_or_spendings_summed(self, start_date, end_date, period='monthly', earnings=True, transfers=False):
-        if period == 'monthly':
-            #last day of month
-            days = list(rrule(MONTHLY, dtstart = start_date, until = end_date, bymonthday=-1))
-        elif period == 'yearly':
-            days = list(rrule(YEARLY, dtstart = start_date, until = end_date, bymonthday=-1, bymonth=12))
-        elif period == 'daily':
-            days = list(rrule(DAILY, dtstart = start_date, until = end_date))
-        elif period == 'weekly':
-            days = list(rrule(WEEKLY, dtstart = start_date, until = end_date, byweekday=SU))
-        ret = []
-        for day in days+[end_date]:
-            ret.append(self.controller.getEarningsOrSpendingsSummedInPeriod(self, start_date, day, earnings=earnings, transfers=transfers))
-            start_date = day
-        return ret
 
     @property
     def birthday(self):
