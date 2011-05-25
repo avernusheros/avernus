@@ -160,19 +160,22 @@ class AccountTransactionTab(gtk.VBox, page.Page):
         notebook.append_page(chart, tab_label=gtk.Label(_('Account balance')))
 
         table = gtk.Table()
-        y = 0
+        chart_controller = chartController.TransactionCategoryPieController(self.account.transactions, earnings=True)
+        chart = charts.Pie(chart_controller, 350)
+        self.charts.append((chart, chart_controller))
         label = gtk.Label()
-        label.set_markup('<b>Earnings</b>')
-        table.attach(label,0,1,y,y+1)
-        chart = CategoryPie(300/2, self.account, self.account.birthday, datetime.date.today(), earnings=True)
-        table.attach(chart,0,1,y+1,y+2)
+        label.set_markup('<b>'+_('Earnings')+'</b>')
+        table.attach(label,0,1,0,1,xoptions=gtk.FILL, yoptions=gtk.FILL)
+        table.attach(chart,0,1,1,2)
 
+        chart_controller = chartController.TransactionCategoryPieController(self.account.transactions, earnings=False)
+        chart = charts.Pie(chart_controller, 350)
+        self.charts.append((chart, chart_controller))
         label = gtk.Label()
-        label.set_markup('<b>Spendings</b>')
-        table.attach(label,1,2,y,y+1)
-        chart = CategoryPie(300/2, self.account, self.account.birthday, datetime.date.today(), earnings=False)
-        table.attach(chart,1,2,y+1,y+2)
-        notebook.append_page(table)
+        label.set_markup('<b>'+_('Spendings')+'</b>')
+        table.attach(label,1,2,0,1,xoptions=gtk.FILL, yoptions=gtk.FILL)
+        table.attach(chart,1,2,1,2)
+        notebook.append_page(table, tab_label=gtk.Label(_('Categories')))
 
         self.vpaned.pack1(notebook)
 

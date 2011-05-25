@@ -2,6 +2,7 @@ from avernus.gui import gui_utils
 from avernus import date_utils
 from dateutil.relativedelta import relativedelta
 from dateutil.rrule import *
+from itertools import ifilter
 import datetime
 import logging
 logger = logging.getLogger(__name__)
@@ -40,10 +41,10 @@ def get_legend(smaller, bigger, step):
 
 
 class TransactionChartController:
-    
+
     def get_step(self):
         return get_step_for_range(self.start_date, self.end_date)
-        
+
     def get_start_date(self):
         return self.start_date
 
@@ -66,26 +67,26 @@ class TransactionValueOverTimeChartController(TransactionChartController):
         self.total_avg = False
         self.average_y = 0
         self.update(transactions, date_range)
-        
+
     def get_start_date(self):
         if self.monthly:
             return datetime.date(self.start_date.year, self.start_date.month, 1)
         return self.start_date
-        
+
     def get_step(self):
         if self.monthly:
             return relativedelta(months=1)
         return TransactionChartController.get_step(self)
-        
+
     def set_monthly(self, monthly):
         self.monthly = monthly
         self.calculate_values()
         #print "Set monthly to ", monthly
-        
+
     def set_rolling_average(self, avg):
         self.rolling_avg = avg
         self.calculate_values()
-        
+
     def set_total_average(self, avg):
         self.total_avg = avg
         self.calculate_values()
@@ -103,7 +104,7 @@ class TransactionValueOverTimeChartController(TransactionChartController):
             self.calculate_rolling_average()
         if self.total_avg:
             self.calculate_total_average()
-            
+
     def remove_zero(self):
         # if the second is the same as the first or the last the same as the one before
         # only do it if we have more than 4
@@ -114,7 +115,7 @@ class TransactionValueOverTimeChartController(TransactionChartController):
             if (self.y_values['Transaction value'][-1] == self.y_values['Transaction value'][-2]):
                 del self.y_values['Transaction value'][-1]
                 del self.x_values[-1]
-        
+
     def calculate_y_values(self):
         self.y_values = {'Transaction value':[]}
         #FIXME do we need this temp dict?
@@ -137,11 +138,11 @@ class TransactionValueOverTimeChartController(TransactionChartController):
         for x in self.x_values_all:
             value = x
             self.y_values['Transaction value'].append(temp[value])
-            
+
     def calculate_total_average(self):
         self.average_y = sum(self.y_values['Transaction value']) / len(self.y_values['Transaction value'])
         self.y_values['Total average'] = [self.average_y for y in self.y_values['Transaction value']]
-            
+
     def calculate_rolling_average(self):
         temp_values = []
         for y in self.y_values['Transaction value']:
@@ -150,10 +151,10 @@ class TransactionValueOverTimeChartController(TransactionChartController):
             else:
                 temp_values.append((y+temp_values[-1])/2)
         self.y_values['Rolling average'] = temp_values
- 
-            
+
+
 class TransactionStepValueChartController(TransactionValueOverTimeChartController):
-      
+
     def calculate_y_values(self):
         self.y_values = {'Transaction value': []}
         temp = {}
@@ -169,7 +170,7 @@ class TransactionStepValueChartController(TransactionValueOverTimeChartControlle
         # see if the first or last x is zero
         for x in self.x_values_all:
             self.y_values['Transaction value'].append(temp[x])
-            
+
     def remove_zero(self):
         if self.y_values['Transaction value'][0] == 0:
             del self.y_values['Transaction value'][0]
@@ -177,7 +178,27 @@ class TransactionStepValueChartController(TransactionValueOverTimeChartControlle
         if self.y_values['Transaction value'][-1] == 0:
             del self.y_values['Transaction value'][-1]
             del self.x_values[-1]
-        
+
+
+class TransactionCategoryPieController():
+
+    def __init__(self, transactions, earnings):
+        self.earnings = earnings
+        self.update(transactions)
+
+    def update(self, transactions, *args):
+        self.transactions = transactions
+        self.calculate_values()
+
+    def calculate_values(self):
+        data = {}
+        for trans in ifilter(lambda t: t.isEarning() == self.earnings, self.transactions):
+            try:
+                data[str(trans.category)] += abs(trans.amount)
+            except:
+                data[str(trans.category)] = abs(trans.amount)
+        self.values = data
+
 
 class AccountBalanceOverTimeChartController(TransactionChartController):
 
@@ -201,7 +222,7 @@ class AccountBalanceOverTimeChartController(TransactionChartController):
             return
         iterator = transactions.__iter__()
         current_trans = iterator.next()
-        
+
         y_values = []
         for current_date in reversed(self.x_values_all):
             while current_trans.date > current_date and count != trans_count:

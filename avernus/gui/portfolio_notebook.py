@@ -18,6 +18,7 @@ class PortfolioNotebook(gtk.Notebook):
 
         self.connect('switch-page', self.on_notebook_selection)
         self.show_all()
+        self.on_notebook_selection(self, 0, 0)
 
     def on_notebook_selection(self, notebook, page, page_num):
         notebook.get_nth_page(page_num).show()

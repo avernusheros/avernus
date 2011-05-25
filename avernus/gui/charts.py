@@ -29,6 +29,7 @@ class Pie(ChartBase):
                                         values=True
                                         )
         self.chart = plot.handler
+        self.chart.show()
         self.pack_start(self.chart)
 
 
@@ -72,9 +73,9 @@ class SimpleLineChart(ChartBase):
         self.chart = plot.handler
         self.chart.show()
         self.pack_start(self.chart)
-        
+
 class TransactionChart(SimpleLineChart):
-    
+
     def __init__(self, chartController, width, dots=2):
         self.totalAvgLabel = gtk.Label()
         SimpleLineChart.__init__(self, chartController, width, dots=dots)
@@ -90,19 +91,19 @@ class TransactionChart(SimpleLineChart):
         hbox.pack_start(totalAvgBtn, expand=False, fill=False)
         hbox.pack_end(self.totalAvgLabel, expand=False, fill=False)
         self.pack_end(hbox, expand=False, fill=False)
-        
-    
+
+
     def on_combo_toggled(self, widget, setter):
         active = widget.get_active()
         setter(active)
         self.draw_chart()
-        
+
     def draw_chart(self):
         SimpleLineChart.draw_chart(self)
         if self.controller.total_avg:
             self.totalAvgLabel.set_text(_('Average ') + str(self.controller.average_y))
             self.totalAvgLabel.show()
-        
+
     def remove_chart(self):
         if self.chart:
             self.remove(self.chart)
