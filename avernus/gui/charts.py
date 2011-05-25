@@ -24,7 +24,7 @@ class Pie(ChartBase):
         plot = cairoplot.plots.PiePlot('gtk',
                                         data=self.controller.values,
                                         width=self.width,
-                                        height=300,
+                                        height=self.width,
                                         gradient=True,
                                         values=True
                                         )
@@ -36,6 +36,10 @@ class Pie(ChartBase):
 class BarChart(ChartBase):
 
     def draw_chart(self):
+        if len(self.controller.y_values) == 0:
+            self.pack_start(gtk.Label(_('No data to plot')))
+            return
+
         plot = cairoplot.plots.VerticalBarPlot('gtk',
                                         data=self.controller.y_values,
                                         width=self.width,

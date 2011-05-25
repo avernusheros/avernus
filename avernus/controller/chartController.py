@@ -38,8 +38,6 @@ def get_legend(smaller, bigger, step):
     return erg
 
 
-
-
 class TransactionChartController:
 
     def get_step(self):
