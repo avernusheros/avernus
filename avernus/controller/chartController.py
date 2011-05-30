@@ -178,6 +178,35 @@ class TransactionStepValueChartController(TransactionValueOverTimeChartControlle
             del self.x_values[-1]
 
 
+class EarningsVsSpendingsController():
+
+    def __init__(self, transactions, date_range):
+        self.update(transactions, date_range)
+
+    def update(self, transactions, date_range):
+        start, end = date_range
+        onemonth = relativedelta(months=1)
+        data = {}
+        self.x_values = []
+        while start.year < end.year or (start.year == end.year and start.month <= end.month):
+            if not start.year in data:
+                data[start.year] = {}
+            if not start.month in data[start.year]:
+                data[start.year][start.month] = [0, 0]
+            self.x_values.append(start)
+            start += onemonth
+
+        for trans in transactions:
+            if trans.isEarning():
+                data[trans.date.year][trans.date.month][0] += trans.amount
+            else:
+                data[trans.date.year][trans.date.month][1] += abs(trans.amount)
+        self.y_values = []
+        for x_value in self.x_values:
+            self.y_values.append([data[x_value.year][x_value.month][0], data[x_value.year][x_value.month][0]])
+        self.x_values = map(str, self.x_values)
+
+
 class TransactionCategoryPieController():
 
     def __init__(self, transactions, earnings):

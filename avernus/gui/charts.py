@@ -36,6 +36,7 @@ class Pie(ChartBase):
 class BarChart(ChartBase):
 
     def draw_chart(self):
+        self.remove_chart()
         if len(self.controller.y_values) == 0:
             self.pack_start(gtk.Label(_('No data to plot')))
             return
@@ -49,9 +50,9 @@ class BarChart(ChartBase):
                                         background="white light_gray",
                                         value_formatter = gui_utils.get_currency_format_from_float,
                                         )
-        chart = plot.handler
-        chart.show()
-        self.pack_start(chart)
+        self.chart = plot.handler
+        self.chart.show()
+        self.pack_start(self.chart)
 
 
 class SimpleLineChart(ChartBase):
