@@ -42,61 +42,13 @@ class Account(SQLiteEntity):
     def transaction_count(self):
         return len(self.controller.getTransactionsForAccount(self))
 
-    def yield_matching_transfer_tranactions(self, transaction):
+    def yield_matching_transfer_transactions(self, transaction):
         for trans in self:
             if transaction.amount == -trans.amount:
                 if trans.transfer is None or trans.transfer == transaction:
                     fivedays = datetime.timedelta(5)
                     if transaction.date-fivedays < trans.date and transaction.date+fivedays > trans.date:
                         yield trans
-
-    def yield_earnings_in_period(self, start_date, end_date, transfers=False):
-        for trans in self:
-            if transfers or trans.transfer is None:
-                if trans.date >= start_date and trans.date <= end_date and trans.amount >= 0.0:
-                    yield trans
-
-    def yield_spendings_in_period(self, start_date, end_date, transfers=False):
-        for trans in self:
-            if transfers or trans.transfer is None:
-                if trans.date >= start_date and trans.date <= end_date and trans.amount < 0.0:
-                    yield trans
-
-    def get_sum_in_period_by_category(self, start_date, end_date, parent_category=None, b_earnings=False, transfers=False):
-        #sum for all categories including subcategories
-        if parent_category:
-            parent_category_id = parent_category.id
-        else:
-            parent_category_id = None
-        hierarchy = self.controller.getAllAccountCategoriesHierarchical()
-        cats = {}
-        sums = {}
-
-        def get_child_categories(parent):
-            if parent in hierarchy:
-                res = []
-                for cat in hierarchy[parent]:
-                    res.append(cat)
-                    res += get_child_categories(cat)
-                return res
-            return []
-
-        if parent_category in hierarchy:
-            for cat in hierarchy[parent_category]:
-                cats[cat] = [cat] + get_child_categories(cat)
-                sums[cat] = 0.0
-
-        cats['None'] = [parent_category]
-        sums['None'] = 0.0
-
-        for trans in self:
-            if transfers or trans.transfer is None:
-                if trans.isEarning() == b_earnings:
-                    for cat, subcats in cats.items():
-                        if trans.category in subcats:
-                            sums[cat] += trans.amount
-        return sums
-
 
     @property
     def birthday(self):

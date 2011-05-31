@@ -473,7 +473,7 @@ def getTransactionsForAccount(account):
 def yield_matching_transfer_tranactions(transaction):
     for account in getAllAccount():
         if account != transaction.account:
-            for ta in account.yield_matching_transfer_tranactions(transaction):
+            for ta in account.yield_matching_transfer_transactions(transaction):
                 yield ta
 
 def deleteAllAccountTransaction(account):
