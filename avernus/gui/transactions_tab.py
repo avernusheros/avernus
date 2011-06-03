@@ -46,21 +46,12 @@ class TransactionsTree(Tree):
         self.connect('button_press_event', self.on_button_press)
         
     def load_transactions(self):
-        items = []
-        if isinstance(self.portfolio, avernus.objects.container.Portfolio):
-            items = [self.portfolio]
-        else:
-            items = self.portfolio
-        for port in items:
-            for ta in port.transactions:
+        for position in self.portfolio:
+            for ta in position.transactions:
                 self.insert_transaction(ta)
       
     def on_transaction_created(self, ta):
-        if ta.portfolio is None:
-            portfolio = ta.position.portfolio
-        else:
-            portfolio = ta.portfolio
-        if portfolio.id == self.portfolio.id:
+        if ta.portfolio.id == self.portfolio.id:
             self.insert_transaction(ta)  
             
     def on_button_press(self, widget, event):
@@ -73,20 +64,13 @@ class TransactionsTree(Tree):
             dialogs.SellDialog(transaction.position, transaction)
         elif transaction.type == 1: #Buy
             dialogs.BuyDialog(transaction.portfolio, transaction)
-        elif transaction.type == 3:
-            dialogs.CashDialog(transaction.portfolio, 0, transaction)
-        elif transaction.type == 4:
-            dialogs.CashDialog(transaction.portfolio, 1, transaction)
         else:   
             print "TODO edit transaction"
     
     def insert_transaction(self, ta):
         model = self.get_model()
         if model:
-            if ta.position is None: #a portfolio related transaction
-                model.append(None, [ta, ta.type_string, '', ta.date.date(), ta.quantity, ta.price, ta.costs, ta.total])
-            else:
-                model.append(None, [ta, ta.type_string, get_name_string(ta.position.stock), ta.date.date(), ta.quantity, ta.price, ta.costs, ta.total])
+            model.append(None, [ta, ta.type_string, get_name_string(ta.position.stock), ta.date.date(), ta.quantity, ta.price, ta.costs, ta.total])
 
     def show_context_menu(self, event):
         transaction, iter = self.get_selected_item()

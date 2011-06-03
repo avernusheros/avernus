@@ -420,14 +420,10 @@ def get_all_used_stocks():
     return [Stock.getByPrimaryKey(stockid[0]) for stockid in model.store.select(query)]
 
 def getPositionForPortfolio(portfolio):
-    key = portfolio.getPrimaryKey()
-    erg = PortfolioPosition.getAllFromOneColumn("portfolio",key)
-    return erg
+    return PortfolioPosition.getAllFromOneColumn("portfolio", portfolio.getPrimaryKey())
 
 def getTransactionForPosition(position):
-    key = position.getPrimaryKey()
-    erg = Transaction.getAllFromOneColumn("position", key)
-    return erg
+    return Transaction.getAllFromOneColumn("position", position.getPrimaryKey())
 
 def deleteAllPositionTransaction(position):
     for trans in getTransactionForPosition(position):
@@ -460,11 +456,6 @@ def deleteAllWatchlistPosition(watchlist):
 
 def getDividendForPosition(pos):
     return Dividend.getAllFromOneColumn("position", pos.getPrimaryKey())
-
-def getTransactionForPortfolio(portfolio):
-    key = portfolio.getPrimaryKey()
-    erg = Transaction.getAllFromOneColumn("portfolio",key)
-    return erg
 
 def getTransactionsForAccount(account):
     key = account.getPrimaryKey()
