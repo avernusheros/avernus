@@ -361,7 +361,6 @@ class PositionsTab(gtk.VBox, page.Page):
             return [(_('Day\'s gain'), gui_utils.get_green_red_string(change, change_text)),
                     (_('Overall gain'), gui_utils.get_green_red_string(o_change, o_change_text)),
                     ('Investments', gui_utils.get_currency_format_from_float(self.container.cvalue)),
-                    ('Cash', gui_utils.get_currency_format_from_float(self.container.cash)),
                     ('# positions', len(self.container)),
                     ('Last update', gui_utils.datetime_format(self.container.last_update, False))
                     ]

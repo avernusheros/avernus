@@ -99,7 +99,6 @@ class Portfolio(SQLiteEntity, Container):
                    "name":          "VARCHAR",
                    "last_update":   "TIMESTAMP",
                    "comment":       "TEXT",
-                   "cash":          "FLOAT",
                    }
     container_type = 'portfolio'
 
@@ -148,23 +147,11 @@ class Portfolio(SQLiteEntity, Container):
     def onUpdate(self, **kwargs):
         pubsub.publish('container.updated', self)
 
-    def onInsert(self, **kwargs):
-        pass
-
     def onDelete(self, **kwargs):
         for trans in self.transactions:
             trans.delete()
         for pos in self:
             pos.delete()
-
-    def onRemoveRelationEntry(self, **kwargs):
-        pass
-
-    def onAddRelationEntry(self, **kwargs):
-        pass
-
-    def onRetrieveComposite(self, **kwargs):
-        pass
 
     __callbacks__ = {
                      'onUpdate':onUpdate,

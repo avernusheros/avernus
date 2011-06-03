@@ -275,7 +275,7 @@ class MainTree(gui_utils.Tree):
 class EditWatchlist(gtk.Dialog):
     
     def __init__(self, wl):
-        gtk.Dialog.__init__(self, _("Edit..."), None
+        gtk.Dialog.__init__(self, _("Edit watchlist"), None
                             , gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
                      (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
                       gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
@@ -339,13 +339,12 @@ class EditAccount(gtk.Dialog):
         if response == gtk.RESPONSE_ACCEPT:
             self.acc.name = self.name_entry.get_text()
             self.acc.amount = self.cash_entry.get_value()
-            pubsub.publish("container.edited", self.acc)
         self.destroy()
 
 
 class EditPortfolio(gtk.Dialog):
     def __init__(self, pf):
-        gtk.Dialog.__init__(self, _("Edit..."), None
+        gtk.Dialog.__init__(self, _("Edit portfolio"), None
                             , gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
                      (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
                       gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
@@ -361,12 +360,6 @@ class EditPortfolio(gtk.Dialog):
         self.name_entry = gtk.Entry()
         self.name_entry.set_text(pf.name)
         table.attach(self.name_entry,1,2,0,1)
-
-        #cash entry
-        label = gtk.Label(_('Cash:'))
-        table.attach(label, 0,1,1,2)
-        self.cash_entry = gtk.SpinButton(gtk.Adjustment(lower=-999999999, upper=999999999,step_incr=10, value = pf.cash), digits=2)
-        table.attach(self.cash_entry,1,2,1,2)
 
         self.show_all()
         self.name_entry.connect("activate", self.process_result)
@@ -388,10 +381,6 @@ class ContainerContextMenu(gui_utils.ContextMenu):
         for action in ['edit', 'remove']:
             self.add(actiongroup.get_action(action).create_menu_item())
 
-        self.add(gtk.SeparatorMenuItem())
-
-        if container.__name__ == 'Portfolio':
-            self.add_item(_('Deposit cash'),  lambda x: dialogs.CashDialog(container, 0) , 'gtk-add')
-            self.add_item(_('Withdraw cash'),  lambda x: dialogs.CashDialog(container, 1) , 'gtk-remove')
-        elif container.__name__ == 'Account':
+        if container.__name__ == 'Account':
+            self.add(gtk.SeparatorMenuItem())
             self.add_item(_('Import transactions'),  lambda x: CSVImportDialog(account = container) , 'gtk-add')

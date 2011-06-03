@@ -183,8 +183,8 @@ def update_historical_prices():
         i+=1
         yield float(i)/l*100
 
-def newPortfolio(name, id=None, last_update = datetime.datetime.now(), comment="",cash=0.0):
-    result = Portfolio(id=id, name=name,last_update=last_update,comment=comment,cash=cash)
+def newPortfolio(name, id=None, last_update = datetime.datetime.now(), comment=""):
+    result = Portfolio(id=id, name=name,last_update=last_update,comment=comment)
     result.controller = controller
     result.insert()
     return result

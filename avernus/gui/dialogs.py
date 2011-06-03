@@ -502,59 +502,6 @@ class SellDialog(gtk.Dialog):
         self.total.set_markup('<b>'+gui_utils.get_currency_format_from_float(total)+'</b>')
 
 
-class CashDialog(gtk.Dialog):
-    def __init__(self, pf, type = 0, transaction=None):  #0 deposit, 1 withdraw
-        self.action_type = type
-        self.transaction = transaction
-        if type == 0:
-            text = _("Deposit cash")
-        else: text = _("Withdraw cash")
-        gtk.Dialog.__init__(self, text, None
-                            , gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
-                     (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
-                      gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
-
-        self.pf = pf
-        vbox = self.get_content_area()
-
-        hbox = gtk.HBox()
-        vbox.pack_start(hbox)
-        hbox.pack_start(gtk.Label(_('Amount:')))
-        self.amount_entry = gtk.SpinButton(gtk.Adjustment(lower=0, upper=100000,step_incr=0.1, value = 1.0), digits=2)
-        hbox.pack_start(self.amount_entry)
-
-        self.calendar = gtk.Calendar()
-        vbox.pack_start(self.calendar)
-
-        if self.transaction is not None:
-            self.amount_entry.set_value(self.transaction.price)
-            self.calendar.select_month(self.transaction.date.month-1, self.transaction.date.year)
-            self.calendar.select_day(self.transaction.date.day)
-
-        self.show_all()
-        response = self.run()
-        self.process_result(response = response)
-        self.destroy()
-
-    def process_result(self, widget=None, response = gtk.RESPONSE_ACCEPT):
-        if response == gtk.RESPONSE_ACCEPT:
-            amount = self.amount_entry.get_value()
-            year, month, day = self.calendar.get_date()
-            date = datetime.datetime(year, month+1, day)
-            if self.transaction is None:
-                if self.action_type == 0:
-                    ta = controller.newTransaction(date=date, portfolio=self.pf, type=3, price=amount, quantity=1, costs=0.0)
-                else:
-                    ta = controller.newTransaction(date=date, portfolio=self.pf, type=4, price=amount, quantity=1, costs=0.0)
-                pubsub.publish('transaction.added', ta)
-            else:
-                self.transaction.date = date
-                self.transaction.price = amount
-            if self.action_type == 0:
-                self.pf.cash += amount
-            else:
-                self.pf.cash -= amount
-
 
 class BuyDialog(gtk.Dialog):
 
