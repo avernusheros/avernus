@@ -10,11 +10,26 @@ class ChartBase(gtk.VBox):
         self.controller = controller
         self.width = width
         self.chart = None
-        self.draw_chart()
+        
+        self.connect('realize', self.on_realize)
 
     def remove_chart(self):
         if self.chart:
             self.remove(self.chart)
+            
+    def draw_chart(self):
+        pass
+    
+    def on_realize(self, widget):
+        print "on show", self
+        self.controller.calculate_values()
+        self.draw_chart()
+    
+    def update(self, *args, **kwargs):
+        print "update", self
+        self.controller.update(*args, **kwargs)
+        self.controller.calculate_values()
+        self.draw_chart()
 
 
 class Pie(ChartBase):

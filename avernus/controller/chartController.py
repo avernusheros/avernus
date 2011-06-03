@@ -1,11 +1,15 @@
 from avernus.gui import gui_utils
 from avernus import date_utils
+
 from dateutil.relativedelta import relativedelta
 from dateutil.rrule import *
 from itertools import ifilter
 import datetime
 import logging
+
 logger = logging.getLogger(__name__)
+
+
 
 def get_step_for_range(start,end):
     if start + relativedelta(months=+1) > end:
@@ -92,7 +96,6 @@ class TransactionValueOverTimeChartController(TransactionChartController):
     def update(self, transactions, date_range):
         self.transactions = sorted(transactions, key=lambda t: t.date)
         self.start_date, self.end_date = date_range
-        self.calculate_values()
 
     def calculate_values(self):
         self.calculate_x_values()
@@ -184,7 +187,11 @@ class EarningsVsSpendingsController():
         self.update(transactions, date_range)
 
     def update(self, transactions, date_range):
-        start, end = date_range
+        self.date_range = date_range
+        self.transactions = transactions
+        
+    def calculate_values(self):
+        start, end = self.date_range
         onemonth = relativedelta(months=1)
         data = {}
         self.x_values = []
@@ -196,7 +203,7 @@ class EarningsVsSpendingsController():
             self.x_values.append(start)
             start += onemonth
 
-        for trans in transactions:
+        for trans in self.transactions:
             if trans.isEarning():
                 data[trans.date.year][trans.date.month][0] += trans.amount
             else:
@@ -211,11 +218,10 @@ class TransactionCategoryPieController():
 
     def __init__(self, transactions, earnings):
         self.earnings = earnings
-        self.update(transactions)
+        self.transactions = transactions
 
     def update(self, transactions, *args):
         self.transactions = transactions
-        self.calculate_values()
 
     def calculate_values(self):
         data = {}
@@ -235,7 +241,6 @@ class AccountBalanceOverTimeChartController(TransactionChartController):
 
     def update(self, transactions, date_range):
         self.start_date, self.end_date = date_range
-        self.calculate_values()
 
     def calculate_values(self):
         self.calculate_x_values()
@@ -308,7 +313,6 @@ class PortfolioValueChartController():
     def __init__(self, portfolio, step):
         self.portfolio = portfolio
         self.step = step
-        self.calculate_values()
 
     def _calc_days(self):
         if self.step == 'daily':
@@ -332,7 +336,6 @@ class DimensionChartController():
     def __init__(self, portfolio, dimension):
         self.portfolio = portfolio
         self.dimension = dimension
-        self.calculate_values()
 
     def calculate_values(self):
         data = {}
@@ -354,7 +357,6 @@ class PositionAttributeChartController():
     def __init__(self, portfolio, attribute):
         self.portfolio = portfolio
         self.attribute = attribute
-        self.calculate_values()
 
     def calculate_values(self):
         data = {}
