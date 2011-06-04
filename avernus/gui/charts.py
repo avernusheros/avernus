@@ -3,39 +3,47 @@ from avernus.gui import gui_utils
 from avernus import cairoplot
 
 
+
 class ChartBase(gtk.VBox):
+    SPINNER_SIZE = 40
 
     def __init__(self, controller, width):
         gtk.VBox.__init__(self)
         self.controller = controller
         self.width = width
-        self.chart = None
+        self.widget = None
         
         self.connect('realize', self.on_realize)
 
-    def remove_chart(self):
-        if self.chart:
-            self.remove(self.chart)
+    def remove_widget(self):
+        if self.widget:
+            self.remove(self.widget)
             
-    def draw_chart(self):
+    def draw_widget(self):
         pass
     
+    def draw_spinner(self):
+        self.remove_widget()
+        self.widget = gtk.Spinner()
+        self.pack_start(self.widget, fill=True, expand=True)
+        self.widget.show()
+        self.widget.set_size_request(self.SPINNER_SIZE, self.SPINNER_SIZE)
+        self.widget.start()
+    
     def on_realize(self, widget):
-        print "on show", self
-        self.controller.calculate_values()
-        self.draw_chart()
+        self.draw_spinner()
+        gui_utils.BackgroundTask(self.controller.calculate_values, self.draw_widget)
     
     def update(self, *args, **kwargs):
-        print "update", self
+        self.draw_spinner()
         self.controller.update(*args, **kwargs)
-        self.controller.calculate_values()
-        self.draw_chart()
+        gui_utils.BackgroundTask(self.controller.calculate_values, self.draw_widget)
 
 
 class Pie(ChartBase):
 
-    def draw_chart(self):
-        self.remove_chart()
+    def draw_widget(self):
+        self.remove_widget()
         plot = cairoplot.plots.PiePlot('gtk',
                                         data=self.controller.values,
                                         width=self.width,
@@ -43,15 +51,15 @@ class Pie(ChartBase):
                                         gradient=True,
                                         values=True
                                         )
-        self.chart = plot.handler
-        self.chart.show()
-        self.pack_start(self.chart)
+        self.widget = plot.handler
+        self.widget.show()
+        self.pack_start(self.widget)
 
 
 class BarChart(ChartBase):
 
-    def draw_chart(self):
-        self.remove_chart()
+    def draw_widget(self):
+        self.remove_widget()
         if len(self.controller.y_values) == 0:
             self.pack_start(gtk.Label(_('No data to plot')))
             return
@@ -65,9 +73,9 @@ class BarChart(ChartBase):
                                         background="white light_gray",
                                         value_formatter = gui_utils.get_currency_format_from_float,
                                         )
-        self.chart = plot.handler
-        self.chart.show()
-        self.pack_start(self.chart)
+        self.widget = plot.handler
+        self.widget.show()
+        self.pack_start(self.widget)
 
 
 class SimpleLineChart(ChartBase):
@@ -76,8 +84,8 @@ class SimpleLineChart(ChartBase):
         self.dots = dots
         ChartBase.__init__(self, chartController, width)
 
-    def draw_chart(self):
-        self.remove_chart()
+    def draw_widget(self):
+        self.remove_widget()
         plot = cairoplot.plots.DotLinePlot('gtk',
                                 data=self.controller.y_values,
                                 width=self.width,
@@ -90,9 +98,9 @@ class SimpleLineChart(ChartBase):
                                 series_legend=True,
                                 dots=self.dots,
                                 series_colors=['blue','green','red'])
-        self.chart = plot.handler
-        self.chart.show()
-        self.pack_start(self.chart)
+        self.widget = plot.handler
+        self.widget.show()
+        self.pack_start(self.widget)
 
 class TransactionChart(SimpleLineChart):
 
@@ -116,16 +124,16 @@ class TransactionChart(SimpleLineChart):
     def on_combo_toggled(self, widget, setter):
         active = widget.get_active()
         setter(active)
-        self.draw_chart()
+        self.draw_widget()
 
-    def draw_chart(self):
-        SimpleLineChart.draw_chart(self)
+    def draw_widget(self):
+        SimpleLineChart.draw_widget(self)
         if self.controller.total_avg:
             self.totalAvgLabel.set_text(_('Average ') + str(self.controller.average_y))
             self.totalAvgLabel.show()
 
-    def remove_chart(self):
-        if self.chart:
-            self.remove(self.chart)
+    def remove_widget(self):
+        if self.widget:
+            self.remove(self.widget)
         if not self.controller.total_avg:
             self.totalAvgLabel.hide()

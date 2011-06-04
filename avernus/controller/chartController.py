@@ -269,10 +269,13 @@ class AccountBalanceOverTimeChartController(TransactionChartController):
 class DividendsPerYearChartController():
 
     def __init__(self, portfolio):
+        self.portfolio = portfolio
+    
+    def calculate_values(self):
         data = {}
-        for year in date_utils.get_years(portfolio.birthday):
+        for year in date_utils.get_years(self.portfolio.birthday):
             data[str(year)] = 0.0
-        for pos in portfolio:
+        for pos in self.portfolio:
             for div in pos.dividends:
                 data[str(div.date.year)]+=div.total
         self.x_values = sorted(data.keys())
@@ -284,8 +287,11 @@ class DividendsPerYearChartController():
 class DividendsPerPositionChartController():
 
     def __init__(self, portfolio):
+        self.portfolio = portfolio
+    
+    def calculate_values(self):
         data = {}
-        for pos in portfolio:
+        for pos in self.portfolio:
             for div in pos.dividends:
                 try:
                     data[pos.name]+=div.total

@@ -112,7 +112,9 @@ class Portfolio(SQLiteEntity, Container):
 
     @property
     def transactions(self):
-        return self.controller.getTransactionForPortfolio(self)
+        for pos in self:
+            for ta in pos.transactions:
+                yield ta
 
     @property
     def closed_positions(self):
