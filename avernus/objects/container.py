@@ -90,21 +90,10 @@ class Container(object):
         yield 1
 
 
-class Portfolio(SQLiteEntity, Container):
-
-    __primaryKey__ = "id"
-    __tableName__ = 'portfolio'
-    __columns__ = {
-                   "id"  :          "INTEGER",
-                   "name":          "VARCHAR",
-                   "last_update":   "TIMESTAMP",
-                   "comment":       "TEXT",
-                   }
+class PortfolioBase(Container):
+    
     container_type = 'portfolio'
-
-    def __iter__(self):
-        return self.controller.getPositionForPortfolio(self).__iter__()
-
+    
     def get_value_at_date(self, t):
         #FIXME
         #does not consider sold positions
@@ -145,6 +134,21 @@ class Portfolio(SQLiteEntity, Container):
     @property
     def birthday(self):
         return min(t.date for t in self.transactions)
+    
+
+class Portfolio(SQLiteEntity, PortfolioBase):
+
+    __primaryKey__ = "id"
+    __tableName__ = 'portfolio'
+    __columns__ = {
+                   "id"  :          "INTEGER",
+                   "name":          "VARCHAR",
+                   "last_update":   "TIMESTAMP",
+                   "comment":       "TEXT",
+                   }
+
+    def __iter__(self):
+        return self.controller.getPositionForPortfolio(self).__iter__()
 
     def onUpdate(self, **kwargs):
         pubsub.publish('container.updated', self)
@@ -164,6 +168,18 @@ class Portfolio(SQLiteEntity, Container):
                      #'onRetrieveComposite':onRetrieveComposite,
                      }
 
+
+class AllPortfolio(PortfolioBase):
+    name = ''
+    __name__ = 'Portfolio'
+    
+    def __iter__(self):
+        return self.controller.getAllPosition().__iter__()
+    
+    @property
+    def last_update(self):
+        return min([pf.last_update for pf in self.controller.getAllPortfolio()])
+        
 
 class Watchlist(SQLiteEntity, Container):
 
