@@ -14,6 +14,7 @@ from avernus.objects import model
 from webbrowser import open as web
 import avernus
 import gtk
+import sys
 import gobject
 
 try:
@@ -176,6 +177,7 @@ class MainWindow(gtk.Window):
         self.config.set_option('hpaned position', self.hpaned.get_position(), 'Gui')
         model.store.close()
         gtk.main_quit()
+        sys.exit()
 
     def on_maintree_select(self, item):
         self.on_maintree_unselect()

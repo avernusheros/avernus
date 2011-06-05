@@ -4,7 +4,7 @@ import gtk,sys
 from avernus import pubsub
 from avernus.gui.plot import ChartWindow
 from avernus.gui.dialogs import SellDialog, NewWatchlistPositionDialog, BuyDialog, EditPositionDialog
-from avernus.gui.gui_utils import Tree, ContextMenu, get_name_string, datetime_format
+from avernus.gui.gui_utils import Tree, get_name_string, datetime_format
 from avernus.gui import gui_utils, dialogs, progress_manager, page
 from avernus.objects.position import MetaPosition
 from avernus.controller import controller
@@ -34,12 +34,6 @@ def current_price_markup(column, cell, model, iter, user_data):
     markup = gui_utils.get_currency_format_from_float(model.get_value(iter, user_data)) +'\n' +'<small>'+gui_utils.get_datetime_string(stock.date)+'</small>'
     cell.set_property('markup', markup)
 
-
-class PositionContextMenu(ContextMenu):
-    def __init__(self, actiongroup):
-        ContextMenu.__init__(self)
-        for action in actiongroup.list_actions():
-            self.add(action.create_menu_item())
 
 
 class PositionsTree(Tree):
@@ -121,7 +115,6 @@ class PositionsTree(Tree):
                 ('remove', gtk.STOCK_DELETE,  'remove', None, _('Delete selected position'), self.on_remove),
                 ('chart',  None,              'chart',  None, _('Chart selected position'),  self.on_chart),
                 ('dividend', None,            'dividend', None, _('Add dividend payment'), self.on_dividend),
-                #('split',  None            , 'split...', None, _('Split selected position'), self.on_remove),
                 ('update', gtk.STOCK_REFRESH, 'update', None, _('Update positions'),         self.on_update_positions)
                                 ])
         self.actiongroup.get_action('chart').set_icon_name('avernus')
@@ -135,7 +128,29 @@ class PositionsTree(Tree):
             return False
         if event.button == 3:
             if self.selected_item is not None:
-                PositionContextMenu(self.actiongroup).show(event)
+                self.show_context_menu(event)
+
+    def show_context_menu(self, event):
+        context_menu = gui_utils.ContextMenu()
+        for action in self.actiongroup.list_actions():
+            context_menu.add(action.create_menu_item())
+        context_menu.add_item('----')
+        
+        #Move to another portfolio
+        item = gtk.MenuItem(_("Move"))
+        context_menu.add(item)
+        menu = gtk.Menu()
+        item.set_submenu(menu)
+        for pf in controller.getAllPortfolio():
+            if pf != self.container:
+                item = gtk.MenuItem(pf.name)
+                item.connect("activate", self.on_move_position, pf)
+                menu.append(item)
+        context_menu.show(event)
+
+    def on_move_position(self, widget, new_portfolio):
+        position, iter = self.selected_item
+        position.portfolio = new_portfolio
 
     def on_unselect(self):
         for action in ['edit', 'remove', 'chart']:

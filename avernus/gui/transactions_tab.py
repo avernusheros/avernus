@@ -63,7 +63,7 @@ class TransactionsTree(Tree):
         if transaction.type == 0: #SELL
             dialogs.SellDialog(transaction.position, transaction)
         elif transaction.type == 1: #Buy
-            dialogs.BuyDialog(transaction.portfolio, transaction)
+            dialogs.BuyDialog(transaction.position.portfolio, transaction)
         else:   
             print "TODO edit transaction"
     
