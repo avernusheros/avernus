@@ -76,7 +76,7 @@ class DimensionComboBox(gtk.ComboBoxEntry):
         self.dialog = dialog
         liststore = gtk.ListStore(object, str)
         gtk.ComboBoxEntry.__init__(self, liststore, self.COL_TEXT)
-        for dimVal in dimension.values:
+        for dimVal in sorted(dimension.values):
             liststore.append([dimVal, dimVal.name])
         self.child.set_text(self.get_dimension_text(asset, dimension))
         completion = gtk.EntryCompletion()
@@ -486,12 +486,9 @@ class SellDialog(gtk.Dialog):
                 if shares == 0.0:
                     return
                 self.pos.quantity -= shares
-                self.pos.portfolio.cash += shares*price - ta_costs
                 ta = controller.newTransaction(portfolio=self.pos.portfolio, position=self.pos, type=0, date=date, quantity=shares, price=price, costs=ta_costs)
                 pubsub.publish('transaction.added', ta)
             else:
-                self.pos.portfolio.cash -= self.transaction.quantity*self.transaction.price - self.transaction.costs
-                self.pos.portfolio.cash += shares*price - ta_costs
                 self.pos.price = self.transaction.price=price
                 self.pos.date = self.transaction.date = date
                 self.transaction.costs = ta_costs
@@ -640,14 +637,11 @@ class BuyDialog(gtk.Dialog):
                 if shares == 0.0:
                     return
                 pos = controller.newPortfolioPosition(price=price, date=date, quantity=shares, portfolio=self.pf, stock = stock)
-                self.pf.cash -= shares*price - ta_costs
                 ta = controller.newTransaction(type=1, date=date,quantity=shares,price=price,costs=ta_costs, position=pos, portfolio=self.pf)
                 #FIXME trigger publish in container.py and transaction.py
                 pubsub.publish('container.position.added', self.pf, pos)
                 pubsub.publish('transaction.added', ta)
             else:
-                self.pf.cash += self.transaction.quantity*self.transaction.price - self.transaction.costs
-                self.pf.cash -= shares*price - ta_costs
                 self.transaction.position.price = self.transaction.price = price
                 self.transaction.position.date = self.transaction.date = date
                 self.transaction.costs = ta_costs
