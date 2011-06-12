@@ -7,6 +7,8 @@ from avernus.gui import gui_utils, dialogs, progress_manager
 from avernus.gui.csv_import_dialog import CSVImportDialog
 from avernus.controller import controller
 
+from avernus.objects.container import AllPortfolio
+
 
 class Category(object):
     __name__ = 'Category'
@@ -50,6 +52,10 @@ class InfoBox(gtk.Table):
         gtk.Table.__init__(self)
         self.line_count = 0
         
+        self.set_col_spacings(6)
+        self.set_homogeneous(False)
+        self.set_border_width(6)
+        
         pubsub.subscribe('update_page', self.on_update_page)
         pubsub.subscribe('maintree.select', self.on_maintree_select)
     
@@ -59,8 +65,12 @@ class InfoBox(gtk.Table):
         label = gtk.Label()
         info = gtk.Label()
         info.set_markup(info_text)
-        label.set_justify(gtk.JUSTIFY_LEFT);
-        label.set_markup("<span font_weight=\"bold\">"+label_text+"</span>")
+        label.set_justify(gtk.JUSTIFY_RIGHT)
+        info.set_justify(gtk.JUSTIFY_LEFT)
+        label.set_markup("<span font_weight=\"bold\">"+label_text+':'+"</span>")
+        
+        label.set_alignment(1, 0);
+        info.set_alignment(0, 0);
         
         info.set_ellipsize(pango.ELLIPSIZE_END)
         info.set_selectable(True)
@@ -99,7 +109,13 @@ class MainTree(gui_utils.Tree):
 
     def _load_items(self):
         #loading portfolios...
-        for pf in controller.getAllPortfolio():
+        portfolios = controller.getAllPortfolio()
+        if len(portfolios) > 1:
+            all_pf = AllPortfolio()
+            all_pf.controller = controller
+            all_pf.name = "<i>%s</i>" % (_('All'),)
+            self.insert_portfolio(all_pf)
+        for pf in portfolios:
             self.insert_portfolio(pf)
         for wl in controller.getAllWatchlist():
             self.insert_watchlist(wl)
@@ -267,7 +283,7 @@ class MainTree(gui_utils.Tree):
 class EditWatchlist(gtk.Dialog):
     
     def __init__(self, wl):
-        gtk.Dialog.__init__(self, _("Edit..."), None
+        gtk.Dialog.__init__(self, _("Edit watchlist"), None
                             , gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
                      (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
                       gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
@@ -331,13 +347,12 @@ class EditAccount(gtk.Dialog):
         if response == gtk.RESPONSE_ACCEPT:
             self.acc.name = self.name_entry.get_text()
             self.acc.amount = self.cash_entry.get_value()
-            pubsub.publish("container.edited", self.acc)
         self.destroy()
 
 
 class EditPortfolio(gtk.Dialog):
     def __init__(self, pf):
-        gtk.Dialog.__init__(self, _("Edit..."), None
+        gtk.Dialog.__init__(self, _("Edit portfolio"), None
                             , gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
                      (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
                       gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
@@ -353,12 +368,6 @@ class EditPortfolio(gtk.Dialog):
         self.name_entry = gtk.Entry()
         self.name_entry.set_text(pf.name)
         table.attach(self.name_entry,1,2,0,1)
-
-        #cash entry
-        label = gtk.Label(_('Cash:'))
-        table.attach(label, 0,1,1,2)
-        self.cash_entry = gtk.SpinButton(gtk.Adjustment(lower=-999999999, upper=999999999,step_incr=10, value = pf.cash), digits=2)
-        table.attach(self.cash_entry,1,2,1,2)
 
         self.show_all()
         self.name_entry.connect("activate", self.process_result)
@@ -380,10 +389,6 @@ class ContainerContextMenu(gui_utils.ContextMenu):
         for action in ['edit', 'remove']:
             self.add(actiongroup.get_action(action).create_menu_item())
 
-        self.add(gtk.SeparatorMenuItem())
-
-        if container.__name__ == 'Portfolio':
-            self.add_item(_('Deposit cash'),  lambda x: dialogs.CashDialog(container, 0) , 'gtk-add')
-            self.add_item(_('Withdraw cash'),  lambda x: dialogs.CashDialog(container, 1) , 'gtk-remove')
-        elif container.__name__ == 'Account':
+        if container.__name__ == 'Account':
+            self.add(gtk.SeparatorMenuItem())
             self.add_item(_('Import transactions'),  lambda x: CSVImportDialog(account = container) , 'gtk-add')

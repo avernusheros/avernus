@@ -2,7 +2,6 @@
 from avernus import pubsub, config
 from avernus.controller import controller, filterController
 from avernus.gui import progress_manager
-from avernus.gui.account_chart_tab import AccountChartTab
 from avernus.gui.account_transactions_tab import AccountTransactionTab
 from avernus.gui.container_overview_tab import ContainerOverviewTab
 from avernus.gui.csv_import_dialog import CSVImportDialog
@@ -15,6 +14,7 @@ from avernus.objects import model
 from webbrowser import open as web
 import avernus
 import gtk
+import sys
 import gobject
 
 try:
@@ -86,7 +86,7 @@ class MenuBar(gtk.MenuBar):
 
     def _create_menu(self, action, items):
         menu_item = self.actiongroup.get_action(action).create_menu_item()
-        menu_item.mname = action #used in plugin api
+        #menu_item.mname = action #used in plugin api
         self.append(menu_item)
         menu = gtk.Menu()
         menu_item.set_submenu(menu)
@@ -177,6 +177,7 @@ class MainWindow(gtk.Window):
         self.config.set_option('hpaned position', self.hpaned.get_position(), 'Gui')
         model.store.close()
         gtk.main_quit()
+        sys.exit()
 
     def on_maintree_select(self, item):
         self.on_maintree_unselect()
@@ -189,7 +190,7 @@ class MainWindow(gtk.Window):
             del page
 
     def on_prefs(self, *args):
-        PrefDialog(self.pengine)
+        PrefDialog()
 
     def on_do_category_assignments(self, *args):
         filterController.run_auto_assignments()

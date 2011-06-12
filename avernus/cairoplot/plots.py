@@ -34,9 +34,9 @@ __version__ = 1.1
 import cairo
 import math
 import random
-from series import Series, Group, Data
+from avernus.cairoplot.series import Series, Group, Data
 
-import handlers
+from avernus.cairoplot import handlers
 HORZ = 0
 VERT = 1
 NORM = 2
@@ -2018,8 +2018,3 @@ class GanttChart (Plot) :
                                       self.borders[HORZ] + data.content[1]*self.horizontal_step,
                                       self.borders[VERT] + index*self.vertical_step + 3.0*self.vertical_step/4.0,
                                       self.series_colors[index])
-
-
-if __name__ == "__main__":
-    import tests
-    import seriestests

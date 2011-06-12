@@ -6,6 +6,7 @@ from avernus.controller import controller
 from avernus.objects import stock
 from avernus.objects.position import MetaPosition
 import datetime
+import locale
 import gtk
 
 
@@ -68,15 +69,16 @@ class DimensionComboBox(gtk.ComboBoxEntry):
 
     COL_OBJ  = 0
     COL_TEXT = 1
+    SEPARATOR = ';'
 
     def __init__(self, dimension, asset, dialog):
         self.dimension = dimension
         self.dialog = dialog
         liststore = gtk.ListStore(object, str)
         gtk.ComboBoxEntry.__init__(self, liststore, self.COL_TEXT)
-        for dimVal in dimension.values:
+        for dimVal in sorted(dimension.values):
             liststore.append([dimVal, dimVal.name])
-        self.child.set_text(asset.getDimensionText(dimension))
+        self.child.set_text(self.get_dimension_text(asset, dimension))
         completion = gtk.EntryCompletion()
         completion.set_model(liststore)
         completion.set_text_column(self.COL_TEXT)
@@ -87,6 +89,26 @@ class DimensionComboBox(gtk.ComboBoxEntry):
         self.child.set_property('secondary-icon-tooltip-markup', '<b>ValueA</b> or <b>ValueA:40, ValueB:30 ...</b>')
         completion.connect("match-selected", self.on_completion_match)
         self.connect('changed', self.on_entry_changed)
+
+    def get_dimension_text(self, asset, dim):
+        advs = asset.getAssetDimensionValue(dim)
+        if len(advs) == 1:
+            # we have 100% this value in its dimension
+            return str(advs.pop(0))
+        erg = ""
+        i = 0
+        for adv in advs:
+            i += 1
+            erg += self.get_adv_text(adv)
+            if i<len(advs):
+                erg += self.SEPARATOR+" "
+        return erg
+
+    def get_adv_text(self, adv):
+        erg = adv.dimensionValue.name
+        if adv.value != 100:
+            erg += ":"+locale.str(adv.value)
+        return erg
 
     def on_entry_changed(self, editable):
         parse = self.parse()
@@ -100,14 +122,14 @@ class DimensionComboBox(gtk.ComboBoxEntry):
     def match_func(self, completion, key, iter):
         model = completion.get_model()
         text = model.get_value(iter, self.COL_TEXT).lower()
-        key = key.split(',')[-1].strip().lower()
+        key = key.split(self.SEPARATOR)[-1].strip().lower()
         if text.startswith(key):
             return True
         return False
 
     def on_completion_match(self, completion, model, iter):
         current_text = self.get_active_text()
-        current_text = current_text[:-len(current_text.split(',')[-1])]
+        current_text = current_text[:-len(current_text.split(self.SEPARATOR)[-1])]
         if len(current_text) == 0:
             self.child.set_text(model[iter][self.COL_TEXT])
         else:
@@ -120,7 +142,7 @@ class DimensionComboBox(gtk.ComboBoxEntry):
         iterator = self.get_active_iter()
         if iterator is None:
             name = self.get_active_text()
-            portions = name.split(",")
+            portions = name.split(self.SEPARATOR)
             sum = 0
             erg = []
             for portion in portions:
@@ -134,7 +156,7 @@ class DimensionComboBox(gtk.ComboBoxEntry):
                     else:
                         continue # no name, no entry
                 try:
-                    value = float(value) # try parsing a float out of the number
+                    value = locale.atof(value) # try parsing a float out of the number
                 except:
                     return False # failure
                 sum += value
@@ -464,12 +486,9 @@ class SellDialog(gtk.Dialog):
                 if shares == 0.0:
                     return
                 self.pos.quantity -= shares
-                self.pos.portfolio.cash += shares*price - ta_costs
                 ta = controller.newTransaction(portfolio=self.pos.portfolio, position=self.pos, type=0, date=date, quantity=shares, price=price, costs=ta_costs)
                 pubsub.publish('transaction.added', ta)
             else:
-                self.pos.portfolio.cash -= self.transaction.quantity*self.transaction.price - self.transaction.costs
-                self.pos.portfolio.cash += shares*price - ta_costs
                 self.pos.price = self.transaction.price=price
                 self.pos.date = self.transaction.date = date
                 self.transaction.costs = ta_costs
@@ -479,59 +498,6 @@ class SellDialog(gtk.Dialog):
         total = self.shares_entry.get_value() * self.price_entry.get_value() + self.tacosts_entry.get_value()
         self.total.set_markup('<b>'+gui_utils.get_currency_format_from_float(total)+'</b>')
 
-
-class CashDialog(gtk.Dialog):
-    def __init__(self, pf, type = 0, transaction=None):  #0 deposit, 1 withdraw
-        self.action_type = type
-        self.transaction = transaction
-        if type == 0:
-            text = _("Deposit cash")
-        else: text = _("Withdraw cash")
-        gtk.Dialog.__init__(self, text, None
-                            , gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
-                     (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
-                      gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
-
-        self.pf = pf
-        vbox = self.get_content_area()
-
-        hbox = gtk.HBox()
-        vbox.pack_start(hbox)
-        hbox.pack_start(gtk.Label(_('Amount:')))
-        self.amount_entry = gtk.SpinButton(gtk.Adjustment(lower=0, upper=100000,step_incr=0.1, value = 1.0), digits=2)
-        hbox.pack_start(self.amount_entry)
-
-        self.calendar = gtk.Calendar()
-        vbox.pack_start(self.calendar)
-
-        if self.transaction is not None:
-            self.amount_entry.set_value(self.transaction.price)
-            self.calendar.select_month(self.transaction.date.month-1, self.transaction.date.year)
-            self.calendar.select_day(self.transaction.date.day)
-
-        self.show_all()
-        response = self.run()
-        self.process_result(response = response)
-        self.destroy()
-
-    def process_result(self, widget=None, response = gtk.RESPONSE_ACCEPT):
-        if response == gtk.RESPONSE_ACCEPT:
-            amount = self.amount_entry.get_value()
-            year, month, day = self.calendar.get_date()
-            date = datetime.datetime(year, month+1, day)
-            if self.transaction is None:
-                if self.action_type == 0:
-                    ta = controller.newTransaction(date=date, portfolio=self.pf, type=3, price=amount, quantity=1, costs=0.0)
-                else:
-                    ta = controller.newTransaction(date=date, portfolio=self.pf, type=4, price=amount, quantity=1, costs=0.0)
-                pubsub.publish('transaction.added', ta)
-            else:
-                self.transaction.date = date
-                self.transaction.price = amount
-            if self.action_type == 0:
-                self.pf.cash += amount
-            else:
-                self.pf.cash -= amount
 
 
 class BuyDialog(gtk.Dialog):
@@ -671,14 +637,11 @@ class BuyDialog(gtk.Dialog):
                 if shares == 0.0:
                     return
                 pos = controller.newPortfolioPosition(price=price, date=date, quantity=shares, portfolio=self.pf, stock = stock)
-                self.pf.cash -= shares*price - ta_costs
                 ta = controller.newTransaction(type=1, date=date,quantity=shares,price=price,costs=ta_costs, position=pos, portfolio=self.pf)
                 #FIXME trigger publish in container.py and transaction.py
                 pubsub.publish('container.position.added', self.pf, pos)
                 pubsub.publish('transaction.added', ta)
             else:
-                self.pf.cash += self.transaction.quantity*self.transaction.price - self.transaction.costs
-                self.pf.cash -= shares*price - ta_costs
                 self.transaction.position.price = self.transaction.price = price
                 self.transaction.position.date = self.transaction.date = date
                 self.transaction.costs = ta_costs

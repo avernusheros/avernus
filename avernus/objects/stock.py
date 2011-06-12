@@ -49,20 +49,6 @@ class Stock(SQLiteEntity):
     def stock(self):
         return self
 
-    def getDimensionText(self, dim):
-        advs = self.getAssetDimensionValue(dim)
-        if len(advs) == 1:
-            # we have 100% this value in its dimension
-            return str(advs.pop(0))
-        erg = ""
-        i = 0
-        for adv in advs:
-            i += 1
-            erg += str(adv)
-            if i<len(advs):
-                erg += ", "
-        return erg
-
     def updateAssetDimensionValue(self, dimension, dimVals):
         for adv in self.getAssetDimensionValue(dimension):
             adv.delete()

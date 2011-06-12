@@ -9,30 +9,23 @@ class FilterDialog(gtk.Dialog):
     def __init__(self, *args, **kwargs):
         gtk.Dialog.__init__(self, _("Account Category Filters"), None
                             , gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
-                     (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
-                      gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
+                     (gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
         self.set_size_request(800, 500)
         self._init_widgets()
         self.show_all()
-        response = self.run()
-        self.process_result(response = response)
+        self.run()
         self.destroy()
 
     def _init_widgets(self):
-        vbox = self.get_content_area()
+        vpaned = gtk.VPaned()
+        self.get_content_area().pack_start(vpaned)
+        vbox = gtk.VBox()
 
         sw = gtk.ScrolledWindow()
         sw.set_policy(gtk.POLICY_AUTOMATIC,gtk.POLICY_AUTOMATIC)
         self.filter_tree = FilterTree()
-        vbox.pack_start(self.filter_tree)
-
-        frame = gtk.Frame('Preview')
-        sw = gtk.ScrolledWindow()
-        sw.set_policy(gtk.POLICY_AUTOMATIC,gtk.POLICY_AUTOMATIC)
-        self.preview_tree = PreviewTree()
-        frame.add(sw)
-        sw.add(self.preview_tree)
-        vbox.pack_end(frame)
+        sw.add(self.filter_tree)
+        vbox.pack_start(sw)
 
         actiongroup = gtk.ActionGroup('filter')
         actiongroup.add_actions([
@@ -49,22 +42,25 @@ class FilterDialog(gtk.Dialog):
         toolbar.insert(actiongroup.get_action('reset').create_tool_item(), -1)
         vbox.pack_start(toolbar, expand=False, fill=True)
 
-        self.show_all()
-        
+        vpaned.add1(vbox)
+
+        frame = gtk.Frame('Preview')
+        sw = gtk.ScrolledWindow()
+        sw.set_policy(gtk.POLICY_AUTOMATIC,gtk.POLICY_AUTOMATIC)
+        self.preview_tree = PreviewTree()
+        frame.add(sw)
+        sw.add(self.preview_tree)
+        vpaned.add2(frame)
+
     def refresh_preview(self, widget):
         # get the active rule and refresh the preview tree with it
         active_rule = self.filter_tree.get_active_filter()
         if active_rule:
             self.preview_tree.on_refresh(active_rule)
-        
+
     def reset_preview(self, widget):
         self.preview_tree.reset()
 
-    def process_result(self, response):
-        if response == gtk.RESPONSE_ACCEPT:
-            print "D'accord"
-        else:
-            print "Mince alors"
 
 
 class PreviewTree(gui_utils.Tree):
@@ -90,10 +86,10 @@ class PreviewTree(gui_utils.Tree):
         self.create_column(_('Category'), self.CATEGORY, expand=False)
         self.create_column(_('Account'), self.ACCOUNT, expand=False)
         self.set_rules_hint(True)
-        
+
         self.active_filter = None
         self.load_all()
-        
+
     def visible_cb(self, model, iter):
         transaction = model[iter][self.OBJECT]
         if transaction and transaction.is_transfer():
@@ -113,7 +109,7 @@ class PreviewTree(gui_utils.Tree):
     def on_refresh(self, filter):
         self.active_filter = filter
         self.modelfilter.refilter()
-        
+
     def reset(self):
         self.active_filter = None
         self.modelfilter.refilter()
@@ -122,18 +118,28 @@ class PreviewTree(gui_utils.Tree):
 class FilterTree(gui_utils.Tree):
     OBJECT = 0
     ACTIVE = 1
-    FILTER_STR = 2
-    CATEGORY = 3
-    CATEGORY_STR = 4
+    PRIORITY = 2
+    FILTER_STR = 3
+    CATEGORY = 4
+    CATEGORY_STR = 5
 
     def __init__(self):
         gui_utils.Tree.__init__(self)
-        self.model = gtk.ListStore(object, bool, str, object, str)
+        self.model = gtk.ListStore(object, bool, int, str, object, str)
         self.set_model(self.model)
 
         column, cell = self.create_check_column(_('Active'), self.ACTIVE)
         cell.connect("toggled", self.on_toggled)
-        col, cell = self.create_column(_('Filter'), self.FILTER_STR)
+
+        cell = gtk.CellRendererSpin()
+        adjustment = gtk.Adjustment(1, 1, 100, 1, 10, 0)
+        cell.set_property("editable", True)
+        cell.set_property("adjustment", adjustment)
+        cell.connect("edited", self.on_spin_edited)
+        column = gtk.TreeViewColumn(_('Priority'), cell, text=self.PRIORITY)
+        self.append_column(column)
+
+        col, cell = self.create_column(_('Filter'), self.FILTER_STR, expand = True)
         cell.set_property('editable', True)
         cell.connect('edited', self.on_cell_edited)
 
@@ -150,7 +156,7 @@ class FilterTree(gui_utils.Tree):
         self.append_column(column)
 
         self.load_rules()
-        
+
     def get_active_filter(self):
         item, iter = self.get_selected_item()
         return item
@@ -164,10 +170,16 @@ class FilterTree(gui_utils.Tree):
         self.model[path][self.CATEGORY_STR] = category.name
         self.model[path][self.OBJECT].category = category
 
+    def on_spin_edited(self, cell, path, new_text):
+        try:
+            new_val = int(new_text)
+        except:
+            #no integer value
+            return
+        self.model[path][self.PRIORITY] = self.model[path][self.OBJECT].priority = new_val
+
     def on_cell_edited(self, cellrenderertext, path, new_text):
-        self.model[path][self.FILTER_STR] = new_text
-        #FIXME vll erst bei ok saven
-        self.model[path][self.OBJECT].rule = new_text
+        self.model[path][self.FILTER_STR] = self.model[path][self.OBJECT].rule = new_text
 
     def on_toggled(self, cellrenderertoggle, path):
         active = not self.model[path][self.ACTIVE]
@@ -185,4 +197,4 @@ class FilterTree(gui_utils.Tree):
             self.model.remove(iter)
 
     def insert_rule(self, rule):
-        self.model.append([rule, rule.active, rule.rule, rule.category, rule.category.name])
+        self.model.append([rule, rule.active, rule.priority, rule.rule, rule.category, rule.category.name])

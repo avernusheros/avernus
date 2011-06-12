@@ -2,6 +2,21 @@ import gtk, pytz
 from avernus import config, pubsub
 import locale
 import gobject
+import threading
+
+
+
+class BackgroundTask():
+
+   def __init__(self, function, complete_callback=None):
+       self.function = function
+       self.complete_callback = complete_callback
+       threading.Thread(target=self.start).start()
+
+   def start(self):
+       self.function()
+       if self.complete_callback is not None:
+           gobject.idle_add(self.complete_callback)
 
 
 class Tree(gtk.TreeView):
@@ -19,7 +34,8 @@ class Tree(gtk.TreeView):
             return treestore[selection_iter][0], selection_iter
         return None, None
 
-    def create_column(self, name, attribute, func=None):
+    def create_column(self, name, attribute, func=None, expand=False):
+        #FIXME keyword expand is unused
         cell = gtk.CellRendererText()
         column = gtk.TreeViewColumn(name, cell)
         self.append_column(column)
@@ -28,6 +44,7 @@ class Tree(gtk.TreeView):
         else:
             column.add_attribute(cell, "markup", attribute)
         column.set_sort_column_id(attribute)
+        column.set_expand(expand)
         return column, cell
 
     def create_icon_column(self, name, attribute, size=None):
@@ -121,7 +138,10 @@ def get_string_from_float(number):
     return locale.format('%g', round(number,2), grouping=False, monetary=True)
 
 def get_currency_format_from_float(number):
-    return locale.currency(number)
+    try:
+        return locale.currency(number)
+    except:
+        return str(round(number,2))
 
 def float_to_red_green_string_currency(column, cell, model, iter, user_data):
     num = model.get_value(iter, user_data)
@@ -190,7 +210,10 @@ def datetime_format(datetime, nl = True):
 def get_date_string(date):
     if date is None:
         return ''
-    return date.strftime(locale.nl_langinfo(locale.D_FMT))
+    try:
+        return date.strftime(locale.nl_langinfo(locale.D_FMT))
+    except:
+        return str(date)
 
 def get_datetime_string(datetime):
     if datetime is not None:

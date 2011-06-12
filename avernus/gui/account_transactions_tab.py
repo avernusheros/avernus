@@ -9,8 +9,6 @@ import datetime
 import pango
 import logging
 
-#FIXME
-from avernus.gui.account_chart_tab import CategoryPie
 logger = logging.getLogger(__name__)
 
 
@@ -67,7 +65,7 @@ class AccountTransactionTab(gtk.VBox, page.Page):
         sw.set_property('hscrollbar-policy', gtk.POLICY_AUTOMATIC)
         sw.set_property('vscrollbar-policy', gtk.POLICY_AUTOMATIC)
         actiongroup = gtk.ActionGroup('transactions')
-        self.transactions_tree = TransactionsTree(account, actiongroup, self.search_entry)
+        self.transactions_tree = TransactionsTree(account, actiongroup, self.search_entry, self.update_ui)
         actiongroup.add_actions([
                 ('add',    gtk.STOCK_ADD,    'new transaction',    None, _('Add new transaction'), self.transactions_tree.on_add),
                 ('edit' ,  gtk.STOCK_EDIT,   'edit transaction',   None, _('Edit selected transaction'),   self.transactions_tree.on_edit),
@@ -108,7 +106,7 @@ class AccountTransactionTab(gtk.VBox, page.Page):
         sw.set_property('hscrollbar-policy', gtk.POLICY_AUTOMATIC)
         sw.set_property('vscrollbar-policy', gtk.POLICY_AUTOMATIC)
         actiongroup = gtk.ActionGroup('categories')
-        self.category_tree = CategoriesTree(actiongroup)
+        self.category_tree = CategoriesTree(actiongroup, self.transactions_tree.on_category_update)
         actiongroup.add_actions([
                 ('add',    gtk.STOCK_ADD,    'new category',    None, _('Add new category'), self.category_tree.on_add),
                 ('edit' ,  gtk.STOCK_EDIT,   'rename category',   None, _('Rename selected category'),   self.category_tree.on_edit),
@@ -131,7 +129,6 @@ class AccountTransactionTab(gtk.VBox, page.Page):
         self.category_tree.load_categories()
         self.update_page()
 
-        pubsub.subscribe("AccountTransactionsTab.UIupdate", self.update_ui)
         self.connect("destroy", self.on_destroy)
         self.show_all()
 
@@ -144,35 +141,45 @@ class AccountTransactionTab(gtk.VBox, page.Page):
         self.charts = []
         notebook = gtk.Notebook()
         notebook.set_property('tab_pos', gtk.POS_LEFT)
-        over_time_controller = chartController.TransactionValueOverTimeChartController(self.account.transactions, (self.transactions_tree.range_start, self.transactions_tree.range_end))
-        categoryChart = charts.TransactionChart(over_time_controller,300)
-        self.charts.append((categoryChart, over_time_controller))
+        date_range = (self.transactions_tree.range_start, self.transactions_tree.range_end)
+        
+        over_time_controller = chartController.TransactionValueOverTimeChartController(self.account.transactions, date_range)
+        categoryChart = charts.TransactionChart(over_time_controller, 300)
+        self.charts.append(categoryChart)
         notebook.append_page(categoryChart, tab_label=gtk.Label(_('Over Time')))
 
-        step_controller = chartController.TransactionStepValueChartController(self.account.transactions, (self.transactions_tree.range_start, self.transactions_tree.range_end))
-        valueChart = charts.TransactionChart(step_controller,300)
-        self.charts.append((valueChart, step_controller))
+        step_controller = chartController.TransactionStepValueChartController(self.account.transactions, date_range)
+        valueChart = charts.TransactionChart(step_controller, 300)
+        self.charts.append(valueChart)
         notebook.append_page(valueChart, tab_label=gtk.Label(_('Step Value')))
 
-        chart_controller = chartController.AccountBalanceOverTimeChartController(self.account, (self.transactions_tree.range_start, self.transactions_tree.range_end))
-        chart = charts.SimpleLineChart(chart_controller,300)
-        self.charts.append((chart, chart_controller))
+        chart_controller = chartController.AccountBalanceOverTimeChartController(self.account, date_range)
+        chart = charts.SimpleLineChart(chart_controller, 300)
+        self.charts.append(chart)
         notebook.append_page(chart, tab_label=gtk.Label(_('Account balance')))
 
         table = gtk.Table()
-        y = 0
+        chart_controller = chartController.TransactionCategoryPieController(self.account.transactions, earnings=True)
+        chart = charts.Pie(chart_controller, 400)
+        self.charts.append(chart)
         label = gtk.Label()
-        label.set_markup('<b>Earnings</b>')
-        table.attach(label,0,1,y,y+1)
-        chart = CategoryPie(300/2, self.account, self.account.birthday, datetime.date.today(), earnings=True)
-        table.attach(chart,0,1,y+1,y+2)
+        label.set_markup('<b>'+_('Earnings')+'</b>')
+        table.attach(label,0,1,0,1,xoptions=gtk.FILL, yoptions=gtk.FILL)
+        table.attach(chart,0,1,1,2)
 
+        chart_controller = chartController.TransactionCategoryPieController(self.account.transactions, earnings=False)
+        chart = charts.Pie(chart_controller, 400)
+        self.charts.append(chart)
         label = gtk.Label()
-        label.set_markup('<b>Spendings</b>')
-        table.attach(label,1,2,y,y+1)
-        chart = CategoryPie(300/2, self.account, self.account.birthday, datetime.date.today(), earnings=False)
-        table.attach(chart,1,2,y+1,y+2)
-        notebook.append_page(table)
+        label.set_markup('<b>'+_('Spendings')+'</b>')
+        table.attach(label,1,2,0,1,xoptions=gtk.FILL, yoptions=gtk.FILL)
+        table.attach(chart,1,2,1,2)
+        notebook.append_page(table, tab_label=gtk.Label(_('Categories')))
+
+        chart_controller = chartController.EarningsVsSpendingsController(self.account.transactions, date_range)
+        chart = charts.BarChart(chart_controller, 400)
+        self.charts.append(chart)
+        notebook.append_page(chart, tab_label=gtk.Label(_('Earnings vs Spendings')))
 
         self.vpaned.pack1(notebook)
 
@@ -201,9 +208,8 @@ class AccountTransactionTab(gtk.VBox, page.Page):
     def update_ui(self):
         self.refilter()
         transactions = [row[0] for row in self.transactions_tree.modelfilter]
-        for chart, chart_controller in self.charts:
-            chart_controller.update(transactions, (self.transactions_tree.range_start, self.transactions_tree.range_end))
-            chart.draw_chart()
+        for chart in self.charts:
+            chart.update(transactions, (self.transactions_tree.range_start, self.transactions_tree.range_end))
         self.update_page()
 
     def refilter(self):
@@ -233,9 +239,10 @@ class TransactionsTree(gui_utils.Tree):
     DATE = 4
     ICON = 5
 
-    def __init__(self, account, actiongroup, search_entry):
+    def __init__(self, account, actiongroup, search_entry, updater):
         self.account = account
         self.actiongroup = actiongroup
+        self.updater = updater
         self.searchstring = ''
         self.only_transfer = False
         self.only_uncategorized = False
@@ -253,7 +260,8 @@ class TransactionsTree(gui_utils.Tree):
         sorter.set_sort_func(self.DATE, gui_utils.sort_by_time, self.DATE)
         col, cell = self.create_column(_('Description'), self.DESCRIPTION, func=gui_utils.transaction_desc_markup)
         cell.props.wrap_mode = pango.WRAP_WORD
-        cell.props.wrap_width = 300
+        cell.props.wrap_width = 400
+        col.set_expand(True)
         self.create_column(_('Amount'), self.AMOUNT, func=gui_utils.currency_format)
         self.create_column(_('Category'), self.CATEGORY)
         self.set_rules_hint(True)
@@ -269,19 +277,13 @@ class TransactionsTree(gui_utils.Tree):
         self.connect('key_press_event', self.on_key_press)
         search_entry.connect('changed', self.on_search_entry_changed)
         pubsub.subscribe('accountTransaction.created', self.on_transaction_created)
-        pubsub.subscribe('CategoriesTree.onSelect', self.on_category_select)
-        pubsub.subscribe("CategoriesTree.onUnselect", self.on_category_unselect)
         self.single_category = None
-
         self.reset_filter_dates()
 
-    def on_category_select(self, *args, **kwargs):
-        self.single_category = kwargs['category']
-        pubsub.publish("AccountTransactionsTab.UIupdate")
-
-    def on_category_unselect(self):
-        self.single_category = None
-        pubsub.publish("AccountTransactionsTab.UIupdate")
+    def on_category_update(self, category):
+        if category != self.single_category:
+            self.single_category = category
+            self.updater()
 
     def visible_cb(self, model, iter):
         transaction = model[iter][0]
@@ -324,7 +326,7 @@ class TransactionsTree(gui_utils.Tree):
 
     def on_search_entry_changed(self, editable):
         self.searchstring = editable.get_text().lower()
-        pubsub.publish("AccountTransactionsTab.UIupdate")
+        self.updater()
 
     def on_transaction_created(self, transaction):
         if transaction.account == self.account:
@@ -488,14 +490,14 @@ class TransactionsTree(gui_utils.Tree):
             self.only_uncategorized=True
         else:
             self.only_uncategorized=False
-        pubsub.publish("AccountTransactionsTab.UIupdate")
+        self.updater()
 
     def on_toggle_transfer(self, button):
         if button.get_active():
             self.only_transfer=True
         else:
             self.only_transfer=False
-        pubsub.publish("AccountTransactionsTab.UIupdate")
+        self.updater()
 
     def on_toggle_date(self, button, start, end):
         if button.get_active():
@@ -503,7 +505,7 @@ class TransactionsTree(gui_utils.Tree):
             self.end_filter = end
         else:
             self.reset_filter_dates()
-        pubsub.publish("AccountTransactionsTab.UIupdate")
+        self.updater()
 
     def reset_filter_dates(self):
         self.start_filter = datetime.datetime(datetime.MINYEAR,1,1)
@@ -518,8 +520,9 @@ class CategoriesTree(gui_utils.Tree):
     TARGETS = [('MY_TREE_MODEL_ROW', gtk.TARGET_SAME_WIDGET, 0),
                ('text/plain', 0, 80)]
 
-    def __init__(self, actiongroup):
+    def __init__(self, actiongroup, updater):
         gui_utils.Tree.__init__(self)
+        self.updater = updater
         self.actiongroup = actiongroup
         self.set_model(gtk.TreeStore(object, str))
         col, self.cell = self.create_column(_('Categories'), 1)
@@ -636,10 +639,10 @@ class CategoriesTree(gui_utils.Tree):
         for action in ['remove', 'edit']:
             self.actiongroup.get_action(action).set_sensitive(False)
         self.get_selection().unselect_all()
-        pubsub.publish("CategoriesTree.onUnselect")
+        self.updater(None)
 
     def on_select(self, obj):
-        pubsub.publish("CategoriesTree.onSelect",category=obj)
+        self.updater(obj)
         for action in ['remove', 'edit']:
             self.actiongroup.get_action(action).set_sensitive(True)
 
@@ -831,9 +834,8 @@ class EditTransaction(gtk.Dialog):
             if self.transfer_button.get_active():
                 self.transaction.transfer = self.transfer_transaction
                 self.transfer_transaction.transfer = self.transaction
-            else:
-                if self.transaction.transfer is not None:
-                    self.transaction.transfer.transfer = None
-                    self.transaction.transfer = None
+            elif self.transaction.transfer is not None:
+                self.transaction.transfer.transfer = None
+                self.transaction.transfer = None
         self.destroy()
         return response == gtk.RESPONSE_ACCEPT, self.transaction

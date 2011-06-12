@@ -1,4 +1,4 @@
-﻿import plots
+﻿from avernus.cairoplot import plots
 
 
 HORZ = 0

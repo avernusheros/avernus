@@ -183,8 +183,8 @@ def update_historical_prices():
         i+=1
         yield float(i)/l*100
 
-def newPortfolio(name, id=None, last_update = datetime.datetime.now(), comment="",cash=0.0):
-    result = Portfolio(id=id, name=name,last_update=last_update,comment=comment,cash=cash)
+def newPortfolio(name, id=None, last_update = datetime.datetime.now(), comment=""):
+    result = Portfolio(id=id, name=name,last_update=last_update,comment=comment)
     result.controller = controller
     result.insert()
     return result
@@ -420,14 +420,10 @@ def get_all_used_stocks():
     return [Stock.getByPrimaryKey(stockid[0]) for stockid in model.store.select(query)]
 
 def getPositionForPortfolio(portfolio):
-    key = portfolio.getPrimaryKey()
-    erg = PortfolioPosition.getAllFromOneColumn("portfolio",key)
-    return erg
+    return PortfolioPosition.getAllFromOneColumn("portfolio", portfolio.getPrimaryKey())
 
 def getTransactionForPosition(position):
-    key = position.getPrimaryKey()
-    erg = Transaction.getAllFromOneColumn("position", key)
-    return erg
+    return Transaction.getAllFromOneColumn("position", position.getPrimaryKey())
 
 def deleteAllPositionTransaction(position):
     for trans in getTransactionForPosition(position):
@@ -461,39 +457,14 @@ def deleteAllWatchlistPosition(watchlist):
 def getDividendForPosition(pos):
     return Dividend.getAllFromOneColumn("position", pos.getPrimaryKey())
 
-def getTransactionForPortfolio(portfolio):
-    key = portfolio.getPrimaryKey()
-    erg = Transaction.getAllFromOneColumn("portfolio",key)
-    return erg
-
 def getTransactionsForAccount(account):
     key = account.getPrimaryKey()
     return AccountTransaction.getAllFromOneColumn("account",key)
 
-def getEarningsOrSpendingsSummedInPeriod(account, start_date, end_date, earnings=True, transfers=False):
-    if earnings: operator = '>'
-    else: operator = '<'
-    query = """
-    SELECT abs(sum(trans.amount))
-    FROM accounttransaction as trans, account
-    WHERE account.id == ?
-    AND account.id == trans.account
-    AND trans.amount"""+operator+"""0.0
-    AND trans.date <= ?
-    AND trans.date >= ?
-    """
-    if not transfers:
-        query+=' AND trans.transferid == -1'
-    #ugly, but [0] does not work
-    for row in model.store.select(query, (account.id, end_date, start_date)):
-        if row[0] == None:
-            return 0.0
-        return row[0]
-
 def yield_matching_transfer_tranactions(transaction):
     for account in getAllAccount():
         if account != transaction.account:
-            for ta in account.yield_matching_transfer_tranactions(transaction):
+            for ta in account.yield_matching_transfer_transactions(transaction):
                 yield ta
 
 def deleteAllAccountTransaction(account):
