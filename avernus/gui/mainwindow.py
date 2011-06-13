@@ -10,12 +10,14 @@ from avernus.gui.left_pane import MainTreeBox
 from avernus.gui.portfolio_notebook import PortfolioNotebook
 from avernus.gui.positions_tab import PositionsTab
 from avernus.gui.preferences import PrefDialog
+from avernus.gui.exportDialog import ExportDialog
 from avernus.objects import model
 from webbrowser import open as web
 import avernus
+import gobject
 import gtk
 import sys
-import gobject
+
 
 try:
     import pygtk
@@ -68,13 +70,14 @@ class MenuBar(gtk.MenuBar):
              ('bug'           , None                 , 'Report a _Bug'      , None        , None, lambda x:web("https://bugs.launchpad.net/avernus")),
              ('about'         , gtk.STOCK_ABOUT      , '_About'             , None        , None, AboutDialog),
              ('filter'        , None                 , '_Category Filters'  , None        , None, FilterDialog),
-             ('do_assignments', None                 , '_Run auto-assignments', None      , None, parent.on_do_category_assignments)
+             ('do_assignments', None                 , '_Run auto-assignments', None      , None, parent.on_do_category_assignments),
+             ('export CSV'    , None                 , '_Export Account Transactions', None, None, ExportDialog)
              ])
 
         for action in actiongroup.list_actions():
             action.set_accel_group(accelgroup)
 
-        file_menu_items  = ['import', '---', 'quit']
+        file_menu_items  = ['import','export CSV','---', 'quit']
         edit_menu_items = ['prefs']
         tools_menu_items = ['update', 'historical','filter', 'do_assignments']
         help_menu_items  = ['help', 'website', 'feature', 'bug', '---', 'about']
