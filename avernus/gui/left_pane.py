@@ -8,6 +8,7 @@ from avernus.gui.csv_import_dialog import CSVImportDialog
 from avernus.controller import controller
 
 from avernus.objects.container import AllPortfolio
+from avernus.objects.account import AllAccount
 
 
 class Category(object):
@@ -17,7 +18,7 @@ class Category(object):
 
 
 class MainTreeBox(gtk.VBox):
-    
+
     def __init__(self):
         gtk.VBox.__init__(self)
         actiongroup = gtk.ActionGroup('left_pane')
@@ -42,23 +43,23 @@ class MainTreeBox(gtk.VBox):
         vbox = gtk.VBox()
         self.pack_start(vbox, expand=False, fill=False)
         progress_manager.box = vbox
-        
+
         self.pack_start(InfoBox(), expand=False, fill=False)
 
 
 class InfoBox(gtk.Table):
-    
+
     def __init__(self):
         gtk.Table.__init__(self)
         self.line_count = 0
-        
+
         self.set_col_spacings(6)
         self.set_homogeneous(False)
         self.set_border_width(6)
-        
+
         pubsub.subscribe('update_page', self.on_update_page)
         pubsub.subscribe('maintree.select', self.on_maintree_select)
-    
+
     def add_line(self, label_text, info_text):
         if not isinstance(info_text, str):
             info_text = str(info_text)
@@ -68,47 +69,46 @@ class InfoBox(gtk.Table):
         label.set_justify(gtk.JUSTIFY_RIGHT)
         info.set_justify(gtk.JUSTIFY_LEFT)
         label.set_markup("<span font_weight=\"bold\">"+label_text+':'+"</span>")
-        
+
         label.set_alignment(1, 0);
         info.set_alignment(0, 0);
-        
+
         info.set_ellipsize(pango.ELLIPSIZE_END)
         info.set_selectable(True)
-        
+
         self.attach(label, 0, 1, self.line_count, self.line_count + 1, xoptions=gtk.FILL, yoptions=gtk.FILL)
         self.attach(info, 1, 2, self.line_count, self.line_count + 1)
 
         self.line_count+=1
-    
+
     def clear(self):
         for child in self:
             self.remove(child)
         self.line_count = 0
-    
+
     def on_update_page(self, page):
         self.clear()
         for label, info in page.get_info():
             self.add_line(label, info)
         self.show_all()
-        
+
     def on_maintree_select(self, obj):
         self.clear()
 
 
 class MainTree(gui_utils.Tree):
-    
+
     def __init__(self, actiongroup):
         gui_utils.Tree.__init__(self)
         self.actiongroup = actiongroup
         self.selected_item = None
-        
+
         self._init_widgets()
         self.insert_categories()
         self._subscribe()
         self._load_items()
 
     def _load_items(self):
-        #loading portfolios...
         portfolios = controller.getAllPortfolio()
         if len(portfolios) > 1:
             all_pf = AllPortfolio()
@@ -119,7 +119,14 @@ class MainTree(gui_utils.Tree):
             self.insert_portfolio(pf)
         for wl in controller.getAllWatchlist():
             self.insert_watchlist(wl)
-        for account in controller.getAllAccount():
+
+        accounts = controller.getAllAccount()
+        if len(accounts) > 1:
+            all_account = AllAccount()
+            all_account.controller = controller
+            all_account.name = "<i>%s</i>" % (_('All'),)
+            self.insert_account(all_account)
+        for account in accounts:
             self.insert_account(account)
         self.expand_all()
 
@@ -143,7 +150,7 @@ class MainTree(gui_utils.Tree):
         cell.set_property('editable', True)
         cell.connect('edited', self.on_cell_edited)
         self.create_column('', 3)
-        
+
     def on_button_press_event(self, widget, event):
         target = self.get_path_at_pos(int(event.x), int(event.y))
         if target and event.type == gtk.gdk.BUTTON_PRESS:
@@ -168,10 +175,10 @@ class MainTree(gui_utils.Tree):
 
     def insert_watchlist(self, item):
         self.get_model().append(self.wl_iter, [item, 'watchlist', item.name, ''])
-    
+
     def insert_account(self, item):
         self.get_model().append(self.accounts_iter, [item, 'account', item.name, gui_utils.get_currency_format_from_float(item.amount)])
-    
+
     def insert_portfolio(self, item):
         self.get_model().append(self.pf_iter, [item, 'portfolio', item.name, gui_utils.get_currency_format_from_float(item.cvalue)])
 
@@ -196,7 +203,7 @@ class MainTree(gui_utils.Tree):
         row = self.find_item(item)
         if row:
             row[3] = gui_utils.get_currency_format_from_float(item.amount)
-        
+
     def on_updated(self, item):
         obj, iter = self.selected_item
         row = self.get_model()[iter]
@@ -204,7 +211,7 @@ class MainTree(gui_utils.Tree):
             #row[1] = item
             row[2] = item.name
             row[3] = gui_utils.get_currency_format_from_float(item.amount)
-        
+
     def on_cursor_changed(self, widget):
         #Get the current selection in the gtk.TreeView
         selection = widget.get_selection()
@@ -281,7 +288,7 @@ class MainTree(gui_utils.Tree):
 
 
 class EditWatchlist(gtk.Dialog):
-    
+
     def __init__(self, wl):
         gtk.Dialog.__init__(self, _("Edit watchlist"), None
                             , gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
@@ -310,35 +317,35 @@ class EditWatchlist(gtk.Dialog):
             self.wl.name = self.name_entry.get_text()
             pubsub.publish("container.edited", self.wl)
         self.destroy()
-        
-        
+
+
 class EditAccount(gtk.Dialog):
-    
+
     def __init__(self, acc):
         gtk.Dialog.__init__(self, _("Edit Account"), None,
                             gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
                      (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
                       gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
-        
+
         self.acc = acc
         vbox = self.get_content_area()
         table = gtk.Table()
         vbox.pack_start(table)
-        
+
         label = gtk.Label(_("Name:"))
         table.attach(label, 0,1,0,1)
         self.name_entry = gtk.Entry()
         self.name_entry.set_text(acc.name)
         table.attach(self.name_entry, 1,2,0,1)
-        
+
         #cash entry
         label = gtk.Label(_('Current balance:'))
         table.attach(label, 0,1,1,2)
         self.cash_entry = gtk.SpinButton(gtk.Adjustment(lower=-999999999, upper=999999999,step_incr=10, value = acc.amount), digits=2)
         table.attach(self.cash_entry,1,2,1,2)
-        
+
         self.show_all()
-        
+
         self.name_entry.connect("activate", self.process_result)
         response = self.run()
         self.process_result(response = response)

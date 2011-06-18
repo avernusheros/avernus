@@ -142,7 +142,7 @@ class AccountTransactionTab(gtk.VBox, page.Page):
         notebook = gtk.Notebook()
         notebook.set_property('tab_pos', gtk.POS_LEFT)
         date_range = (self.transactions_tree.range_start, self.transactions_tree.range_end)
-        
+
         over_time_controller = chartController.TransactionValueOverTimeChartController(self.account.transactions, date_range)
         categoryChart = charts.TransactionChart(over_time_controller, 300)
         self.charts.append(categoryChart)
@@ -244,8 +244,8 @@ class TransactionsTree(gui_utils.Tree):
         self.actiongroup = actiongroup
         self.updater = updater
         self.searchstring = ''
-        self.only_transfer = False
-        self.only_uncategorized = False
+        self.b_show_transfer = False
+        self.b_show_uncategorized = False
         self.range_start = account.birthday
         self.range_end = datetime.date.today()
         gui_utils.Tree.__init__(self)
@@ -316,8 +316,8 @@ class TransactionsTree(gui_utils.Tree):
                 or self.searchstring in str(transaction.amount) \
                 or (transaction.category and self.searchstring in transaction.category.name.lower())
                 )\
-                and (not self.only_transfer or transaction.is_transfer())\
-                and (not self.only_uncategorized or not transaction.has_category()):
+                and (self.b_show_transfer or not transaction.is_transfer())\
+                and (self.b_show_uncategorized or transaction.has_category()):
 
                 if transaction.date >= self.range_start \
                     and transaction.date <= self.range_end:
@@ -366,7 +366,7 @@ class TransactionsTree(gui_utils.Tree):
         return sum
 
     def load_transactions(self):
-        for ta in controller.getTransactionsForAccount(self.account):
+        for ta in self.account:
             self.insert_transaction(ta)
 
     def insert_transaction(self, ta):
@@ -487,16 +487,16 @@ class TransactionsTree(gui_utils.Tree):
 
     def on_toggle_uncategorized(self, button):
         if button.get_active():
-            self.only_uncategorized=True
+            self.b_show_uncategorized=True
         else:
-            self.only_uncategorized=False
+            self.b_show_uncategorized=False
         self.updater()
 
     def on_toggle_transfer(self, button):
         if button.get_active():
-            self.only_transfer=True
+            self.b_show_transfer=True
         else:
-            self.only_transfer=False
+            self.b_show_transfer=False
         self.updater()
 
     def on_toggle_date(self, button, start, end):
