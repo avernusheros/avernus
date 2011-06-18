@@ -366,7 +366,7 @@ class TransactionsTree(gui_utils.Tree):
         return sum
 
     def load_transactions(self):
-        for ta in controller.getTransactionsForAccount(self.account):
+        for ta in self.account:
             self.insert_transaction(ta)
 
     def insert_transaction(self, ta):

@@ -3,7 +3,45 @@ from avernus.objects.model import SQLiteEntity
 import datetime
 
 
-class Account(SQLiteEntity):
+class AccountBase():
+
+    def __len__(self):
+        return self.transaction_count
+
+    def __iter__(self):
+        return self.transactions.__iter__()
+
+    def has_transaction(self, transaction):
+        return self.controller.check_duplicate(AccountTransaction, account=self.id, **transaction)
+
+    @property
+    def transaction_count(self):
+        return len(self.transactions)
+
+    def yield_matching_transfer_transactions(self, transaction):
+        for trans in self:
+            if transaction.amount == -trans.amount:
+                if trans.transfer is None or trans.transfer == transaction:
+                    fivedays = datetime.timedelta(5)
+                    if transaction.date-fivedays < trans.date and transaction.date+fivedays > trans.date:
+                        yield trans
+
+    @property
+    def birthday(self):
+        if self.transaction_count>0:
+            return min(t.date for t in self)
+        return datetime.date.today()
+
+    @property
+    def lastday(self):
+        if self.transaction_count>0:
+            return max(t.date for t in self)
+        return datetime.date.today()
+
+
+
+
+class Account(SQLiteEntity, AccountBase):
 
     __primaryKey__ = 'id'
     __tableName__ = "account"
@@ -25,42 +63,23 @@ class Account(SQLiteEntity):
                      'onUpdate':on_update,
                     }
 
-    def __iter__(self):
-        return self.controller.getTransactionsForAccount(self).__iter__()
-
     @property
     def transactions(self):
         return self.controller.getTransactionsForAccount(self)
 
-    def __len__(self):
-        return self.transaction_count
 
-    def has_transaction(self, transaction):
-        return self.controller.check_duplicate(AccountTransaction, account=self.id, **transaction)
 
-    @property
-    def transaction_count(self):
-        return len(self.controller.getTransactionsForAccount(self))
-
-    def yield_matching_transfer_transactions(self, transaction):
-        for trans in self:
-            if transaction.amount == -trans.amount:
-                if trans.transfer is None or trans.transfer == transaction:
-                    fivedays = datetime.timedelta(5)
-                    if transaction.date-fivedays < trans.date and transaction.date+fivedays > trans.date:
-                        yield trans
+class AllAccount(AccountBase):
+    name = ''
+    __name__ = 'Account'
 
     @property
-    def birthday(self):
-        if self.transaction_count>0:
-            return min(t.date for t in self)
-        return datetime.date.today()
+    def transactions(self):
+        return self.controller.getAllAccountTransactions()
 
     @property
-    def lastday(self):
-        if self.transaction_count>0:
-            return max(t.date for t in self)
-        return datetime.date.today()
+    def amount(self):
+        return sum([acc.amount for acc in self.controller.getAllAccount()])
 
 
 class AccountCategory(SQLiteEntity):
