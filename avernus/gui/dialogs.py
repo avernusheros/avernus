@@ -228,6 +228,7 @@ class EditStockTable(gtk.Table):
     def __init__(self, stock_to_edit, dialog):
         gtk.Table.__init__(self)
         self.stock = stock_to_edit
+        self.b_change = False
 
         self.attach(gtk.Label(_('Name')),0,1,0,1, yoptions=gtk.FILL)
         self.name_entry = gtk.Entry()
@@ -261,10 +262,19 @@ class EditStockTable(gtk.Table):
             comboName = dim.name+"ValueComboBox"
             setattr(self, comboName, DimensionComboBox(dim, stock_to_edit, dialog))
             self.attach(getattr(self, comboName), 1,2,currentRow,currentRow+1,  yoptions=gtk.FILL)
+            getattr(self, comboName).connect("changed", self.on_change)
             currentRow += 1
+        
+        self.name_entry.connect('changed', self.on_change)
+        self.isin_entry.connect('changed', self.on_change)
+        self.ter_entry.connect('changed', self.on_change)
+        
+            
+    def on_change(self, widget):
+        self.b_change = True
 
     def process_result(self, widget=None, response = gtk.RESPONSE_ACCEPT):
-        if response == gtk.RESPONSE_ACCEPT:
+        if response == gtk.RESPONSE_ACCEPT and self.b_change:
             self.stock.name = self.name_entry.get_text()
             self.stock.isin = self.isin_entry.get_text()
             active_iter = self.type_cb.get_active_iter()
