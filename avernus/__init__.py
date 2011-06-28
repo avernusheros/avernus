@@ -1,5 +1,5 @@
 __appname__ = 'avernus'
-__version__ = '0.6.90'
+__version__ = '0.7'
 __description__ = 'A simple program to easily manage your investments.'
 __url__='https://launchpad.net/avernus'
 __authors__ = ['Wolfgang Steitz', 'Bastian Kennel']

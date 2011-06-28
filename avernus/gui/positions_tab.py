@@ -191,7 +191,7 @@ class PositionsTree(Tree):
         controller.GeneratorTask(self.container.update_positions, complete_callback=finished_cb).start()
 
     def on_position_added(self, container, item):
-        if container.id == self.container.id:
+        if container.id == -1 or container.id == self.container.id:
             self.insert_position(item)
             if not self.watchlist:
                 #update portfolio fractions

@@ -171,6 +171,7 @@ class Portfolio(SQLiteEntity, PortfolioBase):
 
 class AllPortfolio(PortfolioBase):
     name = ''
+    id = -1
     __name__ = 'Portfolio'
     
     def __iter__(self):
@@ -179,6 +180,11 @@ class AllPortfolio(PortfolioBase):
     @property
     def last_update(self):
         return min([pf.last_update for pf in self.controller.getAllPortfolio()])
+     
+    @last_update.setter
+    def last_update(self, value):
+        for pf in self.controller.getAllPortfolio():
+            pf.last_update = value    
         
 
 class Watchlist(SQLiteEntity, Container):
