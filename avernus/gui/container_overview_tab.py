@@ -51,30 +51,27 @@ class ContainerOverviewTree(gui_utils.Tree):
 
     OBJ = 0
     NAME = 1
-    LAST_PRICE = 2
+    VALUE = 2
     CHANGE = 3
     CHANGE_PERCENT = 4
     TER = 5
+    LAST_UPDATE = 6
+    COUNT = 7
+    PERCENT = 8
 
     def __init__(self, container):
         self.container = container
         gui_utils.Tree.__init__(self)
-        self.set_model(gtk.ListStore(object,str, str,float, float, float))
+        self.set_model(gtk.ListStore(object,str, float,float, float, float, object,int,float))
 
         self.create_column(_('Name'), self.NAME)
-        self.create_column(_('Current value'), self.LAST_PRICE)
+        self.create_column(_('Current value'), self.VALUE, func=gui_utils.currency_format)
+        self.create_column(_('%'), self.PERCENT, func=gui_utils.percent_format)
+        self.create_column(_('Last update'), self.LAST_UPDATE, func=gui_utils.date_to_string)
+        self.create_column(_('# positions'), self.COUNT)
         col, cell = self.create_column(_('Change'), self.CHANGE, func=gui_utils.float_to_red_green_string)
         col, cell = self.create_column(_('Change %'), self.CHANGE_PERCENT, func=gui_utils.float_to_red_green_string)
         col, cell = self.create_column(unichr(8709)+' TER', self.TER, func=gui_utils.float_format)
-
-        def sort_price(model, iter1, iter2):
-            item1 = model.get_value(iter1, self.OBJ)
-            item2 = model.get_value(iter2, self.OBJ)
-            if item1.price == item2.price: return 0
-            elif item1.price < item2.price: return -1
-            else: return 1
-
-        self.get_model().set_sort_func(self.LAST_PRICE, sort_price)
 
         self.set_rules_hint(True)
         self.load_items()
@@ -106,6 +103,7 @@ class ContainerOverviewTree(gui_utils.Tree):
             items = controller.getAllWatchlist()
         elif self.container.name == 'Portfolios':
             items = controller.getAllPortfolio()
+        self.overall_value = sum([i.cvalue for i in items])
         for item in items:
             self.insert_item(item)
 
@@ -113,7 +111,8 @@ class ContainerOverviewTree(gui_utils.Tree):
         if container.id == self.container.id:
             for row in self.get_model():
                 item = row[0]
-                row[self.LAST_PRICE] = gui_utils.get_price_string(item)
+                row[self.VALUE] = item.cvalue
+                row[self.LAST_UPDATE] = item.last_update
                 row[self.CHANGE] = item.change
                 row[self.CHANGE_PERCENT] = item.percent
                 row[self.TER] = item.ter
@@ -121,7 +120,10 @@ class ContainerOverviewTree(gui_utils.Tree):
     def insert_item(self, item):
         self.get_model().append([item,
                                item.name,
-                               gui_utils.get_price_string(item),
+                               item.cvalue,
                                item.change,
                                item.percent,
-                               item.ter])
+                               item.ter,
+                               item.last_update,
+                               len(item),
+                               100*item.cvalue/self.overall_value])
