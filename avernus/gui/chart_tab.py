@@ -101,4 +101,4 @@ class ChartTab(gtk.ScrolledWindow):
     def on_zoom_change(self, combobox):
         self.pfvalue_chart_controller.step = combobox.get_active_text()
         self.pfvalue_chart_controller.calculate_values()
-        self.pfvalue_chart.draw_chart()
+        self.pfvalue_chart.draw_widget()
