@@ -89,6 +89,8 @@ class AccountTransactionTab(gtk.VBox, page.Page):
 
         uncategorized_button.connect('toggled', self.transactions_tree.on_toggle_uncategorized)
         transfer_button.connect('toggled', self.transactions_tree.on_toggle_transfer)
+        uncategorized_button.set_active(self.transactions_tree.b_show_uncategorized)
+        transfer_button.set_active(self.transactions_tree.b_show_transfer)
 
         self.update_range()
 
@@ -129,7 +131,7 @@ class AccountTransactionTab(gtk.VBox, page.Page):
         self.category_tree.load_categories()
         self.update_page()
 
-        self.connect("destroy", self.on_destroy)
+        self.connect("unrealize", self.on_unrealize)
         self.show_all()
 
     def on_toggled(self, widget, chart, setter):
@@ -226,8 +228,10 @@ class AccountTransactionTab(gtk.VBox, page.Page):
         return [('# transactions', len(self.transactions_tree.modelfilter)),
                 ('Sum', gui_utils.get_currency_format_from_float(self.transactions_tree.get_filtered_transaction_value()))]
 
-    def on_destroy(self, widget):
+    def on_unrealize(self, widget):
         self.config.set_option('account hpaned position', self.hpaned.get_position(), 'Gui')
+        self.config.set_option('show transfer', self.transactions_tree.b_show_transfer, 'Gui')
+        self.config.set_option('show uncategorized', self.transactions_tree.b_show_uncategorized, 'Gui')
 
 
 class TransactionsTree(gui_utils.Tree):
@@ -244,8 +248,9 @@ class TransactionsTree(gui_utils.Tree):
         self.actiongroup = actiongroup
         self.updater = updater
         self.searchstring = ''
-        self.b_show_transfer = False
-        self.b_show_uncategorized = False
+        cfg = config.avernusConfig()
+        self.b_show_transfer = cfg.get_option('show transfer', section='Gui') == 'True'
+        self.b_show_uncategorized = cfg.get_option('show uncategorized', section='Gui') == 'True'
         self.range_start = account.birthday
         self.range_end = datetime.date.today()
         gui_utils.Tree.__init__(self)
