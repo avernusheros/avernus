@@ -188,7 +188,8 @@ class FilterTree(gui_utils.Tree):
 
     def on_add(self, widget):
         rule = filterController.create("new filter - click to edit", self.categories[0], False)
-        self.insert_rule(rule)
+        iter = self.insert_rule(rule)
+        self.scroll_to_cell(self.model.get_path(iter))
 
     def on_remove(self, widget):
         item, iter = self.get_selected_item()
@@ -197,4 +198,4 @@ class FilterTree(gui_utils.Tree):
             self.model.remove(iter)
 
     def insert_rule(self, rule):
-        self.model.append([rule, rule.active, rule.priority, rule.rule, rule.category, rule.category.name])
+        return self.model.append([rule, rule.active, rule.priority, rule.rule, rule.category, rule.category.name])
