@@ -170,4 +170,10 @@ class AccountTransaction(SQLiteEntity):
     def has_category(self):
         return (self.category is not None)
 
+    def on_update(self, **kwargs):
+        pubsub.publish('accountTransaction.updated', self)
+
+    __callbacks__ = {
+                     'onUpdate':on_update,
+                    }
     transfer = property(get_transfer, set_transfer)

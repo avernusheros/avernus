@@ -281,7 +281,7 @@ class TransactionsTree(gui_utils.Tree):
         self.connect('button_release_event', self.on_button_release)
         self.connect('key_press_event', self.on_key_press)
         search_entry.connect('changed', self.on_search_entry_changed)
-        pubsub.subscribe('accountTransaction.created', self.on_transaction_created)
+        pubsub.subscribe('accountTransaction.updated', self.on_transaction_updated)
         self.single_category = None
         self.reset_filter_dates()
 
@@ -335,6 +335,25 @@ class TransactionsTree(gui_utils.Tree):
 
     def on_transaction_created(self, transaction):
         if transaction.account == self.account:
+            self.insert_transaction(transaction)
+
+    def find_transaction(self, transaction):
+        #search recursiv
+        def search(rows):
+            if not rows: return None
+            for row in rows:
+                if row[0] == transaction:
+                    return row
+                result = search(row.iterchildren())
+                if result: return result
+            return None
+        return search(self.model)
+
+
+    def on_transaction_updated(self, transaction):
+        if transaction.account == self.account:
+            row = self.find_transaction(transaction)
+            self.model.remove(row.iter)
             self.insert_transaction(transaction)
 
     def on_drag_data_get(self, treeview, context, selection, info, timestamp):
@@ -397,7 +416,6 @@ class TransactionsTree(gui_utils.Tree):
         b_change, transaction = dlg.start()
         if b_change:
             self.account.amount = self.account.amount - old_amount + transaction.amount
-            self.get_model()[iterator] = self.get_item_to_insert(transaction)
 
     def on_dividend(self, widget=None):
         trans, iterator = self._get_selected_transaction()
