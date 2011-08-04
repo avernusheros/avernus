@@ -87,11 +87,11 @@ class AccountTransactionTab(gtk.VBox, page.Page):
         frame.set_shadow_type(gtk.SHADOW_IN)
         self.hpaned.pack1(frame, shrink=True, resize=True)
 
-        uncategorized_button.connect('toggled', self.transactions_tree.on_toggle_uncategorized)
-        transfer_button.connect('toggled', self.transactions_tree.on_toggle_transfer)
         uncategorized_button.set_active(self.transactions_tree.b_show_uncategorized)
         transfer_button.set_active(self.transactions_tree.b_show_transfer)
-
+        uncategorized_button.connect('toggled', self.transactions_tree.on_toggle_uncategorized)
+        transfer_button.connect('toggled', self.transactions_tree.on_toggle_transfer)
+        
         self.update_range()
 
         vbox = gtk.VBox()
@@ -353,8 +353,9 @@ class TransactionsTree(gui_utils.Tree):
     def on_transaction_updated(self, transaction):
         if transaction.account == self.account:
             row = self.find_transaction(transaction)
-            self.model.remove(row.iter)
-            self.insert_transaction(transaction)
+            if row:
+                self.model.remove(row.iter)
+                self.insert_transaction(transaction)
 
     def on_drag_data_get(self, treeview, context, selection, info, timestamp):
         treeselection = treeview.get_selection()
