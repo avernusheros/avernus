@@ -7,8 +7,10 @@ from avernus.objects import stock
 from avernus.objects.position import MetaPosition
 import datetime
 import locale
+import logging
 import gtk
 
+logger = logging.getLogger(__name__)
 
 class EditPositionDialog(gtk.Dialog):
 
@@ -192,12 +194,22 @@ class QuotationTable(gtk.Table):
         self.count_label = gtk.Label()
         self.attach(self.count_label, 1,2,2,3, yoptions=gtk.FILL)
 
-        button = gtk.Button(_('Get Quotations!'))
+        button = gtk.Button(_('Get quotations'))
         button.connect('clicked', self.on_get_button_clicked)
         self.attach(button, 0,2,4,5, yoptions=gtk.FILL)
-        button = gtk.Button(_('Delete Quotations'))
+
+        button = gtk.Button(_('Delete quotations'))
         button.connect('clicked', self.on_delete_button_clicked)
         self.attach(button, 0,2,5,6, yoptions=gtk.FILL)
+
+        button = gtk.Button(_('Edit quotations'))
+        button.connect('clicked', self.on_edit_button_clicked)
+        self.attach(button, 0,2,6,7, yoptions=gtk.FILL)
+
+        self.update_labels()
+
+    def on_edit_button_clicked(self, button):
+        EditHistoricalQuotationsDialog(self.stock)
         self.update_labels()
 
     def on_delete_button_clicked(self, button):
@@ -264,12 +276,12 @@ class EditStockTable(gtk.Table):
             self.attach(getattr(self, comboName), 1,2,currentRow,currentRow+1,  yoptions=gtk.FILL)
             getattr(self, comboName).connect("changed", self.on_change)
             currentRow += 1
-        
+
         self.name_entry.connect('changed', self.on_change)
         self.isin_entry.connect('changed', self.on_change)
         self.ter_entry.connect('changed', self.on_change)
-        
-            
+
+
     def on_change(self, widget):
         self.b_change = True
 
@@ -414,7 +426,89 @@ class StockSelector(gtk.VBox):
                                        ])
 
 
+class EditHistoricalQuotationsDialog(gtk.Dialog):
+
+    def __init__(self, stock):
+        self.stock = stock
+
+        gtk.Dialog.__init__(self, _("Quotations")+" - "+stock.name, None
+                            , gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
+                     (gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
+        self.set_default_size(300, 300)
+
+        #init wigets
+        vbox = self.get_content_area()
+        self.tree = gui_utils.Tree()
+        sw = gtk.ScrolledWindow()
+        sw.set_property('hscrollbar-policy', gtk.POLICY_AUTOMATIC)
+        sw.set_property('vscrollbar-policy', gtk.POLICY_AUTOMATIC)
+        vbox.pack_start(sw, expand=True, fill=True)
+        sw.add(self.tree)
+        toolbar = gtk.Toolbar()
+        vbox.pack_start(toolbar, expand=False, fill=True)
+
+        #init tree
+        self.model = gtk.ListStore(object, object, float)
+        self.tree.set_model(self.model)
+        self.date_column, cell = self.tree.create_column(_('Date'), 1, func=gui_utils.date_to_string)
+        self.tree.connect("row-activated", self.on_row_activated)
+
+        cell = gtk.CellRendererSpin()
+        adjustment = gtk.Adjustment(0.00, 0, 9999999, 0.01, 10, 0)
+        cell.set_property("editable", True)
+        cell.set_property("adjustment", adjustment)
+        cell.connect("edited", self.on_cell_edited)
+        self.price_column = gtk.TreeViewColumn(_('Price (close)'), cell, text=2)
+        self.tree.append_column(self.price_column)
+
+        #init toolbar
+        actiongroup = gtk.ActionGroup('quotations')
+        actiongroup.add_actions([
+                ('add', gtk.STOCK_ADD, 'new quotation', None, _('Add new quotation'), self.on_add),
+                ('remove', gtk.STOCK_DELETE, 'remove quotation', None, _('Remove selected quotation'), self.on_remove)
+            ])
+        for action in actiongroup.list_actions():
+            toolbar.insert(action.create_tool_item(), -1)
+
+        #load values
+        for quotation in controller.getAllQuotationsFromStock(self.stock):
+            self.model.append([quotation, quotation.date, quotation.close])
+
+        #show dialog
+        self.show_all()
+        self.run()
+        self.destroy()
+
+    def on_row_activated(self, treeview, path, view_column):
+        if view_column == self.date_column:
+            quotation = self.model[path][0]
+            dlg = CalendarDialog(quotation.date)
+            if dlg.date:
+                quotation.date = self.model[path][1] = dlg.date
+
+    def on_add(self, button):
+        quotation = controller.newQuotation(datetime.date.today(), self.stock, detectDuplicates = False)
+        iter = self.model.append([quotation, quotation.date, quotation.close])
+        path = self.model.get_path(iter)
+        self.tree.set_cursor(path, focus_column=self.price_column, start_editing=True)
+
+    def on_remove(self, button):
+        selection = self.tree.get_selection()
+        model, selection_iter = selection.get_selected()
+        if selection_iter:
+            model[selection_iter][0].delete()
+            model.remove(selection_iter)
+
+    def on_cell_edited(self, cellrenderertext, path, new_text):
+        try:
+            value = float(new_text.replace(",","."))
+            self.model[path][2] = self.model[path][0].close = value
+        except:
+            logger.debug("entered value is not a float", new_text)
+
+
 class SellDialog(gtk.Dialog):
+
     def __init__(self, pos, transaction = None):
         if transaction is None:
             title = _('Sell position')
