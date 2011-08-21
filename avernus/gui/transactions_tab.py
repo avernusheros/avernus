@@ -3,7 +3,7 @@
 import gtk
 from avernus import pubsub
 from avernus.gui import gui_utils, dialogs
-from avernus.gui.gui_utils import Tree, get_datetime_string, get_name_string
+from avernus.gui.gui_utils import Tree, get_datetime_string
 import avernus.objects
 
 
@@ -70,7 +70,7 @@ class TransactionsTree(Tree):
     def insert_transaction(self, ta):
         model = self.get_model()
         if model:
-            model.append(None, [ta, ta.type_string, get_name_string(ta.position.stock), ta.date.date(), ta.quantity, ta.price, ta.costs, ta.total])
+            model.append(None, [ta, ta.type_string, gui_utils.get_name_string(ta.position.stock), ta.date.date(), ta.quantity, ta.price, ta.costs, ta.total])
 
     def show_context_menu(self, event):
         transaction, iter = self.get_selected_item()
