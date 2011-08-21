@@ -3,7 +3,8 @@
 import gtk,sys
 from avernus import pubsub
 from avernus.gui.plot import ChartWindow
-from avernus.gui.dialogs import SellDialog, NewWatchlistPositionDialog, BuyDialog, EditPositionDialog
+from avernus.gui.dialogs import SellDialog, NewWatchlistPositionDialog, BuyDialog
+from avernus.gui.position_dialog import PositionDialog
 from avernus.gui.gui_utils import Tree, get_name_string, datetime_format
 from avernus.gui import gui_utils, dialogs, progress_manager, page
 from avernus.objects.position import MetaPosition
@@ -234,7 +235,7 @@ class PositionsTree(Tree):
 
     def on_edit(self, widget):
         position, iter = self.selected_item
-        EditPositionDialog(position)
+        PositionDialog(position)
         self.update_position_after_edit(position, iter)
 
     def update_position_after_edit(self, pos, iter=None):
