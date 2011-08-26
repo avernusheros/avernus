@@ -136,7 +136,7 @@ class PositionsTree(Tree):
         for action in self.actiongroup.list_actions():
             context_menu.add(action.create_menu_item())
         context_menu.add_item('----')
-        
+
         #Move to another portfolio
         item = gtk.MenuItem(_("Move"))
         context_menu.add(item)
@@ -302,6 +302,7 @@ class PositionsTree(Tree):
                 else:
                     p1 = self.stock_cache[position.stock.id]
                     mp = MetaPosition(p1)
+                    mp.controller = controller
                     tree_iter = self.model.append(None, self._get_row(mp))
                     self.stock_cache[position.stock.id] = mp
                     self._move_position(p1, tree_iter)

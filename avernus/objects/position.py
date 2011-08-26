@@ -181,3 +181,9 @@ class MetaPosition(Position):
         self.date = self.positions[0].date
         for position in self.positions:
             self._recalc_values_after_adding(position)
+
+    @property
+    def transactions(self):
+        for pos in self.positions:
+            for ta in self.controller.getTransactionForPosition(pos):
+                yield ta

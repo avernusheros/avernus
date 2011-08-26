@@ -104,9 +104,9 @@ class QuotationTable(gtk.Table):
         else:
             self.first_label.set_text(gui_utils.get_date_string(quotations[0].date))
             self.last_label.set_text(gui_utils.get_date_string(quotations[-1].date))
-            
-            
-            
+
+
+
 class TransactionsTab(gtk.VBox):
 
     def __init__(self, position):
@@ -132,33 +132,36 @@ class TransactionsTab(gtk.VBox):
         self.tree.connect("row-activated", self.on_row_activated)
         self.model.set_sort_func(2, gui_utils.sort_by_time, 2)
         self.tree.create_column(_('Type'), 1)
-        
+
         cell = gtk.CellRendererSpin()
         adjustment = gtk.Adjustment(0.00, 0, 9999999, 0.01, 10, 0)
+        cell.set_property("digits", 2)
         cell.set_property("editable", True)
         cell.set_property("adjustment", adjustment)
         cell.connect("edited", self.on_shares_edited, 3)
         self.shares_column = gtk.TreeViewColumn(_('Shares'), cell, text=3)
         self.tree.append_column(self.shares_column)
-        
+
         cell = gtk.CellRendererSpin()
         adjustment = gtk.Adjustment(0.00, 0, 9999999, 0.01, 10, 0)
+        cell.set_property("digits", 2)
         cell.set_property("editable", True)
         cell.set_property("adjustment", adjustment)
         cell.connect("edited", self.on_price_edited, 4)
         self.price_column = gtk.TreeViewColumn(_('Price'), cell, text=4)
         self.tree.append_column(self.price_column)
-        
+
         cell = gtk.CellRendererSpin()
         adjustment = gtk.Adjustment(0.00, 0, 9999999, 0.01, 10, 0)
+        cell.set_property("digits", 2)
         cell.set_property("editable", True)
         cell.set_property("adjustment", adjustment)
         cell.connect("edited", self.on_costs_edited, 5)
         self.costs_column = gtk.TreeViewColumn(_('Transaction Costs'), cell, text=5)
         self.tree.append_column(self.costs_column)
-        
+
         self.tree.set_model(self.model)
-        
+
         #init toolbar
         actiongroup = gtk.ActionGroup('transactionstab')
         actiongroup.add_actions([
@@ -186,7 +189,7 @@ class TransactionsTab(gtk.VBox):
                 #FIXME new date is not stored. why?
 
     def on_add(self, button):
-        #FIXME 
+        #FIXME
         return
         quotation = controller.newQuotation(datetime.date.today(), self.stock, detectDuplicates = False)
         iter = self.model.append([quotation, quotation.date, quotation.close])
@@ -204,21 +207,27 @@ class TransactionsTab(gtk.VBox):
     def on_shares_edited(self, cellrenderertext, path, new_text, columnnumber):
         try:
             value = float(new_text.replace(",","."))
-            self.model[path][columnnumber] = self.model[path][0].quantity = value
+            self.model[path][columnnumber] = value
+            self.model[path][0].quantity = value
+            self.model[path][0].position.quantity = value
         except:
             logger.debug("entered value is not a float", new_text)
 
     def on_price_edited(self, cellrenderertext, path, new_text, columnnumber):
         try:
             value = float(new_text.replace(",","."))
-            self.model[path][columnnumber] = self.model[path][0].price = value
+            self.model[path][columnnumber] = value
+            self.model[path][0].price = value
+            self.model[path][0].position.price = value
         except:
             logger.debug("entered value is not a float", new_text)
-            
+
     def on_costs_edited(self, cellrenderertext, path, new_text, columnnumber):
         try:
             value = float(new_text.replace(",","."))
-            self.model[path][columnnumber] = self.model[path][0].costs = value
+            self.model[path][columnnumber] = value
+            self.model[path][0].costs = value
+            self.model[path][0].position.costs = value
         except:
             logger.debug("entered value is not a float", new_text)
 
@@ -313,28 +322,33 @@ class EditPositionTable(gtk.Table):
 
         self.attach(gtk.Label(_('Shares')),0,1,0,1)
         self.shares_entry = gtk.SpinButton(gtk.Adjustment(lower=0, upper=100000,step_incr=1.0, value = 0), digits=2)
-        self.shares_entry.set_value(self.pos.quantity)
         self.attach(self.shares_entry,1,2,0,1)
 
         self.attach(gtk.Label(_('Buy price')),0,1,1,2)
         self.price_entry = gtk.SpinButton(gtk.Adjustment(lower=0, upper=100000,step_incr=0.1, value = 1.0), digits=2)
-        self.price_entry.set_value(self.pos.price)
         self.attach(self.price_entry,1,2,1,2)
 
         self.attach(gtk.Label(_('Buy date')),0,1,2,3)
         self.calendar = gtk.Calendar()
-        self.calendar.select_month(self.pos.date.month-1, self.pos.date.year)
-        self.calendar.select_day(self.pos.date.day)
-        self.attach(self.calendar,1,2,2,3)
 
+        self.attach(self.calendar,1,2,2,3)
         self.attach(gtk.Label(_('Comment')),0,1,3,4)
 
         self.comment_entry = gtk.TextView()
         self.comment_entry.set_wrap_mode(gtk.WRAP_WORD)
         self.comment_entry.set_size_request(50, 80)
+        self.attach(self.comment_entry, 1,2,3,4)
+
+        self.update_values()
+        self.connect("expose-event", self.update_values)
+
+    def update_values(self, *args):
+        self.price_entry.set_value(self.pos.price)
+        self.shares_entry.set_value(self.pos.quantity)
+        self.calendar.select_month(self.pos.date.month-1, self.pos.date.year)
+        self.calendar.select_day(self.pos.date.day)
         entry_buffer = self.comment_entry.get_buffer()
         entry_buffer.set_text(self.pos.comment)
-        self.attach(self.comment_entry, 1,2,3,4)
 
     def process_result(self, widget=None, response = gtk.RESPONSE_ACCEPT):
         if response == gtk.RESPONSE_ACCEPT:
