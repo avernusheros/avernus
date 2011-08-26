@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from avernus import pubsub, config
 from avernus.controller import controller, filterController
-from avernus.gui import progress_manager
+from avernus.gui import progress_manager, gui_utils
 from avernus.gui.account_transactions_tab import AccountTransactionTab
 from avernus.gui.container_overview_tab import ContainerOverviewTab
 from avernus.gui.csv_import_dialog import CSVImportDialog
@@ -196,17 +196,17 @@ class MainWindow(gtk.Window):
         PrefDialog()
 
     def on_do_category_assignments(self, *args):
-        filterController.run_auto_assignments()
+        gui_utils.BackgroundTask(filterController.run_auto_assignments).start()
 
     def on_historical(self, *args):
         def finished_cb():
             progress_manager.remove_monitor(42)
         m = progress_manager.add_monitor(42, _('downloading quotations...'), gtk.STOCK_REFRESH)
-        controller.GeneratorTask(controller.update_historical_prices, m.progress_update, complete_callback=finished_cb).start()
+        gui_utils.GeneratorTask(controller.update_historical_prices, m.progress_update, complete_callback=finished_cb).start()
 
     def on_update_all(self, *args):
         def finished_cb():
             progress_manager.remove_monitor(11)
         m = progress_manager.add_monitor(11, _('updating stocks...'), gtk.STOCK_REFRESH)
         m.progress_update_auto()
-        controller.GeneratorTask(controller.update_all, complete_callback=finished_cb).start()
+        gui_utils.GeneratorTask(controller.update_all, complete_callback=finished_cb).start()

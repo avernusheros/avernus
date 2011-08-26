@@ -193,7 +193,7 @@ class PositionsTree(Tree):
             progress_manager.remove_monitor(555)
         m = progress_manager.add_monitor(555, _('updating stocks...'), gtk.STOCK_REFRESH)
         m.progress_update_auto()
-        controller.GeneratorTask(self.container.update_positions, complete_callback=finished_cb).start()
+        gui_utils.GeneratorTask(self.container.update_positions, complete_callback=finished_cb).start()
 
     def on_position_added(self, container, item):
         if container.id == -1 or container.id == self.container.id:
