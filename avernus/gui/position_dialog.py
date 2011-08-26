@@ -19,8 +19,7 @@ class PositionDialog(gtk.Dialog):
     def __init__(self, position):
         gtk.Dialog.__init__(self, _("Edit position - ")+position.name, None
                             , gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
-                     (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
-                      gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
+                     (gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
         vbox = self.get_content_area()
         notebook = gtk.Notebook()
         vbox.pack_start(notebook)
@@ -37,15 +36,22 @@ class PositionDialog(gtk.Dialog):
         notebook.append_page(self.stock_table, gtk.Label(_('Stock')))
         notebook.append_page(self.transactions_table, gtk.Label(_('Transactions')))
         notebook.append_page(self.quotation_table, gtk.Label(_('Quotations')))
+        
+        self.previous_page = 0
+        notebook.connect("switch-page", self.on_switch_page)
+        
         self.show_all()
-        response = self.run()
-        self.process_result(response = response)
+        self.run()
+        self.process_result()
 
-    def process_result(self, widget=None, response = gtk.RESPONSE_ACCEPT):
-        if response == gtk.RESPONSE_ACCEPT:
-            if not self.is_meta:
-                self.position_table.process_result(response)
-            self.stock_table.process_result(response)
+    def on_switch_page(self, notebook, page, page_num):
+        #previous was the position tab
+        if self.previous_page == 0 and not self.is_meta:   
+            self.position_table.process_result()  
+        self.previous_page = page_num
+
+    def process_result(self, widget=None):
+        self.stock_table.process_result()
         self.destroy()
 
 
@@ -140,6 +146,7 @@ class TransactionsTab(gtk.VBox):
         cell.set_property("adjustment", adjustment)
         cell.connect("edited", self.on_shares_edited, 3)
         self.shares_column = gtk.TreeViewColumn(_('Shares'), cell, text=3)
+        self.shares_column.set_cell_data_func(cell, gui_utils.float_format, 3)
         self.tree.append_column(self.shares_column)
 
         cell = gtk.CellRendererSpin()
@@ -149,6 +156,7 @@ class TransactionsTab(gtk.VBox):
         cell.set_property("adjustment", adjustment)
         cell.connect("edited", self.on_price_edited, 4)
         self.price_column = gtk.TreeViewColumn(_('Price'), cell, text=4)
+        self.price_column.set_cell_data_func(cell, gui_utils.currency_format, 4)
         self.tree.append_column(self.price_column)
 
         cell = gtk.CellRendererSpin()
@@ -158,6 +166,7 @@ class TransactionsTab(gtk.VBox):
         cell.set_property("adjustment", adjustment)
         cell.connect("edited", self.on_costs_edited, 5)
         self.costs_column = gtk.TreeViewColumn(_('Transaction Costs'), cell, text=5)
+        self.costs_column.set_cell_data_func(cell, gui_utils.currency_format, 5)
         self.tree.append_column(self.costs_column)
 
         self.tree.set_model(self.model)
@@ -165,7 +174,7 @@ class TransactionsTab(gtk.VBox):
         #init toolbar
         actiongroup = gtk.ActionGroup('transactionstab')
         actiongroup.add_actions([
-                ('add', gtk.STOCK_ADD, 'new quotation', None, _('Add new quotation'), self.on_add),
+               # ('add', gtk.STOCK_ADD, 'new quotation', None, _('Add new quotation'), self.on_add),
                 ('remove', gtk.STOCK_DELETE, 'remove quotation', None, _('Remove selected quotation'), self.on_remove)
             ])
         for action in actiongroup.list_actions():
@@ -189,7 +198,7 @@ class TransactionsTab(gtk.VBox):
                 #FIXME new date is not stored. why?
 
     def on_add(self, button):
-        #FIXME
+        #FIXME implement add functionality
         return
         quotation = controller.newQuotation(datetime.date.today(), self.stock, detectDuplicates = False)
         iter = self.model.append([quotation, quotation.date, quotation.close])
@@ -197,13 +206,26 @@ class TransactionsTab(gtk.VBox):
         self.tree.set_cursor(path, focus_column=self.price_column, start_editing=True)
 
     def on_remove(self, button):
-        #FIXME evlt muss position geloescht werden
         selection = self.tree.get_selection()
         model, selection_iter = selection.get_selected()
         if selection_iter:
-            model[selection_iter][0].delete()
-            model.remove(selection_iter)
-
+            dlg = gtk.MessageDialog(None,
+                     gtk.DIALOG_DESTROY_WITH_PARENT, gtk.MESSAGE_QUESTION,
+                     gtk.BUTTONS_OK_CANCEL)
+            dlg.set_markup(_("Permanently delete selected transaction?"))
+            response = dlg.run()
+            dlg.destroy()
+            if response == gtk.RESPONSE_OK:
+                #update position
+                ta = model[selection_iter][0]
+                if ta.is_sell():
+                    ta.position.quantity += ta.quantity
+                else:
+                    ta.position.quantity -= ta.quantity
+                #delete                
+                ta.delete()
+                model.remove(selection_iter)
+                    
     def on_shares_edited(self, cellrenderertext, path, new_text, columnnumber):
         try:
             value = float(new_text.replace(",","."))
@@ -350,16 +372,16 @@ class EditPositionTable(gtk.Table):
         entry_buffer = self.comment_entry.get_buffer()
         entry_buffer.set_text(self.pos.comment)
 
-    def process_result(self, widget=None, response = gtk.RESPONSE_ACCEPT):
-        if response == gtk.RESPONSE_ACCEPT:
-            self.pos.quantity = self.shares_entry.get_value()
-            self.pos.price = self.price_entry.get_value()
-            year, month, day = self.calendar.get_date()
-            self.pos.date = datetime.datetime(year, month+1, day)
-            buffer = self.comment_entry.get_buffer()
-            self.pos.comment = unicode(buffer.get_text(buffer.get_start_iter(), buffer.get_end_iter()))
-            if hasattr(self.pos, "buy_transaction"):
-                ta = self.pos.buy_transaction
+    def process_result(self, widget=None):
+        self.pos.quantity = self.shares_entry.get_value()
+        self.pos.price = self.price_entry.get_value()
+        year, month, day = self.calendar.get_date()
+        self.pos.date = datetime.datetime(year, month+1, day)
+        buffer = self.comment_entry.get_buffer()
+        self.pos.comment = unicode(buffer.get_text(buffer.get_start_iter(), buffer.get_end_iter()))
+        if hasattr(self.pos, "buy_transaction"):
+            ta = self.pos.buy_transaction
+            if ta:
                 ta.quantity = self.pos.quantity
                 ta.price = self.pos.price
                 ta.date = self.pos.date
