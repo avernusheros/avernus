@@ -37,6 +37,8 @@ class TransactionsTree(Tree):
         self.create_column(_('Price'), 5, func=gui_utils.currency_format)
         self.create_column(_('Transaction Costs'), 6, func=gui_utils.currency_format)
         self.create_column(_('Total'), 7, func=gui_utils.float_to_red_green_string_currency)
+        
+        self.model.set_sort_column_id(3, gtk.SORT_ASCENDING)
 
         self.actiongroup = gtk.ActionGroup('portfolio_transactions')
         self.actiongroup.add_actions([
@@ -44,6 +46,7 @@ class TransactionsTree(Tree):
                                 ])
         pubsub.subscribe('transaction.added', self.on_transaction_created)
         self.connect('button_press_event', self.on_button_press)
+        self.connect("row-activated", self.on_row_activated)
 
     def load_transactions(self):
         for position in self.portfolio:
@@ -57,7 +60,10 @@ class TransactionsTree(Tree):
     def on_button_press(self, widget, event):
         if event.button == 3:
             self.show_context_menu(event)
-
+            
+    def on_row_activated(self, treeview, path, column):
+        self.on_edit(treeview)
+                
     def on_edit(self, widget):
         transaction, iter = self.get_selected_item()
         if transaction.type == 0: #SELL
@@ -66,11 +72,13 @@ class TransactionsTree(Tree):
             dialogs.BuyDialog(transaction.position.portfolio, transaction)
         else:
             print "TODO edit transaction"
-
+         
+        #update treeview by removing and re-adding the transaction
+        self.model.remove(iter)
+        self.insert_transaction(transaction)
+         
     def insert_transaction(self, ta):
-        model = self.get_model()
-        if model:
-            model.append(None, [ta, ta.type_string, gui_utils.get_name_string(ta.position.stock), ta.date.date(), ta.quantity, ta.price, ta.costs, ta.total])
+        self.model.append(None, [ta, ta.type_string, gui_utils.get_name_string(ta.position.stock), ta.date.date(), ta.quantity, ta.price, ta.costs, ta.total])
 
     def show_context_menu(self, event):
         transaction, iter = self.get_selected_item()
