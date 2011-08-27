@@ -18,8 +18,6 @@ import gobject
 import itertools
 import logging
 import sys
-import thread
-import threading
 
 
 

@@ -3,8 +3,7 @@ from avernus import config, pubsub
 import locale
 import gobject
 import threading
-
-
+import thread
 
 
 

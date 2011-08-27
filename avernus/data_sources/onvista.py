@@ -258,7 +258,7 @@ class Onvista():
             currency = temp[9]
         else:
             isin = str(base.findAll('tr','hgrau2')[1].findAll('td', text=True)[1])
-            
+        
             #getting the year
             #FIXME
             #try:
@@ -272,7 +272,7 @@ class Onvista():
             #else:
             #    #fallback to the hardcoded current year
             year = unicode(str(date.today().year)[2:])
-            
+        isin = isin.replace('&nbsp;', '')   
         for row in base.findAll('div',tdInd['table_class'])[tdInd['table']].find('table'):
             tds = row.findAll('td')
             if len(tds)>3:
@@ -403,7 +403,7 @@ if __name__ == "__main__":
     s1 = Stock('DE000A0F5G98', ex, stock.FUND)
     s2 = Stock('LU0103598305', ex, stock.FUND)
     s3 = Stock('LU0103598305', ex, stock.FUND)
-    #test_search()
+    test_search()
     #print plugin.search_kurse(s1)
     #print plugin.search_kurse(s3)
     #test_parse_kurse()

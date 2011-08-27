@@ -5,6 +5,7 @@ from avernus.objects.stock import Stock
 from avernus import pubsub
 from avernus.data_sources import yahoo, onvista
 import datetime, re
+from avernus.gui import gui_utils
 
 
 sources = {'onvista.de': onvista.Onvista(),
@@ -19,6 +20,8 @@ class DatasourceManager(object):
     
     def __init__(self):
         self.current_searches = []
+        self.b_online = True
+        self.search_callback = None
         pubsub.subscribe('network', self.on_network_change)
         
     def on_network_change(self, state):
@@ -37,7 +40,7 @@ class DatasourceManager(object):
             #check whether search function exists
             func = getattr(source, "search", None)
             if func:
-                task = controller.GeneratorTask(func, self._item_found_callback, complete_cb)
+                task = gui_utils.GeneratorTask(func, self._item_found_callback, complete_cb)
                 self.current_searches.append(task)
                 task.start(searchstring)
 
@@ -58,7 +61,7 @@ class DatasourceManager(object):
             stock = controller.newStock(**item)
         if source_info is not None:
             controller.newSourceInfo(source=source.name, stock=stock, info=source_info)
-        if new:     
+        if new and self.search_callback:     
             self.search_callback(stock, source_icons[item['source']])
 
     def validate_isin(self, isin):
