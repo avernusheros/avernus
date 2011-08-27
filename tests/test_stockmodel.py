@@ -22,7 +22,6 @@ class Test(unittest.TestCase):
             pf_a =controller.newPortfolio(name="erstesPort",
                                        last_update=datetime.datetime.now(),
                                        comment="einKommentar",
-                                       cash=0.0
                                        )
             s1 = controller.newPortfolioPosition(
                                    date=datetime.datetime.now(),
