@@ -3,7 +3,7 @@
 
 import sys
 import os
-import gtk
+from gi.repository import Gtk, GObject
 import optparse
 import logging
 
@@ -77,6 +77,7 @@ def init_translations():
 def init_icons():
     from avernus.gui.icons import IconManager
     icons = IconManager()
+    
     path = os.path.join(config.getdatapath(),'images')
     iconNames = [
     'avernus','tags','tag','watchlists','watchlist','portfolio',
@@ -86,17 +87,12 @@ def init_icons():
     ]
     for name in iconNames:
         icons.add_icon_name_from_directory(name, path)
-    #icons.add_icon_name_from_directory('tag', path)
-    #icons.add_icon_name_from_directory('tags', path)
-    #icons.add_stock_from_directory('avernus-chart', path)
-    gtk.window_set_default_icon_name('avernus')
+    Gtk.Window.set_default_icon_name('avernus')
 
 
 def start(db_file = None):
     init_icons()
-
     if db_file == None:
-        from avernus import config
         configs = config.avernusConfig()
         db_file = configs.get_option('database file')
 
@@ -109,12 +105,12 @@ def start(db_file = None):
     from avernus.gui.mainwindow import MainWindow
     from avernus.datasource_manager import DatasourceManager
     dsm = DatasourceManager()
-    window = MainWindow()
+    MainWindow()
     controller.datasource_manager = dsm
 
     from avernus.network_manager import DBusNetwork
     DBusNetwork()
-    gtk.main()
+    Gtk.main()
 
 if __name__ == "__main__":
     init_translations()
@@ -126,7 +122,8 @@ if __name__ == "__main__":
 
     init_logger(options.debug)
 
-    #gobject.threads_init()
-    gtk.gdk.threads_init()
+    GObject.threads_init()
+    
+    #Gdk.threads_init()
     #run the application
     start(options.datafile)

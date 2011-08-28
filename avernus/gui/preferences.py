@@ -2,29 +2,29 @@
 from avernus.config import avernusConfig
 from avernus.gui import gui_utils
 from avernus.controller import controller
-import gtk
+from gi.repository import Gtk
 import logging
 import sys
 logger = logging.getLogger(__name__)
 
 
-class PrefDialog(gtk.Dialog):
+class PrefDialog(Gtk.Dialog):
 
     DEFAULT_WIDTH = 200
     DEFAULT_HEIGHT = 300
 
     def __init__(self):
-        gtk.Dialog.__init__(self, "Preferences", None,
-                            gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
-                            (gtk.STOCK_OK, gtk.RESPONSE_ACCEPT),
+        Gtk.Dialog.__init__(self, "Preferences", None,
+                            Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,
+                            (Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT),
                             )
         self.set_default_size(self.DEFAULT_WIDTH, self.DEFAULT_HEIGHT)
         logger.debug("PrefDialog started")
         vbox = self.get_content_area()
-        notebook = gtk.Notebook()
-        vbox.pack_start(notebook)
-        notebook.append_page(DimensionList(), gtk.Label('Dimensions'))
-        notebook.append_page(AccountPreferences(), gtk.Label('Account'))
+        notebook = Gtk.Notebook()
+        vbox.pack_start(notebook, True, True, 0)
+        notebook.append_page(DimensionList(), Gtk.Label(label='Dimensions'))
+        notebook.append_page(AccountPreferences(), Gtk.Label(label='Account'))
 
         self.show_all()
         self.run()
@@ -32,10 +32,10 @@ class PrefDialog(gtk.Dialog):
         logger.debug("PrefDialog destroyed")
 
 
-class AccountPreferences(gtk.VBox):
+class AccountPreferences(Gtk.VBox):
 
     def __init__(self):
-        gtk.VBox.__init__(self)
+        Gtk.VBox.__init__(self)
         self.configParser = avernusConfig()
 
         section = self._add_section('Charts')
@@ -45,7 +45,7 @@ class AccountPreferences(gtk.VBox):
         self._add_option(section, _('Include already categorized transactions'), 'assignments categorized transactions')
 
     def _add_option(self, allignment, name, option):
-        button = gtk.CheckButton(label = name)
+        button = Gtk.CheckButton(label = name)
         allignment.add(button)
         button.connect('toggled', self.on_toggled, option)
         pre = self.configParser.get_option(option, 'Account')
@@ -53,13 +53,13 @@ class AccountPreferences(gtk.VBox):
         button.set_active(pre)
 
     def _add_section(self, name):
-        frame = gtk.Frame()
-        frame.set_shadow_type(gtk.SHADOW_NONE)
-        label = gtk.Label()
+        frame = Gtk.Frame()
+        frame.set_shadow_type(Gtk.ShadowType.NONE)
+        label = Gtk.Label()
         label.set_markup('<b>'+name+'</b>')
         frame.set_label_widget(label)
-        self.pack_start(frame, expand=False, fill=False, padding=10)
-        alignment = gtk.Alignment(xalign=0.5, yalign=0.5, xscale=1.0, yscale=1.0)
+        self.pack_start(frame, False, False, 10)
+        alignment = Gtk.Alignment.new(0.5, 0.5, 1.0, 1.0)
         alignment.set_property("left-padding", 12)
         frame.add(alignment)
         return alignment
@@ -68,57 +68,57 @@ class AccountPreferences(gtk.VBox):
         self.configParser.set_option(option, button.get_active(), 'Account')
 
 
-class DimensionList(gtk.VBox):
+class DimensionList(Gtk.VBox):
 
     OBJECT = 0
     NAME = 1
 
     def __init__(self):
-        gtk.VBox.__init__(self)
+        Gtk.VBox.__init__(self)
         self.tree = gui_utils.Tree()
         self.tree.set_headers_visible(False)
-        self.model = gtk.TreeStore(object, str)
+        self.model = Gtk.TreeStore(object, str)
         self.tree.set_model(self.model)
         col, cell = self.tree.create_column('Dimensions', self.NAME)
         cell.set_property('editable', True)
         cell.connect('edited', self.on_cell_edited)
-        sw = gtk.ScrolledWindow()
-        sw.set_property('hscrollbar-policy', gtk.POLICY_AUTOMATIC)
-        sw.set_property('vscrollbar-policy', gtk.POLICY_AUTOMATIC)
-        self.pack_start(sw, expand=True, fill=True)
+        sw = Gtk.ScrolledWindow()
+        sw.set_property('hscrollbar-policy', Gtk.PolicyType.AUTOMATIC)
+        sw.set_property('vscrollbar-policy', Gtk.PolicyType.AUTOMATIC)
+        self.pack_start(sw, True, True, 0)
         sw.add(self.tree)
         for dim in sorted(controller.getAllDimension()):
             iterator = self.model.append(None, [dim, dim.name])
             for val in sorted(controller.getAllDimensionValueForDimension(dim)):
                 self.model.append(iterator, [val, val.name])
 
-        actiongroup = gtk.ActionGroup('dimensions')
+        actiongroup = Gtk.ActionGroup('dimensions')
         actiongroup.add_actions([
-                ('add',     gtk.STOCK_ADD,    'new dimension',      None, _('Add new dimension'), self.on_add),
-                ('rename',  gtk.STOCK_EDIT,   'rename dimension',   None, _('Rename selected dimension'), self.on_edit),
-                ('remove',  gtk.STOCK_DELETE, 'remove dimension',   None, _('Remove selected dimension'), self.on_remove)
+                ('add',     Gtk.STOCK_ADD,    'new dimension',      None, _('Add new dimension'), self.on_add),
+                ('rename',  Gtk.STOCK_EDIT,   'rename dimension',   None, _('Rename selected dimension'), self.on_edit),
+                ('remove',  Gtk.STOCK_DELETE, 'remove dimension',   None, _('Remove selected dimension'), self.on_remove)
                      ])
-        toolbar = gtk.Toolbar()
+        toolbar = Gtk.Toolbar()
         self.conditioned = ['rename', 'edit']
 
         for action in actiongroup.list_actions():
             button = action.create_tool_item()
             toolbar.insert(button, -1)
-        self.pack_start(toolbar, expand=False, fill=True)
+        self.pack_start(toolbar, False, True, 0)
 
-    def on_add(self, widget):
+    def on_add(self, widget, user_data=None):
         dimension = controller.newDimension(_('new dimension'))
         iterator = self.model.append(None, [dimension, dimension.name])
         #self.expand_row( model.get_path(parent_iter), True)
-        self.tree.set_cursor(self.model.get_path(iterator), focus_column = self.tree.get_column(0), start_editing=True)
+        self.tree.set_cursor(self.model.get_path(iterator), self.tree.get_column(0), True)
 
-    def on_edit(self, widget):
+    def on_edit(self, widget, user_data=None):
         selection = self.tree.get_selection()
         model, selection_iter = selection.get_selected()
         if selection_iter:
-            self.tree.set_cursor(model.get_path(selection_iter), focus_column = self.tree.get_column(0), start_editing=True)
+            self.tree.set_cursor(model.get_path(selection_iter), self.tree.get_column(0), True)
 
-    def on_remove(self, widget):
+    def on_remove(self, widget, user_data=None):
         selection = self.tree.get_selection()
         model, selection_iter = selection.get_selected()
         if selection_iter:

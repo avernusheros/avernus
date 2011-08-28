@@ -2,7 +2,7 @@
 
 import unittest
 from avernus.objects import model, store
-from avernus.controller import controller
+
 
 class A(model.SQLiteEntity):
     __primaryKey__ = "id"

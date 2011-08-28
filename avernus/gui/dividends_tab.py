@@ -1,44 +1,44 @@
 #!/usr/bin/env python
 
-import gtk
+from gi.repository import Gtk
 from datetime import datetime
 from avernus.gui.gui_utils import Tree, get_name_string
 from avernus.controller import controller
 from avernus.gui import gui_utils, dialogs, page
 
 
-class DividendsTab(gtk.VBox, page.Page):
+class DividendsTab(Gtk.VBox, page.Page):
     
     def __init__(self, portfolio):
-        gtk.VBox.__init__(self)
+        Gtk.VBox.__init__(self)
         self.portfolio = portfolio
         self._init_widgets()
         self.show_all()
     
     def _init_widgets(self):
-        actiongroup = gtk.ActionGroup('dividend_tab')
+        actiongroup = Gtk.ActionGroup('dividend_tab')
         self.tree = DividendsTree(self.portfolio, actiongroup)
         
         actiongroup.add_actions([
-                ('add',    gtk.STOCK_ADD,     'add',    None, _('Add new dividend'),         self.on_add),
-                ('remove', gtk.STOCK_DELETE,  'remove', None, _('Delete selected dividend'), self.tree.on_remove),
-                ('edit', gtk.STOCK_EDIT,  'remove', None, _('Edit selected dividend'), self.tree.on_edit),
+                ('add',    Gtk.STOCK_ADD,     'add',    None, _('Add new dividend'),         self.on_add),
+                ('remove', Gtk.STOCK_DELETE,  'remove', None, _('Delete selected dividend'), self.tree.on_remove),
+                ('edit', Gtk.STOCK_EDIT,  'remove', None, _('Edit selected dividend'), self.tree.on_edit),
                  ])
         actiongroup.get_action('remove').set_sensitive(False)
         actiongroup.get_action('edit').set_sensitive(False)
-        #self.set_property('hscrollbar-policy', gtk.POLICY_AUTOMATIC)
-        #self.set_property('vscrollbar-policy', gtk.POLICY_AUTOMATIC)
-        tb = gtk.Toolbar()
+        #self.set_property('hscrollbar-policy', Gtk.PolicyType.AUTOMATIC)
+        #self.set_property('vscrollbar-policy', Gtk.PolicyType.AUTOMATIC)
+        tb = Gtk.Toolbar()
         for action in actiongroup.list_actions():
             button = action.create_tool_item()
             tb.insert(button, -1)
         
-        sw = gtk.ScrolledWindow()
-        sw.set_property('hscrollbar-policy', gtk.POLICY_AUTOMATIC)
-        sw.set_property('vscrollbar-policy', gtk.POLICY_AUTOMATIC)
+        sw = Gtk.ScrolledWindow()
+        sw.set_property('hscrollbar-policy', Gtk.PolicyType.AUTOMATIC)
+        sw.set_property('vscrollbar-policy', Gtk.PolicyType.AUTOMATIC)
         sw.add(self.tree)
-        self.pack_start(tb, expand = False, fill = False)
-        self.pack_start(sw)
+        self.pack_start(tb, False, False, 0)
+        self.pack_start(sw, True, True, 0)
     
     def on_add(self, widget = None):
         dialogs.DividendDialog(self.portfolio, tree = self.tree)
@@ -72,7 +72,7 @@ class DividendsTree(Tree):
         self.connect('cursor_changed', self.on_cursor_changed)
 
     def _init_widgets(self):
-        self.set_model(gtk.TreeStore(object, str, object, float, float, float))
+        self.set_model(Gtk.TreeStore(object, str, object, float, float, float))
         self.create_column(_('Position'), self.POSITION)
         self.create_column(_('Date'), self.DATE, func=gui_utils.date_to_string)
         self.create_column(_('Amount'), self.AMOUNT, func=gui_utils.currency_format)
@@ -127,13 +127,13 @@ class DividendsTree(Tree):
         obj, iterator = self.get_selected_item()
         if obj is None:
             return
-        dlg = gtk.MessageDialog(None,
-             gtk.DIALOG_DESTROY_WITH_PARENT, gtk.MESSAGE_QUESTION,
-             gtk.BUTTONS_OK_CANCEL,
+        dlg = Gtk.MessageDialog(None,
+             Gtk.DialogFlags.DESTROY_WITH_PARENT, Gtk.MessageType.QUESTION,
+             Gtk.ButtonsType.OK_CANCEL,
              _("Permanently delete dividend?"))
         response = dlg.run()
         dlg.destroy()
-        if response == gtk.RESPONSE_OK:
+        if response == Gtk.ResponseType.OK:
             obj.delete()
             self.get_model().remove(iterator)
             self.actiongroup.get_action('remove').set_sensitive(False)

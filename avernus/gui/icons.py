@@ -24,7 +24,8 @@
 # do so. If you do not wish to do so, delete this exception statement
 # from your version.
 
-import glob, gtk, os
+import glob, os
+from gi.repository import Gtk, GdkPixbuf
 
 class IconManager(object):
     """
@@ -32,8 +33,8 @@ class IconManager(object):
         single icons as well as sets of icons
     """
     def __init__(self):
-        self.icon_theme = gtk.icon_theme_get_default()
-        self.icon_factory = gtk.IconFactory()
+        self.icon_theme = Gtk.IconTheme.get_default()
+        self.icon_factory = Gtk.IconFactory()
         self.icon_factory.add_default()
         # TODO: Make svg actually recognized
         self._sizes = [16, 22, 24, 32, 48, 'scalable']
@@ -73,7 +74,7 @@ class IconManager(object):
             Registers an icon name from a filename
         """
         try:# TODO: Make svg actually recognized
-            pixbuf = gtk.gdk.pixbuf_new_from_file(filename)
+            pixbuf = GdkPixbuf.Pixbuf.new_from_file(filename)
             self.add_icon_name_from_pixbuf(icon_name, pixbuf, size)
         except Exception as e:
             print "exception in icons.py IconManager.add_icon_name_from_file"
@@ -87,66 +88,5 @@ class IconManager(object):
         """
         if size is None:
             size = pixbuf.get_width()
-        gtk.icon_theme_add_builtin_icon(icon_name, size, pixbuf)
+        Gtk.IconTheme.add_builtin_icon(icon_name, size, pixbuf)
         # print "added ",icon_name, size
-
-    def add_stock_from_directory(self, stock_id, directory):
-        """
-            Registers a stock icon from files found in a directory
-        """
-        files = []
-        self._sizes.reverse() # Prefer small over downscaled icons
-
-        for size in self._sizes:
-            try: # WxH/stock_id.png and scalable/stock_id.svg
-                sizedir = '%dx%d' % (size, size)
-            except TypeError:
-                sizedir = size
-            filepath = os.path.join(directory, sizedir, stock_id)
-            try:
-                files += [glob.glob('%s.*' % filepath)[0]]
-            except IndexError: # stock_idW.png and stock_id.svg
-                try:
-                    filename = '%s%d' % (stock_id, size)
-                except TypeError:
-                    filename = stock_id
-                filepath = os.path.join(directory, filename)
-                try:
-                    files += [glob.glob('%s.*' % filepath)[0]]
-                except IndexError: # Give up
-                    print "index error in icons.py IconManager.add_stock_from_directory"
-                    
-
-        self.add_stock_from_files(stock_id, files)
-
-    def add_stock_from_file(self, stock_id, filename):
-        """
-            Registers a stock icon from a filename
-        """
-        self.add_stock_from_files([filename])
-
-    def add_stock_from_files(self, stock_id, filenames):
-        """
-            Registers a stock icon from filenames
-        """
-        pixbufs = [gtk.gdk.pixbuf_new_from_file(filename) for filename in filenames]
-        self.add_stock_from_pixbufs(stock_id, pixbufs)
-
-    def add_stock_from_pixbuf(self, stock_id, pixbuf):
-        """
-            Registers a stock icon from a pixbuf
-        """
-        self.add_stock_from_pixbufs([pixbuf])
-
-    def add_stock_from_pixbufs(self, stock_id, pixbufs):
-        """
-            Registers a stock icon from pixbufs
-        """
-        icon_set = gtk.IconSet()
-
-        for pixbuf in pixbufs:
-            icon_source = gtk.IconSource()
-            icon_source.set_pixbuf(pixbuf)
-            icon_set.add_source(icon_source)
-        
-        self.icon_factory.add(stock_id, icon_set)

@@ -1,8 +1,7 @@
 # -*- Mode: Python; coding: utf-8; indent-tabs-mode: nil; tab-width: 4 -*-
-from BeautifulSoup import BeautifulSoup, NavigableString
+from BeautifulSoup import BeautifulSoup
 from datetime import datetime, date
 import pytz
-from dateutil.relativedelta import relativedelta
 import threading, re
 from Queue import Queue
 import urllib

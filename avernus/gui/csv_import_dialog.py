@@ -1,19 +1,21 @@
 #!/usr/bin/env python
 
-import gtk, os, pango
+from gi.repository import Gtk
+import os
+from gi.repository import Pango
 from avernus.gui import gui_utils
 from avernus import csvimporter, config
 from avernus.controller import controller
 
 
-class CSVImportDialog(gtk.Dialog):
+class CSVImportDialog(Gtk.Dialog):
 
     TITLE = _("Import CSV")
 
     def __init__(self, widget=None, account=None):
-        gtk.Dialog.__init__(self, self.TITLE, None
-                            , gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
-                     (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,))
+        Gtk.Dialog.__init__(self, self.TITLE, None
+                            , Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,
+                     (Gtk.STOCK_CANCEL, Gtk.ResponseType.REJECT,))
         self.account = account
         self.config = config.avernusConfig()
         self._init_widgets()
@@ -28,23 +30,24 @@ class CSVImportDialog(gtk.Dialog):
         self.process_result(response = response)
 
     def _init_widgets(self):
-        self.import_button = self.add_button('Import', gtk.RESPONSE_ACCEPT)
+        self.import_button = self.add_button('Import', Gtk.ResponseType.ACCEPT)
         self.import_button.set_sensitive(False)
         vbox = self.get_content_area()
-        fileBox = gtk.HBox()
-        vbox.pack_start(fileBox, fill=False, expand=False)
-        fileBox.pack_start(gtk.Label('File to import'), fill=False, expand=False)
-        self.fcbutton = gtk.FileChooserButton('File to import')
+        fileBox = Gtk.HBox()
+        vbox.pack_start(fileBox, False, False, 0)
+        fileBox.pack_start(Gtk.Label('File to import'), False, False, 0)
+        self.fcbutton = Gtk.FileChooserButton()
+        self.fcbutton.set_title(_('File to import'))
         self.file = None
         self.fcbutton.connect('file-set', self._on_file_set)
         folder = self.config.get_option('last_csv_folder')
         if folder is not None:
             self.fcbutton.set_current_folder(folder)
-        fileBox.pack_start(self.fcbutton, fill=True)
-        accBox = gtk.HBox()
-        vbox.pack_start(accBox, fill=False, expand=False)
-        accBox.pack_start(gtk.Label('Target account'), fill=False, expand=False)
-        model = gtk.ListStore(object, str)
+        fileBox.pack_start(self.fcbutton, True, True, 0)
+        accBox = Gtk.HBox()
+        vbox.pack_start(accBox, False, False, 0)
+        accBox.pack_start(Gtk.Label('Target account'), False, False, 0)
+        model = Gtk.ListStore(object, str)
         i = 0
         active = -1
         for account in controller.getAllAccount():
@@ -52,36 +55,38 @@ class CSVImportDialog(gtk.Dialog):
             if self.account == account:
                 active = i
             i+=1
-        self.account_cb = gtk.ComboBox(model)
+        self.account_cb = Gtk.ComboBox()
+        self.account_cb.set_model(model)
         if active>-1:
             self.account_cb.set_active(active)
-        cell = gtk.CellRendererText()
+        cell = Gtk.CellRendererText()
         self.account_cb.pack_start(cell, True)
         self.account_cb.add_attribute(cell, 'text', 1)
         self.account_cb.connect('changed', self._on_account_changed)
-        accBox.pack_start(self.account_cb, fill=False, expand=True)
+        accBox.pack_start(self.account_cb, False, True, 0)
 
         if self.config.get_option('category_assignments_on_import') == 'True':
             self.b_assignments = True
         else:
             self.b_assignments = False
-        category_assignment_button = gtk.CheckButton(label=_('Do category assignments'))
+        category_assignment_button = Gtk.CheckButton(label=_('Do category assignments'))
         category_assignment_button.set_active(self.b_assignments)
-        accBox.pack_start(category_assignment_button)
+        accBox.pack_start(category_assignment_button, True, True, 0)
         category_assignment_button.connect('toggled', self.on_toggle_assignments)
 
-        frame = gtk.Frame('Preview')
-        sw = gtk.ScrolledWindow()
-        sw.set_policy(gtk.POLICY_AUTOMATIC,gtk.POLICY_AUTOMATIC)
+        frame = Gtk.Frame()
+        frame.set_label('Preview')
+        sw = Gtk.ScrolledWindow()
+        sw.set_policy(Gtk.PolicyType.AUTOMATIC,Gtk.PolicyType.AUTOMATIC)
         self.tree = PreviewTree()
         frame.add(sw)
 
         sw.add(self.tree)
-        vbox.pack_start(frame)
+        vbox.pack_start(frame, True, True, 0)
         self.show_all()
 
-    def process_result(self, widget=None, response = gtk.RESPONSE_ACCEPT):
-        if response == gtk.RESPONSE_ACCEPT:
+    def process_result(self, widget=None, response = Gtk.ResponseType.ACCEPT):
+        if response == Gtk.ResponseType.ACCEPT:
             model = self.account_cb.get_model()
             self.importer.create_transactions(self.account)
         self.destroy()
@@ -124,18 +129,18 @@ class PreviewTree(gui_utils.Tree):
         self.set_rules_hint(True)
 
         self.set_size_request(700,400)
-        self.model = gtk.ListStore(str, str, float, bool, str, str)
+        self.model = Gtk.ListStore(object, str, float, bool, str, str)
         self.set_model(self.model)
 
         column, cell = self.create_check_column('import?', 3)
         cell.connect("toggled", self.on_toggled)
-        column, cell = self.create_column('date', 0)
+        column, cell = self.create_column('date', 0, func=gui_utils.date_to_string)
         column.add_attribute(cell, 'foreground', 5)
         cell.set_property('foreground-set', True)
         column, cell = self.create_column('description', 1)
         column.add_attribute(cell, 'foreground', 5)
         cell.set_property('foreground-set', True)
-        cell.props.wrap_mode = pango.WRAP_WORD
+        cell.props.wrap_mode = Pango.WrapMode.WORD
         cell.props.wrap_width = 300
         column, cell = self.create_column('amount', 2, func=gui_utils.currency_format)
         column.add_attribute(cell, 'foreground', 5)

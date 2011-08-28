@@ -2,8 +2,6 @@ import unittest
 import avernus.objects.store as store
 import avernus.objects.model as model
 from avernus.controller import controller
-import avernus.objects.container as container
-from avernus.objects.position import PortfolioPosition as Position
 import datetime
 
 dbfile = ":memory:"
@@ -23,7 +21,7 @@ class Test(unittest.TestCase):
                                        last_update=datetime.datetime.now(),
                                        comment="einKommentar",
                                        )
-            s1 = controller.newPortfolioPosition(
+            controller.newPortfolioPosition(
                                    date=datetime.datetime.now(),
                                    price=1.58,
                                    quantity=152,
@@ -31,7 +29,7 @@ class Test(unittest.TestCase):
                                    stock=None,
                                    comment="allesKommentieren"
                                   )
-            s2 = controller.newPortfolioPosition(
+            controller.newPortfolioPosition(
                                     date=datetime.datetime.now(),
                                    price=1.85,
                                    quantity=125,
@@ -39,7 +37,7 @@ class Test(unittest.TestCase):
                                    stock=None,
                                    comment="allesKommentieren2"
                                   )
-            s3 = controller.newPortfolioPosition(
+            controller.newPortfolioPosition(
                                 date=datetime.datetime.now(),
                                price=14.5,
                                quantity=512,

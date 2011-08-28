@@ -1,20 +1,20 @@
-import gtk
-import gobject
+from gi.repository import Gtk
+from gi.repository import GObject
 from avernus import pubsub
 
 
-class ProgressMonitor(gtk.Frame):
+class ProgressMonitor(Gtk.Frame):
     """
         A progress monitor
     """
-    def __init__(self,id, desc, icon):
+    def __init__(self, progress_id, desc, icon):
         """
         Initializes the monitor
         """
-        gtk.Frame.__init__(self)
+        Gtk.Frame.__init__(self)
         self.desc = desc
         self.icon = icon
-        self.id = id
+        self.id = progress_id
         self._setup_widgets()
         self.show_all()
         
@@ -22,15 +22,15 @@ class ProgressMonitor(gtk.Frame):
         """
         Called when the progress has been updated
         """
-        gobject.idle_add(self.progress.set_fraction, float(percent) / 100)
-        gobject.idle_add(self.progress.set_text, '%d%%' % percent)
+        GObject.idle_add(self.progress.set_fraction, float(percent) / 100)
+        GObject.idle_add(self.progress.set_text, '%d%%' % percent)
 
     def progress_update_pulse(self, *args):
-        gobject.idle_add(self.progress.pulse)
+        GObject.idle_add(self.progress.pulse)
         return True
         
     def progress_update_auto(self):
-        gobject.timeout_add(100, self.progress_update_pulse)
+        GObject.timeout_add(100, self.progress_update_pulse)
 
     def stop(self, *e):
         """
@@ -43,56 +43,56 @@ class ProgressMonitor(gtk.Frame):
         """
         Sets up the various widgets for this object
         """
-        self.set_shadow_type(gtk.SHADOW_NONE)
+        self.set_shadow_type(Gtk.ShadowType.NONE)
         desc = self.desc
         icon = self.icon
 
-        box = gtk.VBox()
+        box = Gtk.VBox()
         box.set_border_width(3)
-        label = gtk.Label(desc)
+        label = Gtk.Label(label=desc)
         label.set_use_markup(True)
         label.set_alignment(0, 0.5)
         label.set_padding(3, 0)
 
-        box.pack_start(label, False, False)
+        box.pack_start(label, False, False, 0)
 
-        pbox = gtk.HBox()
+        pbox = Gtk.HBox()
         pbox.set_spacing(3)
 
-        img = gtk.Image()
-        img.set_from_stock(icon, gtk.ICON_SIZE_SMALL_TOOLBAR)
+        img = Gtk.Image()
+        img.set_from_stock(icon, Gtk.IconSize.SMALL_TOOLBAR)
         img.set_size_request(32, 32)
-        pbox.pack_start(img, False, False)
+        pbox.pack_start(img, False, False, 0)
 
-        ibox = gtk.VBox()
-        l = gtk.Label()
+        ibox = Gtk.VBox()
+        l = Gtk.Label()
         l.set_size_request(2, 2)
-        ibox.pack_start(l, False, False)
-        self.progress = gtk.ProgressBar()
+        ibox.pack_start(l, False, False, 0)
+        self.progress = Gtk.ProgressBar()
         self.progress.set_text(' ')
 
-        ibox.pack_start(self.progress, True, False)
-        l = gtk.Label()
+        ibox.pack_start(self.progress, True, False, 0)
+        l = Gtk.Label()
         l.set_size_request(2, 2)
-        ibox.pack_start(l, False, False)
-        pbox.pack_start(ibox, True, True)
+        ibox.pack_start(l, False, False, 0)
+        pbox.pack_start(ibox, True, True, 0)
 
-        button = gtk.Button()
-        img = gtk.Image()
-        img.set_from_stock('gtk-stop', gtk.ICON_SIZE_SMALL_TOOLBAR)
+        button = Gtk.Button()
+        img = Gtk.Image()
+        img.set_from_stock('gtk-stop', Gtk.IconSize.SMALL_TOOLBAR)
         button.set_image(img)
 
         #pbox.pack_start(button, False, False)
         button.connect('clicked', self.stop)
 
-        box.pack_start(pbox, True, True)
+        box.pack_start(pbox, True, True, 0)
         self.add(box)
 
 
 box = None
 monitors = {}
 
-def add_monitor(id, description, stock_icon):
+def add_monitor(progress_id, description, stock_icon):
     """
     Adds a progress box
 
@@ -101,18 +101,18 @@ def add_monitor(id, description, stock_icon):
     """
     if not monitors:
         box.show()
-    monitor = ProgressMonitor(id, description, stock_icon)
+    monitor = ProgressMonitor(progress_id, description, stock_icon)
     #self.box.add(monitor)
-    box.pack_start(monitor, False, False)
+    box.pack_start(monitor, False, False, 0)
 
-    monitors[id] = monitor
+    monitors[progress_id] = monitor
     return monitor
 
-def remove_monitor(id):
+def remove_monitor(progress_id):
     """
     Removes a monitor from the manager
     """
-    box.remove(monitors[id])
-    del monitors[id]
+    box.remove(monitors[progress_id])
+    del monitors[progress_id]
     if not monitors:
         box.hide()

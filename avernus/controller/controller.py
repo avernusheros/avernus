@@ -14,7 +14,6 @@ from avernus.objects.source_info import SourceInfo
 from avernus.objects.stock import Stock
 from avernus.objects.transaction import Transaction
 import datetime
-import gobject
 import itertools
 import logging
 import sys
@@ -162,8 +161,8 @@ def load_sample_data():
     acc = newAccount(_('sample account'))
     newAccountTransaction(account=acc, description='this is a sample transaction', amount=99.99, date=datetime.date.today())
     newAccountTransaction(account=acc, description='another sample transaction', amount=-33.90, date=datetime.date.today())
-    pf = newPortfolio(_('sample portfolio'))
-    wl = newWatchlist(_('sample watchlist'))
+    newPortfolio(_('sample portfolio'))
+    newWatchlist(_('sample watchlist'))
 
 def update_all():
     datasource_manager.update_stocks(get_all_used_stocks())
@@ -181,20 +180,20 @@ def update_historical_prices():
         i+=1
         yield float(i)/l*100
 
-def newPortfolio(name, id=None, last_update = datetime.datetime.now(), comment=""):
-    result = Portfolio(id=id, name=name,last_update=last_update,comment=comment)
+def newPortfolio(name, pf_id=None, last_update = datetime.datetime.now(), comment=""):
+    result = Portfolio(id=pf_id, name=name,last_update=last_update,comment=comment)
     result.controller = controller
     result.insert()
     return result
 
-def newWatchlist(name, id=None, last_update = datetime.datetime.now(), comment=""):
-    result = Watchlist(id=id, name=name,last_update=last_update,comment=comment)
+def newWatchlist(name, wl_id=None, last_update = datetime.datetime.now(), comment=""):
+    result = Watchlist(id=wl_id, name=name,last_update=last_update,comment=comment)
     result.controller = controller
     result.insert()
     return result
 
-def newAccount(name, id=None, amount=0, accounttype=1):
-    result = Account(id=id, name=name, amount=amount, type=accounttype)
+def newAccount(name, a_id=None, amount=0, accounttype=1):
+    result = Account(id=a_id, name=name, amount=amount, type=accounttype)
     result.controller = controller
     result.insert()
     return result
@@ -509,4 +508,4 @@ def getBuyTransaction(portfolio_position):
 
 def yieldSellTransactions(portfolio_position):
     for ta in Transaction.getByColumns({'position': portfolio_position.id, 'type':0}, create=True):
-       yield ta
+        yield ta

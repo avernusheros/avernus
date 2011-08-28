@@ -3,54 +3,54 @@
 from avernus.controller import chartController
 from avernus.gui import charts
 from avernus.controller import controller
-import gtk
+from gi.repository import Gtk
 
 
-class ChartTab(gtk.ScrolledWindow):
+class ChartTab(Gtk.ScrolledWindow):
 
     def __init__(self, pf):
-        gtk.ScrolledWindow.__init__(self)
+        Gtk.ScrolledWindow.__init__(self)
         self.pf = pf
-        self.set_property('hscrollbar-policy', gtk.POLICY_AUTOMATIC)
-        self.set_property('vscrollbar-policy', gtk.POLICY_AUTOMATIC)
+        self.set_property('hscrollbar-policy', Gtk.PolicyType.AUTOMATIC)
+        self.set_property('vscrollbar-policy', Gtk.PolicyType.AUTOMATIC)
         self.show_all()
 
     def show(self):
         if len(self.pf) == 0:
-            self.add_with_viewport(gtk.Label('\n%s\n%s\n\n' % (_('No data!'), _('Add positions to portfolio first.') )))
+            self.add_with_viewport(Gtk.Label(label='\n%s\n%s\n\n' % (_('No data!'), _('Add positions to portfolio first.') )))
             self.show_all()
             return
 
-        width = self.allocation[2]
+        width = self.get_allocation().width
         self.clear()
-        table = gtk.Table()
+        table = Gtk.Table()
 
         #value over time chart
-        hbox = gtk.HBox()
+        hbox = Gtk.HBox()
         table.attach(hbox, 0, 2, 0, 1)
-        label = gtk.Label()
+        label = Gtk.Label()
         label.set_markup('<b>'+_('Value over time')+'</b>')
-        hbox.pack_start(label, fill=True, expand=True)
+        hbox.pack_start(label, True, True, 0)
 
-        combobox = gtk.combo_box_new_text()
+        combobox = Gtk.ComboBoxText()
         for st in ['daily', 'weekly', 'monthly', 'yearly']:
             combobox.append_text(st)
         combobox.set_active(2)
         combobox.connect('changed', self.on_zoom_change)
-        hbox.pack_start(combobox, fill=False, expand=False)
+        hbox.pack_start(combobox, False, False, 0)
 
         self.pfvalue_chart_controller = chartController.PortfolioValueChartController(self.pf, 'monthly')
         self.pfvalue_chart = charts.SimpleLineChart(self.pfvalue_chart_controller, width)
         table.attach(self.pfvalue_chart, 0, 2, 1, 2)
 
-        label = gtk.Label()
+        label = Gtk.Label()
         label.set_markup('<b>'+_('Market value')+'</b>')
         table.attach(label, 0,1,2,3)
         chart_controller = chartController.PositionAttributeChartController(self.pf, 'name')
         chart = charts.Pie(chart_controller, width/2)
         table.attach(chart, 0,1,3,4)
 
-        label = gtk.Label()
+        label = Gtk.Label()
         label.set_markup('<b>'+_('Investment types')+'</b>')
         table.attach(label,1,2,2,3)
         chart_controller = chartController.PositionAttributeChartController(self.pf, 'type_string')
@@ -61,7 +61,7 @@ class ChartTab(gtk.ScrolledWindow):
         col = 0
         switch = True
         for dim in controller.getAllDimension():
-            label = gtk.Label()
+            label = Gtk.Label()
             label.set_markup('<b>'+dim.name+'</b>')
             table.attach(label, col,col+1,row,row+1)
             chart_controller = chartController.DimensionChartController(self.pf, dim)
@@ -77,14 +77,14 @@ class ChartTab(gtk.ScrolledWindow):
         if not switch:
             row+=2
 
-        label = gtk.Label()
+        label = Gtk.Label()
         label.set_markup('<b>'+_('Dividends per Year')+'</b>')
         table.attach(label,0,2,row,row+1)
         chart_controller = chartController.DividendsPerYearChartController(self.pf)
         chart = charts.BarChart(chart_controller,width)
         table.attach(chart, 0,2,row+2,row+3)
 
-        label = gtk.Label()
+        label = Gtk.Label()
         label.set_markup('<b>'+_('Dividends')+'</b>')
         table.attach(label,0,2,row+3,row+4)
         chart_controller = chartController.DividendsPerPositionChartController(self.pf)

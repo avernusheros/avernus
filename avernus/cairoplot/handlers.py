@@ -1,5 +1,5 @@
 import cairo
-import gtk
+from gi.repository import Gtk
 
 class Handler(object):
     """Base class for all handlers."""
@@ -90,22 +90,22 @@ class SVGHandler(VectorHandler):
         self.surface = cairo.SVGSurface(filename, width, height)
 
 
-class GTKHandler(gtk.DrawingArea, Handler):
+class GTKHandler(Gtk.DrawingArea, Handler):
     
     def __init__(self, width, height, *args, **kwargs):
         """Create Handler for arbitrary surfaces."""
         Handler.__init__(self)
-        gtk.DrawingArea.__init__(self)
+        Gtk.DrawingArea.__init__(self)
         self.context = None
         self.plot = None
         self.set_size_request(width, height)
 
         # connect events for resizing/redrawing
-        self.connect("expose_event", self.on_expose_event)
+        self.connect("draw", self.on_expose_event)
 
     def on_expose_event(self, widget, data):
         """Redraws plot if need be."""
-        self.context = widget.window.cairo_create()
+        self.context = widget.get_window().cairo_create()
         if (self.plot is not None):
             self.plot.render()
 
@@ -118,4 +118,3 @@ class GTKHandler(gtk.DrawingArea, Handler):
         allocation = self.get_allocation()
         plot.dimensions[0] = allocation.width
         plot.dimensions[1] = allocation.height
-        

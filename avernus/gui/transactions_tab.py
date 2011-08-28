@@ -1,18 +1,19 @@
 #!/usr/bin/env python
 
-import gtk
+from gi.repository import Gtk
 from avernus import pubsub
 from avernus.gui import gui_utils, dialogs
 from avernus.gui.gui_utils import Tree, get_datetime_string
 import avernus.objects
 
 
-class TransactionsTab(gtk.ScrolledWindow):
+class TransactionsTab(Gtk.ScrolledWindow):
+    
     def __init__(self, item):
-        gtk.ScrolledWindow.__init__(self)
+        Gtk.ScrolledWindow.__init__(self)
         self.transactions_tree = TransactionsTree(item)
-        self.set_property('hscrollbar-policy', gtk.POLICY_AUTOMATIC)
-        self.set_property('vscrollbar-policy', gtk.POLICY_AUTOMATIC)
+        self.set_property('hscrollbar-policy', Gtk.PolicyType.AUTOMATIC)
+        self.set_property('vscrollbar-policy', Gtk.PolicyType.AUTOMATIC)
         self.add(self.transactions_tree)
         self.show_all()
 
@@ -26,7 +27,7 @@ class TransactionsTree(Tree):
     def __init__(self, portfolio):
         self.portfolio = portfolio
         Tree.__init__(self)
-        self.model = gtk.TreeStore(object,str, str, object,float, float, float, float)
+        self.model = Gtk.TreeStore(object,str, str, object,float, float, float, float)
         self.set_model(self.model)
 
         self.create_column(_('Date'), 3, func=gui_utils.date_to_string)
@@ -38,11 +39,11 @@ class TransactionsTree(Tree):
         self.create_column(_('Transaction Costs'), 6, func=gui_utils.currency_format)
         self.create_column(_('Total'), 7, func=gui_utils.float_to_red_green_string_currency)
         
-        self.model.set_sort_column_id(3, gtk.SORT_ASCENDING)
+        self.model.set_sort_column_id(3, Gtk.SortType.ASCENDING)
 
-        self.actiongroup = gtk.ActionGroup('portfolio_transactions')
+        self.actiongroup = Gtk.ActionGroup('portfolio_transactions')
         self.actiongroup.add_actions([
-                ('edit' ,  gtk.STOCK_EDIT, 'edit transaction',   None, _('Edit selected transaction'),   self.on_edit),
+                ('edit' ,  Gtk.STOCK_EDIT, 'edit transaction',   None, _('Edit selected transaction'),   self.on_edit),
                                 ])
         pubsub.subscribe('transaction.added', self.on_transaction_created)
         self.connect('button_press_event', self.on_button_press)
@@ -78,7 +79,7 @@ class TransactionsTree(Tree):
         self.insert_transaction(transaction)
          
     def insert_transaction(self, ta):
-        self.model.append(None, [ta, ta.type_string, gui_utils.get_name_string(ta.position.stock), ta.date.date(), ta.quantity, ta.price, ta.costs, ta.total])
+        self.model.append(None, [ta, ta.type_string, gui_utils.get_name_string(ta.position.stock), ta.date.date(), float(ta.quantity), ta.price, ta.costs, ta.total])
 
     def show_context_menu(self, event):
         transaction, iter = self.get_selected_item()

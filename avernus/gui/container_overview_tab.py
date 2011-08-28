@@ -1,25 +1,25 @@
 #!/usr/bin/env python
 
-import gtk
+from gi.repository import Gtk
 from avernus import pubsub
 from avernus.controller import controller
 from avernus.gui import gui_utils
 
 
-class ContainerOverviewTab(gtk.VBox):
+class ContainerOverviewTab(Gtk.VBox):
 
     def __init__(self, item):
-        gtk.VBox.__init__(self)
+        Gtk.VBox.__init__(self)
         if item.name == 'Accounts':
             tree = AccountOverviewTree()
         else:
             tree = ContainerOverviewTree(item)
-        sw = gtk.ScrolledWindow()
-        sw.set_property('hscrollbar-policy', gtk.POLICY_AUTOMATIC)
-        sw.set_property('vscrollbar-policy', gtk.POLICY_AUTOMATIC)
+        sw = Gtk.ScrolledWindow()
+        sw.set_property('hscrollbar-policy', Gtk.PolicyType.AUTOMATIC)
+        sw.set_property('vscrollbar-policy', Gtk.PolicyType.AUTOMATIC)
         sw.add(tree)
 
-        self.pack_start(sw)
+        self.pack_start(sw, True, True, 0)
         self.show_all()
 
 
@@ -28,7 +28,7 @@ class AccountOverviewTree(gui_utils.Tree):
     def __init__(self):
         gui_utils.Tree.__init__(self)
         self.set_rules_hint(True)
-        self.model = gtk.ListStore(object, str, float, int, object, object)
+        self.model = Gtk.ListStore(object, str, float, int, object, object)
         self.set_model(self.model)
         self.create_column(_('Name'), 1)
         self.create_column(_('Amount'), 2, func=gui_utils.currency_format)
@@ -62,7 +62,7 @@ class ContainerOverviewTree(gui_utils.Tree):
     def __init__(self, container):
         self.container = container
         gui_utils.Tree.__init__(self)
-        self.set_model(gtk.ListStore(object,str, float,float, float, float, object,int,float))
+        self.set_model(Gtk.ListStore(object,str, float,float, float, float, object,int,float))
 
         self.create_column(_('Name'), self.NAME)
         self.create_column(_('Current value'), self.VALUE, func=gui_utils.currency_format)
@@ -104,6 +104,8 @@ class ContainerOverviewTree(gui_utils.Tree):
         elif self.container.name == 'Portfolios':
             items = controller.getAllPortfolio()
         self.overall_value = sum([i.cvalue for i in items])
+        if self.overall_value == 0.0:
+            self.overall_value = 1
         for item in items:
             self.insert_item(item)
 
@@ -122,7 +124,7 @@ class ContainerOverviewTree(gui_utils.Tree):
                                item.name,
                                item.cvalue,
                                item.change,
-                               item.percent,
+                               float(item.percent),
                                item.ter,
                                item.last_update,
                                len(item),

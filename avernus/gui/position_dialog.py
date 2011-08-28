@@ -8,34 +8,34 @@ from avernus.objects.position import MetaPosition
 import datetime
 import locale
 import logging
-import gtk
+from gi.repository import Gtk
 
 logger = logging.getLogger(__name__)
 
 
 
-class PositionDialog(gtk.Dialog):
+class PositionDialog(Gtk.Dialog):
 
     def __init__(self, position):
-        gtk.Dialog.__init__(self, _("Edit position - ")+position.name, None
-                            , gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
-                     (gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
+        Gtk.Dialog.__init__(self, _("Edit position - ")+position.name, None
+                            , Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,
+                     (Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT))
         vbox = self.get_content_area()
-        notebook = gtk.Notebook()
-        vbox.pack_start(notebook)
+        notebook = Gtk.Notebook()
+        vbox.pack_start(notebook, True, True, 0)
         if isinstance(position, MetaPosition):
             self.is_meta = True
-            self.position_table = gtk.Label('This is a meta-position!')
+            self.position_table = Gtk.Label(label='This is a meta-position!')
         else:
             self.is_meta = False
             self.position_table = EditPositionTable(position)
         self.quotation_table = QuotationTable(position.stock)
         self.transactions_table = TransactionsTab(position)
         self.stock_table = dialogs.EditStockTable(position.stock, self)
-        notebook.append_page(self.position_table, gtk.Label(_('Position')))
-        notebook.append_page(self.stock_table, gtk.Label(_('Stock')))
-        notebook.append_page(self.transactions_table, gtk.Label(_('Transactions')))
-        notebook.append_page(self.quotation_table, gtk.Label(_('Quotations')))
+        notebook.append_page(self.position_table, Gtk.Label(label=_('Position')))
+        notebook.append_page(self.stock_table, Gtk.Label(label=_('Stock')))
+        notebook.append_page(self.transactions_table, Gtk.Label(label=_('Transactions')))
+        notebook.append_page(self.quotation_table, Gtk.Label(label=_('Quotations')))
         
         self.previous_page = 0
         notebook.connect("switch-page", self.on_switch_page)
@@ -55,33 +55,33 @@ class PositionDialog(gtk.Dialog):
         self.destroy()
 
 
-class QuotationTable(gtk.Table):
+class QuotationTable(Gtk.Table):
 
     def __init__(self, stock):
-        gtk.Table.__init__(self)
+        Gtk.Table.__init__(self)
         self.stock = stock
 
-        self.attach(gtk.Label(_('First quotation')), 0,1,0,1, yoptions=gtk.FILL)
-        self.first_label = gtk.Label()
-        self.attach(self.first_label, 1,2,0,1, yoptions=gtk.FILL)
-        self.attach(gtk.Label(_('Last quotation')), 0,1,1,2, yoptions=gtk.FILL)
-        self.last_label = gtk.Label()
-        self.attach(self.last_label, 1,2,1,2, yoptions=gtk.FILL)
-        self.attach(gtk.Label(_('# quotations')), 0,1,2,3, yoptions=gtk.FILL)
-        self.count_label = gtk.Label()
-        self.attach(self.count_label, 1,2,2,3, yoptions=gtk.FILL)
+        self.attach(Gtk.Label(label=_('First quotation')), 0,1,0,1, yoptions=Gtk.AttachOptions.FILL)
+        self.first_label = Gtk.Label()
+        self.attach(self.first_label, 1,2,0,1, yoptions=Gtk.AttachOptions.FILL)
+        self.attach(Gtk.Label(label=_('Last quotation')), 0,1,1,2, yoptions=Gtk.AttachOptions.FILL)
+        self.last_label = Gtk.Label()
+        self.attach(self.last_label, 1,2,1,2, yoptions=Gtk.AttachOptions.FILL)
+        self.attach(Gtk.Label(label=_('# quotations')), 0,1,2,3, yoptions=Gtk.AttachOptions.FILL)
+        self.count_label = Gtk.Label()
+        self.attach(self.count_label, 1,2,2,3, yoptions=Gtk.AttachOptions.FILL)
 
-        button = gtk.Button(_('Get quotations'))
+        button = Gtk.Button(_('Get quotations'))
         button.connect('clicked', self.on_get_button_clicked)
-        self.attach(button, 0,2,4,5, yoptions=gtk.FILL)
+        self.attach(button, 0,2,4,5, yoptions=Gtk.AttachOptions.FILL)
 
-        button = gtk.Button(_('Delete quotations'))
+        button = Gtk.Button(_('Delete quotations'))
         button.connect('clicked', self.on_delete_button_clicked)
-        self.attach(button, 0,2,5,6, yoptions=gtk.FILL)
+        self.attach(button, 0,2,5,6, yoptions=Gtk.AttachOptions.FILL)
 
-        button = gtk.Button(_('Edit quotations'))
+        button = Gtk.Button(_('Edit quotations'))
         button.connect('clicked', self.on_edit_button_clicked)
-        self.attach(button, 0,2,6,7, yoptions=gtk.FILL)
+        self.attach(button, 0,2,6,7, yoptions=Gtk.AttachOptions.FILL)
 
         self.update_labels()
 
@@ -113,25 +113,25 @@ class QuotationTable(gtk.Table):
 
 
 
-class TransactionsTab(gtk.VBox):
+class TransactionsTab(Gtk.VBox):
 
     def __init__(self, position):
         self.position = position
 
-        gtk.VBox.__init__(self)
+        Gtk.VBox.__init__(self)
 
         #init wigets
         self.tree = gui_utils.Tree()
-        sw = gtk.ScrolledWindow()
-        sw.set_property('hscrollbar-policy', gtk.POLICY_AUTOMATIC)
-        sw.set_property('vscrollbar-policy', gtk.POLICY_AUTOMATIC)
-        self.pack_start(sw, expand=True, fill=True)
+        sw = Gtk.ScrolledWindow()
+        sw.set_property('hscrollbar-policy', Gtk.PolicyType.AUTOMATIC)
+        sw.set_property('vscrollbar-policy', Gtk.PolicyType.AUTOMATIC)
+        self.pack_start(sw, True, True, 0)
         sw.add(self.tree)
-        toolbar = gtk.Toolbar()
-        self.pack_start(toolbar, expand=False, fill=True)
+        toolbar = Gtk.Toolbar()
+        self.pack_start(toolbar, False, True, 0)
 
         #init tree
-        self.model = gtk.ListStore(object,str, object,float, float, float)
+        self.model = Gtk.ListStore(object, str, object, float, float, float)
         self.tree.set_model(self.model)
 
         self.date_column, cell = self.tree.create_column(_('Date'), 2, func=gui_utils.date_to_string)
@@ -139,43 +139,43 @@ class TransactionsTab(gtk.VBox):
         self.model.set_sort_func(2, gui_utils.sort_by_time, 2)
         self.tree.create_column(_('Type'), 1)
 
-        cell = gtk.CellRendererSpin()
-        adjustment = gtk.Adjustment(0.00, 0, 9999999, 0.01, 10, 0)
+        cell = Gtk.CellRendererSpin()
+        adjustment = Gtk.Adjustment(0.00, 0, 9999999, 0.01, 10, 0)
         cell.set_property("digits", 2)
         cell.set_property("editable", True)
         cell.set_property("adjustment", adjustment)
         cell.connect("edited", self.on_shares_edited, 3)
-        self.shares_column = gtk.TreeViewColumn(_('Shares'), cell, text=3)
+        self.shares_column = Gtk.TreeViewColumn(_('Shares'), cell, text=3)
         self.shares_column.set_cell_data_func(cell, gui_utils.float_format, 3)
         self.tree.append_column(self.shares_column)
 
-        cell = gtk.CellRendererSpin()
-        adjustment = gtk.Adjustment(0.00, 0, 9999999, 0.01, 10, 0)
+        cell = Gtk.CellRendererSpin()
+        adjustment = Gtk.Adjustment(0.00, 0, 9999999, 0.01, 10, 0)
         cell.set_property("digits", 2)
         cell.set_property("editable", True)
         cell.set_property("adjustment", adjustment)
         cell.connect("edited", self.on_price_edited, 4)
-        self.price_column = gtk.TreeViewColumn(_('Price'), cell, text=4)
+        self.price_column = Gtk.TreeViewColumn(_('Price'), cell, text=4)
         self.price_column.set_cell_data_func(cell, gui_utils.currency_format, 4)
         self.tree.append_column(self.price_column)
 
-        cell = gtk.CellRendererSpin()
-        adjustment = gtk.Adjustment(0.00, 0, 9999999, 0.01, 10, 0)
+        cell = Gtk.CellRendererSpin()
+        adjustment = Gtk.Adjustment(0.00, 0, 9999999, 0.01, 10, 0)
         cell.set_property("digits", 2)
         cell.set_property("editable", True)
         cell.set_property("adjustment", adjustment)
         cell.connect("edited", self.on_costs_edited, 5)
-        self.costs_column = gtk.TreeViewColumn(_('Transaction Costs'), cell, text=5)
+        self.costs_column = Gtk.TreeViewColumn(_('Transaction Costs'), cell, text=5)
         self.costs_column.set_cell_data_func(cell, gui_utils.currency_format, 5)
         self.tree.append_column(self.costs_column)
 
         self.tree.set_model(self.model)
 
         #init toolbar
-        actiongroup = gtk.ActionGroup('transactionstab')
+        actiongroup = Gtk.ActionGroup('transactionstab')
         actiongroup.add_actions([
-               # ('add', gtk.STOCK_ADD, 'new quotation', None, _('Add new quotation'), self.on_add),
-                ('remove', gtk.STOCK_DELETE, 'remove quotation', None, _('Remove selected quotation'), self.on_remove)
+               # ('add', Gtk.STOCK_ADD, 'new quotation', None, _('Add new quotation'), self.on_add),
+                ('remove', Gtk.STOCK_DELETE, 'remove quotation', None, _('Remove selected quotation'), self.on_remove)
             ])
         for action in actiongroup.list_actions():
             toolbar.insert(action.create_tool_item(), -1)
@@ -185,7 +185,7 @@ class TransactionsTab(gtk.VBox):
             self.insert_transaction(transaction)
 
     def insert_transaction(self, ta):
-        self.model.append([ta, ta.type_string, ta.date.date(), ta.quantity, ta.price, ta.costs])
+        self.model.append([ta, ta.type_string, ta.date.date(), float(ta.quantity), ta.price, ta.costs])
 
     def on_row_activated(self, treeview, path, view_column):
         if view_column == self.date_column:
@@ -209,13 +209,13 @@ class TransactionsTab(gtk.VBox):
         selection = self.tree.get_selection()
         model, selection_iter = selection.get_selected()
         if selection_iter:
-            dlg = gtk.MessageDialog(None,
-                     gtk.DIALOG_DESTROY_WITH_PARENT, gtk.MESSAGE_QUESTION,
-                     gtk.BUTTONS_OK_CANCEL)
+            dlg = Gtk.MessageDialog(None,
+                     Gtk.DialogFlags.DESTROY_WITH_PARENT, Gtk.MessageType.QUESTION,
+                     Gtk.ButtonsType.OK_CANCEL)
             dlg.set_markup(_("Permanently delete selected transaction?"))
             response = dlg.run()
             dlg.destroy()
-            if response == gtk.RESPONSE_OK:
+            if response == Gtk.ResponseType.OK:
                 #update position
                 ta = model[selection_iter][0]
                 if ta.is_sell():
@@ -255,46 +255,48 @@ class TransactionsTab(gtk.VBox):
 
 
 
-class EditHistoricalQuotationsDialog(gtk.Dialog):
+class EditHistoricalQuotationsDialog(Gtk.Dialog):
 
     def __init__(self, stock):
         self.stock = stock
 
-        gtk.Dialog.__init__(self, _("Quotations")+" - "+stock.name, None
-                            , gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
-                     (gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
+        Gtk.Dialog.__init__(self, _("Quotations")+" - "+stock.name, None
+                            , Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,
+                     (Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT))
         self.set_default_size(300, 300)
 
         #init wigets
         vbox = self.get_content_area()
         self.tree = gui_utils.Tree()
-        sw = gtk.ScrolledWindow()
-        sw.set_property('hscrollbar-policy', gtk.POLICY_AUTOMATIC)
-        sw.set_property('vscrollbar-policy', gtk.POLICY_AUTOMATIC)
-        vbox.pack_start(sw, expand=True, fill=True)
+        sw = Gtk.ScrolledWindow()
+        sw.set_property('hscrollbar-policy', Gtk.PolicyType.AUTOMATIC)
+        sw.set_property('vscrollbar-policy', Gtk.PolicyType.AUTOMATIC)
+        vbox.pack_start(sw, True, True, 0)
         sw.add(self.tree)
-        toolbar = gtk.Toolbar()
-        vbox.pack_start(toolbar, expand=False, fill=True)
+        toolbar = Gtk.Toolbar()
+        vbox.pack_start(toolbar, False, True, 0)
 
         #init tree
-        self.model = gtk.ListStore(object, object, float)
+        self.model = Gtk.ListStore(object, object, float)
         self.tree.set_model(self.model)
         self.date_column, cell = self.tree.create_column(_('Date'), 1, func=gui_utils.date_to_string)
         self.tree.connect("row-activated", self.on_row_activated)
 
-        cell = gtk.CellRendererSpin()
-        adjustment = gtk.Adjustment(0.00, 0, 9999999, 0.01, 10, 0)
+        cell = Gtk.CellRendererSpin()
+        adjustment = Gtk.Adjustment(0.00, 0, 9999999, 0.01, 10, 0)
         cell.set_property("editable", True)
+        cell.set_property("digits", 2)
         cell.set_property("adjustment", adjustment)
         cell.connect("edited", self.on_cell_edited)
-        self.price_column = gtk.TreeViewColumn(_('Price (close)'), cell, text=2)
+        self.price_column = Gtk.TreeViewColumn(_('Price (close)'), cell, text=2)
+        self.price_column.set_cell_data_func(cell, gui_utils.float_format, 2)
         self.tree.append_column(self.price_column)
 
         #init toolbar
-        actiongroup = gtk.ActionGroup('quotations')
+        actiongroup = Gtk.ActionGroup('quotations')
         actiongroup.add_actions([
-                ('add', gtk.STOCK_ADD, 'new quotation', None, _('Add new quotation'), self.on_add),
-                ('remove', gtk.STOCK_DELETE, 'remove quotation', None, _('Remove selected quotation'), self.on_remove)
+                ('add', Gtk.STOCK_ADD, 'new quotation', None, _('Add new quotation'), self.on_add),
+                ('remove', Gtk.STOCK_DELETE, 'remove quotation', None, _('Remove selected quotation'), self.on_remove)
             ])
         for action in actiongroup.list_actions():
             toolbar.insert(action.create_tool_item(), -1)
@@ -336,33 +338,39 @@ class EditHistoricalQuotationsDialog(gtk.Dialog):
             logger.debug("entered value is not a float", new_text)
 
 
-class EditPositionTable(gtk.Table):
+class EditPositionTable(Gtk.Table):
 
     def __init__(self, pos):
-        gtk.Table.__init__(self)
+        Gtk.Table.__init__(self)
         self.pos = pos
 
-        self.attach(gtk.Label(_('Shares')),0,1,0,1)
-        self.shares_entry = gtk.SpinButton(gtk.Adjustment(lower=0, upper=100000,step_incr=1.0, value = 0), digits=2)
+        self.attach(Gtk.Label(label=_('Shares')),0,1,0,1)
+        adjustment = Gtk.Adjustment(lower=0, upper=100000,step_increment=1.0, value = 0)
+        self.shares_entry = Gtk.SpinButton()
+        self.shares_entry.set_adjustment(adjustment)
+        self.shares_entry.set_digits(2)
         self.attach(self.shares_entry,1,2,0,1)
 
-        self.attach(gtk.Label(_('Buy price')),0,1,1,2)
-        self.price_entry = gtk.SpinButton(gtk.Adjustment(lower=0, upper=100000,step_incr=0.1, value = 1.0), digits=2)
+        self.attach(Gtk.Label(label=_('Buy price')),0,1,1,2)
+        adjustment = Gtk.Adjustment(lower=0, upper=100000,step_increment=0.1, value = 1)
+        self.price_entry = Gtk.SpinButton()
+        self.price_entry.set_adjustment(adjustment)
+        self.shares_entry.set_digits(2)
         self.attach(self.price_entry,1,2,1,2)
 
-        self.attach(gtk.Label(_('Buy date')),0,1,2,3)
-        self.calendar = gtk.Calendar()
+        self.attach(Gtk.Label(label=_('Buy date')),0,1,2,3)
+        self.calendar = Gtk.Calendar()
 
         self.attach(self.calendar,1,2,2,3)
-        self.attach(gtk.Label(_('Comment')),0,1,3,4)
+        self.attach(Gtk.Label(label=_('Comment')),0,1,3,4)
 
-        self.comment_entry = gtk.TextView()
-        self.comment_entry.set_wrap_mode(gtk.WRAP_WORD)
+        self.comment_entry = Gtk.TextView()
+        self.comment_entry.set_wrap_mode(Gtk.WrapMode.WORD)
         self.comment_entry.set_size_request(50, 80)
         self.attach(self.comment_entry, 1,2,3,4)
 
         self.update_values()
-        self.connect("expose-event", self.update_values)
+        self.connect("draw", self.update_values)
 
     def update_values(self, *args):
         self.price_entry.set_value(self.pos.price)
@@ -378,7 +386,7 @@ class EditPositionTable(gtk.Table):
         year, month, day = self.calendar.get_date()
         self.pos.date = datetime.datetime(year, month+1, day)
         buffer = self.comment_entry.get_buffer()
-        self.pos.comment = unicode(buffer.get_text(buffer.get_start_iter(), buffer.get_end_iter()))
+        self.pos.comment = unicode(buffer.get_text(buffer.get_start_iter(), buffer.get_end_iter(), True))
         if hasattr(self.pos, "buy_transaction"):
             ta = self.pos.buy_transaction
             if ta:

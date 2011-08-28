@@ -14,3 +14,4 @@ def test_suite():
     files = [f for f in os.listdir(test_dir) if f.endswith(".py") and f not in ignores]
     modules = [m.replace(".py", "") for m in files]
     return unittest.TestLoader().loadTestsFromNames(modules)
+

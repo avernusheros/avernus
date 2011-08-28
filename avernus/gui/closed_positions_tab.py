@@ -1,17 +1,18 @@
 #!/usr/bin/env python
 
-import gtk
+from gi.repository import Gtk
 from avernus import pubsub
 from avernus.gui import gui_utils
 from avernus.controller import controller
 
 
-class ClosedPositionsTab(gtk.ScrolledWindow):
+class ClosedPositionsTab(Gtk.ScrolledWindow):
+    
     def __init__(self, item):
-        gtk.ScrolledWindow.__init__(self)
+        Gtk.ScrolledWindow.__init__(self)
         self.closed_positions_tree = ClosedPositionsTree(item)
-        self.set_property('hscrollbar-policy', gtk.POLICY_AUTOMATIC)
-        self.set_property('vscrollbar-policy', gtk.POLICY_AUTOMATIC)
+        self.set_property('hscrollbar-policy', Gtk.PolicyType.AUTOMATIC)
+        self.set_property('vscrollbar-policy', Gtk.PolicyType.AUTOMATIC)
         self.add(self.closed_positions_tree)
         self.show_all()
 
@@ -25,7 +26,7 @@ class ClosedPositionsTree(gui_utils.Tree):
     def __init__(self, portfolio):
         self.portfolio = portfolio
         gui_utils.Tree.__init__(self)
-        self.model = gtk.ListStore(object, str, float, object, float, float, float, object, float, float, float, float, float)
+        self.model = Gtk.ListStore(object, str, float, object, float, float, float, object, float, float, float, float, float)
         self.set_model(self.model)
         self.create_column('#', 2, func=gui_utils.float_format)
         self.create_column(_('Name'), 1)
@@ -49,7 +50,7 @@ class ClosedPositionsTree(gui_utils.Tree):
     def insert_position(self, pos):
         self.model.append([pos, 
                            gui_utils.get_name_string(pos.stock),
-                           pos.quantity,
+                           float(pos.quantity),
                            pos.buy_date,
                            pos.buy_price,
                            pos.buy_costs,

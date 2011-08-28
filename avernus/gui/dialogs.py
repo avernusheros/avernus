@@ -4,40 +4,39 @@ from avernus import pubsub
 from avernus.gui import gui_utils
 from avernus.controller import controller
 from avernus.objects import stock
-from avernus.objects.position import MetaPosition
 import datetime
 import locale
 import logging
-import gtk
+from gi.repository import Gtk
 
 logger = logging.getLogger(__name__)
 
 
 
 
-class EditStockDialog(gtk.Dialog):
+class EditStockDialog(Gtk.Dialog):
 
     def __init__(self, stock):
-        gtk.Dialog.__init__(self, _("Edit stock"), None
-                            , gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
-                     (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
-                      gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
+        Gtk.Dialog.__init__(self, _("Edit stock"), None
+                            , Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,
+                     (Gtk.STOCK_CANCEL, Gtk.ResponseType.REJECT,
+                      Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT))
 
         vbox = self.get_content_area()
         self.table = EditStockTable(stock)
-        vbox.pack_start(self.table)
+        vbox.pack_start(self.table, True, True, 0)
 
         self.show_all()
         response = self.run()
         self.process_result(response = response)
 
-    def process_result(self, widget=None, response = gtk.RESPONSE_ACCEPT):
-        if response == gtk.RESPONSE_ACCEPT:
+    def process_result(self, widget=None, response = Gtk.ResponseType.ACCEPT):
+        if response == Gtk.ResponseType.ACCEPT:
             self.table.process_result(response)
         self.destroy()
 
 
-class DimensionComboBox(gtk.ComboBoxEntry):
+class DimensionComboBox(Gtk.ComboBox):
 
     COL_OBJ  = 0
     COL_TEXT = 1
@@ -46,19 +45,19 @@ class DimensionComboBox(gtk.ComboBoxEntry):
     def __init__(self, dimension, asset, dialog):
         self.dimension = dimension
         self.dialog = dialog
-        liststore = gtk.ListStore(object, str)
-        gtk.ComboBoxEntry.__init__(self, liststore, self.COL_TEXT)
+        liststore = Gtk.ListStore(object, str)
+        Gtk.ComboBox.__init__(self, model = liststore, id_column = self.COL_TEXT, has_entry=True)
         for dimVal in sorted(dimension.values):
             liststore.append([dimVal, dimVal.name])
-        self.child.set_text(self.get_dimension_text(asset, dimension))
-        completion = gtk.EntryCompletion()
+        self.get_child().set_text(self.get_dimension_text(asset, dimension))
+        completion = Gtk.EntryCompletion()
         completion.set_model(liststore)
         completion.set_text_column(self.COL_TEXT)
-        completion.set_match_func(self.match_func)
-        self.child.set_completion(completion)
-        self.child.set_icon_from_stock(1, gtk.STOCK_APPLY)
-        self.child.set_property('secondary-icon-activatable', False)
-        self.child.set_property('secondary-icon-tooltip-markup', '<b>ValueA</b> or <b>ValueA:40, ValueB:30 ...</b>')
+        completion.set_match_func(self.match_func, None)
+        self.get_child().set_completion(completion)
+        self.get_child().set_icon_from_stock(1, Gtk.STOCK_APPLY)
+        self.get_child().set_property('secondary-icon-activatable', False)
+        self.get_child().set_property('secondary-icon-tooltip-markup', '<b>ValueA</b> or <b>ValueA:40, ValueB:30 ...</b>')
         completion.connect("match-selected", self.on_completion_match)
         self.connect('changed', self.on_entry_changed)
 
@@ -85,11 +84,11 @@ class DimensionComboBox(gtk.ComboBoxEntry):
     def on_entry_changed(self, editable):
         parse = self.parse()
         if not parse and not parse == []: # unsuccesfull parse
-            self.child.set_icon_from_stock(1, gtk.STOCK_CANCEL)
-            self.dialog.set_response_sensitive(gtk.RESPONSE_ACCEPT, False)
+            self.get_child().set_icon_from_stock(1, Gtk.STOCK_CANCEL)
+            self.dialog.set_response_sensitive(Gtk.ResponseType.ACCEPT, False)
         else: # sucessful parse
-            self.child.set_icon_from_stock(1, gtk.STOCK_APPLY)
-            self.dialog.set_response_sensitive(gtk.RESPONSE_ACCEPT, True)
+            self.get_child().set_icon_from_stock(1, Gtk.STOCK_APPLY)
+            self.dialog.set_response_sensitive(Gtk.ResponseType.ACCEPT, True)
 
     def match_func(self, completion, key, iter):
         model = completion.get_model()
@@ -103,10 +102,10 @@ class DimensionComboBox(gtk.ComboBoxEntry):
         current_text = self.get_active_text()
         current_text = current_text[:-len(current_text.split(self.SEPARATOR)[-1])]
         if len(current_text) == 0:
-            self.child.set_text(model[iter][self.COL_TEXT])
+            self.get_child().set_text(model[iter][self.COL_TEXT])
         else:
-            self.child.set_text(current_text+' '+model[iter][self.COL_TEXT])
-        self.child.set_position(-1)
+            self.get_child().set_text(current_text+' '+model[iter][self.COL_TEXT])
+        self.get_child().set_position(-1)
         # stop the event propagation
         return True
 
@@ -150,45 +149,45 @@ class DimensionComboBox(gtk.ComboBoxEntry):
 
 
 
-class EditStockTable(gtk.Table):
+class EditStockTable(Gtk.Table):
 
     def __init__(self, stock_to_edit, dialog):
-        gtk.Table.__init__(self)
+        Gtk.Table.__init__(self)
         self.stock = stock_to_edit
         self.b_change = False
 
-        self.attach(gtk.Label(_('Name')),0,1,0,1, yoptions=gtk.FILL)
-        self.name_entry = gtk.Entry()
+        self.attach(Gtk.Label(label=_('Name')),0,1,0,1, yoptions=Gtk.AttachOptions.FILL)
+        self.name_entry = Gtk.Entry()
         self.name_entry.set_text(stock_to_edit.name)
-        self.attach(self.name_entry,1,2,0,1,yoptions=gtk.FILL)
+        self.attach(self.name_entry,1,2,0,1,yoptions=Gtk.AttachOptions.FILL)
 
-        self.attach(gtk.Label(_('ISIN')),0,1,1,2, yoptions=gtk.FILL)
-        self.isin_entry = gtk.Entry()
+        self.attach(Gtk.Label(label=_('ISIN')),0,1,1,2, yoptions=Gtk.AttachOptions.FILL)
+        self.isin_entry = Gtk.Entry()
         self.isin_entry.set_text(stock_to_edit.isin)
-        self.attach(self.isin_entry,1,2,1,2,yoptions=gtk.FILL)
+        self.attach(self.isin_entry,1,2,1,2,yoptions=Gtk.AttachOptions.FILL)
 
-        self.attach(gtk.Label(_('Type')),0,1,2,3, yoptions=gtk.FILL)
-        liststore = gtk.ListStore(str, int)
+        self.attach(Gtk.Label(label=_('Type')),0,1,2,3, yoptions=Gtk.AttachOptions.FILL)
+        liststore = Gtk.ListStore(str, int)
         for val, name in stock.TYPES.iteritems():
             liststore.append([name, val])
-        self.type_cb = cb = gtk.ComboBox(liststore)
-        cell = gtk.CellRendererText()
+        self.type_cb = cb = Gtk.ComboBox(model = liststore)
+        cell = Gtk.CellRendererText()
         cb.pack_start(cell, True)
         cb.add_attribute(cell, 'text', 0)
         cb.set_active(self.stock.type)
-        self.attach(cb, 1,2,2,3,  yoptions=gtk.FILL)
+        self.attach(cb, 1,2,2,3,  yoptions=Gtk.AttachOptions.FILL)
 
-        self.attach(gtk.Label(_('TER')),0,1,3,4,yoptions=gtk.SHRINK)
-        self.ter_entry = gtk.SpinButton(gtk.Adjustment(lower=0, upper=100,step_incr=0.1, value = self.stock.ter), digits=2)
-        self.attach(self.ter_entry,1,2,3,4,yoptions=gtk.SHRINK)
+        self.attach(Gtk.Label(label=_('TER')),0,1,3,4,yoptions=Gtk.AttachOptions.SHRINK)
+        self.ter_entry = Gtk.SpinButton(adjustment = Gtk.Adjustment(lower=0, upper=100,step_increment=0.1, value = self.stock.ter), digits=2)
+        self.attach(self.ter_entry,1,2,3,4,yoptions=Gtk.AttachOptions.SHRINK)
 
         currentRow = 4
         for dim in controller.getAllDimension():
             #print dim
-            self.attach(gtk.Label(_(dim.name)),0,1,currentRow,currentRow+1, yoptions=gtk.FILL)
+            self.attach(Gtk.Label(label=_(dim.name)),0,1,currentRow,currentRow+1, yoptions=Gtk.AttachOptions.FILL)
             comboName = dim.name+"ValueComboBox"
             setattr(self, comboName, DimensionComboBox(dim, stock_to_edit, dialog))
-            self.attach(getattr(self, comboName), 1,2,currentRow,currentRow+1,  yoptions=gtk.FILL)
+            self.attach(getattr(self, comboName), 1,2,currentRow,currentRow+1,  yoptions=Gtk.AttachOptions.FILL)
             getattr(self, comboName).connect("changed", self.on_change)
             currentRow += 1
 
@@ -200,8 +199,8 @@ class EditStockTable(gtk.Table):
     def on_change(self, widget):
         self.b_change = True
 
-    def process_result(self, widget=None, response = gtk.RESPONSE_ACCEPT):
-        if response == gtk.RESPONSE_ACCEPT and self.b_change:
+    def process_result(self, widget=None, response = Gtk.ResponseType.ACCEPT):
+        if response == Gtk.ResponseType.ACCEPT and self.b_change:
             self.stock.name = self.name_entry.get_text()
             self.stock.isin = self.isin_entry.get_text()
             active_iter = self.type_cb.get_active_iter()
@@ -218,36 +217,36 @@ class EditStockTable(gtk.Table):
 
 
 
-class StockSelector(gtk.VBox):
+class StockSelector(Gtk.VBox):
 
     SPINNER_SIZE = 40
     WIDTH = 600
     HEIGHT = 300
 
     def __init__(self):
-        gtk.VBox.__init__(self)
-        self.search_field = gtk.Entry()
-        self.search_field.set_icon_from_stock(1, gtk.STOCK_FIND)
+        Gtk.VBox.__init__(self)
+        self.search_field = Gtk.Entry()
+        self.search_field.set_icon_from_stock(1, Gtk.STOCK_FIND)
         self.search_field.connect('activate', self.on_search)
         self.search_field.connect('icon-press', self.on_search)
-        self.pack_start(self.search_field, expand=False, fill=False)
+        self.pack_start(self.search_field, False, False, 0)
 
-        sw = gtk.ScrolledWindow()
-        sw.set_property('hscrollbar-policy', gtk.POLICY_AUTOMATIC)
-        sw.set_property('vscrollbar-policy', gtk.POLICY_AUTOMATIC)
+        sw = Gtk.ScrolledWindow()
+        sw.set_property('hscrollbar-policy', Gtk.PolicyType.AUTOMATIC)
+        sw.set_property('vscrollbar-policy', Gtk.PolicyType.AUTOMATIC)
         self.result_tree = gui_utils.Tree()
-        self.result_tree.model = gtk.TreeStore(object, str, str,str,str,str)
+        self.result_tree.model = Gtk.TreeStore(object, str, str,str,str,str)
         self.result_tree.set_model(self.result_tree.model)
         self.result_tree.create_icon_column(None, 1)
         col, cell = self.result_tree.create_column(_('Name'), 2)
         cell.props.wrap_width = self.WIDTH/2
-        cell.props.wrap_mode = gtk.WRAP_WORD
+        cell.props.wrap_mode = Gtk.WrapMode.WORD
         self.result_tree.create_column('ISIN', 3)
         self.result_tree.create_column(_('Currency'), 4)
-        self.result_tree.create_icon_column(_('Type'), 5,size= gtk.ICON_SIZE_DND)
+        self.result_tree.create_icon_column(_('Type'), 5,size= Gtk.IconSize.DND)
         self.result_tree.set_size_request(self.WIDTH, self.HEIGHT)
         sw.add(self.result_tree)
-        self.pack_end(sw)
+        self.pack_end(sw, True ,True, 0)
         self.spinner = None
 
     def get_stock(self):
@@ -255,8 +254,8 @@ class StockSelector(gtk.VBox):
         return self.result_tree.get_model()[path][0]
 
     def _show_spinner(self):
-        self.spinner = gtk.Spinner()
-        self.pack_start(self.spinner, fill=True, expand=False)
+        self.spinner = Gtk.Spinner()
+        self.pack_start(self.spinner, True, False, 0)
         self.spinner.show()
         self.spinner.set_size_request(self.SPINNER_SIZE, self.SPINNER_SIZE)
         self.spinner.start()
@@ -300,7 +299,7 @@ class StockSelector(gtk.VBox):
 
 
 
-class SellDialog(gtk.Dialog):
+class SellDialog(Gtk.Dialog):
 
     def __init__(self, pos, transaction = None):
         if transaction is None:
@@ -309,52 +308,57 @@ class SellDialog(gtk.Dialog):
         else:
             title = _('Edit position')
             max_quantity = pos.quantity + transaction.quantity
-        gtk.Dialog.__init__(self, title, None
-                            , gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
-                     (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
-                      gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
+        Gtk.Dialog.__init__(self, title, None
+                            , Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,
+                     (Gtk.STOCK_CANCEL, Gtk.ResponseType.REJECT,
+                      Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT))
         self.pos = pos
         self.transaction = transaction
 
         vbox = self.get_content_area()
-        table = gtk.Table()
+        table = Gtk.Table()
         table.set_row_spacings(4)
         table.set_col_spacings(4)
-        vbox.pack_end(table)
+        vbox.pack_end(table, True, True, 0)
 
         #name
-        label = gtk.Label()
+        label = Gtk.Label()
         label.set_markup(gui_utils.get_name_string(pos.stock))
-        label.set_alignment(xalign=0.0, yalign=0.5)
-        table.attach(label, 0,2,0,1,xoptions=gtk.FILL, yoptions=0)
+        label.set_alignment(0.0, 0.5)
+        table.attach(label, 0,2,0,1, Gtk.AttachOptions.FILL, 0)
 
         #shares entry
-
-        table.attach(gtk.Label(_('Shares')),1,2,1,2)
-        self.shares_entry = gtk.SpinButton(gtk.Adjustment(lower=0, upper=max_quantity,step_incr=1, value = 0), digits=2)
+        table.attach(Gtk.Label(label=_('Shares')),1,2,1,2)
+        self.shares_entry = Gtk.SpinButton()
+        self.shares_entry.set_adjustment(Gtk.Adjustment(lower=0, upper=max_quantity,step_increment=1, value = 0))
+        self.shares_entry.set_digits(2)
         self.shares_entry.connect("value-changed", self.on_change)
-        table.attach(self.shares_entry, 2,3,1,2,xoptions=gtk.SHRINK,yoptions=gtk.SHRINK)
+        table.attach(self.shares_entry, 2,3,1,2,xoptions=Gtk.AttachOptions.SHRINK,yoptions=Gtk.AttachOptions.SHRINK)
 
         #price entry
-        table.attach(gtk.Label(_('Price:')),1,2,2,3)
-        self.price_entry = gtk.SpinButton(gtk.Adjustment(lower=0, upper=100000,step_incr=0.1, value = 1.0), digits=2)
+        table.attach(Gtk.Label(label=_('Price:')),1,2,2,3)
+        self.price_entry = Gtk.SpinButton()
+        self.price_entry.set_adjustment(Gtk.Adjustment(lower=0, upper=100000,step_increment=0.1, value = 1.0))
+        self.price_entry.set_digits(2)
         self.price_entry.connect("value-changed", self.on_change)
-        table.attach(self.price_entry, 2,3,2,3,xoptions=gtk.SHRINK,yoptions=gtk.SHRINK)
+        table.attach(self.price_entry, 2,3,2,3,xoptions=Gtk.AttachOptions.SHRINK,yoptions=Gtk.AttachOptions.SHRINK)
 
         #ta_costs entry
-        table.attach(gtk.Label(_('Transaction Costs')),1,2,3,4,xoptions=gtk.SHRINK,yoptions=gtk.SHRINK)
-        self.tacosts_entry = gtk.SpinButton(gtk.Adjustment(lower=0, upper=100000,step_incr=0.1, value = 0.0), digits=2)
+        table.attach(Gtk.Label(label=_('Transaction Costs')),1,2,3,4,xoptions=Gtk.AttachOptions.SHRINK,yoptions=Gtk.AttachOptions.SHRINK)
+        self.tacosts_entry = Gtk.SpinButton()
+        self.tacosts_entry.set_adjustment(Gtk.Adjustment(lower=0, upper=100000,step_increment=0.1, value = 0.0))
+        self.tacosts_entry.set_digits(2)
         self.tacosts_entry.connect("value-changed", self.on_change)
-        table.attach(self.tacosts_entry,2,3,3,4,xoptions=gtk.SHRINK,yoptions=gtk.SHRINK)
+        table.attach(self.tacosts_entry,2,3,3,4,xoptions=Gtk.AttachOptions.SHRINK,yoptions=Gtk.AttachOptions.SHRINK)
 
         #total
-        table.attach(gtk.Label(_('Total')),1,2,4,5,xoptions=gtk.SHRINK,yoptions=gtk.SHRINK)
-        self.total = gtk.Label()
+        table.attach(Gtk.Label(label=_('Total')),1,2,4,5,xoptions=Gtk.AttachOptions.SHRINK,yoptions=Gtk.AttachOptions.SHRINK)
+        self.total = Gtk.Label()
         self.total.set_markup('<b>'+gui_utils.get_currency_format_from_float(0.0)+'</b>')
-        table.attach(self.total,2,3,4,5,xoptions=gtk.SHRINK,yoptions=gtk.SHRINK)
+        table.attach(self.total,2,3,4,5,xoptions=Gtk.AttachOptions.SHRINK,yoptions=Gtk.AttachOptions.SHRINK)
 
         #date
-        self.calendar = gtk.Calendar()
+        self.calendar = Gtk.Calendar()
         table.attach(self.calendar, 0,1,1,5)
 
         if self.transaction is not None:
@@ -372,7 +376,7 @@ class SellDialog(gtk.Dialog):
         self.destroy()
 
     def process_result(self):
-        if self.response == gtk.RESPONSE_ACCEPT:
+        if self.response == Gtk.ResponseType.ACCEPT:
             shares = self.shares_entry.get_value()
             price = self.price_entry.get_value()
             year, month, day = self.calendar.get_date()
@@ -397,13 +401,13 @@ class SellDialog(gtk.Dialog):
 
 
 
-class BuyDialog(gtk.Dialog):
+class BuyDialog(Gtk.Dialog):
 
     def __init__(self, pf, transaction=None):
-        gtk.Dialog.__init__(self, _("Buy a position"), None
-                            , gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
-                     (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
-                      gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
+        Gtk.Dialog.__init__(self, _("Buy a position"), None
+                            , Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,
+                     (Gtk.STOCK_CANCEL, Gtk.ResponseType.REJECT,
+                      Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT))
         self.pf = pf
         self.transaction = transaction
         if transaction is None:
@@ -412,10 +416,10 @@ class BuyDialog(gtk.Dialog):
             self.b_new = False
 
         vbox = self.get_content_area()
-        table = gtk.Table()
+        table = Gtk.Table()
         table.set_row_spacings(4)
         table.set_col_spacings(4)
-        vbox.pack_end(table)
+        vbox.pack_end(table, True, True, 0)
         if self.b_new:
             #stock entry
             self.stock_selector = StockSelector()
@@ -424,43 +428,49 @@ class BuyDialog(gtk.Dialog):
             self.stock_selector.result_tree.get_model().connect('row-deleted', self.on_stock_deselection)
             self.stock_ok = False
         else:
-            label = gtk.Label()
+            label = Gtk.Label()
             label.set_markup(gui_utils.get_name_string(self.transaction.position.stock))
             label.set_alignment(xalign=0.0, yalign=0.5)
-            table.attach(label, 0,3,0,1,xoptions=gtk.FILL, yoptions=0)
+            table.attach(label, 0,3,0,1,xoptions=Gtk.AttachOptions.FILL, yoptions=0)
 
         #shares entry
-        table.attach(gtk.Label(_('Shares')),1,2,1,2,xoptions=gtk.SHRINK,yoptions=gtk.SHRINK)
-        self.shares_entry = gtk.SpinButton(gtk.Adjustment(lower=0, upper=100000,step_incr=1.0, value = 1), digits=2)
+        table.attach(Gtk.Label(label=_('Shares')),1,2,1,2,xoptions=Gtk.AttachOptions.SHRINK,yoptions=Gtk.AttachOptions.SHRINK)
+        self.shares_entry = Gtk.SpinButton()
+        self.shares_entry.set_adjustment(Gtk.Adjustment(lower=0, upper=100000,step_increment=1.0, value = 1))
+        self.shares_entry.set_digits(2)
         self.shares_entry.connect("value-changed", self.on_change)
-        table.attach(self.shares_entry,2,3,1,2,xoptions=gtk.SHRINK,yoptions=gtk.SHRINK)
+        table.attach(self.shares_entry,2,3,1,2,xoptions=Gtk.AttachOptions.SHRINK,yoptions=Gtk.AttachOptions.SHRINK)
 
         #price entry
-        table.attach(gtk.Label(_('Price')),1,2,2,3,xoptions=gtk.SHRINK,yoptions=gtk.SHRINK)
-        self.price_entry = gtk.SpinButton(gtk.Adjustment(lower=0, upper=100000,step_incr=0.1, value = 1.0), digits=2)
+        table.attach(Gtk.Label(label=_('Price')),1,2,2,3,xoptions=Gtk.AttachOptions.SHRINK,yoptions=Gtk.AttachOptions.SHRINK)
+        self.price_entry = Gtk.SpinButton()
+        self.price_entry.set_adjustment(Gtk.Adjustment(lower=0, upper=100000,step_increment=0.1, value = 1.0))
+        self.price_entry.set_digits(2)
         self.price_entry.connect("value-changed", self.on_change)
-        table.attach(self.price_entry,2,3,2,3,xoptions=gtk.SHRINK,yoptions=gtk.SHRINK)
+        table.attach(self.price_entry,2,3,2,3,xoptions=Gtk.AttachOptions.SHRINK,yoptions=Gtk.AttachOptions.SHRINK)
 
         #ta_costs entry
-        table.attach(gtk.Label(_('Transaction Costs')),1,2,3,4,xoptions=gtk.SHRINK,yoptions=gtk.SHRINK)
-        self.tacosts_entry = gtk.SpinButton(gtk.Adjustment(lower=0, upper=100000,step_incr=0.1, value = 0.0), digits=2)
+        table.attach(Gtk.Label(label=_('Transaction Costs')),1,2,3,4,xoptions=Gtk.AttachOptions.SHRINK,yoptions=Gtk.AttachOptions.SHRINK)
+        self.tacosts_entry = Gtk.SpinButton()
+        self.tacosts_entry.set_adjustment(Gtk.Adjustment(lower=0, upper=100000, step_increment=0.1, value = 0.0))
+        self.tacosts_entry.set_digits(2)
         self.tacosts_entry.connect("value-changed", self.on_change)
-        table.attach(self.tacosts_entry,2,3,3,4,xoptions=gtk.SHRINK,yoptions=gtk.SHRINK)
+        table.attach(self.tacosts_entry,2,3,3,4,xoptions=Gtk.AttachOptions.SHRINK,yoptions=Gtk.AttachOptions.SHRINK)
 
         #total
-        table.attach(gtk.Label(_('Total')),1,2,4,5,xoptions=gtk.SHRINK,yoptions=gtk.SHRINK)
-        self.total = gtk.Label()
+        table.attach(Gtk.Label(label=_('Total')),1,2,4,5,xoptions=Gtk.AttachOptions.SHRINK,yoptions=Gtk.AttachOptions.SHRINK)
+        self.total = Gtk.Label()
         self.total.set_markup('<b>'+gui_utils.get_currency_format_from_float(0.0)+'</b>')
-        table.attach(self.total,2,3,4,5,xoptions=gtk.SHRINK,yoptions=gtk.SHRINK)
+        table.attach(self.total,2,3,4,5,xoptions=Gtk.AttachOptions.SHRINK,yoptions=Gtk.AttachOptions.SHRINK)
 
         #date
-        self.calendar = gtk.Calendar()
+        self.calendar = Gtk.Calendar()
         self.calendar.connect('day-selected', self.on_calendar_day_selected)
-        table.attach(self.calendar,0,1,1,5,yoptions=gtk.SHRINK)
+        table.attach(self.calendar,0,1,1,5,yoptions=Gtk.AttachOptions.SHRINK)
         self.date_ok = True
 
-        self.infobar = gtk.InfoBar()
-        self.infobar.set_message_type(gtk.MESSAGE_WARNING)
+        self.infobar = Gtk.InfoBar()
+        self.infobar.set_message_type(Gtk.MessageType.WARNING)
 
         if not self.b_new:
             self.stock_ok = True
@@ -472,15 +482,15 @@ class BuyDialog(gtk.Dialog):
             self.on_change()
 
         content = self.infobar.get_content_area()
-        label = gtk.Label('Date cannot be in the future!')
-        image = gtk.Image()
-        image.set_from_stock(gtk.STOCK_DIALOG_WARNING, gtk.ICON_SIZE_DIALOG)
-        content.pack_start(image)
-        content.pack_start(label)
-        vbox.pack_start(self.infobar)
+        label = Gtk.Label(label='Date cannot be in the future!')
+        image = Gtk.Image()
+        image.set_from_stock(Gtk.STOCK_DIALOG_WARNING, Gtk.IconSize.DIALOG)
+        content.pack_start(image, True, True, 0)
+        content.pack_start(label, True, True, 0)
+        vbox.pack_start(self.infobar, True, True, 0)
 
         if self.b_new:
-            self.set_response_sensitive(gtk.RESPONSE_ACCEPT, False)
+            self.set_response_sensitive(Gtk.ResponseType.ACCEPT, False)
         table.show_all()
         response = self.run()
         self.process_result(response)
@@ -514,14 +524,14 @@ class BuyDialog(gtk.Dialog):
 
     def set_response_sensitivity(self):
         if self.stock_ok and self.date_ok:
-            self.set_response_sensitive(gtk.RESPONSE_ACCEPT, True)
+            self.set_response_sensitive(Gtk.ResponseType.ACCEPT, True)
         else:
-            self.set_response_sensitive(gtk.RESPONSE_ACCEPT, False)
+            self.set_response_sensitive(Gtk.ResponseType.ACCEPT, False)
 
     def process_result(self, response):
         if self.b_new:
             self.stock_selector.stop_search()
-        if response == gtk.RESPONSE_ACCEPT:
+        if response == Gtk.ResponseType.ACCEPT:
             price = self.price_entry.get_value()
             year, month, day = self.calendar.get_date()
             date = datetime.datetime(year, month+1, day)
@@ -545,52 +555,53 @@ class BuyDialog(gtk.Dialog):
                 self.transaction.position.quantity = self.transaction.quantity = shares
 
 
-class NewWatchlistPositionDialog(gtk.Dialog):
+class NewWatchlistPositionDialog(Gtk.Dialog):
+    
     def __init__(self, wl):
-        gtk.Dialog.__init__(self, _("Add watchlist position"), None
-                            , gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
-                     (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
-                      gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
+        Gtk.Dialog.__init__(self, _("Add watchlist position"), None
+                            , Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,
+                     (Gtk.STOCK_CANCEL, Gtk.ResponseType.REJECT,
+                      Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT))
         self.wl = wl
 
         vbox = self.get_content_area()
         self.stock_selector = StockSelector()
-        vbox.pack_start(self.stock_selector)
+        vbox.pack_start(self.stock_selector, True, True, 0)
         self.stock_selector.result_tree.connect('cursor-changed', self.on_stock_selection)
         self.stock_selector.result_tree.get_model().connect('row-deleted', self.on_stock_deselection)
 
-        self.set_response_sensitive(gtk.RESPONSE_ACCEPT, False)
+        self.set_response_sensitive(Gtk.ResponseType.ACCEPT, False)
         self.show_all()
         response = self.run()
         self.process_result(response)
         self.destroy()
 
     def on_stock_selection(self, *args):
-        self.set_response_sensitive(gtk.RESPONSE_ACCEPT, True)
+        self.set_response_sensitive(Gtk.ResponseType.ACCEPT, True)
 
     def on_stock_deselection(self, *args):
-        self.set_response_sensitive(gtk.RESPONSE_ACCEPT, False)
+        self.set_response_sensitive(Gtk.ResponseType.ACCEPT, False)
 
     def process_result(self, response):
         self.stock_selector.stop_search()
-        if response == gtk.RESPONSE_ACCEPT:
+        if response == Gtk.ResponseType.ACCEPT:
             stock = self.stock_selector.get_stock()
             stock.update_price()
             pos = controller.newWatchlistPosition(price=stock.price, date=stock.date, watchlist=self.wl, stock = stock)
             pubsub.publish('container.position.added', self.wl, pos)
 
 
-class PosSelector(gtk.ComboBox):
+class PosSelector(Gtk.ComboBox):
 
     def __init__(self, pf, position=None):
-        gtk.ComboBox.__init__(self)
-        cell = gtk.CellRendererText()
+        Gtk.ComboBox.__init__(self)
+        cell = Gtk.CellRendererText()
         self.pack_start(cell, True)
         self.add_attribute(cell, 'text', 1)
         self.set_active(0)
-        self.set_button_sensitivity(gtk.SENSITIVITY_AUTO)
+        self.set_button_sensitivity(Gtk.SENSITIVITY_AUTO)
 
-        liststore = gtk.ListStore(object, str)
+        liststore = Gtk.ListStore(object, str)
         liststore.append([-1, 'Select a position'])
         i=1
         if pf is not None:
@@ -607,22 +618,22 @@ class PosSelector(gtk.ComboBox):
         self.set_model(liststore)
 
 
-class CalendarDialog(gtk.Dialog):
+class CalendarDialog(Gtk.Dialog):
 
     def __init__(self, date=None):
-        gtk.Dialog.__init__(self, _("Chose a date"), None
-                            , gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
-                            (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
-                             gtk.STOCK_OK, gtk.RESPONSE_ACCEPT)
+        Gtk.Dialog.__init__(self, _("Chose a date"), None
+                            , Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,
+                            (Gtk.STOCK_CANCEL, Gtk.ResponseType.REJECT,
+                             Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT)
                             )
         vbox = self.get_content_area()
-        self.calendar = gtk.Calendar()
+        self.calendar = Gtk.Calendar()
         self.date = None
         if date:
             self.calendar.select_month(date.month-1, date.year)
             self.calendar.select_day(date.day)
 
-        vbox.pack_start(self.calendar)
+        vbox.pack_start(self.calendar, True, True, 0)
 
         self.calendar.connect("day-selected-double-click", self.on_day_selected)
         self.show_all()
@@ -630,29 +641,30 @@ class CalendarDialog(gtk.Dialog):
         self.process_result(response)
 
     def process_result(self, response):
-        if response == gtk.RESPONSE_ACCEPT:
+        if response == Gtk.ResponseType.ACCEPT:
             y,m,d = self.calendar.get_date()
             self.date = datetime.date(y,m+1,d)
         self.destroy()
 
     def on_day_selected(self, cal):
-        self.process_result(gtk.RESPONSE_ACCEPT)
+        self.process_result(Gtk.ResponseType.ACCEPT)
 
 
 
-class DividendDialog(gtk.Dialog):
+class DividendDialog(Gtk.Dialog):
+    
     def __init__(self, pf=None, tree=None, date=None, price=None, position=None, dividend=None):
-        gtk.Dialog.__init__(self, _("Add dividend"), None
-                            , gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
-                     (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
-                      'Add', gtk.RESPONSE_ACCEPT))
+        Gtk.Dialog.__init__(self, _("Add dividend"), None
+                            , Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,
+                     (Gtk.STOCK_CANCEL, Gtk.ResponseType.REJECT,
+                      'Add', Gtk.ResponseType.ACCEPT))
         self.tree = tree
         self.dividend = dividend
         vbox = self.get_content_area()
-        table = gtk.Table()
-        vbox.pack_start(table)
+        table = Gtk.Table()
+        vbox.pack_start(table, True, True, 0)
 
-        table.attach(gtk.Label(_('Position')),0,1,0,1)
+        table.attach(Gtk.Label(label=_('Position')),0,1,0,1)
         if dividend is not None:
             position = dividend.position
         self.pos_selector = PosSelector(pf, position)
@@ -660,22 +672,22 @@ class DividendDialog(gtk.Dialog):
         table.attach(self.pos_selector,1,2,0,1)
         self.selected_pos = position
 
-        table.attach(gtk.Label(_('Amount')),0,1,1,2)
-        self.value_entry = gtk.SpinButton(gtk.Adjustment(lower=0, upper=100000,step_incr=0.1, value = 1.0), digits=2)
+        table.attach(Gtk.Label(label=_('Amount')),0,1,1,2)
+        self.value_entry = Gtk.SpinButton(Gtk.Adjustment(lower=0, upper=100000,step_increment=0.1, value = 1.0), digits=2)
         self.value_entry.connect("value-changed", self.on_change)
         table.attach(self.value_entry, 1,2,1,2)
 
-        table.attach(gtk.Label(_('Transaction costs')),0,1,2,3)
-        self.tacosts_entry = gtk.SpinButton(gtk.Adjustment(lower=0, upper=100000,step_incr=0.1, value = 0.0), digits=2)
+        table.attach(Gtk.Label(label=_('Transaction costs')),0,1,2,3)
+        self.tacosts_entry = Gtk.SpinButton(Gtk.Adjustment(lower=0, upper=100000,step_increment=0.1, value = 0.0), digits=2)
         self.tacosts_entry.connect("value-changed", self.on_change)
         table.attach(self.tacosts_entry, 1,2,2,3)
 
-        table.attach(gtk.Label(_('Total')),0,1,3,4)
-        self.total = gtk.Label()
+        table.attach(Gtk.Label(label=_('Total')),0,1,3,4)
+        self.total = Gtk.Label()
         self.total.set_markup('<b>'+gui_utils.get_currency_format_from_float(0.0)+'</b>')
-        table.attach(self.total,1,2,3,4,xoptions=gtk.SHRINK,yoptions=gtk.SHRINK)
+        table.attach(self.total,1,2,3,4,xoptions=Gtk.AttachOptions.SHRINK,yoptions=Gtk.AttachOptions.SHRINK)
 
-        self.calendar = gtk.Calendar()
+        self.calendar = Gtk.Calendar()
         table.attach(self.calendar, 0, 2, 4, 5)
 
         if date is not None:
@@ -692,7 +704,7 @@ class DividendDialog(gtk.Dialog):
             self.tacosts_entry.set_value(dividend.costs)
             self.on_change()
 
-        self.set_response_sensitive(gtk.RESPONSE_ACCEPT, self.position is not None)
+        self.set_response_sensitive(Gtk.ResponseType.ACCEPT, self.position is not None)
         self.show_all()
         response = self.run()
         self.process_result(response)
@@ -707,13 +719,13 @@ class DividendDialog(gtk.Dialog):
         index = combobox.get_active()
         if index:
             self.selected_pos = model[index][0]
-            self.set_response_sensitive(gtk.RESPONSE_ACCEPT, True)
+            self.set_response_sensitive(Gtk.ResponseType.ACCEPT, True)
         else:
             self.selected_pos = None
-            self.set_response_sensitive(gtk.RESPONSE_ACCEPT, False)
+            self.set_response_sensitive(Gtk.ResponseType.ACCEPT, False)
 
     def process_result(self, response):
-        if response == gtk.RESPONSE_ACCEPT:
+        if response == Gtk.ResponseType.ACCEPT:
             year, month, day = self.calendar.get_date()
             date = datetime.datetime(year, month+1, day)
             value = self.value_entry.get_value()

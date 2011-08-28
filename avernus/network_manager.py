@@ -35,5 +35,5 @@ class DBusNetwork(object):
 
 if __name__ == '__main__':
     d = DBusNetwork()
-    import gtk
-    gtk.main()
+    from gi.repository import Gtk
+    Gtk.main()

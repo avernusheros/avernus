@@ -1,7 +1,8 @@
-import gtk, pytz
+from gi.repository import Gtk
+import pytz
 from avernus import config, pubsub
 import locale
-import gobject
+from gi.repository import GObject
 import threading
 import thread
 
@@ -9,7 +10,7 @@ import thread
 
 class GeneratorTask(object):
     """
-    http://unpythonic.blogspot.com/2007/08/using-threads-in-pygtk.html
+    http://unpythonic.blogspot.com/2007/08/using-threads-in-pyGtk.html
     Thanks!
     """
     def __init__(self, generator, loop_callback=None, complete_callback=None):
@@ -22,9 +23,9 @@ class GeneratorTask(object):
         for ret in self.generator(*args, **kwargs):
             if self._stopped:
                 thread.exit()
-            gobject.idle_add(self._loop, ret)
+            GObject.idle_add(self._loop, ret)
         if self.complete_callback is not None:
-            gobject.idle_add(self.complete_callback)
+            GObject.idle_add(self.complete_callback)
 
     def _loop(self, ret):
         if ret is None:
@@ -43,25 +44,26 @@ class GeneratorTask(object):
 
 class BackgroundTask():
 
-   def __init__(self, function, complete_callback=None):
-       self.function = function
-       self.complete_callback = complete_callback
-       threading.Thread(target=self.start).start()
+    def __init__(self, function, complete_callback=None):
+        self.function = function
+        self.complete_callback = complete_callback
+        threading.Thread(target=self.start).start()
 
-   def start(self):
-       self.function()
-       if self.complete_callback is not None:
-           gobject.idle_add(self.complete_callback)
+    def start(self):
+        self.function()
+        if self.complete_callback is not None:
+            GObject.idle_add(self.complete_callback)
 
 
-class Tree(gtk.TreeView):
+class Tree(Gtk.TreeView):
+    
     def __init__(self):
         self.selected_item = None
-        gtk.TreeView.__init__(self)
+        Gtk.TreeView.__init__(self)
         pubsub.subscribe('clear!', self.clear)
 
     def get_selected_item(self):
-        #Get the current selection in the gtk.TreeView
+        #Get the current selection in the Gtk.TreeView
         selection = self.get_selection()
         # Get the selection iter
         treestore, selection_iter = selection.get_selected()
@@ -71,8 +73,8 @@ class Tree(gtk.TreeView):
 
     def create_column(self, name, attribute, func=None, expand=False):
         #FIXME keyword expand is unused
-        cell = gtk.CellRendererText()
-        column = gtk.TreeViewColumn(name, cell)
+        cell = Gtk.CellRendererText()
+        column = Gtk.TreeViewColumn(name, cell)
         self.append_column(column)
         if func is not None:
             column.set_cell_data_func(cell, func, attribute)
@@ -83,24 +85,24 @@ class Tree(gtk.TreeView):
         return column, cell
 
     def create_icon_column(self, name, attribute, size=None):
-        #gtk.ICON_SIZE_MENU, gtk.ICON_SIZE_SMALL_TOOLBAR, gtk.ICON_SIZE_LARGE_TOOLBAR, gtk.ICON_SIZE_BUTTON, gtk.ICON_SIZE_DND and gtk.ICON_SIZE_DIALOG.
-        column = gtk.TreeViewColumn(name)
+        #Gtk.IconSize.MENU, Gtk.IconSize.SMALL_TOOLBAR, Gtk.IconSize.LARGE_TOOLBAR, Gtk.IconSize.BUTTON, Gtk.IconSize.DND and Gtk.IconSize.DIALOG.
+        column = Gtk.TreeViewColumn(name)
         self.append_column(column)
-        cell = gtk.CellRendererPixbuf()
+        cell = Gtk.CellRendererPixbuf()
         if size:
             cell.set_property('stock-size', size)
-        column.pack_start(cell, expand = False)
-        column.set_attributes(cell, icon_name=attribute)
+        column.pack_start(cell, False)
+        column.add_attribute(cell, "icon_name", attribute)
         return column, cell
 
     def create_icon_text_column(self, name, attribute1, attribute2, func1=None, func2=None):
-        column = gtk.TreeViewColumn(name)
+        column = Gtk.TreeViewColumn(name)
         self.append_column(column)
-        cell1 = gtk.CellRendererPixbuf()
-        cell2 = gtk.CellRendererText()
-        column.pack_start(cell1, expand = False)
-        column.pack_start(cell2, expand = True)
-        column.set_attributes(cell1, icon_name=attribute1)
+        cell1 = Gtk.CellRendererPixbuf()
+        cell2 = Gtk.CellRendererText()
+        column.pack_start(cell1, False)
+        column.pack_start(cell2, True)
+        column.add_attribute(cell1, "icon_name", attribute1)
         column.add_attribute(cell2, "markup", attribute2)
         column.set_sort_column_id(attribute2)
         if func1 is not None:
@@ -110,18 +112,18 @@ class Tree(gtk.TreeView):
         return column, cell2
 
     def create_check_column(self, name, attribute):
-        column = gtk.TreeViewColumn(name)
+        column = Gtk.TreeViewColumn(name)
         self.append_column(column)
-        cell = gtk.CellRendererToggle()
-        column.pack_start(cell, expand = False)
+        cell = Gtk.CellRendererToggle()
+        column.pack_start(cell, False)
         column.add_attribute(cell, 'active', attribute)
         return column, cell
 
-    def find_item(self, row0, type = None):
+    def find_item(self, row0, itemtype = None):
         def search(rows):
             if not rows: return None
             for row in rows:
-                if row[0] == row0 and (type is None or type == row[1].type):
+                if row[0] == row0 and (itemtype is None or itemtype == row[1].type):
                     return row
                 result = search(row.iterchildren())
                 if result: return result
@@ -132,40 +134,43 @@ class Tree(gtk.TreeView):
         self.get_model().clear()
 
 
-class ContextMenu(gtk.Menu):
+class ContextMenu(Gtk.Menu):
+    
     def __init__(self):
-        gtk.Menu.__init__(self)
+        Gtk.Menu.__init__(self)
 
     def show(self, event):
         self.show_all()
-        self.popup(None, None, None, event.button, event.get_time())
+        self.popup(None, None, None, None, event.button, event.get_time())
 
     def add_item(self, label, func = None, icon = None):
         if label == '----':
-            self.add(gtk.SeparatorMenuItem())
+            self.add(Gtk.SeparatorMenuItem())
         else:
             if icon is not None:
-                item = gtk.ImageMenuItem(icon)
+                item = Gtk.ImageMenuItem()
+                item.set_label(icon)
+                item.set_use_stock(True)
                 item.get_children()[0].set_label(label)
             else:
-                item = gtk.MenuItem(label)
+                item = Gtk.MenuItem(label)
             if func is not None:
                 item.connect("activate", func)
             self.add(item)
             return item
 
-def float_format(column, cell_renderer, tree_model, iter, user_data):
-    number = tree_model.get_value(iter, user_data)
+def float_format(column, cell_renderer, tree_model, iterator, user_data):
+    number = tree_model.get_value(iterator, user_data)
     cell_renderer.set_property('text', get_string_from_float(number))
     return
 
-def percent_format(column, cell_renderer, tree_model, iter, user_data):
-    number = tree_model.get_value(iter, user_data)
+def percent_format(column, cell_renderer, tree_model, iterator, user_data):
+    number = tree_model.get_value(iterator, user_data)
     cell_renderer.set_property('text', get_string_from_float(number)+'%')
     return
 
-def currency_format(column, cell_renderer, tree_model, iter, user_data):
-    number = tree_model.get_value(iter, user_data)
+def currency_format(column, cell_renderer, tree_model, iterator, user_data):
+    number = tree_model.get_value(iterator, user_data)
     cell_renderer.set_property('text', get_currency_format_from_float(number))
     return
 
@@ -178,18 +183,18 @@ def get_currency_format_from_float(number):
     except:
         return str(round(number,2))
 
-def float_to_red_green_string_currency(column, cell, model, iter, user_data):
-    num = model.get_value(iter, user_data)
+def float_to_red_green_string_currency(column, cell, model, iterator, user_data):
+    num = model.get_value(iterator, user_data)
     text = get_currency_format_from_float(num)
     cell.set_property('markup', get_green_red_string(num, text))
 
-def float_to_red_green_string(column, cell, model, iter, user_data):
-    num = model.get_value(iter, user_data)
+def float_to_red_green_string(column, cell, model, iterator, user_data):
+    num = model.get_value(iterator, user_data)
     text = get_string_from_float(num)
     cell.set_property('markup', get_green_red_string(num, text))
 
-def float_to_red_green_string_percent(column, cell, model, iter, user_data):
-    num = model.get_value(iter, user_data)
+def float_to_red_green_string_percent(column, cell, model, iterator, user_data):
+    num = model.get_value(iterator, user_data)
     text = get_string_from_float(num)+'%'
     cell.set_property('markup', get_green_red_string(num, text))
 
@@ -205,8 +210,8 @@ def sort_by_time(model, iter1, iter2, data=None):
         return 1
     return 0
 
-def date_to_string(column, cell, model, iter, user_data):
-    item = model.get_value(iter, user_data)
+def date_to_string(column, cell, model, iterator, user_data):
+    item = model.get_value(iterator, user_data)
     cell.set_property('text', get_date_string(item))
 
 def get_price_string(item):
@@ -221,9 +226,9 @@ def to_local_time(date):
         return date.replace(tzinfo = None)
 
 def get_name_string(stock):
-    return '<b>%s</b>\n<small>%s\n%s</small>' % (gobject.markup_escape_text(stock.name),
-                                                 gobject.markup_escape_text(stock.isin),
-                                                 gobject.markup_escape_text(stock.exchange))
+    return '<b>%s</b>\n<small>%s\n%s</small>' % (GObject.markup_escape_text(stock.name),
+                                                 GObject.markup_escape_text(stock.isin),
+                                                 GObject.markup_escape_text(stock.exchange))
 
 def get_green_red_string(num, text = None):
     if text is None:
@@ -259,9 +264,9 @@ def get_datetime_string(datetime):
     return ''
 
 
-def transaction_desc_markup(column, cell, model, iter, user_data):
-    text = model.get_value(iter, user_data)
-    markup =  '<span size="small">%s</span>' % (gobject.markup_escape_text(text),)
+def transaction_desc_markup(column, cell, model, iterator, user_data):
+    text = model.get_value(iterator, user_data)
+    markup =  '<span size="small">%s</span>' % (GObject.markup_escape_text(text),)
     cell.set_property('markup', markup)
 
 #FIXME horizontal scrollbars are always shown
@@ -277,10 +282,10 @@ def resize_wrap(scroll, allocation, treeview, column, cell):
     column.set_property('min-width', newWidth + 10)
     column.set_property('max-width', newWidth + 10)
     store = treeview.model
-    iter = store.get_iter_first()
-    while iter and store.iter_is_valid(iter):
-            store.row_changed(store.get_path(iter), iter)
-            iter = store.iter_next(iter)
+    iterator = store.get_iter_first()
+    while iterator and store.iter_is_valid(iterator):
+            store.row_changed(store.get_path(iterator), iterator)
+            iterator = store.iter_next(iterator)
             treeview.set_size_request(0,-1)
 
 

@@ -1,34 +1,34 @@
-import gtk
+from gi.repository import Gtk
 from avernus.gui import gui_utils
 from avernus import cairoplot
 
 
 
-class ChartBase(gtk.VBox):
+class ChartBase(Gtk.VBox):
     SPINNER_SIZE = 40
 
     def __init__(self, controller, width):
-        gtk.VBox.__init__(self)
+        Gtk.VBox.__init__(self)
         self.controller = controller
         self.width = width
-        self.widget = None
+        self.current_widget = None
         
         self.connect('realize', self.on_realize)
 
     def remove_widget(self):
-        if self.widget:
-            self.remove(self.widget)
+        if self.current_widget:
+            self.remove(self.current_widget)
             
     def draw_widget(self):
         pass
     
     def draw_spinner(self):
         self.remove_widget()
-        self.widget = gtk.Spinner()
-        self.pack_start(self.widget, fill=True, expand=True)
-        self.widget.show()
-        self.widget.set_size_request(self.SPINNER_SIZE, self.SPINNER_SIZE)
-        self.widget.start()
+        self.current_widget = Gtk.Spinner()
+        self.pack_start(self.current_widget, True, True, 0)
+        self.current_widget.show()
+        self.current_widget.set_size_request(self.SPINNER_SIZE, self.SPINNER_SIZE)
+        self.current_widget.start()
     
     def on_realize(self, widget):
         self.draw_spinner()
@@ -51,9 +51,9 @@ class Pie(ChartBase):
                                         gradient=True,
                                         values=True
                                         )
-        self.widget = plot.handler
-        self.widget.show()
-        self.pack_start(self.widget)
+        self.current_widget = plot.handler
+        self.current_widget.show()
+        self.pack_start(self.current_widget, True, True, 0)
 
 
 class BarChart(ChartBase):
@@ -61,7 +61,7 @@ class BarChart(ChartBase):
     def draw_widget(self):
         self.remove_widget()
         if len(self.controller.y_values) == 0:
-            self.pack_start(gtk.Label(_('No data to plot')))
+            self.pack_start(Gtk.Label(_('No data to plot')), True, True, 0)
             return
 
         plot = cairoplot.plots.VerticalBarPlot('gtk',
@@ -73,9 +73,9 @@ class BarChart(ChartBase):
                                         background="white light_gray",
                                         value_formatter = gui_utils.get_currency_format_from_float,
                                         )
-        self.widget = plot.handler
-        self.widget.show()
-        self.pack_start(self.widget)
+        self.current_widget = plot.handler
+        self.current_widget.show()
+        self.pack_start(self.current_widget, True, True, 0)
 
 
 class SimpleLineChart(ChartBase):
@@ -98,27 +98,27 @@ class SimpleLineChart(ChartBase):
                                 series_legend=True,
                                 dots=self.dots,
                                 series_colors=['blue','green','red'])
-        self.widget = plot.handler
-        self.widget.show()
-        self.pack_start(self.widget)
+        self.current_widget = plot.handler
+        self.current_widget.show()
+        self.pack_start(self.current_widget, True, True, 0)
 
 class TransactionChart(SimpleLineChart):
 
     def __init__(self, chartController, width, dots=2):
-        self.totalAvgLabel = gtk.Label()
+        self.totalAvgLabel = Gtk.Label()
         SimpleLineChart.__init__(self, chartController, width, dots=dots)
-        hbox = gtk.HBox()
-        monthlyBtn = gtk.CheckButton(label=_('monthly'))
+        hbox = Gtk.HBox()
+        monthlyBtn = Gtk.CheckButton(label=_('monthly'))
         monthlyBtn.connect('toggled',lambda x: self.on_combo_toggled(x, self.controller.set_monthly))
-        hbox.pack_start(monthlyBtn, expand=False, fill=False)
-        rollingAvgBtn = gtk.CheckButton(label=_('rolling average'))
+        hbox.pack_start(monthlyBtn, False, False, 0)
+        rollingAvgBtn = Gtk.CheckButton(label=_('rolling average'))
         rollingAvgBtn.connect('toggled', lambda x: self.on_combo_toggled(x, self.controller.set_rolling_average))
-        hbox.pack_start(rollingAvgBtn, expand=False, fill=False)
-        totalAvgBtn = gtk.CheckButton(label=_('total average'))
+        hbox.pack_start(rollingAvgBtn, False, False, 0)
+        totalAvgBtn = Gtk.CheckButton(label=_('total average'))
         totalAvgBtn.connect('toggled', lambda x: self.on_combo_toggled(x, self.controller.set_total_average))
-        hbox.pack_start(totalAvgBtn, expand=False, fill=False)
-        hbox.pack_end(self.totalAvgLabel, expand=False, fill=False)
-        self.pack_end(hbox, expand=False, fill=False)
+        hbox.pack_start(totalAvgBtn, False, False, 0)
+        hbox.pack_end(self.totalAvgLabel, False, False, 0)
+        self.pack_end(hbox, False, False, 0)
 
 
     def on_combo_toggled(self, widget, setter):
@@ -133,7 +133,7 @@ class TransactionChart(SimpleLineChart):
             self.totalAvgLabel.show()
 
     def remove_widget(self):
-        if self.widget:
-            self.remove(self.widget)
+        if self.current_widget:
+            self.remove(self.current_widget)
         if not self.controller.total_avg:
             self.totalAvgLabel.hide()

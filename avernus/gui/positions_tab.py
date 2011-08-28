@@ -1,11 +1,13 @@
 #!/usr/bin/env python
 
-import gtk,sys
+from gi.repository import Gtk
+from gi.repository import Gdk
+import sys
 from avernus import pubsub
 from avernus.gui.plot import ChartWindow
 from avernus.gui.dialogs import SellDialog, NewWatchlistPositionDialog, BuyDialog
 from avernus.gui.position_dialog import PositionDialog
-from avernus.gui.gui_utils import Tree, get_name_string, datetime_format
+from avernus.gui.gui_utils import Tree, get_name_string
 from avernus.gui import gui_utils, dialogs, progress_manager, page
 from avernus.objects.position import MetaPosition
 from avernus.controller import controller
@@ -77,13 +79,13 @@ class PositionsTree(Tree):
         self.on_unselect()
 
     def _init_widgets(self):
-        self.model = gtk.TreeStore(object, str, float, float, float, float, str, float, float, float, float, str, float, str, float)
+        self.model = Gtk.TreeStore(object, str, float, float, float, float, str, float, float, float, float, str, float, str, float)
         self.set_model(self.model)
 
         if not self.watchlist:
             self.create_column('#', self.COLS['shares'])
         self.create_column(_('Name'), self.COLS['name'])
-        self.create_icon_column(_('Type'), self.COLS['type'],size= gtk.ICON_SIZE_DND)
+        self.create_icon_column(_('Type'), self.COLS['type'],size= Gtk.IconSize.DND)
         if not self.watchlist:
             self.create_column(_('Pf %'), self.COLS['pf_percent'], func=gui_utils.percent_format)
         self.create_column(_('Start'), self.COLS['start'], func=start_price_markup)
@@ -111,20 +113,20 @@ class PositionsTree(Tree):
             pubsub.subscribe(topic, callback)
 
         self.actiongroup.add_actions([
-                ('add',    gtk.STOCK_ADD,     'add',    None, _('Add new position'),         self.on_add),
-                ('edit' ,  gtk.STOCK_EDIT,    'edit',   None, _('Edit selected position'),   self.on_edit),
-                ('remove', gtk.STOCK_DELETE,  'remove', None, _('Delete selected position'), self.on_remove),
+                ('add',    Gtk.STOCK_ADD,     'add',    None, _('Add new position'),         self.on_add),
+                ('edit' ,  Gtk.STOCK_EDIT,    'edit',   None, _('Edit selected position'),   self.on_edit),
+                ('remove', Gtk.STOCK_DELETE,  'remove', None, _('Delete selected position'), self.on_remove),
                 ('chart',  None,              'chart',  None, _('Chart selected position'),  self.on_chart),
                 ('dividend', None,            'dividend', None, _('Add dividend payment'), self.on_dividend),
-                ('update', gtk.STOCK_REFRESH, 'update', None, _('Update positions'),         self.on_update_positions)
+                ('update', Gtk.STOCK_REFRESH, 'update', None, _('Update positions'),         self.on_update_positions)
                                 ])
         self.actiongroup.get_action('chart').set_icon_name('avernus')
-        accelgroup = gtk.AccelGroup()
+        accelgroup = Gtk.AccelGroup()
         for action in self.actiongroup.list_actions():
             action.set_accel_group(accelgroup)
 
     def on_button_press_event(self, widget, event):
-        if event.type == gtk.gdk._2BUTTON_PRESS:
+        if event.type == Gdk.EventType._2BUTTON_PRESS:
             self.on_edit(widget)
             return False
         if event.button == 3:
@@ -142,13 +144,13 @@ class PositionsTree(Tree):
             context_menu.add_item('----')
     
             #Move to another portfolio
-            item = gtk.MenuItem(_("Move"))
+            item = Gtk.MenuItem(_("Move"))
             context_menu.add(item)
-            menu = gtk.Menu()
+            menu = Gtk.Menu()
             item.set_submenu(menu)
             for pf in all_portfolios:
                 if pf != self.container:
-                    item = gtk.MenuItem(pf.name)
+                    item = Gtk.MenuItem(pf.name)
                     item.connect("activate", self.on_move_position, pf)
                     menu.append(item)
         context_menu.show(event)
@@ -179,7 +181,7 @@ class PositionsTree(Tree):
                 row[self.COLS['name']] = get_name_string(item.stock)
                 row[self.COLS['last_price']] = item.stock.price
                 row[self.COLS['change']] = item.current_change[0]
-                row[self.COLS['change_percent']] = item.current_change[1]
+                row[self.COLS['change_percent']] = float(item.current_change[1])
                 row[self.COLS['gain']] = gain
                 row[self.COLS['gain_percent']] = gain_percent
                 row[self.COLS['gain_icon']] = get_arrow_icon(gain_percent)
@@ -191,7 +193,7 @@ class PositionsTree(Tree):
     def on_update_positions(self, *args):
         def finished_cb():
             progress_manager.remove_monitor(555)
-        m = progress_manager.add_monitor(555, _('updating stocks...'), gtk.STOCK_REFRESH)
+        m = progress_manager.add_monitor(555, _('updating stocks...'), Gtk.STOCK_REFRESH)
         m.progress_update_auto()
         gui_utils.GeneratorTask(self.container.update_positions, complete_callback=finished_cb).start()
 
@@ -203,41 +205,41 @@ class PositionsTree(Tree):
                 for row in self.model:
                     row[self.COLS['pf_percent']] = row[self.COLS['obj']].portfolio_fraction
 
-    def on_remove(self, widget):
+    def on_remove(self, widget, user_data=None):
         position, iter = self.selected_item
         if self.watchlist:
-            dlg = gtk.MessageDialog(None,
-                 gtk.DIALOG_DESTROY_WITH_PARENT, gtk.MESSAGE_QUESTION,
-                    gtk.BUTTONS_OK_CANCEL, _("Are you sure?"))
+            dlg = Gtk.MessageDialog(None,
+                 Gtk.DialogFlags.DESTROY_WITH_PARENT, Gtk.MessageType.QUESTION,
+                    Gtk.ButtonsType.OK_CANCEL, _("Are you sure?"))
             response = dlg.run()
             dlg.destroy()
-            if response == gtk.RESPONSE_OK:
+            if response == Gtk.ResponseType.OK:
                 position.delete()
                 self.model.remove(iter)
         else:
             d = SellDialog(position)
-            if d.response == gtk.RESPONSE_ACCEPT:
-                if position.quantity == 0:
+            if d.response == Gtk.ResponseType.ACCEPT:
+                if position.quantity == 0.0:
                     self.model.remove(iter)
                 else:
-                    self.model[iter][self.COLS['shares']] = position.quantity
+                    self.model[iter][self.COLS['shares']] = float(position.quantity)
 
-    def on_add(self, widget):
+    def on_add(self, widget, user_data):
         if self.watchlist:
             NewWatchlistPositionDialog(self.container)
         else:
             BuyDialog(self.container)
 
-    def on_dividend(self, widget):
+    def on_dividend(self, widget, user_data):
         if self.selected_item is not None:
             dialogs.DividendDialog(pf=self.container, position=self.selected_item[0])
         else:
             dialogs.DividendDialog(pf=self.container)
 
-    def on_chart(self, widget):
+    def on_chart(self, widget, user_data=None):
         ChartWindow(self.selected_item[0].stock)
 
-    def on_edit(self, widget):
+    def on_edit(self, widget, user_data=None):
         position, iter = self.selected_item
         PositionDialog(position)
         self.update_position_after_edit(position, iter)
@@ -256,7 +258,7 @@ class PositionsTree(Tree):
                 self.update_position_after_edit(item)
 
     def on_cursor_changed(self, widget):
-        #Get the current selection in the gtk.TreeView
+        #Get the current selection in the Gtk.TreeView
         selection = widget.get_selection()
         # Get the selection iter
         treestore, selection_iter = selection.get_selected()
@@ -286,7 +288,7 @@ class PositionsTree(Tree):
                position.days_gain,
                gain[1],
                gain_icon,
-               c_change[1],
+               float(c_change[1]),
                icons[position.stock.type],
                0]
 
@@ -335,34 +337,34 @@ class PositionsTree(Tree):
         return search(self.model)
 
 
-class PositionsTab(gtk.VBox, page.Page):
+class PositionsTab(Gtk.VBox, page.Page):
 
-    def __init__(self, container):
-        gtk.VBox.__init__(self)
-        self.container = container
-        actiongroup = gtk.ActionGroup('position_tab')
-        positions_tree = PositionsTree(container, actiongroup, use_metapositions = container.__name__ == 'Portfolio')
-        tb = gtk.Toolbar()
+    def __init__(self, portfolio):
+        Gtk.VBox.__init__(self)
+        self.portfolio = portfolio
+        actiongroup = Gtk.ActionGroup('position_tab')
+        positions_tree = PositionsTree(portfolio, actiongroup, use_metapositions = portfolio.__name__ == 'Portfolio')
+        tb = Gtk.Toolbar()
 
-        if container.container_type == 'portfolio':
+        if portfolio.container_type == 'portfolio':
             buttons = ['add', 'remove', 'edit', 'chart', '---', 'update']
         else:
             buttons = ['add', 'remove', 'edit', 'chart', '---', 'update']
 
         for action in buttons:
             if action == '---':
-                tb.insert(gtk.SeparatorToolItem(),-1)
+                tb.insert(Gtk.SeparatorToolItem(),-1)
             else:
                 button = actiongroup.get_action(action).create_tool_item()
                 tb.insert(button, -1)
 
-        self.pack_start(tb, expand = False, fill = True)
+        self.pack_start(tb, False, True, 0)
 
-        sw = gtk.ScrolledWindow()
-        sw.set_property('hscrollbar-policy', gtk.POLICY_AUTOMATIC)
-        sw.set_property('vscrollbar-policy', gtk.POLICY_AUTOMATIC)
+        sw = Gtk.ScrolledWindow()
+        sw.set_property('hscrollbar-policy', Gtk.PolicyType.AUTOMATIC)
+        sw.set_property('vscrollbar-policy', Gtk.PolicyType.AUTOMATIC)
         sw.add(positions_tree)
-        self.pack_start(sw)
+        self.pack_start(sw, True, True, 0)
 
         pubsub.subscribe('position.created', self.update_page)
         pubsub.subscribe('stocks.updated', self.update_page)
@@ -374,17 +376,17 @@ class PositionsTab(gtk.VBox, page.Page):
         self.update_page()
 
     def get_info(self):
-        if self.container.container_type == 'portfolio':
-            change, percent = self.container.current_change
+        if self.portfolio.container_type == 'portfolio':
+            change, percent = self.portfolio.current_change
             change_text = gui_utils.get_string_from_float(percent) + '%' + ' | ' + gui_utils.get_currency_format_from_float(change)
-            o_change, o_percent = self.container.overall_change
+            o_change, o_percent = self.portfolio.overall_change
             o_change_text = gui_utils.get_string_from_float(o_percent) + '%' + ' | ' + gui_utils.get_currency_format_from_float(o_change)
             return [(_('Day\'s gain'), gui_utils.get_green_red_string(change, change_text)),
                     (_('Overall gain'), gui_utils.get_green_red_string(o_change, o_change_text)),
-                    ('Investments', gui_utils.get_currency_format_from_float(self.container.cvalue)),
-                    ('# positions', len(self.container)),
-                    ('Last update', gui_utils.datetime_format(self.container.last_update, False))
+                    ('Investments', gui_utils.get_currency_format_from_float(self.portfolio.cvalue)),
+                    ('# positions', len(self.portfolio)),
+                    ('Last update', gui_utils.datetime_format(self.portfolio.last_update, False))
                     ]
         else: #watchlist
-            return [('# positions', len(self.container)),
-                    ('Last update', gui_utils.datetime_format(self.container.last_update, False))]
+            return [('# positions', len(self.portfolio)),
+                    ('Last update', gui_utils.datetime_format(self.portfolio.last_update, False))]

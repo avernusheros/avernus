@@ -1,26 +1,20 @@
-'''
-Created on 12 Jun 2011
-
-@author: bastian
-'''
 from avernus import config
 from avernus.controller import controller
 from avernus.gui import gui_utils
-from avernus.gui.csv_import_dialog import PreviewTree
-import gtk
+from gi.repository import Gtk
 import os
-import pango
+from gi.repository import Pango
 import time
 import csv
 
-class ExportDialog(gtk.Dialog):
+class ExportDialog(Gtk.Dialog):
     
     TITLE = _('Export Account Transactions')
 
     def __init__(self, widget=None, account=None):
-        gtk.Dialog.__init__(self, self.TITLE, None
-                            , gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
-                     (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,))
+        Gtk.Dialog.__init__(self, self.TITLE, None
+                            , Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,
+                     (Gtk.STOCK_CANCEL, Gtk.ResponseType.REJECT,))
         self.account = account
         self.config = config.avernusConfig()
         self.transactions = []
@@ -30,25 +24,26 @@ class ExportDialog(gtk.Dialog):
         self.process_result(response = response)
         
     def _init_widgets(self):
-        self.export_button = self.add_button('Export', gtk.RESPONSE_ACCEPT)
+        self.export_button = self.add_button('Export', Gtk.ResponseType.ACCEPT)
         self.export_button.set_sensitive(False)
         vbox = self.get_content_area()
-        fileBox = gtk.HBox()
-        vbox.pack_start(fileBox, fill=False, expand=False)
-        fileBox.pack_start(gtk.Label('Location to export'), fill=False, expand=False)
-        self.fcbutton = gtk.FileChooserButton('Folder to export to')
-        self.fcbutton.set_action(gtk.FILE_CHOOSER_ACTION_SELECT_FOLDER)
+        fileBox = Gtk.HBox()
+        vbox.pack_start(fileBox, False, False, 0)
+        fileBox.pack_start(Gtk.Label(_('Location to export')), False, False, 0)
+        self.fcbutton = Gtk.FileChooserButton()
+        self.fcbutton.set_title(_('Folder to export to'))
+        self.fcbutton.set_action(Gtk.FileChooserAction.SELECT_FOLDER)
         self.file = None
         self.fcbutton.connect('file-set', self._on_file_set)
         folder = self.config.get_option('last_export_folder')
         if folder is not None:
             self.fcbutton.set_current_folder(folder)
             self.folder = folder
-        fileBox.pack_start(self.fcbutton, fill=True)
-        accBox = gtk.HBox()
-        vbox.pack_start(accBox, fill=False, expand=False)
-        accBox.pack_start(gtk.Label('Target account'), fill=False, expand=False)
-        model = gtk.ListStore(object, str)
+        fileBox.pack_start(self.fcbutton, True, True, 0)
+        accBox = Gtk.HBox()
+        vbox.pack_start(accBox, False, False, 0)
+        accBox.pack_start(Gtk.Label('Target account'), False, False, 0)
+        model = Gtk.ListStore(object, str)
         i = 0
         active = -1
         for account in controller.getAllAccount():
@@ -56,22 +51,24 @@ class ExportDialog(gtk.Dialog):
             if self.account == account:
                 active = i
             i+=1
-        self.account_cb = gtk.ComboBox(model)
+        self.account_cb = Gtk.ComboBox()
+        self.account_cb.set_model(model)
         if active>-1:
             self.account_cb.set_active(active)
-        cell = gtk.CellRendererText()
+        cell = Gtk.CellRendererText()
         self.account_cb.pack_start(cell, True)
         self.account_cb.add_attribute(cell, 'text', 1)
         self.account_cb.connect('changed', self._on_account_changed)
-        accBox.pack_start(self.account_cb, fill=False, expand=True)
-        frame = gtk.Frame('Transactions')
-        sw = gtk.ScrolledWindow()
-        sw.set_policy(gtk.POLICY_AUTOMATIC,gtk.POLICY_AUTOMATIC)
+        accBox.pack_start(self.account_cb, False, True, 0)
+        frame = Gtk.Frame()
+        frame.set_label('Transactions')
+        sw = Gtk.ScrolledWindow()
+        sw.set_policy(Gtk.PolicyType.AUTOMATIC,Gtk.PolicyType.AUTOMATIC)
         self.tree = TransactionTree()
         frame.add(sw)
 
         sw.add(self.tree)
-        vbox.pack_start(frame)
+        vbox.pack_start(frame, True, True, 0)
         self.show_all()
         
     def _on_file_set(self, button):
@@ -85,8 +82,8 @@ class ExportDialog(gtk.Dialog):
         self.tree.reload(self.account)
         self.export_button.set_sensitive(True)
         
-    def process_result(self, widget=None, response = gtk.RESPONSE_ACCEPT):
-        if response == gtk.RESPONSE_ACCEPT:
+    def process_result(self, widget=None, response = Gtk.ResponseType.ACCEPT):
+        if response == Gtk.ResponseType.ACCEPT:
             # gather the transactions
             self.transactions = self.tree.getExportTransactions()
             # generate the filename
@@ -114,12 +111,12 @@ class TransactionTree(gui_utils.Tree):
         gui_utils.Tree.__init__(self)
         self.set_rules_hint(True)
         self.set_size_request(700,400)
-        self.model = gtk.ListStore(object, str, float, str, bool)
+        self.model = Gtk.ListStore(object, object, float, str, bool)
         self.set_model(self.model)
         
         column, cell = self.create_check_column('export?', self.EXPORT)
         cell.connect("toggled", self.on_toggled)
-        column, cell = self.create_column('date', self.DATE)
+        column, cell = self.create_column('date', self.DATE, func=gui_utils.date_to_string)
         column.add_attribute(cell, 'foreground', 5)
         cell.set_property('foreground-set', True)
         column, cell = self.create_column('amount', self.AMOUNT, func=gui_utils.currency_format)
@@ -128,16 +125,16 @@ class TransactionTree(gui_utils.Tree):
         column, cell = self.create_column('description', self.DESC)
         column.add_attribute(cell, 'foreground', 5)
         cell.set_property('foreground-set', True)
-        cell.props.wrap_mode = pango.WRAP_WORD
+        cell.props.wrap_mode = Pango.WrapMode.WORD
         cell.props.wrap_width = 300
         
     def getExportTransactions(self):
         erg = []
         for line in self.model:
-            object = line[self.OBJECT]
+            obj = line[self.OBJECT]
             export = line[self.EXPORT]
             if export:
-                erg.append(object)
+                erg.append(obj)
         return erg
         
     def on_toggled(self, cellrenderertoggle, path):
@@ -149,4 +146,3 @@ class TransactionTree(gui_utils.Tree):
         model = self.get_model()
         for trans in account:
             model.append([trans, trans.date, trans.amount, trans.description, True])
-        

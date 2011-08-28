@@ -1,8 +1,3 @@
-'''
-Created on Dec 28, 2010
-
-@author: simpsus
-'''
 from avernus.objects.model import SQLiteEntity
 from avernus.objects.stock import Stock
 

@@ -14,25 +14,19 @@ from avernus.gui.exportDialog import ExportDialog
 from avernus.objects import model
 from webbrowser import open as web
 import avernus
-import gobject
-import gtk
+from gi.repository import Gtk
+from gi.repository import Gdk
 import sys
 
 
-try:
-    import pygtk
-    pygtk.require("2.0")
-except:
-    raise Exception("PyGTK Version >=2.0 required")
-
 if __name__ == '__main__':
-    import sys
     sys.path.append('..')
 
 
-class AboutDialog(gtk.AboutDialog):
+class AboutDialog(Gtk.AboutDialog):
+    
     def __init__(self, *arg, **args):
-        gtk.AboutDialog.__init__(self)
+        Gtk.AboutDialog.__init__(self)
 
         self.set_name(avernus.__appname__)
         self.set_version(avernus.__version__)
@@ -47,10 +41,10 @@ class AboutDialog(gtk.AboutDialog):
         self.hide()
 
 
-class MenuBar(gtk.MenuBar):
+class MenuBar(Gtk.MenuBar):
     def __init__(self, parent, actiongroup, accelgroup):
         self.actiongroup = actiongroup
-        gtk.MenuBar.__init__(self)
+        Gtk.MenuBar.__init__(self)
 
         # Create actions
         #item: name, stockid, label, accel, tooltip, callback
@@ -60,15 +54,15 @@ class MenuBar(gtk.MenuBar):
              ('Tools'         , None                 , '_Tools'),
              ('Help'          , None                 , '_Help'),
              ('import'        , None                 , '_Import CSV'        , None        , None, CSVImportDialog),
-             ('quit'          , gtk.STOCK_QUIT       , '_Quit'              , '<Control>q', None, parent.on_destroy),
-             ('prefs'         , gtk.STOCK_PREFERENCES, '_Preferences'       , None        , None, parent.on_prefs),
-             ('update'        , gtk.STOCK_REFRESH    , '_Update all stocks' , 'F5'        , None, parent.on_update_all),
-             ('historical'    , gtk.STOCK_REFRESH     ,'Get _historical data', None       , None,  parent.on_historical),
-             ('help'          , gtk.STOCK_HELP       , '_Help'              , 'F1'        , None, lambda x:web("https://answers.launchpad.net/avernus")),
-             ('website'       , None                 , '_Website'           , None        , None, lambda x:web("https://launchpad.net/avernus")),
-             ('feature'       , None                 , 'Request a _Feature' , None        , None, lambda x:web("https://blueprints.launchpad.net/avernus")),
-             ('bug'           , None                 , 'Report a _Bug'      , None        , None, lambda x:web("https://bugs.launchpad.net/avernus")),
-             ('about'         , gtk.STOCK_ABOUT      , '_About'             , None        , None, AboutDialog),
+             ('quit'          , Gtk.STOCK_QUIT       , '_Quit'              , '<Control>q', None, parent.on_destroy),
+             ('prefs'         , Gtk.STOCK_PREFERENCES, '_Preferences'       , None        , None, parent.on_prefs),
+             ('update'        , Gtk.STOCK_REFRESH    , '_Update all stocks' , 'F5'        , None, parent.on_update_all),
+             ('historical'    , Gtk.STOCK_REFRESH     ,'Get _historical data', None       , None,  parent.on_historical),
+             ('help'          , Gtk.STOCK_HELP       , '_Help'              , 'F1'        , None, lambda x, y:web("https://answers.launchpad.net/avernus")),
+             ('website'       , None                 , '_Website'           , None        , None, lambda x, y:web("https://launchpad.net/avernus")),
+             ('feature'       , None                 , 'Request a _Feature' , None        , None, lambda x, y:web("https://blueprints.launchpad.net/avernus")),
+             ('bug'           , None                 , 'Report a _Bug'      , None        , None, lambda x, y:web("https://bugs.launchpad.net/avernus")),
+             ('about'         , Gtk.STOCK_ABOUT      , '_About'             , None        , None, AboutDialog),
              ('filter'        , None                 , '_Category Filters'  , None        , None, FilterDialog),
              ('do_assignments', None                 , '_Run auto-assignments', None      , None, parent.on_do_category_assignments),
              ('export CSV'    , None                 , '_Export Account Transactions', None, None, ExportDialog)
@@ -91,36 +85,37 @@ class MenuBar(gtk.MenuBar):
         menu_item = self.actiongroup.get_action(action).create_menu_item()
         #menu_item.mname = action #used in plugin api
         self.append(menu_item)
-        menu = gtk.Menu()
+        menu = Gtk.Menu()
         menu_item.set_submenu(menu)
         for item in items:
             if item == '---':
-                menu.append(gtk.SeparatorMenuItem())
+                menu.append(Gtk.SeparatorMenuItem())
             else:
                 menu.append(self.actiongroup.get_action(item).create_menu_item())
 
 
-class MainWindow(gtk.Window):
+class MainWindow(Gtk.Window):
+    
     def __init__(self):
-        gtk.Window.__init__(self)
+        Gtk.Window.__init__(self)
         self.config = config.avernusConfig()
         self.set_title(avernus.__appname__)
 
-        vbox = gtk.VBox()
+        vbox = Gtk.VBox()
         self.add(vbox)
 
         # Create an accelerator group
-        accelgroup = gtk.AccelGroup()
+        accelgroup = Gtk.AccelGroup()
         # Add the accelerator group to the toplevel window
         self.add_accel_group(accelgroup)
         # Create an ActionGroup
-        actiongroup = gtk.ActionGroup('main_window')
+        actiongroup = Gtk.ActionGroup('main_window')
 
         self.main_menu = MenuBar(self, actiongroup, accelgroup)
-        vbox.pack_start(self.main_menu, expand=False, fill=False)
+        vbox.pack_start(self.main_menu, False, False, 0)
 
-        self.hpaned = gtk.HPaned()
-        vbox.pack_start(self.hpaned)
+        self.hpaned = Gtk.HPaned()
+        vbox.pack_start(self.hpaned, True, True, 0)
 
         self.hpaned.pack1(MainTreeBox())
 
@@ -135,7 +130,6 @@ class MainWindow(gtk.Window):
         self.pages['Watchlist'] = PositionsTab
         self.pages['Category']  = ContainerOverviewTab
         self.pages['Account']   = AccountTransactionTab
-                                  #(AccountChartTab, 'Charts')]
 
         #set min size
         screen = self.get_screen()
@@ -167,7 +161,7 @@ class MainWindow(gtk.Window):
             self.config.set_option('size', self.get_size(), 'Gui')
 
     def on_window_state_event(self, widget, event):
-        if event.new_window_state == gtk.gdk.WINDOW_STATE_MAXIMIZED:
+        if event.new_window_state == Gdk.WindowState.MAXIMIZED:
             self.maximized = True
             self.config.set_option('maximize', True, section='Gui')
         else:
@@ -179,7 +173,7 @@ class MainWindow(gtk.Window):
         #save db on quit
         self.config.set_option('hpaned position', self.hpaned.get_position(), 'Gui')
         model.store.close()
-        gtk.main_quit()
+        Gtk.main_quit()
         sys.exit()
 
     def on_maintree_select(self, item):
@@ -201,12 +195,12 @@ class MainWindow(gtk.Window):
     def on_historical(self, *args):
         def finished_cb():
             progress_manager.remove_monitor(42)
-        m = progress_manager.add_monitor(42, _('downloading quotations...'), gtk.STOCK_REFRESH)
+        m = progress_manager.add_monitor(42, _('downloading quotations...'), Gtk.STOCK_REFRESH)
         gui_utils.GeneratorTask(controller.update_historical_prices, m.progress_update, complete_callback=finished_cb).start()
 
     def on_update_all(self, *args):
         def finished_cb():
             progress_manager.remove_monitor(11)
-        m = progress_manager.add_monitor(11, _('updating stocks...'), gtk.STOCK_REFRESH)
+        m = progress_manager.add_monitor(11, _('updating stocks...'), Gtk.STOCK_REFRESH)
         m.progress_update_auto()
         gui_utils.GeneratorTask(controller.update_all, complete_callback=finished_cb).start()
