@@ -87,4 +87,4 @@ class TransactionsTree(Tree):
             context_menu = gui_utils.ContextMenu()
             for action in self.actiongroup.list_actions():
                 context_menu.add(action.create_menu_item())
-            context_menu.show(event)
+            context_menu.run(event)

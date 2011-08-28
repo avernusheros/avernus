@@ -153,7 +153,7 @@ class PositionsTree(Tree):
                     item = Gtk.MenuItem(pf.name)
                     item.connect("activate", self.on_move_position, pf)
                     menu.append(item)
-        context_menu.show(event)
+        context_menu.run(event)
 
     def on_move_position(self, widget, new_portfolio):
         position, iter = self.selected_item
@@ -224,7 +224,7 @@ class PositionsTree(Tree):
                 else:
                     self.model[iter][self.COLS['shares']] = float(position.quantity)
 
-    def on_add(self, widget, user_data):
+    def on_add(self, widget, user_data=None):
         if self.watchlist:
             NewWatchlistPositionDialog(self.container)
         else:
@@ -290,7 +290,7 @@ class PositionsTree(Tree):
                gain_icon,
                float(c_change[1]),
                icons[position.stock.type],
-               0]
+               0.0]
 
         if isinstance(position, MetaPosition):
             ret[self.COLS['shares']] = unichr(8721) + " "+ret[self.COLS['shares']]

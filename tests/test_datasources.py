@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 
+import __builtin__
+__builtin__._ = str
+
 import unittest
 from avernus.data_sources import onvista, yahoo
 from avernus.datasource_manager import DatasourceManager
@@ -10,6 +13,8 @@ import datetime
 dbfile = ":memory:"
 create = True
 
+#stocks which are mentioned in bug reports
+ITEMS_WITH_PROBLEMS = ['AT0000859582']
 
 
 class DataSourcesTest(unittest.TestCase):
@@ -31,7 +36,6 @@ class DataSourcesTest(unittest.TestCase):
             self.assertTrue(data['type'] < 10)
             self.assertTrue(data['type'] >= 0)
 
-    
     def test_onvista_search(self):
         o = onvista.Onvista()
         for res in o.search("DE0008474248"):
@@ -46,11 +50,11 @@ class DataSourcesTest(unittest.TestCase):
     def put_stocks_in_db(self):
         o = onvista.Onvista()
         for res in o.search("DE0008474248"):
-            item, source = res
-            self.dsm._item_found_callback(item, source)
+            item, source, source_info = res
+            self.dsm._item_found_callback(item, source, source_info)
         y = yahoo.Yahoo()
         for res in y.search('google'):
-            item, source, source_info= res
+            item, source, source_info = res
             self.dsm._item_found_callback(item, source, source_info) 
 
     def test_update_stocks(self):
@@ -64,12 +68,33 @@ class DataSourcesTest(unittest.TestCase):
             self.assertNotEqual(st.date, test_date)
             self.assertNotEqual(st.price, 0)
 
+
+    def get_historical_prices(self, st):
+        #loops needed, since the dsm uses generators
+        for foo in self.dsm.update_historical_prices(st):
+            for bar in foo:
+                pass
+
     def test_historicals(self):
         self.put_stocks_in_db()
         for st in controller.getAllStock():
             count = len(controller.getAllQuotationsFromStock(st))
-            #loops needed, since the dsm uses generators
-            for foo in self.dsm.update_historical_prices(st):
-                for bar in foo:
-                    pass
+            self.get_historical_prices(st)
             self.assertNotEqual(count, len(controller.getAllQuotationsFromStock(st)))
+
+    def test_items_with_problems(self):
+        for item in ITEMS_WITH_PROBLEMS:
+            self.dsm.search(item, threaded = False)
+            stock = controller.getStockForSearchstring(item)[0]
+            
+            test_date = datetime.datetime(1900, 1, 1)
+            stock.price = 0
+            stock.date = test_date
+            self.dsm.update_stocks([stock])
+            self.assertNotEqual(stock.date, test_date)
+            self.assertNotEqual(stock.price, 0)
+
+            self.assertIsNotNone(stock)
+            count = len(controller.getAllQuotationsFromStock(stock))
+            self.get_historical_prices(stock)
+            self.assertNotEqual(count, len(controller.getAllQuotationsFromStock(stock)))

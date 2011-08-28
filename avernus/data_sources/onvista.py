@@ -202,7 +202,7 @@ class Onvista():
             for kursPage in pages:
                 logger.debug("Parsing fonds result page")
                 for item in self._parse_kurse_html(kursPage):
-                    yield (item, self)
+                    yield (item, self, None)
             logger.debug("Finished Fonds")
 
             # enhance the /kurse suffix to the links
@@ -213,7 +213,7 @@ class Onvista():
             for kursPage in pages:
                 logger.debug("Parsing ETF result page")
                 for item in self._parse_kurse_html(kursPage, tdInd=etfTDS, stockType=stock.ETF):
-                    yield (item, self)
+                    yield (item, self, None)
 
             bondlinks = [tag['href'] for tag in linkTagsBond]
             bondlinks = [link + "/kurse" for link in bondlinks]
@@ -222,7 +222,7 @@ class Onvista():
             for kursPage in pages:
                 logger.debug("Parsing bond result page")
                 for item in self._parse_kurse_html(kursPage, tdInd=bondTDS, stockType=stock.BOND):
-                    yield (item, self)
+                    yield (item, self, None)
         else:
             logger.debug("Received a Single result page")
             # we have a single page
@@ -233,15 +233,15 @@ class Onvista():
                 #print "found ETF-onepage"
                 for item in self._parse_kurse_html(html, tdInd=etfTDS, stockType=stock.ETF):
                     #print "Yield ", item
-                    yield (item, self)
+                    yield (item, self, None)
             elif "anleihen" in received_url:
                 #bond
                 for item in self._parse_kurse_html(html, tdInd=bondTDS, stockType=stock.BOND):
-                    yield (item, self)
+                    yield (item, self, None)
             elif "fond" in received_url:
                 # aktive fonds
                 for item in self._parse_kurse_html(html):
-                    yield (item, self)
+                    yield (item, self, None)
         logger.debug("Finished Searching " + searchstring)
 
     def _parse_kurse_html(self, kursPage, tdInd=fondTDS, stockType = stock.FUND):

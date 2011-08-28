@@ -139,13 +139,13 @@ class ContextMenu(Gtk.Menu):
     def __init__(self):
         Gtk.Menu.__init__(self)
 
-    def show(self, event):
+    def run(self, event):
         self.show_all()
-        self.popup(None, None, None, None, event.button, event.get_time())
+        self.popup(None, None, None, None, event.button, event.time)
 
     def add_item(self, label, func = None, icon = None):
         if label == '----':
-            self.add(Gtk.SeparatorMenuItem())
+            self.append(Gtk.SeparatorMenuItem())
         else:
             if icon is not None:
                 item = Gtk.ImageMenuItem()
@@ -153,10 +153,11 @@ class ContextMenu(Gtk.Menu):
                 item.set_use_stock(True)
                 item.get_children()[0].set_label(label)
             else:
-                item = Gtk.MenuItem(label)
+                item = Gtk.MenuItem()
+                item.set_label(label)
             if func is not None:
                 item.connect("activate", func)
-            self.add(item)
+            self.append(item)
             return item
 
 def float_format(column, cell_renderer, tree_model, iterator, user_data):

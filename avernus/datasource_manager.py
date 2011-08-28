@@ -30,7 +30,7 @@ class DatasourceManager(object):
     def get_source_count(self):
         return len(sources.items())
  
-    def search(self, searchstring, callback, complete_cb):
+    def search(self, searchstring, callback = None, complete_cb = None, threaded = True):
         self.stop_search()
         self.search_callback = callback
         if not self.b_online:
@@ -40,9 +40,14 @@ class DatasourceManager(object):
             #check whether search function exists
             func = getattr(source, "search", None)
             if func:
-                task = gui_utils.GeneratorTask(func, self._item_found_callback, complete_cb)
-                self.current_searches.append(task)
-                task.start(searchstring)
+                if threaded:
+                    task = gui_utils.GeneratorTask(func, self._item_found_callback, complete_cb)
+                    self.current_searches.append(task)
+                    task.start(searchstring)
+                else:
+                    for res in func(searchstring):
+                        item, source, source_info = res
+                        self._item_found_callback(item, source, source_info)
 
     def stop_search(self):
         for search in self.current_searches:

@@ -157,7 +157,7 @@ class MainTree(gui_utils.Tree):
         if target and event.type == Gdk.EventType.BUTTON_PRESS:
             obj = self.get_model()[target[0]][0]
             if event.button == 3 and not isinstance(obj, Category):
-                ContainerContextMenu(obj, self.actiongroup).show(event)
+                ContainerContextMenu(obj, self.actiongroup, event)
             elif self.get_selection().path_is_selected(target[0]) and isinstance(obj, Category):
                 #disable editing of categories
                 return True
@@ -391,12 +391,16 @@ class EditPortfolio(Gtk.Dialog):
 
 
 class ContainerContextMenu(gui_utils.ContextMenu):
-    def __init__(self, container, actiongroup):
+    
+    def __init__(self, container, actiongroup, event):
         gui_utils.ContextMenu.__init__(self)
-
+        
         for action in ['edit', 'remove']:
-            self.add(actiongroup.get_action(action).create_menu_item())
+            self.append(actiongroup.get_action(action).create_menu_item())
 
         if container.__name__ == 'Account':
-            self.add(Gtk.SeparatorMenuItem())
+            self.append(Gtk.SeparatorMenuItem())
             self.add_item(_('Import transactions'),  lambda x: CSVImportDialog(account = container) , 'gtk-add')
+        
+        self.run(event)
+        

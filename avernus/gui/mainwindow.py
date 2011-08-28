@@ -97,7 +97,7 @@ class MenuBar(Gtk.MenuBar):
 class MainWindow(Gtk.Window):
     
     def __init__(self):
-        Gtk.Window.__init__(self)
+        Gtk.Window.__init__(self, type=Gtk.WindowType.TOPLEVEL)
         self.config = config.avernusConfig()
         self.set_title(avernus.__appname__)
 
@@ -173,8 +173,7 @@ class MainWindow(Gtk.Window):
         #save db on quit
         self.config.set_option('hpaned position', self.hpaned.get_position(), 'Gui')
         model.store.close()
-        Gtk.main_quit()
-        sys.exit()
+        #sys.exit()
 
     def on_maintree_select(self, item):
         self.on_maintree_unselect()
