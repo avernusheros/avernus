@@ -56,10 +56,10 @@ class BackgroundTask():
 
 
 class Tree(Gtk.TreeView):
-    
+
     def __init__(self):
         self.selected_item = None
-        Gtk.TreeView.__init__(self)
+        super(Gtk.TreeView, self).__init__()
         pubsub.subscribe('clear!', self.clear)
 
     def get_selected_item(self):
@@ -135,13 +135,18 @@ class Tree(Gtk.TreeView):
 
 
 class ContextMenu(Gtk.Menu):
-    
+
     def __init__(self):
-        Gtk.Menu.__init__(self)
+        super(Gtk.Menu, self).__init__()
 
     def run(self, event):
         self.show_all()
-        self.popup(None, None, None, None, event.button, event.time)
+        print "calling popup"
+        try:
+            self.popup_for_device(None, None, None, None, None,
+            event.button.button, time)
+        except:
+            print "popups are broken!"
 
     def add_item(self, label, func = None, icon = None):
         if label == '----':

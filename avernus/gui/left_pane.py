@@ -21,7 +21,7 @@ class Category(object):
 class MainTreeBox(Gtk.VBox):
 
     def __init__(self):
-        Gtk.VBox.__init__(self)
+        super(Gtk.VBox, self).__init__()
         actiongroup = Gtk.ActionGroup('left_pane')
 
         main_tree = MainTree(actiongroup)
@@ -51,7 +51,7 @@ class MainTreeBox(Gtk.VBox):
 class InfoBox(Gtk.Table):
 
     def __init__(self):
-        Gtk.Table.__init__(self)
+        super(Gtk.Table, self).__init__()
         self.line_count = 0
 
         self.set_col_spacings(6)
@@ -100,7 +100,7 @@ class InfoBox(Gtk.Table):
 class MainTree(gui_utils.Tree):
 
     def __init__(self, actiongroup):
-        gui_utils.Tree.__init__(self)
+        super(gui_utils.Tree, self).__init__()
         self.actiongroup = actiongroup
         self.selected_item = None
 
@@ -158,6 +158,7 @@ class MainTree(gui_utils.Tree):
             obj = self.get_model()[target[0]][0]
             if event.button == 3 and not isinstance(obj, Category):
                 ContainerContextMenu(obj, self.actiongroup, event)
+                return True
             elif self.get_selection().path_is_selected(target[0]) and isinstance(obj, Category):
                 #disable editing of categories
                 return True
@@ -291,7 +292,7 @@ class MainTree(gui_utils.Tree):
 class EditWatchlist(Gtk.Dialog):
 
     def __init__(self, wl):
-        Gtk.Dialog.__init__(self, _("Edit watchlist"), None
+        super(Gtk.Dialog, self).__init__(_("Edit watchlist"), None
                             , Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,
                      (Gtk.STOCK_CANCEL, Gtk.ResponseType.REJECT,
                       Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT))
@@ -323,7 +324,7 @@ class EditWatchlist(Gtk.Dialog):
 class EditAccount(Gtk.Dialog):
 
     def __init__(self, acc):
-        Gtk.Dialog.__init__(self, _("Edit Account"), None,
+        super(Gtk.Dialog, self).__init__(_("Edit Account"), None,
                             Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,
                      (Gtk.STOCK_CANCEL, Gtk.ResponseType.REJECT,
                       Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT))
@@ -359,8 +360,9 @@ class EditAccount(Gtk.Dialog):
 
 
 class EditPortfolio(Gtk.Dialog):
+
     def __init__(self, pf):
-        Gtk.Dialog.__init__(self, _("Edit portfolio"), None
+        super(Gtk.Dialog, self).__init__(_("Edit portfolio"), None
                             , Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,
                      (Gtk.STOCK_CANCEL, Gtk.ResponseType.REJECT,
                       Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT))
@@ -391,16 +393,15 @@ class EditPortfolio(Gtk.Dialog):
 
 
 class ContainerContextMenu(gui_utils.ContextMenu):
-    
+
     def __init__(self, container, actiongroup, event):
         gui_utils.ContextMenu.__init__(self)
-        
+
         for action in ['edit', 'remove']:
             self.append(actiongroup.get_action(action).create_menu_item())
 
         if container.__name__ == 'Account':
             self.append(Gtk.SeparatorMenuItem())
             self.add_item(_('Import transactions'),  lambda x: CSVImportDialog(account = container) , 'gtk-add')
-        
+
         self.run(event)
-        

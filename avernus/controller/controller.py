@@ -83,7 +83,7 @@ def initialLoading():
         #this will now be much faster as everything is in the cache
         for obj in cl.getAll():
             obj.controller = controller
-            logger.debug("Loading Composites of Objekt: " + str(obj))
+            logger.debug("Loading Composites of Objekt: " + unicode(obj))
             obj.retrieveAllComposite()
 
 def is_duplicate(tp, **kwargs):

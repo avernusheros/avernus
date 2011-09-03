@@ -25,7 +25,7 @@ class Cache(object):
         """
         Caches an object. Key to caching is the tuple (class,primary key)
         """
-        logger.debug("Caching "+str(obj))
+        logger.debug("Caching "+unicode(obj))
         self.objects[(obj.__class__,obj.getPrimaryKey())] = obj
 
     def isCached(self, t, k):

@@ -158,7 +158,7 @@ class PreviewTree(gui_utils.Tree):
                 color = 'black'
             else:
                 color = self.COLOR_DUPLICATES
-            model.append([trans.date, trans.description, trans.amount, trans.b_import, trans.category, color])
+            model.append([trans.date, trans.description, trans.amount, trans.b_import, str(trans.category), color])
 
     def on_toggled(self, cellrenderertoggle, path):
         self.model[path][3] = self.transactions[int(path)].b_import = not self.model[path][3]

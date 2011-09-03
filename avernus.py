@@ -77,7 +77,7 @@ def init_translations():
 def init_icons():
     from avernus.gui.icons import IconManager
     icons = IconManager()
-    
+
     path = os.path.join(config.getdatapath(),'images')
     iconNames = [
     'avernus','tags','tag','watchlists','watchlist','portfolio',
@@ -111,6 +111,7 @@ def start(db_file = None):
     from avernus.network_manager import DBusNetwork
     DBusNetwork()
     Gtk.main()
+    Gtk.main_quit()
 
 if __name__ == "__main__":
     init_translations()
@@ -123,7 +124,6 @@ if __name__ == "__main__":
     init_logger(options.debug)
 
     GObject.threads_init()
-    
-    #Gdk.threads_init()
+
     #run the application
     start(options.datafile)

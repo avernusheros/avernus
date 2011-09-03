@@ -189,7 +189,7 @@ class EarningsVsSpendingsController():
     def update(self, transactions, date_range):
         self.date_range = date_range
         self.transactions = transactions
-        
+
     def calculate_values(self):
         start, end = self.date_range
         onemonth = relativedelta(months=1)
@@ -210,7 +210,7 @@ class EarningsVsSpendingsController():
                 data[trans.date.year][trans.date.month][1] += abs(trans.amount)
         self.y_values = []
         for x_value in self.x_values:
-            self.y_values.append([data[x_value.year][x_value.month][0], data[x_value.year][x_value.month][0]])
+            self.y_values.append([data[x_value.year][x_value.month][0], data[x_value.year][x_value.month][1]])
         self.x_values = map(str, self.x_values)
 
 
@@ -270,7 +270,7 @@ class DividendsPerYearChartController():
 
     def __init__(self, portfolio):
         self.portfolio = portfolio
-    
+
     def calculate_values(self):
         data = {}
         for year in date_utils.get_years(self.portfolio.birthday):
@@ -288,7 +288,7 @@ class DividendsPerPositionChartController():
 
     def __init__(self, portfolio):
         self.portfolio = portfolio
-    
+
     def calculate_values(self):
         data = {}
         for pos in self.portfolio:

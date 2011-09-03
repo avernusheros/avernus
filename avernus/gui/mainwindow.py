@@ -24,9 +24,9 @@ if __name__ == '__main__':
 
 
 class AboutDialog(Gtk.AboutDialog):
-    
+
     def __init__(self, *arg, **args):
-        Gtk.AboutDialog.__init__(self)
+        super(Gtk.AboutDialog, self).__init__()
 
         self.set_name(avernus.__appname__)
         self.set_version(avernus.__version__)
@@ -42,9 +42,10 @@ class AboutDialog(Gtk.AboutDialog):
 
 
 class MenuBar(Gtk.MenuBar):
+
     def __init__(self, parent, actiongroup, accelgroup):
         self.actiongroup = actiongroup
-        Gtk.MenuBar.__init__(self)
+        super(Gtk.MenuBar, self).__init__()
 
         # Create actions
         #item: name, stockid, label, accel, tooltip, callback
@@ -95,9 +96,9 @@ class MenuBar(Gtk.MenuBar):
 
 
 class MainWindow(Gtk.Window):
-    
+
     def __init__(self):
-        Gtk.Window.__init__(self, type=Gtk.WindowType.TOPLEVEL)
+        super(Gtk.Window, self).__init__(type=Gtk.WindowType.TOPLEVEL)
         self.config = config.avernusConfig()
         self.set_title(avernus.__appname__)
 
