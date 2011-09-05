@@ -99,7 +99,7 @@ class DimensionComboBox(Gtk.ComboBox):
         return False
 
     def on_completion_match(self, completion, model, iter):
-        current_text = self.get_active_text()
+        current_text = self.get_child().get_active_text()
         current_text = current_text[:-len(current_text.split(self.SEPARATOR)[-1])]
         if len(current_text) == 0:
             self.get_child().set_text(model[iter][self.COL_TEXT])
@@ -556,7 +556,7 @@ class BuyDialog(Gtk.Dialog):
 
 
 class NewWatchlistPositionDialog(Gtk.Dialog):
-    
+
     def __init__(self, wl):
         Gtk.Dialog.__init__(self, _("Add watchlist position"), None
                             , Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,
@@ -652,7 +652,7 @@ class CalendarDialog(Gtk.Dialog):
 
 
 class DividendDialog(Gtk.Dialog):
-    
+
     def __init__(self, pf=None, tree=None, date=None, price=None, position=None, dividend=None):
         Gtk.Dialog.__init__(self, _("Add dividend"), None
                             , Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,
