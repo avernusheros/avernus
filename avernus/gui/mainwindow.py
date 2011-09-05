@@ -134,9 +134,8 @@ class MainWindow(Gtk.Window):
 
         #set min size
         screen = self.get_screen()
-        monitor = screen.get_monitor_geometry(0)
-        width = int(monitor.width * 0.66)
-        height = int(monitor.height * 0.66)
+        width = int(screen.get_width() * 0.66)
+        height = int(screen.get_height() * 0.66)
         self.set_size_request(width, height)
 
         size = self.config.get_option('size', section='Gui')
