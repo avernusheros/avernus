@@ -599,7 +599,7 @@ class PosSelector(Gtk.ComboBox):
         self.pack_start(cell, True)
         self.add_attribute(cell, 'text', 1)
         self.set_active(0)
-        self.set_button_sensitivity(Gtk.SENSITIVITY_AUTO)
+        #self.set_button_sensitivity(GTK_SENSITIVITY_AUTO)
 
         liststore = Gtk.ListStore(object, str)
         liststore.append([-1, 'Select a position'])
@@ -673,12 +673,12 @@ class DividendDialog(Gtk.Dialog):
         self.selected_pos = position
 
         table.attach(Gtk.Label(label=_('Amount')),0,1,1,2)
-        self.value_entry = Gtk.SpinButton(Gtk.Adjustment(lower=0, upper=100000,step_increment=0.1, value = 1.0), digits=2)
+        self.value_entry = Gtk.SpinButton(adjustment = Gtk.Adjustment(lower=0, upper=100000,step_increment=0.1, value = 1.0), digits=2)
         self.value_entry.connect("value-changed", self.on_change)
         table.attach(self.value_entry, 1,2,1,2)
 
         table.attach(Gtk.Label(label=_('Transaction costs')),0,1,2,3)
-        self.tacosts_entry = Gtk.SpinButton(Gtk.Adjustment(lower=0, upper=100000,step_increment=0.1, value = 0.0), digits=2)
+        self.tacosts_entry = Gtk.SpinButton(adjustment = Gtk.Adjustment(lower=0, upper=100000,step_increment=0.1, value = 0.0), digits=2)
         self.tacosts_entry.connect("value-changed", self.on_change)
         table.attach(self.tacosts_entry, 1,2,2,3)
 
@@ -704,7 +704,7 @@ class DividendDialog(Gtk.Dialog):
             self.tacosts_entry.set_value(dividend.costs)
             self.on_change()
 
-        self.set_response_sensitive(Gtk.ResponseType.ACCEPT, self.position is not None)
+        self.set_response_sensitive(Gtk.ResponseType.ACCEPT, self.selected_pos is not None)
         self.show_all()
         response = self.run()
         self.process_result(response)

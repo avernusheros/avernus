@@ -12,16 +12,16 @@ class ChartBase(Gtk.VBox):
         self.controller = controller
         self.width = width
         self.current_widget = None
-        
+
         self.connect('realize', self.on_realize)
 
     def remove_widget(self):
         if self.current_widget:
             self.remove(self.current_widget)
-            
+
     def draw_widget(self):
         pass
-    
+
     def draw_spinner(self):
         self.remove_widget()
         self.current_widget = Gtk.Spinner()
@@ -29,11 +29,11 @@ class ChartBase(Gtk.VBox):
         self.current_widget.show()
         self.current_widget.set_size_request(self.SPINNER_SIZE, self.SPINNER_SIZE)
         self.current_widget.start()
-    
+
     def on_realize(self, widget):
         self.draw_spinner()
         gui_utils.BackgroundTask(self.controller.calculate_values, self.draw_widget)
-    
+
     def update(self, *args, **kwargs):
         self.draw_spinner()
         self.controller.update(*args, **kwargs)

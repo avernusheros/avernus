@@ -93,7 +93,7 @@ class AccountTransactionTab(Gtk.VBox, page.Page):
         transfer_button.set_active(self.transactions_tree.b_show_transfer)
         uncategorized_button.connect('toggled', self.transactions_tree.on_toggle_uncategorized)
         transfer_button.connect('toggled', self.transactions_tree.on_toggle_transfer)
-        
+
         self.update_range()
 
         vbox = Gtk.VBox()
@@ -150,17 +150,26 @@ class AccountTransactionTab(Gtk.VBox, page.Page):
         over_time_controller = chartController.TransactionValueOverTimeChartController(self.account.transactions, date_range)
         categoryChart = charts.TransactionChart(over_time_controller, 300)
         self.charts.append(categoryChart)
-        notebook.append_page(categoryChart, Gtk.Label(label=_('Over Time')))
+        label = Gtk.Label(label=_('Over Time'))
+        #FIXME better tooltip
+        label.set_tooltip_text(_('Account value over time.'))
+        notebook.append_page(categoryChart, label)
+
 
         step_controller = chartController.TransactionStepValueChartController(self.account.transactions, date_range)
         valueChart = charts.TransactionChart(step_controller, 300)
         self.charts.append(valueChart)
-        notebook.append_page(valueChart, Gtk.Label(label=_('Step Value')))
+        label = Gtk.Label(label=_('Step Value'))
+        #FIXME better tooltip
+        label.set_tooltip_text(_('step value.'))
+        notebook.append_page(valueChart, label)
 
         chart_controller = chartController.AccountBalanceOverTimeChartController(self.account, date_range)
         chart = charts.SimpleLineChart(chart_controller, 300)
         self.charts.append(chart)
-        notebook.append_page(chart, Gtk.Label(label=_('Account balance')))
+        label = Gtk.Label(label=_('Account balance'))
+        label.set_tooltip_text(_('Account balance over the given time period.'))
+        notebook.append_page(chart, label)
 
         table = Gtk.Table()
         chart_controller = chartController.TransactionCategoryPieController(self.account.transactions, earnings=True)
@@ -168,6 +177,7 @@ class AccountTransactionTab(Gtk.VBox, page.Page):
         self.charts.append(chart)
         label = Gtk.Label()
         label.set_markup('<b>'+_('Earnings')+'</b>')
+        label.set_tooltip_text(_('Categorization of earnings.'))
         table.attach(label,0,1,0,1,xoptions=Gtk.AttachOptions.FILL, yoptions=Gtk.AttachOptions.FILL)
         table.attach(chart,0,1,1,2)
 
@@ -176,14 +186,19 @@ class AccountTransactionTab(Gtk.VBox, page.Page):
         self.charts.append(chart)
         label = Gtk.Label()
         label.set_markup('<b>'+_('Spendings')+'</b>')
+        label.set_tooltip_text(_('Categorization of spendings.'))
         table.attach(label,1,2,0,1,xoptions=Gtk.AttachOptions.FILL, yoptions=Gtk.AttachOptions.FILL)
         table.attach(chart,1,2,1,2)
-        notebook.append_page(table, Gtk.Label(label=_('Categories')))
+        label = Gtk.Label(label=_('Categories'))
+        label.set_tooltip_text(_('Categorization of transactions.'))
+        notebook.append_page(table, label)
 
         chart_controller = chartController.EarningsVsSpendingsController(self.account.transactions, date_range)
         chart = charts.BarChart(chart_controller, 400)
         self.charts.append(chart)
-        notebook.append_page(chart, Gtk.Label(label=_('Earnings vs Spendings')))
+        label = Gtk.Label(label=_('Earnings vs Spendings'))
+        label.set_tooltip_text(_('Earnings vs spendings in given time period.'))
+        notebook.append_page(chart, label)
 
         self.vpaned.pack1(notebook)
 

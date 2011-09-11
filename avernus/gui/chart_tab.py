@@ -30,6 +30,7 @@ class ChartTab(Gtk.ScrolledWindow):
         table.attach(hbox, 0, 2, 0, 1)
         label = Gtk.Label()
         label.set_markup('<b>'+_('Value over time')+'</b>')
+        label.set_tooltip_text(_("The value over time chart plots the portfolio value over the selected time period."))
         hbox.pack_start(label, True, True, 0)
 
         combobox = Gtk.ComboBoxText()
@@ -45,6 +46,7 @@ class ChartTab(Gtk.ScrolledWindow):
 
         label = Gtk.Label()
         label.set_markup('<b>'+_('Market value')+'</b>')
+        label.set_tooltip_text(_("Percentual fraction of each portfolio position."))
         table.attach(label, 0,1,2,3)
         chart_controller = chartController.PositionAttributeChartController(self.pf, 'name')
         chart = charts.Pie(chart_controller, width/2)
@@ -52,6 +54,7 @@ class ChartTab(Gtk.ScrolledWindow):
 
         label = Gtk.Label()
         label.set_markup('<b>'+_('Investment types')+'</b>')
+        label.set_tooltip_text(_("Percentual fraction by investment type."))
         table.attach(label,1,2,2,3)
         chart_controller = chartController.PositionAttributeChartController(self.pf, 'type_string')
         chart = charts.Pie(chart_controller, width/2)
@@ -63,6 +66,7 @@ class ChartTab(Gtk.ScrolledWindow):
         for dim in controller.getAllDimension():
             label = Gtk.Label()
             label.set_markup('<b>'+dim.name+'</b>')
+            label.set_tooltip_text(_('Percentual fraction by "')+dim.name+'".')
             table.attach(label, col,col+1,row,row+1)
             chart_controller = chartController.DimensionChartController(self.pf, dim)
             chart = charts.Pie(chart_controller, width/2)
@@ -79,6 +83,7 @@ class ChartTab(Gtk.ScrolledWindow):
 
         label = Gtk.Label()
         label.set_markup('<b>'+_('Dividends per Year')+'</b>')
+        label.set_tooltip_text(_('Total dividend payment per year.'))
         table.attach(label,0,2,row,row+1)
         chart_controller = chartController.DividendsPerYearChartController(self.pf)
         chart = charts.BarChart(chart_controller,width)
@@ -86,6 +91,7 @@ class ChartTab(Gtk.ScrolledWindow):
 
         label = Gtk.Label()
         label.set_markup('<b>'+_('Dividends')+'</b>')
+        label.set_tooltip_text(_('Total dividend payment for each position.'))
         table.attach(label,0,2,row+3,row+4)
         chart_controller = chartController.DividendsPerPositionChartController(self.pf)
         chart = charts.BarChart(chart_controller,width)
