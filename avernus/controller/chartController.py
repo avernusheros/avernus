@@ -44,8 +44,8 @@ def get_legend(smaller, bigger, step):
 def compute_start_date(dateItems):
     lowest = datetime.date.today()
     for item in dateItems:
-        if item.date < lowest:
-            lowest = item.date
+        if item.date.date() < lowest:
+            lowest = item.date.date()
     return lowest
 
 def calculate_x_values(step, start, end):
@@ -65,13 +65,28 @@ class InvestmentChartController:
         # the transactions are portfolio transactions, not account transactions
         self.transactions = transactions
         self.dividends = dividends
-        self.start_date = compute_start_date(transactions + dividends)
+        self.items = transactions + dividends
+        self.start_date = compute_start_date(self.items)
         self.end_date = datetime.date.today()
         self.step = get_step_for_range(self.start_date, self.end_date)
-        self.legend = get_legend(self.start_date, self.end_date, self.step)
+        self.legend = get_legend(self.start_date, self.end_date, "monthly")
         
-    
-        
+    def calculate_values(self):
+        self.x_values_all, self.x_values = calculate_x_values(self.step, self.start_date, self.end_date)
+        self.items = sorted(self.items, key=lambda t: t.date)
+        self.y_values = []
+        count = 0
+        i = 0
+        for item in self.items:
+            if item.date.date() > self.x_values_all[i]:
+                self.y_values.append(count)
+                i += 1
+            count += item.total
+        while i<len(self.x_values_all):
+            self.y_values.append(count)
+            i += 1
+        self.y_values.reverse()
+            
 
 
 class TransactionChartController:

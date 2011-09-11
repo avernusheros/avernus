@@ -22,6 +22,7 @@ class Transaction(SQLiteEntity):
                    "costs": "FLOAT",
                    "position": PortfolioPosition,
                    }
+    
     @property
     def total(self):
         if self.type==BUY:
