@@ -41,6 +41,38 @@ def get_legend(smaller, bigger, step):
         smaller+=delta
     return erg
 
+def compute_start_date(dateItems):
+    lowest = datetime.date.today()
+    for item in dateItems:
+        if item.date < lowest:
+            lowest = item.date
+    return lowest
+
+def calculate_x_values(step, start, end):
+        result = []
+        current = start
+        while current < end:
+            result.append(current)
+            current += step
+        result.append(current)
+        resultStrings = [gui_utils.get_date_string(x) for x in result]
+        return result, resultStrings
+
+
+class InvestmentChartController:
+    
+    def __init__(self, transactions, dividends):
+        # the transactions are portfolio transactions, not account transactions
+        self.transactions = transactions
+        self.dividends = dividends
+        self.start_date = compute_start_date(transactions + dividends)
+        self.end_date = datetime.date.today()
+        self.step = get_step_for_range(self.start_date, self.end_date)
+        self.legend = get_legend(self.start_date, self.end_date, self.step)
+        
+    
+        
+
 
 class TransactionChartController:
 
@@ -50,16 +82,7 @@ class TransactionChartController:
     def get_start_date(self):
         return self.start_date
 
-    def calculate_x_values(self):
-        self.step = self.get_step()
-        self.x_values_all = []
-        current = self.get_start_date()
-        while current < self.end_date:
-            self.x_values_all.append(current)
-            current += self.step
-        self.x_values_all.append(current)
-        self.x_values = [gui_utils.get_date_string(x) for x in self.x_values_all]
-
+    
 
 class TransactionValueOverTimeChartController(TransactionChartController):
 
@@ -98,7 +121,8 @@ class TransactionValueOverTimeChartController(TransactionChartController):
         self.start_date, self.end_date = date_range
 
     def calculate_values(self):
-        self.calculate_x_values()
+        self.step = self.get_step()
+        self.x_values_all, self.x_values = calculate_x_values(self.step, self.start_date, self.end_date)
         self.calculate_y_values()
         self.remove_zero()
         if self.rolling_avg:
@@ -243,7 +267,8 @@ class AccountBalanceOverTimeChartController(TransactionChartController):
         self.start_date, self.end_date = date_range
 
     def calculate_values(self):
-        self.calculate_x_values()
+        self.step = self.get_step()
+        self.x_values_all, self.x_values = calculate_x_values(self.get_step(), self.start_date, self.end_date)
         transactions = [t for t in self.account if t.date >= self.start_date]
         transactions.sort(key=lambda t: t.date, reverse=True)
         count = 1
