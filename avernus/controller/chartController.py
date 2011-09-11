@@ -70,6 +70,7 @@ class InvestmentChartController:
         self.end_date = datetime.date.today()
         self.step = get_step_for_range(self.start_date, self.end_date)
         self.legend = get_legend(self.start_date, self.end_date, "monthly")
+        self.show_debug()
         
     def calculate_values(self):
         self.x_values_all, self.x_values = calculate_x_values(self.step, self.start_date, self.end_date)
@@ -77,15 +78,20 @@ class InvestmentChartController:
         self.y_values = []
         count = 0
         i = 0
-        for item in self.items:
-            if item.date.date() > self.x_values_all[i]:
-                self.y_values.append(count)
+        for current in self.x_values_all:
+            while i < len(self.items) and self.items[i].date.date() < current:
+                count += self.items[i].total * -1
                 i += 1
-            count += item.total
+            self.y_values.append(count) 
+        #FixMe: we should not need this next loop
         while i<len(self.x_values_all):
             self.y_values.append(count)
             i += 1
-        self.y_values.reverse()
+            
+    def show_debug(self):
+        print "dates ", self.start_date, self.end_date, self.step
+        print "transactions ", len(self.transactions)
+        print "dividends ", len(self.dividends)
             
 
 

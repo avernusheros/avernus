@@ -39,3 +39,6 @@ class Transaction(SQLiteEntity):
 
     def is_sell(self):
         return self.type == SELL
+    
+    def __repr__(self):
+        return self.type_string + " " + self.position.stock.name + "|" + str(self.date) + "|" + str(self.total)
