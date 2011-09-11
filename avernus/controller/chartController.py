@@ -6,6 +6,7 @@ from dateutil.rrule import *
 from itertools import ifilter
 import datetime
 import logging
+from avernus.objects.transaction import Transaction
 
 logger = logging.getLogger(__name__)
 
@@ -70,7 +71,7 @@ class InvestmentChartController:
         self.end_date = datetime.date.today()
         self.step = get_step_for_range(self.start_date, self.end_date)
         self.legend = get_legend(self.start_date, self.end_date, "monthly")
-        self.show_debug()
+        #self.show_debug()
         
     def calculate_values(self):
         self.x_values_all, self.x_values = calculate_x_values(self.step, self.start_date, self.end_date)
@@ -80,7 +81,10 @@ class InvestmentChartController:
         i = 0
         for current in self.x_values_all:
             while i < len(self.items) and self.items[i].date.date() < current:
-                count += self.items[i].total * -1
+                if isinstance(self.items[i], Transaction):
+                    count += self.items[i].total * -1
+                else:
+                    count += self.items[i].total 
                 i += 1
             self.y_values.append(count) 
         #FixMe: we should not need this next loop

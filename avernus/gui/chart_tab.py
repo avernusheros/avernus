@@ -51,7 +51,7 @@ class ChartTab(gtk.ScrolledWindow):
         y += 1
 
         label = gtk.Label()
-        label.set_markup('<b>'+_('Investments')+'</b>')
+        label.set_markup('<b>'+_('Investments and Dividends')+'</b>')
         table.attach(label, 0,1,y,y+1)
         
         y += 1
