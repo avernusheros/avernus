@@ -20,3 +20,7 @@ class Dividend(SQLiteEntity):
     
     def __repr__(self):
         return "Dividend " + self.position.stock.name + "|" + str(self.date) + "|" + str(self.total)
+    
+    @property
+    def investmentValue(self):
+        return (-1 * self.price) + self.costs

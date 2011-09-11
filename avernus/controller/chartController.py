@@ -81,16 +81,16 @@ class InvestmentChartController:
         i = 0
         for current in self.x_values_all:
             while i < len(self.items) and self.items[i].date.date() < current:
-                if isinstance(self.items[i], Transaction):
-                    count += self.items[i].total * -1
-                else:
-                    count += self.items[i].total 
+                value = self.items[i].investmentValue
+                #print value, self.items[i]
+                count += value
                 i += 1
             self.y_values.append(count) 
         #FixMe: we should not need this next loop
-        while i<len(self.x_values_all):
-            self.y_values.append(count)
-            i += 1
+        #while i<len(self.x_values_all):
+        #    self.y_values.append(count)
+        #    i += 1
+        #print self.y_values
             
     def show_debug(self):
         print "dates ", self.start_date, self.end_date, self.step
