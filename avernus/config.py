@@ -18,10 +18,12 @@ def getdatapath():
     is specified at installation time.
     """
     # get pathname absolute or relative
-    if __avernus_data_directory__.startswith('/'):
+    
+    if os.path.exists(__avernus_data_directory__): #.startswith('/')
         pathname = __avernus_data_directory__
     else:
-        pathname = os.path.dirname(__file__) + '/' + __avernus_data_directory__
+        #pathname = os.path.dirname(__file__) + '/' + __avernus_data_directory__
+        pathname = os.path.dirname(__file__) + '/../data'
 
     abs_data_path = os.path.abspath(pathname)
     if os.path.exists(abs_data_path):
