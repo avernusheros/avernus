@@ -3,6 +3,9 @@
 
 import sys
 import os
+import gi
+gi.require_version('Gtk', '3.0')
+
 from gi.repository import Gtk, GObject
 import optparse
 import logging
@@ -22,8 +25,6 @@ if os.path.abspath(__file__).startswith('/opt'):
 if (os.path.exists(os.path.join(PROJECT_ROOT_DIRECTORY, 'avernus'))
     and PROJECT_ROOT_DIRECTORY not in sys.path):
     b_from_source = True
-    python_path.insert(0, PROJECT_ROOT_DIRECTORY)
-    sys.path.insert(0, PROJECT_ROOT_DIRECTORY)
 if python_path:
     os.putenv('PYTHONPATH', "%s:%s" % (os.getenv('PYTHONPATH', ''), ':'.join(python_path))) # for subprocesses    os.putenv('PYTHONPATH', PROJECT_ROOT_DIRECTORY) # for subprocesses
 
@@ -90,40 +91,37 @@ def init_icons():
     Gtk.Window.set_default_icon_name('avernus')
 
 
-def start(db_file = None):
-    init_icons()
-    if db_file == None:
-        configs = config.avernusConfig()
-        db_file = configs.get_option('database file')
+#MAIN
 
-    from avernus.objects import model, store
-    from avernus.controller import controller
-    model.store = store.Store(db_file)
-    controller.createTables()
-    controller.initialLoading()
+GObject.threads_init()
 
-    from avernus.gui.mainwindow import MainWindow
-    from avernus.datasource_manager import DatasourceManager
-    dsm = DatasourceManager()
-    MainWindow()
-    controller.datasource_manager = dsm
+init_translations()
+# Support for command line options.
+parser = optparse.OptionParser(version='%prog '+avernus.__version__)
+parser.add_option("-d", "--debug", action="store_true", dest="debug", help=_("enable debug output"))
+parser.add_option("-f", "--file",  dest="datafile", help="set database file")
+(options, args) = parser.parse_args()
 
-    from avernus.network_manager import DBusNetwork
-    DBusNetwork()
-    Gtk.main()
-    Gtk.main_quit()
+init_logger(options.debug)
+init_icons()
+db_file = options.datafile
+if db_file == None:
+    configs = config.avernusConfig()
+    db_file = configs.get_option('database file')
 
-if __name__ == "__main__":
-    init_translations()
-    # Support for command line options.
-    parser = optparse.OptionParser(version='%prog '+avernus.__version__)
-    parser.add_option("-d", "--debug", action="store_true", dest="debug", help=_("enable debug output"))
-    parser.add_option("-f", "--file",  dest="datafile", help="set database file")
-    (options, args) = parser.parse_args()
+from avernus.objects import model, store
+from avernus.controller import controller
+model.store = store.Store(db_file)
+controller.createTables()
+controller.initialLoading()
 
-    init_logger(options.debug)
+from avernus.gui.mainwindow import MainWindow
+from avernus.datasource_manager import DatasourceManager
+dsm = DatasourceManager()
+MainWindow()
+controller.datasource_manager = dsm
 
-    GObject.threads_init()
-
-    #run the application
-    start(options.datafile)
+from avernus.network_manager import DBusNetwork
+DBusNetwork()
+Gtk.main()
+Gtk.main_quit()

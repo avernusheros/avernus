@@ -2,15 +2,16 @@
 
 from gi.repository import Gtk
 from avernus import pubsub
-from avernus.gui import gui_utils
+from avernus.gui import gui_utils, page
 from avernus.controller import controller
 
 
-class ClosedPositionsTab(Gtk.ScrolledWindow):
-    
-    def __init__(self, item):
+class ClosedPositionsTab(Gtk.ScrolledWindow, page.Page):
+
+    def __init__(self, portfolio):
         Gtk.ScrolledWindow.__init__(self)
-        self.closed_positions_tree = ClosedPositionsTree(item)
+        self.portfolio = portfolio
+        self.closed_positions_tree = ClosedPositionsTree(portfolio)
         self.set_property('hscrollbar-policy', Gtk.PolicyType.AUTOMATIC)
         self.set_property('vscrollbar-policy', Gtk.PolicyType.AUTOMATIC)
         self.add(self.closed_positions_tree)
@@ -19,6 +20,17 @@ class ClosedPositionsTab(Gtk.ScrolledWindow):
     def show(self):
         self.closed_positions_tree.clear()
         self.closed_positions_tree.load_positions()
+        self.update_page()
+
+    def get_info(self):
+        count = 0
+        total = 0.0
+        for pos in self.portfolio.closed_positions:
+            count += 1
+            total += pos.sell_total
+        return [('# positions', count),
+                ('Sum', gui_utils.get_currency_format_from_float(total))
+                ]
 
 
 class ClosedPositionsTree(gui_utils.Tree):
@@ -42,13 +54,13 @@ class ClosedPositionsTree(gui_utils.Tree):
         self.create_column(_('Total'), 10, func=gui_utils.currency_format)
         self.create_column(_('Gain'), 11, func=gui_utils.float_to_red_green_string_currency)
         self.create_column('%', 12, func=gui_utils.float_to_red_green_string)
-        
+
     def load_positions(self):
         for pos in self.portfolio.closed_positions:
             self.insert_position(pos)
 
     def insert_position(self, pos):
-        self.model.append([pos, 
+        self.model.append([pos,
                            gui_utils.get_name_string(pos.stock),
                            float(pos.quantity),
                            pos.buy_date,
