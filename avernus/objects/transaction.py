@@ -6,9 +6,9 @@ BUY      = 1
 
 TYPES = {SELL: 'SELL',
          BUY: 'BUY',
-         }  
+         }
 
-        
+
 class Transaction(SQLiteEntity):
 
     __primaryKey__ = "id"
@@ -22,24 +22,15 @@ class Transaction(SQLiteEntity):
                    "costs": "FLOAT",
                    "position": PortfolioPosition,
                    }
-    
+
     @property
     def total(self):
         if self.type==BUY:
             sign = -1
         else:
-            sign = 1             
-        return sign*self.price*self.quantity - self.costs
-    
-    @property
-    def investmentValue(self):
-        if self.type == BUY:
-            erg = (self.price*self.quantity) + self.costs
-            #print self.price, self.quantity,  self.costs, erg
-            return erg
-        else:
-            return (-self.price*self.quantity) + self.costs
-    
+            sign = 1
+        return sign*self.price*self.quantity + self.costs
+
     @property
     def type_string(self):
         if self.type in TYPES:
@@ -48,6 +39,6 @@ class Transaction(SQLiteEntity):
 
     def is_sell(self):
         return self.type == SELL
-    
+
     def __repr__(self):
         return self.type_string + " " + self.position.stock.name + "|" + str(self.date) + "|" + str(self.total)

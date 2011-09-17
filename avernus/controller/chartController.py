@@ -77,8 +77,7 @@ class InvestmentChartController:
         i = 0
         for current in self.x_values_all:
             while i < len(self.items) and self.items[i].date.date() < current:
-                value = self.items[i].investmentValue
-                count += value
+                count -= self.items[i].total
                 i += 1
             self.y_values['invested capital'].append(count)
 

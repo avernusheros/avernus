@@ -91,30 +91,6 @@ class PortfolioPosition(SQLiteEntity, Position):
         for div in self.controller.getDividendForPosition(self):
             yield div
 
-    def get_value_over_time(self, start_day, end_day=datetime.datetime.today()):
-        #transactions on same day!
-        #dividends?
-        #transaction_costs?
-        end_day = end_day.date()
-        res = []
-        quantity = 0
-        one_day = timedelta(days = 1)
-        current = start_day
-
-        while current <= end_day:
-            print current
-            price = 1 #FIXME, get price at date
-            current += one_day
-            for ta in self.transactions:
-                if ta.date == current:
-                    if ta.type == 0: #sell
-                        quantity -= ta.quantity
-                    elif ta.type == 1: #buy
-                        quantity += ta.quantity
-                        pass
-            res.append((current, ta.quantity*price))
-        return res
-
     def get_quantity_at_date(self, t):
         if t<self.date:
             return 0
