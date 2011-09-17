@@ -22,6 +22,7 @@ class Transaction(SQLiteEntity):
                    "costs": "FLOAT",
                    "position": PortfolioPosition,
                    }
+    
     @property
     def total(self):
         if self.type==BUY:
@@ -31,6 +32,15 @@ class Transaction(SQLiteEntity):
         return sign*self.price*self.quantity - self.costs
     
     @property
+    def investmentValue(self):
+        if self.type == BUY:
+            erg = (self.price*self.quantity) + self.costs
+            #print self.price, self.quantity,  self.costs, erg
+            return erg
+        else:
+            return (-self.price*self.quantity) + self.costs
+    
+    @property
     def type_string(self):
         if self.type in TYPES:
             return TYPES[self.type]
@@ -38,3 +48,6 @@ class Transaction(SQLiteEntity):
 
     def is_sell(self):
         return self.type == SELL
+    
+    def __repr__(self):
+        return self.type_string + " " + self.position.stock.name + "|" + str(self.date) + "|" + str(self.total)

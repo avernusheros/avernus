@@ -6,6 +6,7 @@ from dateutil.rrule import *
 from itertools import ifilter
 import datetime
 import logging
+from avernus.objects.transaction import Transaction
 
 logger = logging.getLogger(__name__)
 
@@ -41,6 +42,46 @@ def get_legend(smaller, bigger, step):
         smaller+=delta
     return erg
 
+def compute_start_date(dateItems):
+    lowest = datetime.date.today()
+    for item in dateItems:
+        if item.date.date() < lowest:
+            lowest = item.date.date()
+    return lowest
+
+def calculate_x_values(step, start, end):
+        result = []
+        current = start
+        while current < end:
+            result.append(current)
+            current += step
+        result.append(current)
+        resultStrings = [gui_utils.get_date_string(x) for x in result]
+        return result, resultStrings
+
+
+class InvestmentChartController:
+
+    def __init__(self, portfolio):
+        self.items = portfolio.getTransactions() + portfolio.getDividends()
+        self.start_date = compute_start_date(self.items)
+        self.end_date = datetime.date.today()
+        self.step = get_step_for_range(self.start_date, self.end_date)
+        self.legend = get_legend(self.start_date, self.end_date, "monthly")
+
+    def calculate_values(self):
+        self.x_values_all, self.x_values = calculate_x_values(self.step, self.start_date, self.end_date)
+        self.items = sorted(self.items, key=lambda t: t.date)
+        self.y_values = {'invested capital': []}
+        count = 0
+        i = 0
+        for current in self.x_values_all:
+            while i < len(self.items) and self.items[i].date.date() < current:
+                value = self.items[i].investmentValue
+                count += value
+                i += 1
+            self.y_values['invested capital'].append(count)
+
 
 class TransactionChartController:
 
@@ -50,15 +91,6 @@ class TransactionChartController:
     def get_start_date(self):
         return self.start_date
 
-    def calculate_x_values(self):
-        self.step = self.get_step()
-        self.x_values_all = []
-        current = self.get_start_date()
-        while current < self.end_date:
-            self.x_values_all.append(current)
-            current += self.step
-        self.x_values_all.append(current)
-        self.x_values = [gui_utils.get_date_string(x) for x in self.x_values_all]
 
 
 class TransactionValueOverTimeChartController(TransactionChartController):
@@ -98,7 +130,8 @@ class TransactionValueOverTimeChartController(TransactionChartController):
         self.start_date, self.end_date = date_range
 
     def calculate_values(self):
-        self.calculate_x_values()
+        self.step = self.get_step()
+        self.x_values_all, self.x_values = calculate_x_values(self.step, self.start_date, self.end_date)
         self.calculate_y_values()
         self.remove_zero()
         if self.rolling_avg:
@@ -243,7 +276,8 @@ class AccountBalanceOverTimeChartController(TransactionChartController):
         self.start_date, self.end_date = date_range
 
     def calculate_values(self):
-        self.calculate_x_values()
+        self.step = self.get_step()
+        self.x_values_all, self.x_values = calculate_x_values(self.get_step(), self.start_date, self.end_date)
         transactions = [t for t in self.account if t.date >= self.start_date]
         transactions.sort(key=lambda t: t.date, reverse=True)
         count = 1

@@ -93,6 +93,18 @@ class PortfolioBase(Container):
     
     container_type = 'portfolio'
     
+    def getTransactions(self):
+        result = []
+        for position in self:
+            result.extend(self.controller.getTransactionForPosition(position))
+        return result
+    
+    def getDividends(self):
+        result = []
+        for position in self:
+            result.extend(self.controller.getDividendForPosition(position))
+        return result
+    
     def get_value_at_date(self, t):
         #FIXME
         #does not consider sold positions
@@ -148,7 +160,7 @@ class Portfolio(SQLiteEntity, PortfolioBase):
 
     def __iter__(self):
         return self.controller.getPositionForPortfolio(self).__iter__()
-
+   
     def onUpdate(self, **kwargs):
         pubsub.publish('container.updated', self)
 
