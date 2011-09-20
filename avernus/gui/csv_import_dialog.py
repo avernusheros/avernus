@@ -22,10 +22,7 @@ class CSVImportDialog(Gtk.Dialog):
         self.importer = csvimporter.CsvImporter()
         self.profile = {}
         self.b_file = False
-        if account is None:
-            self.b_account = False
-        else:
-            self.b_account = True
+        self.b_account = not account is None
         response = self.run()
         self.process_result(response = response)
 
@@ -65,10 +62,7 @@ class CSVImportDialog(Gtk.Dialog):
         self.account_cb.connect('changed', self._on_account_changed)
         accBox.pack_start(self.account_cb, False, True, 0)
 
-        if self.config.get_option('category_assignments_on_import') == 'True':
-            self.b_assignments = True
-        else:
-            self.b_assignments = False
+        self.b_assignments = self.config.get_option('category_assignments_on_import') == 'True'
         category_assignment_button = Gtk.CheckButton(label=_('Do category assignments'))
         category_assignment_button.set_active(self.b_assignments)
         accBox.pack_start(category_assignment_button, True, True, 0)
@@ -104,7 +98,11 @@ class CSVImportDialog(Gtk.Dialog):
         self.set_title(self.TITLE+' - '+os.path.basename(self.file))
         self.config.set_option('last_csv_folder', button.get_current_folder())
         self.fcbutton.set_current_folder(button.get_current_folder())
-        self.importer.load_transactions_from_csv(self.file)
+        try:
+            self.importer.load_transactions_from_csv(self.file)
+        except:
+            self.show_import_error_dialog()
+            return
         if self.b_account:
             self.import_button.set_sensitive(True)
             self.importer.check_duplicates(self.account)
@@ -119,6 +117,15 @@ class CSVImportDialog(Gtk.Dialog):
             self.importer.check_duplicates(self.account)
             self.importer.set_categories(self.b_assignments)
             self.tree.reload(self.importer.results)
+
+    def show_import_error_dialog(self):
+        text = _("""Avernus was unable to parse your csv file.
+- Is the submitted file a csv?
+- Using a csv with more data might give better results.
+- Maybe you want to report a bug.""")
+        dlg = Gtk.MessageDialog(None, Gtk.DialogFlags.DESTROY_WITH_PARENT, Gtk.MessageType.ERROR, Gtk.ButtonsType.CLOSE, text)
+        dlg.run()
+        dlg.destroy()
 
 
 class PreviewTree(gui_utils.Tree):

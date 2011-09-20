@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 
 from avernus.controller import chartController
-from avernus.gui import charts
+from avernus.gui import charts, page
 from avernus.controller import controller
 from gi.repository import Gtk
 
 
-class ChartTab(Gtk.ScrolledWindow):
+class ChartTab(Gtk.ScrolledWindow, page.Page):
 
     def __init__(self, pf):
         Gtk.ScrolledWindow.__init__(self)
@@ -16,6 +16,7 @@ class ChartTab(Gtk.ScrolledWindow):
         self.show_all()
 
     def show(self):
+        self.update_page()
         if len(self.pf) == 0:
             self.add_with_viewport(Gtk.Label(label='\n%s\n%s\n\n' % (_('No data!'), _('Add positions to portfolio first.') )))
             self.show_all()

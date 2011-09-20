@@ -23,24 +23,16 @@ def get_step_for_range(start,end):
     return relativedelta(months=1)
 
 
-def get_legend(smaller, bigger, step):
-    erg = []
+def format_days(days,  step):
     if step == 'monthly':
-        delta = relativedelta(months=+1)
         formatstring = "%b %y"
     elif step == 'yearly':
-        delta = relativedelta(years=+1)
         formatstring = "%Y"
     elif step == 'daily':
-        delta = relativedelta(days=+1)
         formatstring = "%x"
     elif step == 'weekly':
-        delta = relativedelta(weeks=+1)
         formatstring = "%U"
-    while smaller <= bigger:
-        erg.append(smaller.strftime(formatstring))
-        smaller+=delta
-    return erg
+    return map(lambda d: d.strftime(formatstring), days)
 
 def compute_start_date(dateItems):
     lowest = datetime.date.today()
@@ -67,15 +59,16 @@ class InvestmentChartController:
         self.start_date = compute_start_date(self.items)
         self.end_date = datetime.date.today()
         self.step = get_step_for_range(self.start_date, self.end_date)
-        self.legend = get_legend(self.start_date, self.end_date, "monthly")
+
 
     def calculate_values(self):
-        self.x_values_all, self.x_values = calculate_x_values(self.step, self.start_date, self.end_date)
+        self.days, foo = calculate_x_values(self.step, self.start_date, self.end_date)
+        self.x_values = format_days(self.days, "daily")
         self.items = sorted(self.items, key=lambda t: t.date)
         self.y_values = {'invested capital': []}
         count = 0
         i = 0
-        for current in self.x_values_all:
+        for current in self.days:
             while i < len(self.items) and self.items[i].date.date() < current:
                 count -= self.items[i].total
                 i += 1
@@ -367,7 +360,7 @@ class PortfolioValueChartController():
         #FIXME do more stuff here, less in portfolio
         self._calc_days()
         self.y_values = {'Portfolio value' : [self.portfolio.get_value_at_date(t) for t in self.days]}
-        self.x_values = get_legend(self.days[0], self.days[-1], self.step)
+        self.x_values = format_days(self.days, self.step)
 
 
 class DimensionChartController():
