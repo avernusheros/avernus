@@ -19,10 +19,6 @@ from gi.repository import Gdk
 import sys
 
 
-if __name__ == '__main__':
-    sys.path.append('..')
-
-
 class AboutDialog(Gtk.AboutDialog):
 
     def __init__(self, *arg, **args):
@@ -173,7 +169,8 @@ class MainWindow(Gtk.Window):
         #save db on quit
         self.config.set_option('hpaned position', self.hpaned.get_position(), 'Gui')
         model.store.close()
-        #sys.exit()
+        Gtk.main_quit()
+        sys.exit()
 
     def on_maintree_select(self, item):
         self.on_maintree_unselect()
