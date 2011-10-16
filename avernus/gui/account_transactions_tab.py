@@ -128,7 +128,8 @@ class AccountTransactionTab(Gtk.VBox, page.Page):
             toolbar.insert(button, -1)
         vbox.pack_start(toolbar, False, False, 0)
 
-        self._init_charts()
+        self.charts_notebook = AccountChartsNotebook(self.account, (self.transactions_tree.range_start, self.transactions_tree.range_end))
+        self.vpaned.pack1(self.charts_notebook)
         self.transactions_tree.load_transactions()
         self.category_tree.load_categories()
         self.update_page()
@@ -140,67 +141,6 @@ class AccountTransactionTab(Gtk.VBox, page.Page):
         active = widget.get_active()
         setter(active)
         chart.draw_chart()
-
-    def _init_charts(self):
-        self.charts = []
-        notebook = Gtk.Notebook()
-        notebook.set_property('tab_pos', Gtk.PositionType.LEFT)
-        date_range = (self.transactions_tree.range_start, self.transactions_tree.range_end)
-
-        over_time_controller = chartController.TransactionValueOverTimeChartController(self.account.transactions, date_range)
-        categoryChart = charts.TransactionChart(over_time_controller, 300)
-        self.charts.append(categoryChart)
-        label = Gtk.Label(label=_('Over Time'))
-        #FIXME better tooltip
-        label.set_tooltip_text(_('Account value over time.'))
-        notebook.append_page(categoryChart, label)
-
-
-        step_controller = chartController.TransactionStepValueChartController(self.account.transactions, date_range)
-        valueChart = charts.TransactionChart(step_controller, 300)
-        self.charts.append(valueChart)
-        label = Gtk.Label(label=_('Step Value'))
-        #FIXME better tooltip
-        label.set_tooltip_text(_('step value.'))
-        notebook.append_page(valueChart, label)
-
-        chart_controller = chartController.AccountBalanceOverTimeChartController(self.account, date_range)
-        chart = charts.SimpleLineChart(chart_controller, 300)
-        self.charts.append(chart)
-        label = Gtk.Label(label=_('Account balance'))
-        label.set_tooltip_text(_('Account balance over the given time period.'))
-        notebook.append_page(chart, label)
-
-        table = Gtk.Table()
-        chart_controller = chartController.TransactionCategoryPieController(self.account.transactions, earnings=True)
-        chart = charts.Pie(chart_controller, 400)
-        self.charts.append(chart)
-        label = Gtk.Label()
-        label.set_markup('<b>'+_('Earnings')+'</b>')
-        label.set_tooltip_text(_('Categorization of earnings.'))
-        table.attach(label,0,1,0,1,xoptions=Gtk.AttachOptions.FILL, yoptions=Gtk.AttachOptions.FILL)
-        table.attach(chart,0,1,1,2)
-
-        chart_controller = chartController.TransactionCategoryPieController(self.account.transactions, earnings=False)
-        chart = charts.Pie(chart_controller, 400)
-        self.charts.append(chart)
-        label = Gtk.Label()
-        label.set_markup('<b>'+_('Spendings')+'</b>')
-        label.set_tooltip_text(_('Categorization of spendings.'))
-        table.attach(label,1,2,0,1,xoptions=Gtk.AttachOptions.FILL, yoptions=Gtk.AttachOptions.FILL)
-        table.attach(chart,1,2,1,2)
-        label = Gtk.Label(label=_('Categories'))
-        label.set_tooltip_text(_('Categorization of transactions.'))
-        notebook.append_page(table, label)
-
-        chart_controller = chartController.EarningsVsSpendingsController(self.account.transactions, date_range)
-        chart = charts.BarChart(chart_controller, 400)
-        self.charts.append(chart)
-        label = Gtk.Label(label=_('Earnings vs Spendings'))
-        label.set_tooltip_text(_('Earnings vs spendings in given time period.'))
-        notebook.append_page(chart, label)
-
-        self.vpaned.pack1(notebook)
 
     def on_pick_start(self, entry, icon_pos, event):
         dialog = dialogs.CalendarDialog(self.transactions_tree.range_start)
@@ -227,7 +167,7 @@ class AccountTransactionTab(Gtk.VBox, page.Page):
     def update_ui(self):
         self.refilter()
         transactions = [row[0] for row in self.transactions_tree.modelfilter]
-        for chart in self.charts:
+        for chart in self.charts_notebook.charts:
             chart.update(transactions, (self.transactions_tree.range_start, self.transactions_tree.range_end))
         self.update_page()
 
@@ -249,6 +189,71 @@ class AccountTransactionTab(Gtk.VBox, page.Page):
         self.config.set_option('account hpaned position', self.hpaned.get_position(), 'Gui')
         self.config.set_option('show transfer', self.transactions_tree.b_show_transfer, 'Gui')
         self.config.set_option('show uncategorized', self.transactions_tree.b_show_uncategorized, 'Gui')
+
+
+class AccountChartsNotebook(Gtk.Notebook):
+
+    def __init__(self, account, date_range):
+        Gtk.Notebook.__init__(self)
+        self.account = account
+        self.date_range = date_range
+        self.charts = []
+        self.set_property('tab_pos', Gtk.PositionType.LEFT)
+        self.init_charts()
+
+    def init_charts(self):
+        over_time_controller = chartController.TransactionValueOverTimeChartController(self.account.transactions, self.date_range)
+        categoryChart = charts.TransactionChart(over_time_controller, 300)
+        self.charts.append(categoryChart)
+        label = Gtk.Label(label=_('Over Time'))
+        #FIXME better tooltip
+        label.set_tooltip_text(_('Account value over time.'))
+        self.append_page(categoryChart, label)
+
+
+        step_controller = chartController.TransactionStepValueChartController(self.account.transactions, self.date_range)
+        valueChart = charts.TransactionChart(step_controller, 300)
+        self.charts.append(valueChart)
+        label = Gtk.Label(label=_('Step Value'))
+        #FIXME better tooltip
+        label.set_tooltip_text(_('step value.'))
+        self.append_page(valueChart, label)
+
+        chart_controller = chartController.AccountBalanceOverTimeChartController(self.account, self.date_range)
+        chart = charts.SimpleLineChart(chart_controller, 300)
+        self.charts.append(chart)
+        label = Gtk.Label(label=_('Account balance'))
+        label.set_tooltip_text(_('Account balance over the given time period.'))
+        self.append_page(chart, label)
+
+        table = Gtk.Table()
+        chart_controller = chartController.TransactionCategoryPieController(self.account.transactions, earnings=True)
+        chart = charts.Pie(chart_controller, 400)
+        self.charts.append(chart)
+        label = Gtk.Label()
+        label.set_markup('<b>'+_('Earnings')+'</b>')
+        label.set_tooltip_text(_('Categorization of earnings.'))
+        table.attach(label,0,1,0,1,xoptions=Gtk.AttachOptions.FILL, yoptions=Gtk.AttachOptions.FILL)
+        table.attach(chart,0,1,1,2)
+
+        chart_controller = chartController.TransactionCategoryPieController(self.account.transactions, earnings=False)
+        chart = charts.Pie(chart_controller, 400)
+        self.charts.append(chart)
+        label = Gtk.Label()
+        label.set_markup('<b>'+_('Spendings')+'</b>')
+        label.set_tooltip_text(_('Categorization of spendings.'))
+        table.attach(label,1,2,0,1,xoptions=Gtk.AttachOptions.FILL, yoptions=Gtk.AttachOptions.FILL)
+        table.attach(chart,1,2,1,2)
+        label = Gtk.Label(label=_('Categories'))
+        label.set_tooltip_text(_('Categorization of transactions.'))
+        self.append_page(table, label)
+
+        chart_controller = chartController.EarningsVsSpendingsController(self.account.transactions, self.date_range)
+        chart = charts.BarChart(chart_controller, 400)
+        self.charts.append(chart)
+        label = Gtk.Label(label=_('Earnings vs Spendings'))
+        label.set_tooltip_text(_('Earnings vs spendings in given time period.'))
+        self.append_page(chart, label)
 
 
 class TransactionsTree(gui_utils.Tree):
@@ -465,7 +470,7 @@ class TransactionsTree(gui_utils.Tree):
 
     def show_context_menu(self, event):
         trans, iter = self._get_selected_transaction()
-        context_menu = gui_utils.ContextMenu()
+        self.context_menu = gui_utils.ContextMenu()
         if trans:
             for action in self.actiongroup.list_actions():
                 context_menu.add(action.create_menu_item())
@@ -497,7 +502,7 @@ class TransactionsTree(gui_utils.Tree):
                     insert_recursive(cat, category_menu)
         else:
             context_menu.add(self.actiongroup.get_action('add').create_menu_item())
-        context_menu.show(event)
+        self.context_menu.popup(None, None, None, None, event.button, event.time)
 
     def on_key_press(self, widget, event):
         if Gdk.keyval_name(event.keyval) == 'Delete':
@@ -600,10 +605,10 @@ class CategoriesTree(gui_utils.Tree):
     def show_context_menu(self, event):
         category, iter = self.get_selected_item()
         if category:
-            context_menu = gui_utils.ContextMenu()
+            self.context_menu = gui_utils.ContextMenu()
             for action in self.actiongroup.list_actions():
-                context_menu.add(action.create_menu_item())
-            context_menu.show(event)
+                self.context_menu.add(action.create_menu_item())
+            self.context_menu.popup(None, None, None, None, event.button, event.time)
 
     def on_add(self, widget=None):
         parent, selection_iter = self.get_selected_item()

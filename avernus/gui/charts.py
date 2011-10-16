@@ -102,6 +102,7 @@ class SimpleLineChart(ChartBase):
         self.current_widget.show()
         self.pack_start(self.current_widget, True, True, 0)
 
+
 class TransactionChart(SimpleLineChart):
 
     def __init__(self, chartController, width, dots=2):
@@ -119,7 +120,6 @@ class TransactionChart(SimpleLineChart):
         hbox.pack_start(totalAvgBtn, False, False, 0)
         hbox.pack_end(self.totalAvgLabel, False, False, 0)
         self.pack_end(hbox, False, False, 0)
-
 
     def on_combo_toggled(self, widget, setter):
         active = widget.get_active()

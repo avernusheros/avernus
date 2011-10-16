@@ -8,7 +8,7 @@ import avernus.objects
 
 
 class TransactionsTab(Gtk.ScrolledWindow):
-    
+
     def __init__(self, item):
         Gtk.ScrolledWindow.__init__(self)
         self.transactions_tree = TransactionsTree(item)
@@ -38,7 +38,7 @@ class TransactionsTree(Tree):
         self.create_column(_('Price'), 5, func=gui_utils.currency_format)
         self.create_column(_('Transaction Costs'), 6, func=gui_utils.currency_format)
         self.create_column(_('Total'), 7, func=gui_utils.float_to_red_green_string_currency)
-        
+
         self.model.set_sort_column_id(3, Gtk.SortType.ASCENDING)
 
         self.actiongroup = Gtk.ActionGroup('portfolio_transactions')
@@ -61,10 +61,10 @@ class TransactionsTree(Tree):
     def on_button_press(self, widget, event):
         if event.button == 3:
             self.show_context_menu(event)
-            
+
     def on_row_activated(self, treeview, path, column):
         self.on_edit(treeview)
-                
+
     def on_edit(self, widget):
         transaction, iter = self.get_selected_item()
         if transaction.type == 0: #SELL
@@ -73,18 +73,18 @@ class TransactionsTree(Tree):
             dialogs.BuyDialog(transaction.position.portfolio, transaction)
         else:
             print "TODO edit transaction"
-         
+
         #update treeview by removing and re-adding the transaction
         self.model.remove(iter)
         self.insert_transaction(transaction)
-         
+
     def insert_transaction(self, ta):
         self.model.append(None, [ta, ta.type_string, gui_utils.get_name_string(ta.position.stock), ta.date.date(), float(ta.quantity), ta.price, ta.costs, ta.total])
 
     def show_context_menu(self, event):
         transaction, iter = self.get_selected_item()
         if transaction:
-            context_menu = gui_utils.ContextMenu()
+            self.context_menu = gui_utils.ContextMenu()
             for action in self.actiongroup.list_actions():
-                context_menu.add(action.create_menu_item())
-            context_menu.run(event)
+                self.context_menu.add(action.create_menu_item())
+            self.context_menu.popup(None, None, None, None, event.button, event.time)

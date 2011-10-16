@@ -17,19 +17,19 @@ source_icons = {
                 }
 
 class DatasourceManager(object):
-    
+
     def __init__(self):
         self.current_searches = []
         self.b_online = True
         self.search_callback = None
-        pubsub.subscribe('network', self.on_network_change)
-        
+        #pubsub.subscribe('network', self.on_network_change)
+
     def on_network_change(self, state):
         self.b_online = state
-    
+
     def get_source_count(self):
         return len(sources.items())
- 
+
     def search(self, searchstring, callback = None, complete_cb = None, threaded = True):
         self.stop_search()
         self.search_callback = callback
@@ -52,7 +52,7 @@ class DatasourceManager(object):
     def stop_search(self):
         for search in self.current_searches:
             search.stop()
-        self.current_searches = [] 
+        self.current_searches = []
 
     def _item_found_callback(self, item, source, source_info=None):
         #mandatory: isin, type, name
@@ -66,7 +66,7 @@ class DatasourceManager(object):
             stock = controller.newStock(**item)
         if source_info is not None:
             controller.newSourceInfo(source=source.name, stock=stock, info=source_info)
-        if new and self.search_callback:     
+        if new and self.search_callback:
             self.search_callback(stock, source_icons[item['source']])
 
     def validate_isin(self, isin):
@@ -79,10 +79,10 @@ class DatasourceManager(object):
             temp = filter(lambda s: s.source == name, stocks)
             if len(temp) > 0:
                 source.update_stocks(temp)
-        
+
     def update_stock(self, stock):
         self.update_stocks([stock])
-    
+
     def get_historical_prices(self, stock, start_date=None, end_date=None):
         if not self.b_online:
             yield 1
@@ -99,7 +99,7 @@ class DatasourceManager(object):
                             detectDuplicates=True)
         #needed to run as generator thread
         yield 1
-        
+
     def update_historical_prices(self, stock):
         if not self.b_online:
             yield 1

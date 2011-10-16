@@ -121,7 +121,8 @@ dsm = DatasourceManager()
 MainWindow()
 controller.datasource_manager = dsm
 
-from avernus.network_manager import DBusNetwork
-DBusNetwork()
+#FIXME fix or remove the network manager code
+#from avernus.network_manager import DBusNetwork
+#DBusNetwork()
 Gtk.main()
 Gtk.main_quit()

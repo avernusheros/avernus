@@ -137,16 +137,7 @@ class Tree(Gtk.TreeView):
 class ContextMenu(Gtk.Menu):
 
     def __init__(self):
-        super(Gtk.Menu, self).__init__()
-
-    def run(self, event):
-        self.show_all()
-        print "calling popup"
-        try:
-            self.popup_for_device(None, None, None, None, None,
-            event.button.button, time)
-        except:
-            print "popups are broken!"
+        Gtk.Menu.__init__(self)
 
     def add_item(self, label, func = None, icon = None):
         if label == '----':

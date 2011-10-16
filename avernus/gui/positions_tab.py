@@ -134,18 +134,18 @@ class PositionsTree(Tree):
                 self.show_context_menu(event)
 
     def show_context_menu(self, event):
-        context_menu = gui_utils.ContextMenu()
+        self.context_menu = gui_utils.ContextMenu()
         for action in self.actiongroup.list_actions():
-            context_menu.add(action.create_menu_item())
-        
-        
+            self.context_menu.add(action.create_menu_item())
+
+
         all_portfolios = controller.getAllPortfolio()
         if len(all_portfolios) > 1:
-            context_menu.add_item('----')
-    
+            self.context_menu.add_item('----')
+
             #Move to another portfolio
             item = Gtk.MenuItem(_("Move"))
-            context_menu.add(item)
+            self.context_menu.add(item)
             menu = Gtk.Menu()
             item.set_submenu(menu)
             for pf in all_portfolios:
@@ -153,7 +153,7 @@ class PositionsTree(Tree):
                     item = Gtk.MenuItem(pf.name)
                     item.connect("activate", self.on_move_position, pf)
                     menu.append(item)
-        context_menu.run(event)
+        self.context_menu.popup(None, None, None, None, event.button, event.time)
 
     def on_move_position(self, widget, new_portfolio):
         position, iter = self.selected_item

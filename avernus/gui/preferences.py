@@ -38,9 +38,11 @@ class AccountPreferences(Gtk.VBox):
         Gtk.VBox.__init__(self)
         self.configParser = avernusConfig()
 
+		#FIXME tooltip
         section = self._add_section('Charts')
         self._add_option(section, _('Include child categories'), 'categoryChildren')
 
+		#FIXME tooltip
         section = self._add_section('Category Assignments')
         self._add_option(section, _('Include already categorized transactions'), 'assignments categorized transactions')
 
@@ -75,6 +77,11 @@ class DimensionList(Gtk.VBox):
 
     def __init__(self):
         Gtk.VBox.__init__(self)
+        #FIXME description for dimensions
+        text = _("dimensions are used to.... ")
+        label = Gtk.Label(label = text)
+        self.pack_start(label, True, True, 0)
+        
         self.tree = gui_utils.Tree()
         self.tree.set_headers_visible(False)
         self.model = Gtk.TreeStore(object, str)
