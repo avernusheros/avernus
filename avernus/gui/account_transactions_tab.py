@@ -682,7 +682,7 @@ class CategoriesTree(gui_utils.Tree):
         else:
             self.on_unselect()
 
-    def on_unselect(self, widget=None):
+    def on_unselect(self, widget=None, data=None):
         for action in ['remove', 'edit']:
             self.actiongroup.get_action(action).set_sensitive(False)
         self.get_selection().unselect_all()

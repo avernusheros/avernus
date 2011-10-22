@@ -293,11 +293,10 @@ class MainTree(gui_utils.Tree):
 class EditWatchlist(Gtk.Dialog):
 
     def __init__(self, wl):
-        super(Gtk.Dialog, self).__init__(_("Edit watchlist"), None
+        Gtk.Dialog.__init__(self, _("Edit watchlist - ")+wl.name, None
                             , Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,
                      (Gtk.STOCK_CANCEL, Gtk.ResponseType.REJECT,
                       Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT))
-
         self.wl = wl
         vbox = self.get_content_area()
 
@@ -325,11 +324,10 @@ class EditWatchlist(Gtk.Dialog):
 class EditAccount(Gtk.Dialog):
 
     def __init__(self, acc):
-        super(Gtk.Dialog, self).__init__(_("Edit Account"), None,
-                            Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,
+        Gtk.Dialog.__init__(self, _("Edit watchlist - ")+acc.name, None
+                            , Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,
                      (Gtk.STOCK_CANCEL, Gtk.ResponseType.REJECT,
                       Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT))
-
         self.acc = acc
         vbox = self.get_content_area()
         table = Gtk.Table()
@@ -344,7 +342,7 @@ class EditAccount(Gtk.Dialog):
         #cash entry
         label = Gtk.Label(label=_('Current balance:'))
         table.attach(label, 0,1,1,2)
-        self.cash_entry = Gtk.SpinButton(Gtk.Adjustment(lower=-999999999, upper=999999999,step_incr=10, value = acc.amount), digits=2)
+        self.cash_entry = Gtk.SpinButton(adjustment = Gtk.Adjustment(lower=-999999999, upper=999999999,step_increment=10, value = acc.amount), digits=2)
         table.attach(self.cash_entry,1,2,1,2)
 
         self.show_all()
@@ -363,7 +361,7 @@ class EditAccount(Gtk.Dialog):
 class EditPortfolio(Gtk.Dialog):
 
     def __init__(self, pf):
-        super(Gtk.Dialog, self).__init__(_("Edit portfolio"), None
+        Gtk.Dialog.__init__(self, _("Edit watchlist - ")+pf.name, None
                             , Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,
                      (Gtk.STOCK_CANCEL, Gtk.ResponseType.REJECT,
                       Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT))

@@ -430,8 +430,8 @@ class BuyDialog(Gtk.Dialog):
         else:
             label = Gtk.Label()
             label.set_markup(gui_utils.get_name_string(self.transaction.position.stock))
-            label.set_alignment(xalign=0.0, yalign=0.5)
-            table.attach(label, 0,3,0,1,xoptions=Gtk.AttachOptions.FILL, yoptions=0)
+            label.set_alignment(0.0, 0.5)
+            table.attach(label, 0, 3, 0, 1, xoptions=Gtk.AttachOptions.FILL, yoptions=0)
 
         #shares entry
         table.attach(Gtk.Label(label=_('Shares')),1,2,1,2,xoptions=Gtk.AttachOptions.SHRINK,yoptions=Gtk.AttachOptions.SHRINK)
@@ -482,7 +482,7 @@ class BuyDialog(Gtk.Dialog):
             self.on_change()
 
         content = self.infobar.get_content_area()
-        label = Gtk.Label(label='Date cannot be in the future!')
+        label = Gtk.Label(label='Buy dates of positions can not be in the future.')
         image = Gtk.Image()
         image.set_from_stock(Gtk.STOCK_DIALOG_WARNING, Gtk.IconSize.DIALOG)
         content.pack_start(image, True, True, 0)
@@ -503,7 +503,7 @@ class BuyDialog(Gtk.Dialog):
             self.infobar.show_all()
             self.date_ok = False
         else:
-            self.infobar.hide_all()
+            self.infobar.hide()
             self.date_ok = True
         self.set_response_sensitivity()
 

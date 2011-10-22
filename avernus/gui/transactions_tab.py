@@ -65,7 +65,7 @@ class TransactionsTree(Tree):
     def on_row_activated(self, treeview, path, column):
         self.on_edit(treeview)
 
-    def on_edit(self, widget):
+    def on_edit(self, widget, data = None):
         transaction, iter = self.get_selected_item()
         if transaction.type == 0: #SELL
             dialogs.SellDialog(transaction.position, transaction)
