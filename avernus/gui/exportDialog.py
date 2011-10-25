@@ -8,21 +8,21 @@ import time
 import csv
 
 class ExportDialog(Gtk.Dialog):
-    
+
     TITLE = _('Export Account Transactions')
 
-    def __init__(self, widget=None, account=None):
-        Gtk.Dialog.__init__(self, self.TITLE, None
+    def __init__(self, parent=None, account =None):
+        Gtk.Dialog.__init__(self, self.TITLE, parent
                             , Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,
                      (Gtk.STOCK_CANCEL, Gtk.ResponseType.REJECT,))
         self.account = account
         self.config = config.avernusConfig()
         self.transactions = []
         self._init_widgets()
-        
+
         response = self.run()
         self.process_result(response = response)
-        
+
     def _init_widgets(self):
         self.export_button = self.add_button('Export', Gtk.ResponseType.ACCEPT)
         self.export_button.set_sensitive(False)
@@ -70,18 +70,18 @@ class ExportDialog(Gtk.Dialog):
         sw.add(self.tree)
         vbox.pack_start(frame, True, True, 0)
         self.show_all()
-        
+
     def _on_file_set(self, button):
         self.folder = button.get_current_folder()
         self.config.set_option('last_export_folder', self.folder)
-        
+
 
     def _on_account_changed(self, *args):
         self.b_account = True
         self.account = self.account_cb.get_model()[self.account_cb.get_active()][0]
         self.tree.reload(self.account)
         self.export_button.set_sensitive(True)
-        
+
     def process_result(self, widget=None, response = Gtk.ResponseType.ACCEPT):
         if response == Gtk.ResponseType.ACCEPT:
             # gather the transactions
@@ -95,25 +95,25 @@ class ExportDialog(Gtk.Dialog):
             with open(path, 'wb') as file:
                 writer = csv.writer(file)
                 for transaction in self.transactions:
-                    writer.writerow([transaction.date, transaction.amount, 
+                    writer.writerow([transaction.date, transaction.amount,
                                      transaction.description, transaction.category])
         self.destroy()
-        
+
 class TransactionTree(gui_utils.Tree):
-    
+
     OBJECT = 0
     DATE = 1
     AMOUNT = 2
     DESC = 3
     EXPORT = 4
-    
+
     def __init__(self):
         gui_utils.Tree.__init__(self)
         self.set_rules_hint(True)
         self.set_size_request(700,400)
         self.model = Gtk.ListStore(object, object, float, str, bool)
         self.set_model(self.model)
-        
+
         column, cell = self.create_check_column('export?', self.EXPORT)
         cell.connect("toggled", self.on_toggled)
         column, cell = self.create_column('date', self.DATE, func=gui_utils.date_to_string)
@@ -127,7 +127,7 @@ class TransactionTree(gui_utils.Tree):
         cell.set_property('foreground-set', True)
         cell.props.wrap_mode = Pango.WrapMode.WORD
         cell.props.wrap_width = 300
-        
+
     def getExportTransactions(self):
         erg = []
         for line in self.model:
@@ -136,10 +136,10 @@ class TransactionTree(gui_utils.Tree):
             if export:
                 erg.append(obj)
         return erg
-        
+
     def on_toggled(self, cellrenderertoggle, path):
-        self.model[path][self.EXPORT] = not self.model[path][self.EXPORT] 
-        
+        self.model[path][self.EXPORT] = not self.model[path][self.EXPORT]
+
     def reload(self, account):
         self.clear()
         self.account = account

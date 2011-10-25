@@ -185,7 +185,7 @@ class MainTree(gui_utils.Tree):
     def insert_portfolio(self, item):
         self.get_model().append(self.pf_iter, [item, 'portfolio', item.name, gui_utils.get_currency_format_from_float(item.cvalue)])
 
-    def on_remove(self, widget=None):
+    def on_remove(self, widget=None, data=None):
         if self.selected_item is None:
             return
         obj, iter = self.selected_item
@@ -247,18 +247,19 @@ class MainTree(gui_utils.Tree):
         if self.selected_item is None:
             return
         obj, row = self.selected_item
+        parent = self.get_parent().get_parent().get_parent().get_parent()
         if obj.__name__ == 'Portfolio':
-            EditPortfolio(obj)
+            EditPortfolio(obj, parent)
         elif obj.__name__ == 'Watchlist':
-            EditWatchlist(obj)
+            EditWatchlist(obj, parent)
         elif obj.__name__ == 'Account':
-            EditAccount(obj)
+            EditAccount(obj, parent)
 
     def on_cell_edited(self,  cellrenderertext, path, new_text):
         m = self.get_model()
         m[path][0].name = m[path][2] = new_text
 
-    def on_add(self, widget=None):
+    def on_add(self, widget=None, data=None):
         #FIXME sehr unschoen
         obj, row = self.selected_item
         model = self.get_model()
@@ -292,8 +293,8 @@ class MainTree(gui_utils.Tree):
 
 class EditWatchlist(Gtk.Dialog):
 
-    def __init__(self, wl):
-        Gtk.Dialog.__init__(self, _("Edit watchlist - ")+wl.name, None
+    def __init__(self, wl, parent = None):
+        Gtk.Dialog.__init__(self, _("Edit watchlist - ")+wl.name, parent
                             , Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,
                      (Gtk.STOCK_CANCEL, Gtk.ResponseType.REJECT,
                       Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT))
@@ -323,8 +324,8 @@ class EditWatchlist(Gtk.Dialog):
 
 class EditAccount(Gtk.Dialog):
 
-    def __init__(self, acc):
-        Gtk.Dialog.__init__(self, _("Edit watchlist - ")+acc.name, None
+    def __init__(self, acc, parent = None):
+        Gtk.Dialog.__init__(self, _("Edit watchlist - ")+acc.name, parent
                             , Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,
                      (Gtk.STOCK_CANCEL, Gtk.ResponseType.REJECT,
                       Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT))
@@ -360,8 +361,8 @@ class EditAccount(Gtk.Dialog):
 
 class EditPortfolio(Gtk.Dialog):
 
-    def __init__(self, pf):
-        Gtk.Dialog.__init__(self, _("Edit watchlist - ")+pf.name, None
+    def __init__(self, pf, parent = None):
+        Gtk.Dialog.__init__(self, _("Edit watchlist - ")+pf.name, parent
                             , Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,
                      (Gtk.STOCK_CANCEL, Gtk.ResponseType.REJECT,
                       Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT))

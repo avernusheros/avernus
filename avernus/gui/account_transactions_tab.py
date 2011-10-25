@@ -143,14 +143,14 @@ class AccountTransactionTab(Gtk.VBox, page.Page):
         chart.draw_chart()
 
     def on_pick_start(self, entry, icon_pos, event):
-        dialog = dialogs.CalendarDialog(self.transactions_tree.range_start)
+        dialog = dialogs.CalendarDialog(self.transactions_tree.range_start, parent = self.get_toplevel())
         if dialog.date:
             self.transactions_tree.range_start = dialog.date
             self.update_range()
             self.update_ui()
 
     def on_pick_end(self, entry, icon_pos, event):
-        dialog = dialogs.CalendarDialog(self.transactions_tree.range_end)
+        dialog = dialogs.CalendarDialog(self.transactions_tree.range_end, parent=self.get_toplevel())
         if dialog.date:
             self.transactions_tree.range_end = dialog.date
             self.update_range()
@@ -428,7 +428,7 @@ class TransactionsTree(gui_utils.Tree):
         return None, None
 
     def on_add(self, widget=None):
-        dlg = EditTransaction(self.account)
+        dlg = EditTransaction(self.account, parent = self.get_toplevel())
         b_change, transaction = dlg.start()
         self.account.amount += transaction.amount
         self.insert_transaction(transaction)
@@ -436,14 +436,14 @@ class TransactionsTree(gui_utils.Tree):
     def on_edit(self, widget=None):
         transaction, iterator = self._get_selected_transaction()
         old_amount = transaction.amount
-        dlg = EditTransaction(self.account, transaction)
+        dlg = EditTransaction(self.account, transaction, parent = self.get_toplevel())
         b_change, transaction = dlg.start()
         if b_change:
             self.account.amount = self.account.amount - old_amount + transaction.amount
 
     def on_dividend(self, widget=None):
         trans, iterator = self._get_selected_transaction()
-        dialogs.DividendDialog(date=trans.date, price=trans.amount)
+        dialogs.DividendDialog(date=trans.date, price=trans.amount, parent = self.get_toplevel())
 
     def on_remove(self, widget=None):
         trans, iterator = self._get_selected_transaction()
@@ -755,8 +755,9 @@ class CategoriesTree(gui_utils.Tree):
 
 
 class EditTransaction(Gtk.Dialog):
-    def __init__(self, account, transaction = None):
-        Gtk.Dialog.__init__(self, _("Edit transaction"), None
+
+    def __init__(self, account, transaction = None, parent = None):
+        Gtk.Dialog.__init__(self, _("Edit transaction"), parent
                             , Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,
                      (Gtk.STOCK_CANCEL, Gtk.ResponseType.REJECT,
                       Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT))

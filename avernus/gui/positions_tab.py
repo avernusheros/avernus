@@ -144,13 +144,13 @@ class PositionsTree(Tree):
             self.context_menu.add_item('----')
 
             #Move to another portfolio
-            item = Gtk.MenuItem(_("Move"))
+            item = Gtk.MenuItem(label= _("Move"))
             self.context_menu.add(item)
             menu = Gtk.Menu()
             item.set_submenu(menu)
             for pf in all_portfolios:
                 if pf != self.container:
-                    item = Gtk.MenuItem(pf.name)
+                    item = Gtk.MenuItem(label=pf.name)
                     item.connect("activate", self.on_move_position, pf)
                     menu.append(item)
         self.context_menu.popup(None, None, None, None, event.button, event.time)
@@ -217,7 +217,7 @@ class PositionsTree(Tree):
                 position.delete()
                 self.model.remove(iter)
         else:
-            d = SellDialog(position)
+            d = SellDialog(position, parent = self.get_toplevel())
             if d.response == Gtk.ResponseType.ACCEPT:
                 if position.quantity == 0.0:
                     self.model.remove(iter)
@@ -226,22 +226,22 @@ class PositionsTree(Tree):
 
     def on_add(self, widget, user_data=None):
         if self.watchlist:
-            NewWatchlistPositionDialog(self.container)
+            NewWatchlistPositionDialog(self.container, parent = self.get_toplevel())
         else:
-            BuyDialog(self.container)
+            BuyDialog(self.container, parent = self.get_toplevel())
 
     def on_dividend(self, widget, user_data):
         if self.selected_item is not None:
-            dialogs.DividendDialog(pf=self.container, position=self.selected_item[0])
+            dialogs.DividendDialog(pf=self.container, position=self.selected_item[0], parent = self.get_toplevel())
         else:
-            dialogs.DividendDialog(pf=self.container)
+            dialogs.DividendDialog(pf=self.container, parent = self.get_toplevel())
 
     def on_chart(self, widget, user_data=None):
         ChartWindow(self.selected_item[0].stock)
 
     def on_edit(self, widget, user_data=None):
         position, iter = self.selected_item
-        PositionDialog(position)
+        PositionDialog(position, self.get_toplevel())
         self.update_position_after_edit(position, iter)
 
     def update_position_after_edit(self, pos, iter=None):

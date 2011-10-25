@@ -13,11 +13,10 @@ logger = logging.getLogger(__name__)
 
 
 
-
 class EditStockDialog(Gtk.Dialog):
 
-    def __init__(self, stock):
-        Gtk.Dialog.__init__(self, _("Edit stock"), None
+    def __init__(self, stock, parent=None):
+        Gtk.Dialog.__init__(self, _("Edit stock"), parent
                             , Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,
                      (Gtk.STOCK_CANCEL, Gtk.ResponseType.REJECT,
                       Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT))
@@ -301,14 +300,14 @@ class StockSelector(Gtk.VBox):
 
 class SellDialog(Gtk.Dialog):
 
-    def __init__(self, pos, transaction = None):
+    def __init__(self, pos, transaction = None, parent = None):
         if transaction is None:
             title = _('Sell position')
             max_quantity = pos.quantity
         else:
             title = _('Edit position')
             max_quantity = pos.quantity + transaction.quantity
-        Gtk.Dialog.__init__(self, title, None
+        Gtk.Dialog.__init__(self, title, parent
                             , Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,
                      (Gtk.STOCK_CANCEL, Gtk.ResponseType.REJECT,
                       Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT))
@@ -403,8 +402,8 @@ class SellDialog(Gtk.Dialog):
 
 class BuyDialog(Gtk.Dialog):
 
-    def __init__(self, pf, transaction=None):
-        Gtk.Dialog.__init__(self, _("Buy a position"), None
+    def __init__(self, pf, transaction=None, parent=None):
+        Gtk.Dialog.__init__(self, _("Buy a position"), parent
                             , Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,
                      (Gtk.STOCK_CANCEL, Gtk.ResponseType.REJECT,
                       Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT))
@@ -557,8 +556,8 @@ class BuyDialog(Gtk.Dialog):
 
 class NewWatchlistPositionDialog(Gtk.Dialog):
 
-    def __init__(self, wl):
-        Gtk.Dialog.__init__(self, _("Add watchlist position"), None
+    def __init__(self, wl, parent=None):
+        Gtk.Dialog.__init__(self, _("Add watchlist position"), parent
                             , Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,
                      (Gtk.STOCK_CANCEL, Gtk.ResponseType.REJECT,
                       Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT))
@@ -620,8 +619,8 @@ class PosSelector(Gtk.ComboBox):
 
 class CalendarDialog(Gtk.Dialog):
 
-    def __init__(self, date=None):
-        Gtk.Dialog.__init__(self, _("Chose a date"), None
+    def __init__(self, date=None, parent=None):
+        Gtk.Dialog.__init__(self, _("Chose a date"), parent
                             , Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,
                             (Gtk.STOCK_CANCEL, Gtk.ResponseType.REJECT,
                              Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT)
@@ -653,8 +652,8 @@ class CalendarDialog(Gtk.Dialog):
 
 class DividendDialog(Gtk.Dialog):
 
-    def __init__(self, pf=None, tree=None, date=None, price=None, position=None, dividend=None):
-        Gtk.Dialog.__init__(self, _("Add dividend"), None
+    def __init__(self, pf=None, tree=None, date=None, price=None, position=None, dividend=None, parent=None):
+        Gtk.Dialog.__init__(self, _("Add dividend"), parent
                             , Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,
                      (Gtk.STOCK_CANCEL, Gtk.ResponseType.REJECT,
                       'Add', Gtk.ResponseType.ACCEPT))

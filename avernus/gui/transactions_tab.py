@@ -68,9 +68,9 @@ class TransactionsTree(Tree):
     def on_edit(self, widget, data = None):
         transaction, iter = self.get_selected_item()
         if transaction.type == 0: #SELL
-            dialogs.SellDialog(transaction.position, transaction)
+            dialogs.SellDialog(transaction.position, transaction,parent = self.get_toplevel())
         elif transaction.type == 1: #Buy
-            dialogs.BuyDialog(transaction.position.portfolio, transaction)
+            dialogs.BuyDialog(transaction.position.portfolio, transaction, parent = self.get_toplevel())
         else:
             print "TODO edit transaction"
 

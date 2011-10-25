@@ -16,8 +16,8 @@ logger = logging.getLogger(__name__)
 
 class PositionDialog(Gtk.Dialog):
 
-    def __init__(self, position):
-        Gtk.Dialog.__init__(self, _("Edit position - ")+position.name, None
+    def __init__(self, position, parent = None):
+        Gtk.Dialog.__init__(self, _("Edit position - ")+position.name, parent
                             , Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,
                      (Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT))
         vbox = self.get_content_area()
@@ -36,18 +36,18 @@ class PositionDialog(Gtk.Dialog):
         notebook.append_page(self.stock_table, Gtk.Label(label=_('Stock')))
         notebook.append_page(self.transactions_table, Gtk.Label(label=_('Transactions')))
         notebook.append_page(self.quotation_table, Gtk.Label(label=_('Quotations')))
-        
+
         self.previous_page = 0
         notebook.connect("switch-page", self.on_switch_page)
-        
+
         self.show_all()
         self.run()
         self.process_result()
 
     def on_switch_page(self, notebook, page, page_num):
         #previous was the position tab
-        if self.previous_page == 0 and not self.is_meta:   
-            self.position_table.process_result()  
+        if self.previous_page == 0 and not self.is_meta:
+            self.position_table.process_result()
         self.previous_page = page_num
 
     def process_result(self, widget=None):
@@ -86,7 +86,7 @@ class QuotationTable(Gtk.Table):
         self.update_labels()
 
     def on_edit_button_clicked(self, button):
-        EditHistoricalQuotationsDialog(self.stock)
+        EditHistoricalQuotationsDialog(self.stock, parent = self.get_toplevel())
         self.update_labels()
 
     def on_delete_button_clicked(self, button):
@@ -190,7 +190,7 @@ class TransactionsTab(Gtk.VBox):
     def on_row_activated(self, treeview, path, view_column):
         if view_column == self.date_column:
             transaction = self.model[path][0]
-            dlg = dialogs.CalendarDialog(transaction.date)
+            dlg = dialogs.CalendarDialog(transaction.date, parent = self.get_toplevel())
             if dlg.date:
                 #be carefull, transactions have datetimes...
                 transaction.date = transaction.date.replace(dlg.date.year, dlg.date.month, dlg.date.day)
@@ -222,10 +222,10 @@ class TransactionsTab(Gtk.VBox):
                     ta.position.quantity += ta.quantity
                 else:
                     ta.position.quantity -= ta.quantity
-                #delete                
+                #delete
                 ta.delete()
                 model.remove(selection_iter)
-                    
+
     def on_shares_edited(self, cellrenderertext, path, new_text, columnnumber):
         try:
             value = float(new_text.replace(",","."))
@@ -257,10 +257,10 @@ class TransactionsTab(Gtk.VBox):
 
 class EditHistoricalQuotationsDialog(Gtk.Dialog):
 
-    def __init__(self, stock):
+    def __init__(self, stock, parent = None):
         self.stock = stock
 
-        Gtk.Dialog.__init__(self, _("Quotations")+" - "+stock.name, None
+        Gtk.Dialog.__init__(self, _("Quotations")+" - "+stock.name, parent
                             , Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,
                      (Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT))
         self.set_default_size(300, 300)
@@ -313,7 +313,7 @@ class EditHistoricalQuotationsDialog(Gtk.Dialog):
     def on_row_activated(self, treeview, path, view_column):
         if view_column == self.date_column:
             quotation = self.model[path][0]
-            dlg = dialogs.CalendarDialog(quotation.date)
+            dlg = dialogs.CalendarDialog(quotation.date, parent = self.get_toplevel())
             if dlg.date:
                 quotation.date = self.model[path][1] = dlg.date
 

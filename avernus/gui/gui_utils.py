@@ -7,7 +7,6 @@ import threading
 import thread
 
 
-
 class GeneratorTask(object):
     """
     http://unpythonic.blogspot.com/2007/08/using-threads-in-pyGtk.html

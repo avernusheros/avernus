@@ -41,7 +41,7 @@ class DividendsTab(Gtk.VBox, page.Page):
         self.pack_start(sw, True, True, 0)
 
     def on_add(self, widget = None, data = None):
-        dialogs.DividendDialog(self.portfolio, tree = self.tree)
+        dialogs.DividendDialog(self.portfolio, tree = self.tree, parent = self.get_toplevel())
         self.update_page()
 
     def show(self):
@@ -121,7 +121,7 @@ class DividendsTree(Tree):
     def on_edit(self, widget, data = None):
         obj, iterator = self.get_selected_item()
         if obj:
-            dialogs.DividendDialog(self.portfolio, tree = self, dividend=obj)
+            dialogs.DividendDialog(self.portfolio, tree = self, dividend=obj, parent = self.get_toplevel())
 
     def on_remove(self, widget=None, data = None):
         obj, iterator = self.get_selected_item()

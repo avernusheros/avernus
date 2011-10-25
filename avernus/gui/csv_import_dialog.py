@@ -12,8 +12,8 @@ class CSVImportDialog(Gtk.Dialog):
 
     TITLE = _("Import CSV")
 
-    def __init__(self, widget=None, account=None):
-        Gtk.Dialog.__init__(self, self.TITLE, None
+    def __init__(self, account=None, parent=None):
+        Gtk.Dialog.__init__(self, self.TITLE, parent
                             , Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,
                      (Gtk.STOCK_CANCEL, Gtk.ResponseType.REJECT,))
         self.account = account

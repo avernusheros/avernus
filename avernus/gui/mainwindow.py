@@ -21,8 +21,8 @@ import sys
 
 class AboutDialog(Gtk.AboutDialog):
 
-    def __init__(self, *arg, **args):
-        super(Gtk.AboutDialog, self).__init__()
+    def __init__(self, parent = None):
+        Gtk.AboutDialog.__init__(self, parent = parent)
 
         self.set_name(avernus.__appname__)
         self.set_version(avernus.__version__)
@@ -50,7 +50,8 @@ class MenuBar(Gtk.MenuBar):
              ('Edit'          , None                 , '_Edit'),
              ('Tools'         , None                 , '_Tools'),
              ('Help'          , None                 , '_Help'),
-             ('import'        , None                 , '_Import CSV'        , None        , None, CSVImportDialog),
+             ('import'        , None                 , '_Import CSV'        , None        , None, parent.on_csv_import),
+             ('export CSV'    , None                 , '_Export Account Transactions', None, None, parent.on_csv_export),
              ('quit'          , Gtk.STOCK_QUIT       , '_Quit'              , '<Control>q', None, parent.on_destroy),
              ('prefs'         , Gtk.STOCK_PREFERENCES, '_Preferences'       , None        , None, parent.on_prefs),
              ('update'        , Gtk.STOCK_REFRESH    , '_Update all stocks' , 'F5'        , None, parent.on_update_all),
@@ -59,10 +60,10 @@ class MenuBar(Gtk.MenuBar):
              ('website'       , None                 , '_Website'           , None        , None, lambda x, y:web("https://launchpad.net/avernus")),
              ('feature'       , None                 , 'Request a _Feature' , None        , None, lambda x, y:web("https://blueprints.launchpad.net/avernus")),
              ('bug'           , None                 , 'Report a _Bug'      , None        , None, lambda x, y:web("https://bugs.launchpad.net/avernus")),
-             ('about'         , Gtk.STOCK_ABOUT      , '_About'             , None        , None, AboutDialog),
-             ('filter'        , None                 , '_Category Filters'  , None        , None, FilterDialog),
+             ('about'         , Gtk.STOCK_ABOUT      , '_About'             , None        , None, parent.on_about),
+             ('filter'        , None                 , '_Category Filters'  , None        , None, parent.on_category_assignments),
              ('do_assignments', None                 , '_Run auto-assignments', None      , None, parent.on_do_category_assignments),
-             ('export CSV'    , None                 , '_Export Account Transactions', None, None, ExportDialog)
+
              ])
 
         for action in actiongroup.list_actions():
@@ -183,7 +184,19 @@ class MainWindow(Gtk.Window):
             del page
 
     def on_prefs(self, *args):
-        PrefDialog()
+        PrefDialog(parent = self)
+
+    def on_category_assignments(self, *args):
+        FilterDialog(parent = self)
+
+    def on_csv_import(self, *args):
+        CSVImportDialog(parent = self)
+
+    def on_about(self, *args):
+        AboutDialog(parent = self)
+
+    def on_csv_export(self, *args):
+        ExportDialog(parent = self)
 
     def on_do_category_assignments(self, *args):
         gui_utils.BackgroundTask(filterController.run_auto_assignments).start()

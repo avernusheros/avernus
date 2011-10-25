@@ -6,8 +6,8 @@ from gi.repository import Pango
 
 class FilterDialog(Gtk.Dialog):
 
-    def __init__(self, *args, **kwargs):
-        Gtk.Dialog.__init__(self, _("Account Category Filters"), None
+    def __init__(self, parent = None):
+        Gtk.Dialog.__init__(self, _("Account Category Filters"), parent
                             , Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,
                      (Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT))
         self.set_size_request(800, 500)

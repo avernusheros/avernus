@@ -13,8 +13,8 @@ class PrefDialog(Gtk.Dialog):
     DEFAULT_WIDTH = 200
     DEFAULT_HEIGHT = 300
 
-    def __init__(self):
-        Gtk.Dialog.__init__(self, "Preferences", None,
+    def __init__(self, parent = None):
+        Gtk.Dialog.__init__(self, "Preferences", parent,
                             Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,
                             (Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT),
                             )
@@ -38,11 +38,11 @@ class AccountPreferences(Gtk.VBox):
         Gtk.VBox.__init__(self)
         self.configParser = avernusConfig()
 
-		#FIXME tooltip
+        #FIXME tooltip
         section = self._add_section('Charts')
         self._add_option(section, _('Include child categories'), 'categoryChildren')
 
-		#FIXME tooltip
+        #FIXME tooltip
         section = self._add_section('Category Assignments')
         self._add_option(section, _('Include already categorized transactions'), 'assignments categorized transactions')
 
@@ -81,7 +81,7 @@ class DimensionList(Gtk.VBox):
         text = _("dimensions are used to.... ")
         label = Gtk.Label(label = text)
         self.pack_start(label, True, True, 0)
-        
+
         self.tree = gui_utils.Tree()
         self.tree.set_headers_visible(False)
         self.model = Gtk.TreeStore(object, str)
