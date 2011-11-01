@@ -427,13 +427,13 @@ class TransactionsTree(gui_utils.Tree):
             return model[paths[0]][self.OBJECT], model.get_iter(paths[0])
         return None, None
 
-    def on_add(self, widget=None):
+    def on_add(self, widget=None, data=None):
         dlg = EditTransaction(self.account, parent = self.get_toplevel())
         b_change, transaction = dlg.start()
         self.account.amount += transaction.amount
         self.insert_transaction(transaction)
 
-    def on_edit(self, widget=None):
+    def on_edit(self, widget=None, data=None):
         transaction, iterator = self._get_selected_transaction()
         old_amount = transaction.amount
         dlg = EditTransaction(self.account, transaction, parent = self.get_toplevel())
@@ -441,11 +441,11 @@ class TransactionsTree(gui_utils.Tree):
         if b_change:
             self.account.amount = self.account.amount - old_amount + transaction.amount
 
-    def on_dividend(self, widget=None):
+    def on_dividend(self, widget=None, data=None):
         trans, iterator = self._get_selected_transaction()
         dialogs.DividendDialog(date=trans.date, price=trans.amount, parent = self.get_toplevel())
 
-    def on_remove(self, widget=None):
+    def on_remove(self, widget=None, data=None):
         trans, iterator = self._get_selected_transaction()
         dlg = Gtk.MessageDialog(None,
                  Gtk.DialogFlags.DESTROY_WITH_PARENT, Gtk.MessageType.QUESTION,
@@ -465,26 +465,26 @@ class TransactionsTree(gui_utils.Tree):
     def on_set_transaction_category(self, category = None):
         trans, iterator = self._get_selected_transaction()
         trans.category = category
-        self.get_model()[iterator] = self.get_item_to_insert(trans)
-        self.model[iterator] = self.get_item_to_insert(trans)
+        self.get_model().remove(iterator)
+        self.insert_transaction(trans)
 
     def show_context_menu(self, event):
         trans, iter = self._get_selected_transaction()
         self.context_menu = gui_utils.ContextMenu()
         if trans:
             for action in self.actiongroup.list_actions():
-                context_menu.add(action.create_menu_item())
+                self.context_menu.add(action.create_menu_item())
             if trans.category:
-                context_menu.add_item('Remove category', lambda widget: self.on_set_transaction_category())
+                self.context_menu.add_item('Remove category', lambda widget: self.on_set_transaction_category())
             hierarchy = controller.getAllAccountCategoriesHierarchical()
 
             def insert_recursive(cat, menu):
-                item = Gtk.MenuItem(cat.name)
+                item = Gtk.MenuItem(label = cat.name)
                 menu.append(item)
                 if cat in hierarchy:
                     new_menu = Gtk.Menu()
                     item.set_submenu(new_menu)
-                    item = Gtk.MenuItem(cat.name)
+                    item = Gtk.MenuItem(label = cat.name)
                     new_menu.append(item)
                     item.connect('activate', lambda widget: self.on_set_transaction_category(cat))
                     new_menu.append(Gtk.SeparatorMenuItem())
@@ -492,16 +492,16 @@ class TransactionsTree(gui_utils.Tree):
                         insert_recursive(child_cat, new_menu)
                 else:
                     item.connect('activate', lambda widget: self.on_set_transaction_category(cat))
-
             if len(hierarchy[None]) > 0:
-                item = Gtk.MenuItem("Move to category")
-                context_menu.add(item)
+                item = Gtk.MenuItem(label="Move to category")
+                self.context_menu.add(item)
                 category_menu = Gtk.Menu()
                 item.set_submenu(category_menu)
                 for cat in sorted(hierarchy[None]):
                     insert_recursive(cat, category_menu)
         else:
-            context_menu.add(self.actiongroup.get_action('add').create_menu_item())
+            self.context_menu.add(self.actiongroup.get_action('add').create_menu_item())
+        self.context_menu.show_all()
         self.context_menu.popup(None, None, None, None, event.button, event.time)
 
     def on_key_press(self, widget, event):
@@ -526,11 +526,13 @@ class TransactionsTree(gui_utils.Tree):
                and not (event.get_state() & (Gdk.EventMask.CONTROL_MASK|Gdk.EventMask.SHIFT_MASK))
                and self.get_selection().path_is_selected(target[0])):
                     # disable selection
-                    self.get_selection().set_select_function(lambda *ignore: False)
+                    #self.get_selection().set_select_function(lambda *ignore: False)
+                    pass
 
     def on_button_release(self, widget, event):
         # re-enable selection
-        self.get_selection().set_select_function(lambda *ignore: True)
+        #self.get_selection().set_select_function(lambda *ignore: True)
+        pass
 
     def on_toggle_uncategorized(self, button):
         if button.get_active():
@@ -610,7 +612,7 @@ class CategoriesTree(gui_utils.Tree):
                 self.context_menu.add(action.create_menu_item())
             self.context_menu.popup(None, None, None, None, event.button, event.time)
 
-    def on_add(self, widget=None):
+    def on_add(self, widget=None, data=None):
         parent, selection_iter = self.get_selected_item()
         item = controller.newAccountCategory('new category', parent=parent)
         iterator = self.insert_item(item, parent = selection_iter)
@@ -620,12 +622,12 @@ class CategoriesTree(gui_utils.Tree):
         self.cell.set_property('editable', True)
         self.set_cursor(model.get_path(iterator), focus_column = self.get_column(0), start_editing=True)
 
-    def on_edit(self, widget=None):
+    def on_edit(self, widget=None, data=None):
         cat, selection_iter = self.get_selected_item()
         self.cell.set_property('editable', True)
         self.set_cursor(self.get_model().get_path(selection_iter), focus_column = self.get_column(0), start_editing=True)
 
-    def on_remove(self, widget=None):
+    def on_remove(self, widget=None, data=None):
         obj, iterator = self.get_selected_item()
         if obj is None:
             return False
@@ -768,7 +770,7 @@ class EditTransaction(Gtk.Dialog):
             self.transaction = controller.newAccountTransaction(account=account)
 
         #description
-        frame = Gtk.Frame('Description')
+        frame = Gtk.Frame(label = 'Description')
         self.description_entry = Gtk.TextView()
         self.description_entry.set_wrap_mode(Gtk.WrapMode.WORD)
         entry_buffer = self.description_entry.get_buffer()
@@ -780,7 +782,7 @@ class EditTransaction(Gtk.Dialog):
         hbox = Gtk.HBox()
         label = Gtk.Label(label=_('Amount'))
         hbox.pack_start(label, True, True, 0)
-        self.amount_entry = Gtk.SpinButton(Gtk.Adjustment(lower=-999999999, upper=999999999, step_incr=10, value = self.transaction.amount), digits=2)
+        self.amount_entry = Gtk.SpinButton(adjustment = Gtk.Adjustment(lower=-999999999, upper=999999999, step_increment=10, value = self.transaction.amount), digits=2)
         hbox.pack_start(self.amount_entry, True, True, 0)
         vbox.pack_start(hbox, True, True, 0)
 
@@ -789,7 +791,7 @@ class EditTransaction(Gtk.Dialog):
         label = Gtk.Label(label=_('Category'))
         hbox.pack_start(label, True, True, 0)
         treestore = Gtk.TreeStore(object, str)
-        self.combobox = Gtk.ComboBox(treestore)
+        self.combobox = Gtk.ComboBox(model = treestore)
         cell = Gtk.CellRendererText()
         self.combobox.pack_start(cell, True)
         self.combobox.add_attribute(cell, 'text', 1)
@@ -831,9 +833,9 @@ class EditTransaction(Gtk.Dialog):
         cell.props.wrap_width = 200
         cell.props.wrap_mode = Pango.WrapMode.WORD
         self.matching_transactions_tree.create_column(_('Date'), 3, func=gui_utils.date_to_string)
-        vbox.pack_end(self.matching_transactions_tree)
+        vbox.pack_end(self.matching_transactions_tree, True, True, 0)
         self.no_matches_label = Gtk.Label(label='No matching transactions found. Continue only if you want to mark this as a tranfer anyway.')
-        vbox.pack_end(self.no_matches_label)
+        vbox.pack_end(self.no_matches_label, True, True, 0)
 
         #connect signals
         self.transfer_button.connect("toggled", self.on_transfer_toggled)
@@ -870,7 +872,7 @@ class EditTransaction(Gtk.Dialog):
     def process_result(self, response):
         if response == Gtk.ResponseType.ACCEPT:
             buffer = self.description_entry.get_buffer()
-            self.transaction.description = unicode(buffer.get_text(buffer.get_start_iter(), buffer.get_end_iter()))
+            self.transaction.description = unicode(buffer.get_text(buffer.get_start_iter(), buffer.get_end_iter(), True))
             self.transaction.amount = self.amount_entry.get_value()
             year, month, day = self.calendar.get_date()
             self.transaction.date = datetime.date(year, month+1, day)

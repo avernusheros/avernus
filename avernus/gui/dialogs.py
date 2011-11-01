@@ -556,6 +556,9 @@ class BuyDialog(Gtk.Dialog):
 
 class NewWatchlistPositionDialog(Gtk.Dialog):
 
+    WIDTH = 500
+    HEIGHT = 400
+
     def __init__(self, wl, parent=None):
         Gtk.Dialog.__init__(self, _("Add watchlist position"), parent
                             , Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,
@@ -569,6 +572,7 @@ class NewWatchlistPositionDialog(Gtk.Dialog):
         self.stock_selector.result_tree.connect('cursor-changed', self.on_stock_selection)
         self.stock_selector.result_tree.get_model().connect('row-deleted', self.on_stock_deselection)
 
+        self.set_size_request(self.WIDTH, self.HEIGHT)
         self.set_response_sensitive(Gtk.ResponseType.ACCEPT, False)
         self.show_all()
         response = self.run()

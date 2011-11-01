@@ -1,10 +1,16 @@
-from gi.repository import Gtk
-import pytz
 from avernus import config, pubsub
-import locale
+
+from gi.repository import Gtk
 from gi.repository import GObject
+
+import pytz
+import locale
 import threading
 import thread
+import logging
+
+
+logger = logging.getLogger(__name__)
 
 
 class GeneratorTask(object):
@@ -18,12 +24,17 @@ class GeneratorTask(object):
         self.complete_callback = complete_callback
 
     def _start(self, *args, **kwargs):
-        self._stopped = False
-        for ret in self.generator(*args, **kwargs):
-            if self._stopped:
-                thread.exit()
-            GObject.idle_add(self._loop, ret)
-        if self.complete_callback is not None:
+        try:
+            self._stopped = False
+            for ret in self.generator(*args, **kwargs):
+                if self._stopped:
+                    thread.exit()
+                GObject.idle_add(self._loop, ret)
+            if self.complete_callback is not None:
+                GObject.idle_add(self.complete_callback)
+        except:
+            logger.error("thread failed")
+            thread.exit()
             GObject.idle_add(self.complete_callback)
 
     def _loop(self, ret):

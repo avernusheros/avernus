@@ -257,7 +257,7 @@ class Onvista():
             currency = temp[9]
         else:
             isin = str(base.findAll('tr','hgrau2')[1].findAll('td', text=True)[1])
-        
+
             #getting the year
             #FIXME
             #try:
@@ -271,7 +271,7 @@ class Onvista():
             #else:
             #    #fallback to the hardcoded current year
             year = unicode(str(date.today().year)[2:])
-        isin = isin.replace('&nbsp;', '')   
+        isin = isin.replace('&nbsp;', '')
         for row in base.findAll('div',tdInd['table_class'])[tdInd['table']].find('table'):
             tds = row.findAll('td')
             if len(tds)>3:

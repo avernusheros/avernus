@@ -4,8 +4,12 @@ from avernus.controller import controller
 from avernus.objects.stock import Stock
 from avernus import pubsub
 from avernus.data_sources import yahoo, onvista
-import datetime, re
 from avernus.gui import gui_utils
+import datetime, re
+import logging
+
+
+logger = logging.getLogger(__name__)
 
 
 sources = {'onvista.de': onvista.Onvista(),
@@ -41,9 +45,12 @@ class DatasourceManager(object):
             func = getattr(source, "search", None)
             if func:
                 if threaded:
-                    task = gui_utils.GeneratorTask(func, self._item_found_callback, complete_cb)
-                    self.current_searches.append(task)
-                    task.start(searchstring)
+                    try:
+                        task = gui_utils.GeneratorTask(func, self._item_found_callback, complete_cb)
+                        self.current_searches.append(task)
+                        task.start(searchstring)
+                    except:
+                        logger.error("data source "+name+" not working")
                 else:
                     for res in func(searchstring):
                         item, source, source_info = res
