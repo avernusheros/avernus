@@ -128,14 +128,25 @@ class AccountTransactionTab(Gtk.VBox, page.Page):
             toolbar.insert(button, -1)
         vbox.pack_start(toolbar, False, False, 0)
 
-        self.charts_notebook = AccountChartsNotebook(self.account, (self.transactions_tree.range_start, self.transactions_tree.range_end))
-        self.vpaned.pack1(self.charts_notebook)
+        expander = Gtk.Expander(label = _("Charts"))
+        expander.connect("activate", self.on_expander_toggled)
+        self.charts_notebook = None
+        self.vpaned.pack1(expander)
         self.transactions_tree.load_transactions()
         self.category_tree.load_categories()
         self.update_page()
 
         self.connect("unrealize", self.on_unrealize)
         self.show_all()
+
+    def on_expander_toggled(self, expander, *args):
+        if (not expander.get_expanded()):
+            self.charts_notebook = AccountChartsNotebook(self.account, (self.transactions_tree.range_start, self.transactions_tree.range_end))
+            self.charts_notebook.show_all()
+            expander.add(self.charts_notebook)
+        else:
+            expander.remove(self.charts_notebook)
+            self.charts_notebook = None
 
     def on_toggled(self, widget, chart, setter):
         active = widget.get_active()
@@ -167,8 +178,9 @@ class AccountTransactionTab(Gtk.VBox, page.Page):
     def update_ui(self):
         self.refilter()
         transactions = [row[0] for row in self.transactions_tree.modelfilter]
-        for chart in self.charts_notebook.charts:
-            chart.update(transactions, (self.transactions_tree.range_start, self.transactions_tree.range_end))
+        if (not self.charts_notebook == None):
+            for chart in self.charts_notebook.charts:
+                chart.update(transactions, (self.transactions_tree.range_start, self.transactions_tree.range_end))
         self.update_page()
 
     def refilter(self):
@@ -872,7 +884,7 @@ class EditTransaction(Gtk.Dialog):
     def process_result(self, response):
         if response == Gtk.ResponseType.ACCEPT:
             buffer = self.description_entry.get_buffer()
-            self.transaction.description = unicode(buffer.get_text(buffer.get_start_iter(), buffer.get_end_iter(), True))
+            self.transaction.description = unicode(buffer.get_text(buffer.get_start_iter(), buffer.get_end_iter(), True), encoding = "utf8")
             self.transaction.amount = self.amount_entry.get_value()
             year, month, day = self.calendar.get_date()
             self.transaction.date = datetime.date(year, month+1, day)

@@ -235,7 +235,7 @@ def to_local_time(date):
 def get_name_string(stock):
     return '<b>%s</b>\n<small>%s\n%s</small>' % (GObject.markup_escape_text(stock.name),
                                                  GObject.markup_escape_text(stock.isin),
-                                                 GObject.markup_escape_text(stock.exchange))
+                                                 GObject.markup_escape_text(stock.exchange.encode('utf8')))
 
 def get_green_red_string(num, text = None):
     if text is None:
