@@ -22,7 +22,7 @@ class Store(Thread):
         self.db = db
         self.reqs=Queue()
         self.batch = False
-        
+
         self.start()
 
     def run(self):
@@ -42,10 +42,10 @@ class Store(Thread):
             else:
                 cnx.commit()
         cnx.close()
-    
+
     def execute(self, req, arg=None, res=None):
         self.reqs.put((req, arg or tuple(), res))
-        
+
     def select(self, req, arg=None):
         res=Queue()
         self.execute(req, arg, res)
@@ -53,15 +53,15 @@ class Store(Thread):
             rec=res.get()
             if rec=='--no more--': break
             yield rec
-            
+
     def close(self):
         self.execute('--close--')
-        
+
     def backup(self):
         backup_file = self.db+'.backup'+time.strftime(".%Y%m%d-%H%M")
-        shutil.copyfile ( self.db, backup_file ) 
-        
-    
+        shutil.copyfile ( self.db, backup_file )
+
+
 if __name__ == "__main__":
     sql = Store(":memory:")
     sql.execute("create table people(name,first)")

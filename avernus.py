@@ -107,7 +107,11 @@ init_icons()
 db_file = options.datafile
 if db_file == None:
     configs = config.avernusConfig()
-    db_file = configs.get_option('database file')
+    default_file = os.path.join(config.config_path, 'avernus.db')
+    db_file = configs.get_option('database file', default = default_file)
+
+
+#fixme check if dbfile exists
 
 from avernus.objects import model, store
 from avernus.controller import controller

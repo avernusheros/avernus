@@ -18,7 +18,7 @@ def getdatapath():
     is specified at installation time.
     """
     # get pathname absolute or relative
-    
+
     if os.path.exists(__avernus_data_directory__): #.startswith('/')
         pathname = __avernus_data_directory__
     else:
@@ -66,11 +66,13 @@ class AvernusConfig():
     def write(self):
         with open(self.filename, 'wb') as configfile:
             self.parser.write(configfile)
-            
-    def get_option(self, name, section = 'General'):
+
+    def get_option(self, name, section = 'General', default = None):
         #print name, type(name), section, type(section)
         if self.parser.has_option(section, name):
             return self.parser.get(section, name)
+        self.set_option(name, default, section)
+        return default
         #print "unkown config request ", name, section
 
     def set_option(self, name, value, section = 'General'):

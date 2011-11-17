@@ -310,8 +310,8 @@ class TransactionsTree(gui_utils.Tree):
         #self.enable_model_drag_source(Gdk.EventMask.BUTTON1_MOTION_MASK ,
         #                              [ ( 'text/plain', 0, 80 )],
         #                              Gdk.DragAction.DEFAULT | Gdk.DragAction.MOVE)
-        self.connect("drag-data-get", self.on_drag_data_get)
-        self.connect('drag-end', self.on_drag_end)
+        #self.connect("drag-data-get", self.on_drag_data_get)
+        #self.connect('drag-end', self.on_drag_end)
         self.connect('button_press_event', self.on_button_press)
         self.connect('button_release_event', self.on_button_release)
         self.connect('key_press_event', self.on_key_press)
@@ -392,21 +392,21 @@ class TransactionsTree(gui_utils.Tree):
                 self.model.remove(row.iter)
                 self.insert_transaction(transaction)
 
-    def on_drag_data_get(self, treeview, context, selection, info, timestamp):
-        treeselection = treeview.get_selection()
-        model, paths = treeselection.get_selected_rows()
-        iters = [model.get_iter(path) for path in paths]
-        text = '\n'.join([str(model.get_value(iter, self.OBJECT).id) for iter in iters])
-        selection.set('text/plain', 8, text)
-        return
+    #def on_drag_data_get(self, treeview, context, selection, info, timestamp):
+    #    treeselection = treeview.get_selection()
+    #    model, paths = treeselection.get_selected_rows()
+    #    iters = [model.get_iter(path) for path in paths]
+    #    text = '\n'.join([str(model.get_value(iter, self.OBJECT).id) for iter in iters])
+    #    selection.set('text/plain', 8, text)
+    #    return
 
-    def on_drag_end(self,widget, drag_context):
-        treeselection = self.get_selection()
-        model, paths = treeselection.get_selected_rows()
-        iters = [model.get_iter(path) for path in paths]
-        for iter in iters:
-            trans = model.get_value(iter, self.OBJECT)
-            model[iter] = self.get_item_to_insert(trans)
+    #def on_drag_end(self,widget, drag_context):
+    #    treeselection = self.get_selection()
+    #    model, paths = treeselection.get_selected_rows()
+    #    iters = [model.get_iter(path) for path in paths]
+    #    for iter in iters:
+    #        trans = model.get_value(iter, self.OBJECT)
+    #        model[iter] = self.get_item_to_insert(trans)
 
     def get_item_to_insert(self, ta):
         if ta.category:
@@ -591,13 +591,13 @@ class CategoriesTree(gui_utils.Tree):
         # setting the cell editable interfers with drag and drop
         #self.cell.set_property('editable', True)
         self.cell.connect('edited', self.on_cell_edited)
-        self.enable_model_drag_dest(self.TARGETS, Gdk.DragAction.DEFAULT)
+        #self.enable_model_drag_dest(self.TARGETS, Gdk.DragAction.DEFAULT)
         # Allow enable drag and drop of rows including row move
         #self.enable_model_drag_source( Gdk.EventMask.BUTTON1_MOTION_MASK,
         #                        self.TARGETS,
         #                        Gdk.DragAction.DEFAULT|Gdk.DragAction.MOVE)
 
-        self.connect('drag_data_received', self.on_drag_data_received)
+        #self.connect('drag_data_received', self.on_drag_data_received)
         self.connect('cursor_changed', self.on_cursor_changed)
         self.connect('button_press_event', self.on_button_press)
         self.connect('key_press_event', self.on_key_press)
@@ -740,32 +740,32 @@ class CategoriesTree(gui_utils.Tree):
         if self.row_expanded(model.get_path(source)):
             self.expand_row(model.get_path(new_iter), False)
 
-    def on_drag_data_received(self, widget, context, x, y, selection, target_type, etime):
-        drop_info = self.get_dest_row_at_pos(x, y)
-        if 'MY_TREE_MODEL_ROW' in context.targets:
-            model, source_iter = self.get_selection().get_selected()
-            if drop_info:
-                target_path, drop_position = drop_info
-                target_iter = model.get_iter(target_path)
-                #dont allow dragging cats on themselves
-                if not model[target_iter][0].is_parent(model[source_iter][0]):
-                    self._move_row(source_iter, target_iter, drop_position)
-                    context.finish(True, True, etime)
-            else:
-                self._move_row(source_iter, None, None)
-                context.finish(True, True, etime)
-        else: #drop from other widget
-            if drop_info:
-                model = self.get_model()
-                path, position = drop_info
-                target_iter = model.get_iter(path)
-                cat = model[target_iter][0]
-                for id in selection.data.split():
-                    transaction = controller.AccountTransaction.getByPrimaryKey(int(id))
-                    transaction.category = cat
-            else:
-                logger.debug("NO CATEGORY")
-        return
+    #def on_drag_data_received(self, widget, context, x, y, selection, target_type, etime):
+    #    drop_info = self.get_dest_row_at_pos(x, y)
+    #    if 'MY_TREE_MODEL_ROW' in context.targets:
+    #        model, source_iter = self.get_selection().get_selected()
+    #        if drop_info:
+    #            target_path, drop_position = drop_info
+    #            target_iter = model.get_iter(target_path)
+    #            #dont allow dragging cats on themselves
+    #            if not model[target_iter][0].is_parent(model[source_iter][0]):
+    #                self._move_row(source_iter, target_iter, drop_position)
+    #                context.finish(True, True, etime)
+    #        else:
+    #            self._move_row(source_iter, None, None)
+    #            context.finish(True, True, etime)
+    #    else: #drop from other widget
+    #        if drop_info:
+    #            model = self.get_model()
+    #            path, position = drop_info
+    #            target_iter = model.get_iter(path)
+    #            cat = model[target_iter][0]
+    #            for id in selection.data.split():
+    #                transaction = controller.AccountTransaction.getByPrimaryKey(int(id))
+    #                transaction.category = cat
+    #        else:
+    #            logger.debug("NO CATEGORY")
+    #    return
 
 
 class EditTransaction(Gtk.Dialog):
