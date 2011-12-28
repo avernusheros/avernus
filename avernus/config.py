@@ -71,7 +71,8 @@ class AvernusConfig():
         #print name, type(name), section, type(section)
         if self.parser.has_option(section, name):
             return self.parser.get(section, name)
-        self.set_option(name, default, section)
+        if default != None:
+            self.set_option(name, default, section)
         return default
         #print "unkown config request ", name, section
 

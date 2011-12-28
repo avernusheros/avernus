@@ -18,6 +18,10 @@ from gi.repository import Gtk
 from gi.repository import Gdk
 import sys
 
+#FIXME remove this hack
+reload(sys)
+sys.setdefaultencoding("utf-8")
+
 
 class AboutDialog(Gtk.AboutDialog):
 

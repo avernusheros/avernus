@@ -35,7 +35,7 @@ class EditStockDialog(Gtk.Dialog):
         self.destroy()
 
 
-class DimensionComboBox(Gtk.ComboBox):
+class DimensionComboBox(Gtk.ComboBoxText):
 
     COL_OBJ  = 0
     COL_TEXT = 1
@@ -144,8 +144,6 @@ class DimensionComboBox(Gtk.ComboBox):
             for name, value in parse:
                 erg.append((controller.newDimensionValue(self.dimension, name), value))
         return erg
-
-
 
 
 class EditStockTable(Gtk.Table):

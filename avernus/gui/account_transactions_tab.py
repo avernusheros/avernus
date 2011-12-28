@@ -525,21 +525,21 @@ class TransactionsTree(gui_utils.Tree):
     def on_button_press(self, widget, event):
         if event.button == 3:
             self.show_context_menu(event)
-        else:
+        #else:
             #edit on doubleclick
             #if event.type == Gdk.EventType._2BUTTON_PRESS: # 'double click'
             #    self.on_edit()
             #    return
             # Here we intercept mouse clicks on selected items so that we can
             # drag multiple items without the click selecting only one
-            target = self.get_path_at_pos(int(event.x), int(event.y))
-            if (target
-               and event.type == Gdk.EventType.BUTTON_PRESS
-               and not (event.get_state() & (Gdk.EventMask.CONTROL_MASK|Gdk.EventMask.SHIFT_MASK))
-               and self.get_selection().path_is_selected(target[0])):
+            #target = self.get_path_at_pos(int(event.x), int(event.y))
+            #if (target
+               #and event.type == Gdk.EventType.BUTTON_PRESS
+               #and not (event.get_state() & (Gdk.EventMask.CONTROL_MASK|Gdk.EventMask.SHIFT_MASK))
+               #and self.get_selection().path_is_selected(target[0])):
                     # disable selection
                     #self.get_selection().set_select_function(lambda *ignore: False)
-                    pass
+               #     pass
 
     def on_button_release(self, widget, event):
         # re-enable selection

@@ -16,6 +16,9 @@ logger = logging.getLogger(__name__)
 
 class PositionDialog(Gtk.Dialog):
 
+    WIDTH = 600
+    HEIGHT = 400
+
     def __init__(self, position, parent = None):
         Gtk.Dialog.__init__(self, _("Edit position - ")+position.name, parent
                             , Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,
@@ -40,6 +43,7 @@ class PositionDialog(Gtk.Dialog):
         self.previous_page = 0
         notebook.connect("switch-page", self.on_switch_page)
 
+        self.set_size_request(self.WIDTH, self.HEIGHT)
         self.show_all()
         self.run()
         self.process_result()
@@ -112,8 +116,8 @@ class QuotationTable(Gtk.Table):
             self.last_label.set_text(gui_utils.get_date_string(quotations[-1].date))
 
 
-
 class TransactionsTab(Gtk.VBox):
+    COL_DATE = 2
 
     def __init__(self, position):
         self.position = position
@@ -134,9 +138,9 @@ class TransactionsTab(Gtk.VBox):
         self.model = Gtk.ListStore(object, str, object, float, float, float)
         self.tree.set_model(self.model)
 
-        self.date_column, cell = self.tree.create_column(_('Date'), 2, func=gui_utils.date_to_string)
+        self.date_column, cell = self.tree.create_column(_('Date'), self.COL_DATE, func=gui_utils.date_to_string)
         self.tree.connect("row-activated", self.on_row_activated)
-        self.model.set_sort_func(2, gui_utils.sort_by_time, 2)
+        self.model.set_sort_func(self.COL_DATE, gui_utils.sort_by_time, self.COL_DATE)
         self.tree.create_column(_('Type'), 1)
 
         cell = Gtk.CellRendererSpin()
@@ -174,7 +178,7 @@ class TransactionsTab(Gtk.VBox):
         #init toolbar
         actiongroup = Gtk.ActionGroup('transactionstab')
         actiongroup.add_actions([
-               # ('add', Gtk.STOCK_ADD, 'new quotation', None, _('Add new quotation'), self.on_add),
+                ('add', Gtk.STOCK_ADD, 'new quotation', None, _('Add new quotation'), self.on_add),
                 ('remove', Gtk.STOCK_DELETE, 'remove quotation', None, _('Remove selected quotation'), self.on_remove)
             ])
         for action in actiongroup.list_actions():
@@ -194,16 +198,26 @@ class TransactionsTab(Gtk.VBox):
             if dlg.date:
                 #be carefull, transactions have datetimes...
                 transaction.date = transaction.date.replace(dlg.date.year, dlg.date.month, dlg.date.day)
-                self.model[path][2] = dlg.date
-                #FIXME new date is not stored. why?
+                transaction.position.date = transaction.date
+                self.model[path][self.COL_DATE] = transaction.date
 
     def on_add(self, button):
-        #FIXME implement add functionality
-        return
-        quotation = controller.newQuotation(datetime.date.today(), self.stock, detectDuplicates = False)
-        iter = self.model.append([quotation, quotation.date, quotation.close])
-        path = self.model.get_path(iter)
-        self.tree.set_cursor(path, focus_column=self.price_column, start_editing=True)
+        last_transaction = self.position.buy_transaction
+        position = controller.newPortfolioPosition(
+                    price=self.position.price,
+                    date=datetime.datetime.now(),
+                    quantity=last_transaction.quantity,
+                    portfolio=self.position.portfolio,
+                    stock = self.position.stock)
+        transaction = controller.newTransaction(
+                    type=1,
+                    date=position.date,
+                    quantity=position.quantity,
+                    price=position.price,
+                    costs=last_transaction.costs,
+                    position=position,
+                    portfolio=position.portfolio)
+        iter = self.insert_transaction(transaction)
 
     def on_remove(self, button):
         selection = self.tree.get_selection()

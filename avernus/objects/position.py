@@ -84,7 +84,7 @@ class PortfolioPosition(SQLiteEntity, Position):
 
     @property
     def transactions(self):
-        return self.controller.getTransactionForPosition(self)
+        return self.controller.getTransactionsForPosition(self)
 
     @property
     def dividends(self):
@@ -161,5 +161,12 @@ class MetaPosition(Position):
     @property
     def transactions(self):
         for pos in self.positions:
-            for ta in self.controller.getTransactionForPosition(pos):
+            for ta in pos.transactions:
                 yield ta
+
+    @property
+    def buy_transaction(self):
+        """
+        returns the newest buy transaction of this meta position
+        """
+        return max(filter(lambda ta: ta.type == 1, self.transactions), lambda ta: ta.date)[0]

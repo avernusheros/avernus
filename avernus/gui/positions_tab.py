@@ -219,10 +219,9 @@ class PositionsTree(Tree):
         else:
             d = SellDialog(position, parent = self.get_toplevel())
             if d.response == Gtk.ResponseType.ACCEPT:
-                if position.quantity == 0.0:
-                    self.model.remove(iter)
-                else:
-                    self.model[iter][self.COLS['shares']] = float(position.quantity)
+                self.model.remove(iter)
+                if position.quantity != 0.0:
+                    self.insert_position(position)
 
     def on_add(self, widget, user_data=None):
         if self.watchlist:
@@ -230,7 +229,7 @@ class PositionsTree(Tree):
         else:
             BuyDialog(self.container, parent = self.get_toplevel())
 
-    def on_dividend(self, widget, user_data):
+    def on_dividend(self, widget, user_data = None):
         if self.selected_item is not None:
             dialogs.DividendDialog(pf=self.container, position=self.selected_item[0], parent = self.get_toplevel())
         else:

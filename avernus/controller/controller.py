@@ -419,7 +419,7 @@ def get_all_used_stocks():
 def getPositionForPortfolio(portfolio):
     return PortfolioPosition.getAllFromOneColumn("portfolio", portfolio.getPrimaryKey())
 
-def getTransactionForPosition(position):
+def getTransactionsForPosition(position):
     return Transaction.getAllFromOneColumn("position", position.getPrimaryKey())
 
 def deleteAllPositionTransaction(position):
