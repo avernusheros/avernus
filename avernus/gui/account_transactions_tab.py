@@ -384,7 +384,6 @@ class TransactionsTree(gui_utils.Tree):
             return None
         return search(self.model)
 
-
     def on_transaction_updated(self, transaction):
         if transaction.account == self.account:
             row = self.find_transaction(transaction)
@@ -471,7 +470,7 @@ class TransactionsTree(gui_utils.Tree):
             self.model.remove(child_iter)
 
     def _get_child_iter(self, iterator):
-        child_iter = self.get_model().convert_iter_to_child_iter(None, iterator)
+        child_iter = self.get_model().convert_iter_to_child_iter(iterator)
         return self.modelfilter.convert_iter_to_child_iter(child_iter)
 
     def on_set_transaction_category(self, category = None):
@@ -523,6 +522,9 @@ class TransactionsTree(gui_utils.Tree):
         return False
 
     def on_button_press(self, widget, event):
+        if event.type == Gdk.EventType._2BUTTON_PRESS:
+            self.on_edit(widget)
+            return False
         if event.button == 3:
             self.show_context_menu(event)
         #else:
