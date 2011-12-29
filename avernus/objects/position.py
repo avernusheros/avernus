@@ -169,4 +169,4 @@ class MetaPosition(Position):
         """
         returns the newest buy transaction of this meta position
         """
-        return max(filter(lambda ta: ta.type == 1, self.transactions), lambda ta: ta.date)[0]
+        return max(filter(lambda ta: ta.type == 1, self.transactions), key=lambda ta: ta.date)

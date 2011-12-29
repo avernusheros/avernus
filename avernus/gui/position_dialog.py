@@ -118,6 +118,7 @@ class QuotationTable(Gtk.Table):
 
 class TransactionsTab(Gtk.VBox):
     COL_DATE = 2
+    COL_TOTAL = 6
 
     def __init__(self, position):
         self.position = position
@@ -135,7 +136,7 @@ class TransactionsTab(Gtk.VBox):
         self.pack_start(toolbar, False, True, 0)
 
         #init tree
-        self.model = Gtk.ListStore(object, str, object, float, float, float)
+        self.model = Gtk.ListStore(object, str, object, float, float, float, float)
         self.tree.set_model(self.model)
 
         self.date_column, cell = self.tree.create_column(_('Date'), self.COL_DATE, func=gui_utils.date_to_string)
@@ -145,7 +146,7 @@ class TransactionsTab(Gtk.VBox):
 
         cell = Gtk.CellRendererSpin()
         adjustment = Gtk.Adjustment(0.00, 0, 9999999, 0.01, 10, 0)
-        cell.set_property("digits", 2)
+        cell.set_property("digits", 3)
         cell.set_property("editable", True)
         cell.set_property("adjustment", adjustment)
         cell.connect("edited", self.on_shares_edited, 3)
@@ -173,7 +174,11 @@ class TransactionsTab(Gtk.VBox):
         self.costs_column.set_cell_data_func(cell, gui_utils.currency_format, 5)
         self.tree.append_column(self.costs_column)
 
+        #total
+        self.tree.create_column(_('Total'), self.COL_TOTAL, func=gui_utils.float_to_red_green_string_currency)
+
         self.tree.set_model(self.model)
+        self.tree.get_model().set_sort_column_id(self.COL_DATE, Gtk.SortType.ASCENDING)
 
         #init toolbar
         actiongroup = Gtk.ActionGroup('transactionstab')
@@ -189,7 +194,7 @@ class TransactionsTab(Gtk.VBox):
             self.insert_transaction(transaction)
 
     def insert_transaction(self, ta):
-        self.model.append([ta, ta.type_string, ta.date.date(), float(ta.quantity), ta.price, ta.costs])
+        return self.model.append([ta, ta.type_string, ta.date.date(), float(ta.quantity), ta.price, ta.costs, ta.total])
 
     def on_row_activated(self, treeview, path, view_column):
         if view_column == self.date_column:
@@ -200,6 +205,7 @@ class TransactionsTab(Gtk.VBox):
                 transaction.date = transaction.date.replace(dlg.date.year, dlg.date.month, dlg.date.day)
                 transaction.position.date = transaction.date
                 self.model[path][self.COL_DATE] = transaction.date
+                self.tree.scroll_to_cell(path)
 
     def on_add(self, button):
         last_transaction = self.position.buy_transaction
@@ -217,7 +223,9 @@ class TransactionsTab(Gtk.VBox):
                     costs=last_transaction.costs,
                     position=position,
                     portfolio=position.portfolio)
-        iter = self.insert_transaction(transaction)
+        iterator = self.insert_transaction(transaction)
+        self.tree.scroll_to_cell(self.model.get_path(iterator))
+
 
     def on_remove(self, button):
         selection = self.tree.get_selection()
@@ -252,18 +260,24 @@ class TransactionsTab(Gtk.VBox):
     def on_price_edited(self, cellrenderertext, path, new_text, columnnumber):
         try:
             value = float(new_text.replace(",","."))
+            ta = self.model[path][0]
+            ta.price = value
+            ta.position.price = value
+            #update gui
             self.model[path][columnnumber] = value
-            self.model[path][0].price = value
-            self.model[path][0].position.price = value
+            self.model[path][self.COL_TOTAL] = ta.total
         except:
             logger.debug("entered value is not a float", new_text)
 
     def on_costs_edited(self, cellrenderertext, path, new_text, columnnumber):
         try:
             value = float(new_text.replace(",","."))
+            ta = self.model[path][0]
+            ta.costs = value
+            ta.position.costs = value
+            #update gui
             self.model[path][columnnumber] = value
-            self.model[path][0].costs = value
-            self.model[path][0].position.costs = value
+            self.model[path][self.COL_TOTAL] = ta.total
         except:
             logger.debug("entered value is not a float", new_text)
 
