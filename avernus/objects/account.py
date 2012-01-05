@@ -174,6 +174,6 @@ class AccountTransaction(SQLiteEntity):
         pubsub.publish('accountTransaction.updated', self)
 
     __callbacks__ = {
-                     'onUpdate':on_update,
+                   'onUpdate':on_update,
                     }
     transfer = property(get_transfer, set_transfer)

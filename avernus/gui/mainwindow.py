@@ -203,7 +203,8 @@ class MainWindow(Gtk.Window):
         ExportDialog(parent = self)
 
     def on_do_category_assignments(self, *args):
-        gui_utils.BackgroundTask(filterController.run_auto_assignments).start()
+        #gui_utils.GeneratorTask(filterController.run_auto_assignments).start()
+        filterController.run_auto_assignments()
 
     def on_historical(self, *args):
         def finished_cb():

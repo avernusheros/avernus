@@ -6,7 +6,7 @@ import os
 import gi
 gi.require_version('Gtk', '3.0')
 
-from gi.repository import Gtk, GObject
+from gi.repository import Gtk, GObject, GLib, Gdk
 import optparse
 import logging
 
@@ -93,8 +93,6 @@ def init_icons():
 
 #MAIN
 
-GObject.threads_init()
-
 init_translations()
 # Support for command line options.
 parser = optparse.OptionParser(version='%prog '+avernus.__version__)
@@ -113,6 +111,9 @@ if db_file == None:
 
 #fixme check if dbfile exists
 
+GObject.threads_init()
+
+
 from avernus.objects import model, store
 from avernus.controller import controller
 model.store = store.Store(db_file)
@@ -130,3 +131,4 @@ controller.datasource_manager = dsm
 #DBusNetwork()
 Gtk.main()
 Gtk.main_quit()
+

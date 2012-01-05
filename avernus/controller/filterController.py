@@ -2,12 +2,12 @@ from avernus.objects.filter import CategoryFilter
 from avernus.controller import controller
 from avernus.config import avernusConfig
 
-config = avernusConfig()
-
 
 def create(rule, category, priority = 10, active = False):
     result = CategoryFilter(rule=rule, category=category, active=active, priority=priority)
     result.insert()
+    #update rule list
+    rules = get_all_active_by_priority()
     return result
 
 def get_all():
@@ -16,13 +16,13 @@ def get_all():
 def get_all_active_by_priority():
     return sorted([f for f in get_all() if f.active], key=lambda f: f.priority)
 
-def match_transaction(filter, transaction):
-    return filter.rule in transaction.description
+def match_transaction(rule, transaction):
+    return rule.rule in transaction.description
 
 def get_category(transaction):
-    for filter in get_all_active_by_priority():
-        if match_transaction(filter, transaction):
-            return filter.category
+    for rule in rules:
+        if match_transaction(rule, transaction):
+            return rule.category
     return None
 
 def run_auto_assignments():
@@ -32,4 +32,11 @@ def run_auto_assignments():
         b_include_categorized = False
     for transaction in controller.getAllAccountTransactions():
         if b_include_categorized or transaction.category is None:
-            transaction.category = get_category(transaction)
+            cat = get_category(transaction)
+            if cat != transaction.category:
+                transaction.category = get_category(transaction)
+    print "finished"
+
+config = avernusConfig()
+rules = get_all_active_by_priority()
+

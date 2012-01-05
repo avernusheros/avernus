@@ -53,15 +53,14 @@ class FilterDialog(Gtk.Dialog):
         sw.add(self.preview_tree)
         vpaned.add2(frame)
 
-    def refresh_preview(self, widget, user_data):
+    def refresh_preview(self, widget):
         # get the active rule and refresh the preview tree with it
         active_rule = self.filter_tree.get_active_filter()
         if active_rule:
             self.preview_tree.on_refresh(active_rule)
 
-    def reset_preview(self, widget, user_data):
+    def reset_preview(self, widget):
         self.preview_tree.reset()
-
 
 
 class PreviewTree(gui_utils.Tree):
@@ -187,12 +186,12 @@ class FilterTree(gui_utils.Tree):
         self.model[path][self.ACTIVE] = active
         self.model[path][self.OBJECT].active = active
 
-    def on_add(self, widget, user_data):
+    def on_add(self, widget, user_data = None):
         rule = filterController.create("new filter - click to edit", self.categories[0], False)
         iterator = self.insert_rule(rule)
         self.scroll_to_cell(self.model.get_path(iterator))
 
-    def on_remove(self, widget, user_data):
+    def on_remove(self, widget, user_data = None):
         item, iterator = self.get_selected_item()
         if item is not None:
             item.delete()

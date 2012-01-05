@@ -3,10 +3,10 @@
 import sqlite3
 import os
 from Queue import Queue
-from threading import Thread
+import threading
 import shutil, time
 
-class Store(Thread):
+class Store(threading.Thread):
 
     policy = {
                 'retrieveOnGetAll':True,
@@ -33,7 +33,6 @@ class Store(Thread):
         while True:
             req, arg, res = self.reqs.get()
             if req=='--close--': break
-            #print "exec ", req, arg, type(arg)
             cursor.execute(req, arg)
             if res:
                 for rec in cursor:

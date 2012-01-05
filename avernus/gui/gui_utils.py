@@ -9,21 +9,18 @@ import threading
 import thread
 import logging
 
-
 logger = logging.getLogger(__name__)
 
 
 class GeneratorTask(object):
-    """
-    http://unpythonic.blogspot.com/2007/08/using-threads-in-pyGtk.html
-    Thanks!
-    """
+
     def __init__(self, generator, loop_callback=None, complete_callback=None):
         self.generator = generator
         self.loop_callback = loop_callback
         self.complete_callback = complete_callback
 
     def _start(self, *args, **kwargs):
+        logger.debug("start thread")
         try:
             self._stopped = False
             for ret in self.generator(*args, **kwargs):
@@ -32,6 +29,7 @@ class GeneratorTask(object):
                 GObject.idle_add(self._loop, ret)
             if self.complete_callback is not None:
                 GObject.idle_add(self.complete_callback)
+            logger.debug("finished thread")
         except:
             logger.error("thread failed")
             thread.exit()
@@ -62,7 +60,7 @@ class BackgroundTask():
     def start(self):
         self.function()
         if self.complete_callback is not None:
-            GObject.idle_add(self.complete_callback)
+            self.complete_callback()
 
 
 class Tree(Gtk.TreeView):

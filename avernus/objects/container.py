@@ -90,21 +90,22 @@ class Container(object):
 
 
 class PortfolioBase(Container):
-    
+
     container_type = 'portfolio'
-    
+
     def getTransactions(self):
         result = []
         for position in self:
-            result.extend(self.controller.getTransactionForPosition(position))
+            for ta in position.transactions:
+                result.append(ta)
         return result
-    
+
     def getDividends(self):
         result = []
         for position in self:
             result.extend(self.controller.getDividendForPosition(position))
         return result
-    
+
     def get_value_at_date(self, t):
         #FIXME
         #does not consider sold positions
@@ -145,7 +146,7 @@ class PortfolioBase(Container):
     @property
     def birthday(self):
         return min(t.date for t in self.transactions)
-    
+
 
 class Portfolio(SQLiteEntity, PortfolioBase):
 
@@ -160,7 +161,7 @@ class Portfolio(SQLiteEntity, PortfolioBase):
 
     def __iter__(self):
         return self.controller.getPositionForPortfolio(self).__iter__()
-   
+
     def onUpdate(self, **kwargs):
         pubsub.publish('container.updated', self)
 
@@ -184,19 +185,19 @@ class AllPortfolio(PortfolioBase):
     name = ''
     id = -1
     __name__ = 'Portfolio'
-    
+
     def __iter__(self):
         return self.controller.getAllPosition().__iter__()
-    
+
     @property
     def last_update(self):
         return min([pf.last_update for pf in self.controller.getAllPortfolio()])
-     
+
     @last_update.setter
     def last_update(self, value):
         for pf in self.controller.getAllPortfolio():
-            pf.last_update = value    
-        
+            pf.last_update = value
+
 
 class Watchlist(SQLiteEntity, Container):
 

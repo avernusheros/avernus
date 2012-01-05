@@ -11,6 +11,8 @@ from avernus.controller import controller
 class CSVImportDialog(Gtk.Dialog):
 
     TITLE = _("Import CSV")
+    WIDTH = 800
+    HEIGHT = 500
 
     def __init__(self, account=None, parent=None):
         Gtk.Dialog.__init__(self, self.TITLE, parent
@@ -23,6 +25,9 @@ class CSVImportDialog(Gtk.Dialog):
         self.profile = {}
         self.b_file = False
         self.b_account = not account is None
+
+        self.set_size_request(self.WIDTH, self.HEIGHT)
+
         response = self.run()
         self.process_result(response = response)
 
