@@ -10,8 +10,8 @@ logger = logging.getLogger(__name__)
 
 class PrefDialog(Gtk.Dialog):
 
-    DEFAULT_WIDTH = 200
-    DEFAULT_HEIGHT = 300
+    DEFAULT_WIDTH = 400
+    DEFAULT_HEIGHT = 500
 
     def __init__(self, parent = None):
         Gtk.Dialog.__init__(self, "Preferences", parent,
@@ -77,13 +77,14 @@ class DimensionList(Gtk.VBox):
 
     def __init__(self):
         Gtk.VBox.__init__(self)
-        #FIXME description for dimensions
-        text = _("dimensions are used to.... ")
+        text = _("Dimensions are used to categorize your assets. You can define dimensions and categories for those dimensions.")
+
         label = Gtk.Label(label = text)
-        self.pack_start(label, True, True, 0)
+        label.set_line_wrap(True)
+        self.pack_start(label, False, False, 0)
 
         self.tree = gui_utils.Tree()
-        self.tree.set_headers_visible(False)
+        self.tree.set_headers_visible(True)
         self.model = Gtk.TreeStore(object, str)
         self.tree.set_model(self.model)
         col, cell = self.tree.create_column('Dimensions', self.NAME)
