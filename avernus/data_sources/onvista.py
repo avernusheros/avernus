@@ -317,6 +317,7 @@ class Onvista():
                     st.date = item['date']
                     st.change = item['change']
                     st.volume = item['volume']
+            yield 1
 
     def update_historical_prices(self, st, start_date, end_date):
         url = ''

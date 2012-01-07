@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from avernus import pubsub, config
 from avernus.controller import controller, filterController
-from avernus.gui import progress_manager, gui_utils
+from avernus.gui import progress_manager, gui_utils, threads
 from avernus.gui.account_transactions_tab import AccountTransactionTab
 from avernus.gui.container_overview_tab import ContainerOverviewTab
 from avernus.gui.csv_import_dialog import CSVImportDialog
@@ -169,13 +169,14 @@ class MainWindow(Gtk.Window):
             self.maximized = False
             self.config.set_option('maximize', False, section='Gui')
 
-    def on_destroy(self, widget, data=None):
+    def on_destroy(self, widget = None, data = None):
         """on_destroy - called when the avernusWindow is closed. """
         #save db on quit
         self.config.set_option('hpaned position', self.hpaned.get_position(), 'Gui')
         model.store.close()
+        threads.terminate_all()
         Gtk.main_quit()
-        sys.exit()
+        sys.exit(0)
 
     def on_maintree_select(self, item):
         self.on_maintree_unselect()
@@ -203,18 +204,18 @@ class MainWindow(Gtk.Window):
         ExportDialog(parent = self)
 
     def on_do_category_assignments(self, *args):
-        #gui_utils.GeneratorTask(filterController.run_auto_assignments).start()
-        filterController.run_auto_assignments()
+        threads.GeneratorTask(filterController.run_auto_assignments).start()
+        #filterController.run_auto_assignments()
 
     def on_historical(self, *args):
         def finished_cb():
             progress_manager.remove_monitor(42)
         m = progress_manager.add_monitor(42, _('downloading quotations...'), Gtk.STOCK_REFRESH)
-        gui_utils.GeneratorTask(controller.update_historical_prices, m.progress_update, complete_callback=finished_cb).start()
+        threads.GeneratorTask(controller.update_historical_prices, m.progress_update, complete_callback=finished_cb).start()
 
     def on_update_all(self, *args):
         def finished_cb():
             progress_manager.remove_monitor(11)
         m = progress_manager.add_monitor(11, _('updating stocks...'), Gtk.STOCK_REFRESH)
         m.progress_update_auto()
-        gui_utils.GeneratorTask(controller.update_all, complete_callback=finished_cb).start()
+        threads.GeneratorTask(controller.update_all, complete_callback=finished_cb).start()

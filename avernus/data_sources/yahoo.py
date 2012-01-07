@@ -74,6 +74,7 @@ class Yahoo():
                     stocks[current_stock].date = new_date
                     stocks[current_stock].change = float(row[3])
                     stocks[current_stock].exchange = row[4]
+            yield 1
 
     def get_info(self, symbol):
         #name, isin, exchange, currency
@@ -94,7 +95,7 @@ class Yahoo():
             print "crapballs... yahoo.update_historical_prices"
             return
         yid = sourceInfo[0].info
-        
+
         #url = 'http://download.finance.yahoo.com/d/quotes.csv?s=%s&' % yid + \
         url = 'http://ichart.finance.yahoo.com/table.csv?s=%s&' % yid + \
               'a=%s&' % str(start_date.month-1) + \

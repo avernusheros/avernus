@@ -123,12 +123,17 @@ controller.initialLoading()
 from avernus.gui.mainwindow import MainWindow
 from avernus.datasource_manager import DatasourceManager
 dsm = DatasourceManager()
-MainWindow()
+main_window = MainWindow()
 controller.datasource_manager = dsm
 
 #FIXME fix or remove the network manager code
 #from avernus.network_manager import DBusNetwork
 #DBusNetwork()
-Gtk.main()
-Gtk.main_quit()
+try:
+    Gtk.main()
+except KeyboardInterrupt:
+    #FIXME properly quit on a keyboard interrupt..
+    pass
+
+main_window.on_destroy()
 

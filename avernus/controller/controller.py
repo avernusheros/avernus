@@ -165,7 +165,8 @@ def load_sample_data():
     newWatchlist(_('sample watchlist'))
 
 def update_all():
-    datasource_manager.update_stocks(get_all_used_stocks())
+    for ret in datasource_manager.update_stocks(get_all_used_stocks()):
+        yield 0
     for container in getAllPortfolio()+getAllWatchlist():
         container.last_update = datetime.datetime.now()
     yield 1
@@ -176,9 +177,9 @@ def update_historical_prices():
     i=0
     for st in stocks:
         for qt in datasource_manager.get_historical_prices(st):
-            pass
+            yield 0
         i+=1
-        yield float(i)/l*100
+        yield 1
 
 def newPortfolio(name, pf_id=None, last_update = datetime.datetime.now(), comment=""):
     result = Portfolio(id=pf_id, name=name,last_update=last_update,comment=comment)

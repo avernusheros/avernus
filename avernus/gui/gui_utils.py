@@ -5,62 +5,11 @@ from gi.repository import GObject
 
 import pytz
 import locale
-import threading
-import thread
 import logging
 
 logger = logging.getLogger(__name__)
 
 
-class GeneratorTask(object):
-
-    def __init__(self, generator, loop_callback=None, complete_callback=None):
-        self.generator = generator
-        self.loop_callback = loop_callback
-        self.complete_callback = complete_callback
-
-    def _start(self, *args, **kwargs):
-        logger.debug("start thread")
-        try:
-            self._stopped = False
-            for ret in self.generator(*args, **kwargs):
-                if self._stopped:
-                    thread.exit()
-                GObject.idle_add(self._loop, ret)
-            if self.complete_callback is not None:
-                GObject.idle_add(self.complete_callback)
-            logger.debug("finished thread")
-        except:
-            logger.error("thread failed")
-            thread.exit()
-            GObject.idle_add(self.complete_callback)
-
-    def _loop(self, ret):
-        if ret is None:
-            ret = ()
-        if not isinstance(ret, tuple):
-            ret = (ret,)
-        if self.loop_callback:
-            self.loop_callback(*ret)
-
-    def start(self, *args, **kwargs):
-        threading.Thread(target=self._start, args=args, kwargs=kwargs).start()
-
-    def stop(self):
-        self._stopped = True
-
-
-class BackgroundTask():
-
-    def __init__(self, function, complete_callback=None):
-        self.function = function
-        self.complete_callback = complete_callback
-        threading.Thread(target=self.start).start()
-
-    def start(self):
-        self.function()
-        if self.complete_callback is not None:
-            self.complete_callback()
 
 
 class Tree(Gtk.TreeView):
