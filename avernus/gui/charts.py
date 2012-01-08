@@ -1,5 +1,5 @@
 from gi.repository import Gtk
-from avernus.gui import gui_utils
+from avernus.gui import gui_utils, threads
 from avernus import cairoplot
 
 
@@ -32,12 +32,12 @@ class ChartBase(Gtk.VBox):
 
     def on_realize(self, widget):
         self.draw_spinner()
-        gui_utils.BackgroundTask(self.controller.calculate_values, self.draw_widget)
+        threads.BackgroundTask(self.controller.calculate_values, self.draw_widget)
 
     def update(self, *args, **kwargs):
         self.draw_spinner()
         self.controller.update(*args, **kwargs)
-        gui_utils.BackgroundTask(self.controller.calculate_values, self.draw_widget)
+        threads.BackgroundTask(self.controller.calculate_values, self.draw_widget)
 
 
 class Pie(ChartBase):

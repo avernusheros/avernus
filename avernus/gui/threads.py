@@ -11,6 +11,20 @@ threadlist = {}
 current_id = 0
 
 
+
+class BackgroundTask():
+    def __init__(self, function, complete_callback=None):
+        self.function = function
+        self.complete_callback = complete_callback
+        threading.Thread(target=self.start).start()
+
+    def start(self):
+        self.function()
+        if self.complete_callback is not None:
+            self.complete_callback()
+
+
+
 class GeneratorTask(object):
 
     def __init__(self, generator, loop_callback=None, complete_callback=None):
