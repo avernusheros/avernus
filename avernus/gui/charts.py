@@ -32,12 +32,12 @@ class ChartBase(Gtk.VBox):
 
     def on_realize(self, widget):
         self.draw_spinner()
-        threads.BackgroundTask(self.controller.calculate_values, self.draw_widget)
+        threads.GeneratorTask(self.controller.calculate_values, complete_callback=self.draw_widget).start()
 
     def update(self, *args, **kwargs):
         self.draw_spinner()
         self.controller.update(*args, **kwargs)
-        threads.BackgroundTask(self.controller.calculate_values, self.draw_widget)
+        threads.GeneratorTask(self.controller.calculate_values, complete_callback=self.draw_widget).start()
 
 
 class Pie(ChartBase):

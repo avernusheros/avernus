@@ -106,11 +106,6 @@ class PortfolioBase(Container):
             result.extend(self.controller.getDividendForPosition(position))
         return result
 
-    def get_value_at_date(self, t):
-        #FIXME
-        #does not consider sold positions
-        return sum(pos.get_value_at_date(t) for pos in self if t>pos.date)
-
     @property
     def transactions(self):
         for pos in self:

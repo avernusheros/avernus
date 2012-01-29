@@ -17,6 +17,7 @@ def get_step_for_range(start, end):
         return relativedelta(weeks=1)
     return relativedelta(months=1)
 
+
 def format_days(days, step):
     if step == "daily":
         return map(lambda d: gui_utils.get_date_string(d), days)
@@ -65,7 +66,7 @@ class InvestmentChartController:
                 count -= self.items[i].total
                 i += 1
             self.y_values['invested capital'].append(count)
-
+        yield 1
 
 class TransactionChartController:
 
@@ -123,6 +124,7 @@ class TransactionValueOverTimeChartController(TransactionChartController):
             self.calculate_rolling_average()
         if self.total_avg:
             self.calculate_total_average()
+        yield 1
 
     def remove_zero(self):
         # if the second is the same as the first or the last the same as the one before
@@ -189,6 +191,7 @@ class TransactionStepValueChartController(TransactionValueOverTimeChartControlle
         # see if the first or last x is zero
         for x in self.days:
             self.y_values['Transaction value'].append(temp[x])
+        yield 1
 
     def remove_zero(self):
         if self.y_values['Transaction value'][0] == 0:
@@ -230,7 +233,7 @@ class EarningsVsSpendingsController():
         for x_value in self.x_values:
             self.y_values.append([data[x_value.year][x_value.month][0], data[x_value.year][x_value.month][1]])
         self.x_values = map(str, self.x_values)
-
+        yield 1
 
 class TransactionCategoryPieController():
 
@@ -249,7 +252,7 @@ class TransactionCategoryPieController():
             except:
                 data[str(trans.category)] = abs(trans.amount)
         self.values = data
-
+        yield 1
 
 class AccountBalanceOverTimeChartController(TransactionChartController):
 
@@ -284,7 +287,7 @@ class AccountBalanceOverTimeChartController(TransactionChartController):
             y_values.append(amount)
         y_values.reverse()
         self.y_values = {'Balance': y_values}
-
+        yield 1
 
 class DividendsPerYearChartController():
 
@@ -302,6 +305,7 @@ class DividendsPerYearChartController():
         self.y_values = []
         for x_value in self.x_values:
             self.y_values.append([data[x_value]])
+        yield 1
 
 
 class DividendsPerPositionChartController():
@@ -321,6 +325,7 @@ class DividendsPerPositionChartController():
         self.y_values = []
         for x_value in self.x_values:
             self.y_values.append([data[x_value]])
+        yield 1
 
 
 class StockChartPlotController():
@@ -351,11 +356,16 @@ class PortfolioValueChartController():
             self.days = list(rrule(YEARLY, dtstart = self.portfolio.birthday, until = datetime.date.today(), bymonthday=-1, bymonth=12))[-self.MAX_VALUES:]
 
     def calculate_values(self):
-        #FIXME do more stuff here, less in portfolio
         self._calc_days()
-        self.y_values = {'Portfolio value' : [self.portfolio.get_value_at_date(t) for t in self.days]}
+        value = [0.0] * len(self.days)
+        for pos in self.portfolio:
+            for i in range(len(self.days)):
+                value[i] += pos.get_value_at_date(self.days[i])
+                yield 0
+        self.y_values = {'Portfolio value' : value}
         self.x_values = format_days(self.days, self.step)
-
+        yield 1
+            
 
 class DimensionChartController():
 
@@ -376,6 +386,7 @@ class DimensionChartController():
             self.values = {' ':1}
         else:
             self.values = data
+        yield 1
 
 
 class PositionAttributeChartController():
@@ -396,3 +407,4 @@ class PositionAttributeChartController():
             self.values = {' ':1}
         else:
             self.values = data
+        yield 1

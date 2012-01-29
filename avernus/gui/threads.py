@@ -1,14 +1,14 @@
 from gi.repository import GObject
 
 import logging
-import threading, thread
+import threading
+import thread
 
 logger = logging.getLogger(__name__)
 
 
 threadlist = {}
 current_id = 0
-
 
 
 class BackgroundTask():
@@ -21,7 +21,6 @@ class BackgroundTask():
         self.function()
         if self.complete_callback is not None:
             self.complete_callback()
-
 
 
 class GeneratorTask(object):
@@ -48,8 +47,8 @@ class GeneratorTask(object):
             logger.debug("finished thread")
         except:
             logger.debug("thread failed")
-            self._terminate()
             GObject.idle_add(self.complete_callback)
+        self._terminate()
 
     def _terminate(self):
         global threadlist
@@ -73,11 +72,17 @@ class GeneratorTask(object):
     def stop(self):
         self._stopped = True
 
+    def __repr__(self):
+        return str(self.generator)
+
 
 def terminate_all():
     global threadlist
-    for key, val in threadlist.iteritems():
-        val.stop();
+    logger.debug("there are %i threads running." % (len(threadlist),))
+    for val in threadlist.itervalues():
+        logger.debug("stop thread ", val)
+        val.stop()
+
 
 def get_id():
     global current_id

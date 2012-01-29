@@ -92,27 +92,27 @@ class PortfolioPosition(SQLiteEntity, Position):
             yield div
 
     def get_quantity_at_date(self, t):
-        if t<self.date:
+        if t < self.date:
             return 0
-        q=self.quantity
+        q = self.quantity
         for sell_ta in self.sell_transactions:
-            if t<sell_ta.date:
-                q+=sell_ta.quantity
+            if t < sell_ta.date:
+                q += sell_ta.quantity
         return q
 
     def get_value_at_date(self, t):
-        i=1
+        i = 1
         quantity = self.get_quantity_at_date(t)
-        if quantity==0:
+        if quantity == 0:
             return 0
         price = self.controller.getPriceFromStockAtDate(self.stock, t)
-        while not price and i<4:
-            t -= datetime.timedelta(days = i)
+        while not price and i < 4:
+            t -= datetime.timedelta(days=i)
             price = self.controller.getPriceFromStockAtDate(self.stock, t)
-            i+=1
+            i += 1
         if price:
-            return quantity*price
-        return 0
+            return quantity * price
+        return 0.0
 
 
 class WatchlistPosition(SQLiteEntity, Position):
