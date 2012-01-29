@@ -85,7 +85,7 @@ class PositionsTree(Tree):
         if not self.watchlist:
             self.create_column('#', self.COLS['shares'])
         self.create_column(_('Name'), self.COLS['name'])
-        self.create_icon_column(_('Type'), self.COLS['type'],size= Gtk.IconSize.DND)
+        self.create_icon_column(_('Type'), self.COLS['type'], size=Gtk.IconSize.DND)
         if not self.watchlist:
             self.create_column(_('Pf %'), self.COLS['pf_percent'], func=gui_utils.percent_format)
         self.create_column(_('Start'), self.COLS['start'], func=start_price_markup)
@@ -138,13 +138,12 @@ class PositionsTree(Tree):
         for action in self.actiongroup.list_actions():
             self.context_menu.add(action.create_menu_item())
 
-
         all_portfolios = controller.getAllPortfolio()
         if len(all_portfolios) > 1:
             self.context_menu.add_item('----')
 
             #Move to another portfolio
-            item = Gtk.MenuItem(label= _("Move"))
+            item = Gtk.MenuItem(label=_("Move"))
             self.context_menu.add(item)
             menu = Gtk.Menu()
             item.set_submenu(menu)
@@ -156,7 +155,7 @@ class PositionsTree(Tree):
         self.context_menu.popup(None, None, None, None, event.button, event.time)
 
     def on_move_position(self, widget, new_portfolio):
-        position, iter = self.selected_item
+        position, iterator = self.selected_item
         position.portfolio = new_portfolio
 
     def on_unselect(self):
@@ -203,7 +202,8 @@ class PositionsTree(Tree):
             if not self.watchlist:
                 #update portfolio fractions
                 for row in self.model:
-                    row[self.COLS['pf_percent']] = row[self.COLS['obj']].portfolio_fraction
+                    pos = row[self.COLS['obj']]
+                    row[self.COLS['pf_percent']] = float(pos.portfolio_fraction)
 
     def on_remove(self, widget, user_data=None):
         position, iter = self.selected_item
@@ -285,7 +285,7 @@ class PositionsTree(Tree):
                position.bvalue,
                position.cvalue,
                position.days_gain,
-               gain[1],
+               float(gain[1]),
                gain_icon,
                float(c_change[1]),
                icons[position.stock.type],
@@ -294,7 +294,7 @@ class PositionsTree(Tree):
         if isinstance(position, MetaPosition):
             ret[self.COLS['shares']] = unichr(8721) + " "+ret[self.COLS['shares']]
         if not self.watchlist:
-            ret[-1] = position.portfolio_fraction
+            ret[-1] = float(position.portfolio_fraction)
         return ret
 
     def insert_position(self, position):

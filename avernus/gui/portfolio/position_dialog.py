@@ -369,38 +369,33 @@ class EditPositionTable(Gtk.Table):
         Gtk.Table.__init__(self)
         self.pos = pos
 
-        self.attach(Gtk.Label(label=_('Shares')),0,1,0,1)
-        adjustment = Gtk.Adjustment(lower=0, upper=100000,step_increment=1.0, value = 0)
-        self.shares_entry = Gtk.SpinButton()
-        self.shares_entry.set_adjustment(adjustment)
-        self.shares_entry.set_digits(2)
+        self.attach(Gtk.Label(label=_('Shares')), 0, 1, 0, 1)
+        adjustment = Gtk.Adjustment(lower=0, upper=100000, step_increment=1.0)
+        self.shares_entry = Gtk.SpinButton(adjustment=adjustment, digits = 2)
         self.attach(self.shares_entry,1,2,0,1)
 
-        self.attach(Gtk.Label(label=_('Buy price')),0,1,1,2)
-        adjustment = Gtk.Adjustment(lower=0, upper=100000,step_increment=0.1, value = 1)
-        self.price_entry = Gtk.SpinButton()
-        self.price_entry.set_adjustment(adjustment)
-        self.shares_entry.set_digits(2)
-        self.attach(self.price_entry,1,2,1,2)
+        self.attach(Gtk.Label(label=_('Buy price')), 0, 1, 1, 2)
+        adjustment = Gtk.Adjustment(lower=0, upper=100000, step_increment=0.1)
+        self.price_entry = Gtk.SpinButton(adjustment=adjustment, digits=2)
+        self.attach(self.price_entry, 1, 2, 1, 2)
 
-        self.attach(Gtk.Label(label=_('Buy date')),0,1,2,3)
+        self.attach(Gtk.Label(label=_('Buy date')), 0, 1, 2, 3)
         self.calendar = Gtk.Calendar()
 
-        self.attach(self.calendar,1,2,2,3)
-        self.attach(Gtk.Label(label=_('Comment')),0,1,3,4)
+        self.attach(self.calendar, 1, 2, 2, 3)
+        self.attach(Gtk.Label(label=_('Comment')), 0, 1, 3, 4)
 
         self.comment_entry = Gtk.TextView()
         self.comment_entry.set_wrap_mode(Gtk.WrapMode.WORD)
         self.comment_entry.set_size_request(50, 80)
-        self.attach(self.comment_entry, 1,2,3,4)
+        self.attach(self.comment_entry, 1, 2, 3, 4)
 
         self.update_values()
-        self.connect("draw", self.update_values)
 
     def update_values(self, *args):
         self.price_entry.set_value(self.pos.price)
         self.shares_entry.set_value(self.pos.quantity)
-        self.calendar.select_month(self.pos.date.month-1, self.pos.date.year)
+        self.calendar.select_month(self.pos.date.month - 1, self.pos.date.year)
         self.calendar.select_day(self.pos.date.day)
         entry_buffer = self.comment_entry.get_buffer()
         entry_buffer.set_text(self.pos.comment)

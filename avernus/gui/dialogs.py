@@ -192,7 +192,6 @@ class EditStockTable(Gtk.Table):
         self.isin_entry.connect('changed', self.on_change)
         self.ter_entry.connect('changed', self.on_change)
 
-
     def on_change(self, widget):
         self.b_change = True
 
@@ -208,10 +207,6 @@ class EditStockTable(Gtk.Table):
                 active = box.get_active()
                 self.stock.updateAssetDimensionValue(dim, active)
                 pubsub.publish("stock.edited", self.stock)
-
-
-
-
 
 
 class StockSelector(Gtk.VBox):

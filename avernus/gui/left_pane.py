@@ -14,6 +14,7 @@ from avernus.objects.account import AllAccount
 
 class Category(object):
     __name__ = 'Category'
+    id = -1
     def __init__(self, name):
         self.name = name
 
@@ -160,7 +161,7 @@ class MainTree(gui_utils.Tree):
                 self.popup = ContainerContextMenu(obj, self.actiongroup)
                 self.popup.popup(None, None, None, None, event.button, event.time)
                 return True
-            elif self.get_selection().path_is_selected(target[0]) and isinstance(obj, Category):
+            elif self.get_selection().path_is_selected(target[0]) and obj.id == -1 :
                 #disable editing of categories
                 return True
 
@@ -188,17 +189,17 @@ class MainTree(gui_utils.Tree):
     def on_remove(self, widget=None, data=None):
         if self.selected_item is None:
             return
-        obj, iter = self.selected_item
+        obj, iterator = self.selected_item
         if not isinstance(obj, Category):
             dlg = Gtk.MessageDialog(None,
                  Gtk.DialogFlags.DESTROY_WITH_PARENT, Gtk.MessageType.QUESTION,
                  Gtk.ButtonsType.OK_CANCEL)
-            dlg.set_markup(_("Permanently delete <b>")+obj.name+'</b>?')
+            dlg.set_markup(_("Permanently delete <b>") + obj.name + '</b>?')
             response = dlg.run()
             dlg.destroy()
             if response == Gtk.ResponseType.OK:
                 obj.delete()
-                self.get_model().remove(iter)
+                self.get_model().remove(iterator)
                 self.selected_item = None
                 pubsub.publish('maintree.unselect')
 
@@ -247,6 +248,9 @@ class MainTree(gui_utils.Tree):
         if self.selected_item is None:
             return
         obj, row = self.selected_item
+        #all portfolio and all account are not editable
+        if obj.id == -1:
+            return
         parent = self.get_parent().get_parent().get_parent().get_parent()
         if obj.__name__ == 'Portfolio':
             EditPortfolio(obj, parent)
