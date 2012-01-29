@@ -3,8 +3,7 @@
 from gi.repository import Gtk
 from avernus import pubsub
 from avernus.gui import gui_utils, dialogs
-from avernus.gui.gui_utils import Tree, get_datetime_string
-import avernus.objects
+from avernus.gui.gui_utils import Tree
 
 
 class TransactionsTab(Gtk.ScrolledWindow):

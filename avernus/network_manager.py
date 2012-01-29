@@ -1,5 +1,4 @@
-import dbus, gobject
-from dbus.mainloop.glib import DBusGMainLoop
+import dbus
 from avernus import pubsub
 
 

@@ -5,7 +5,7 @@ from gi.repository import Gdk
 from gi.repository import Pango
 from avernus import pubsub
 from avernus.gui import gui_utils, progress_manager
-from avernus.gui.csv_import_dialog import CSVImportDialog
+from avernus.gui.account.csv_import_dialog import CSVImportDialog
 from avernus.controller import controller
 
 from avernus.objects.container import AllPortfolio

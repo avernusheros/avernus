@@ -4,11 +4,11 @@ from gi.repository import Gtk
 from gi.repository import Gdk
 import sys
 from avernus import pubsub
-from avernus.gui.plot import ChartWindow
+from avernus.gui.portfolio.plot import ChartWindow
 from avernus.gui.dialogs import SellDialog, NewWatchlistPositionDialog, BuyDialog
-from avernus.gui.position_dialog import PositionDialog
+from avernus.gui.portfolio.position_dialog import PositionDialog
 from avernus.gui.gui_utils import Tree, get_name_string
-from avernus.gui import gui_utils, dialogs, progress_manager, page
+from avernus.gui import gui_utils, dialogs, progress_manager, page, threads
 from avernus.objects.position import MetaPosition
 from avernus.controller import controller
 
@@ -21,8 +21,8 @@ gain_thresholds = {
                    }
 
 def get_arrow_icon(perc):
-    for (min,max),name in gain_thresholds.items():
-        if min<=perc and max>=perc:
+    for (min_val, max_val),name in gain_thresholds.items():
+        if min_val<=perc and max_val>=perc:
             return name
 
 def start_price_markup(column, cell, model, iter, user_data):
@@ -195,7 +195,7 @@ class PositionsTree(Tree):
             progress_manager.remove_monitor(555)
         m = progress_manager.add_monitor(555, _('updating stocks...'), Gtk.STOCK_REFRESH)
         m.progress_update_auto()
-        gui_utils.GeneratorTask(self.container.update_positions, complete_callback=finished_cb).start()
+        threads.GeneratorTask(self.container.update_positions, complete_callback=finished_cb).start()
 
     def on_position_added(self, container, item):
         if container.id == -1 or container.id == self.container.id:

@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 from gi.repository import Gtk
-from datetime import datetime
 from avernus.gui.gui_utils import Tree, get_name_string
 from avernus.controller import controller
 from avernus.gui import gui_utils, dialogs, page

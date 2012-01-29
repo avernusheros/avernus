@@ -6,7 +6,7 @@ import os
 import gi
 gi.require_version('Gtk', '3.0')
 
-from gi.repository import Gtk, GObject, GLib, Gdk
+from gi.repository import Gtk, GObject
 import optparse
 import logging
 

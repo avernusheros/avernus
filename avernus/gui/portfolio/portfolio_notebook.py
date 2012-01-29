@@ -1,9 +1,9 @@
 from gi.repository import Gtk
-from avernus.gui.positions_tab import PositionsTab
-from avernus.gui.transactions_tab import TransactionsTab
-from avernus.gui.dividends_tab import DividendsTab
-from avernus.gui.closed_positions_tab import ClosedPositionsTab
-from avernus.gui.chart_tab import ChartTab
+from avernus.gui.portfolio.positions_tab import PositionsTab
+from avernus.gui.portfolio.transactions_tab import TransactionsTab
+from avernus.gui.portfolio.dividends_tab import DividendsTab
+from avernus.gui.portfolio.closed_positions_tab import ClosedPositionsTab
+from avernus.gui.portfolio.chart_tab import ChartTab
 
 
 class PortfolioNotebook(Gtk.Notebook):

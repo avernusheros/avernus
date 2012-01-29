@@ -2,7 +2,8 @@
 from BeautifulSoup import BeautifulSoup
 from datetime import datetime, date
 import pytz
-import threading, re
+import threading
+import re
 from Queue import Queue
 import urllib
 import urllib2

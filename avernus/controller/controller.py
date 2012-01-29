@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 
 from avernus.objects import model
-from avernus.objects.account import Account, AccountTransaction, AccountCategory
+from avernus.objects.account import Account, AccountTransaction, \
+    AccountCategory
 from avernus.objects.container import Portfolio, Watchlist
 from avernus.objects.dimension import Dimension, DimensionValue, \
     AssetDimensionValue

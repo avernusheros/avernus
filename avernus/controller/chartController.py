@@ -6,7 +6,6 @@ from dateutil.rrule import *
 from itertools import ifilter
 import datetime
 import logging
-from avernus.objects.transaction import Transaction
 
 logger = logging.getLogger(__name__)
 

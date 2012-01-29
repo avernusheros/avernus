@@ -2,9 +2,8 @@
 
 from avernus.controller import controller
 from avernus.objects.stock import Stock
-from avernus import pubsub
 from avernus.data_sources import yahoo, onvista
-from avernus.gui import gui_utils
+from avernus.gui import threads
 import datetime, re
 import logging
 
@@ -46,7 +45,7 @@ class DatasourceManager(object):
             if func:
                 if threaded:
                     try:
-                        task = gui_utils.GeneratorTask(func, self._item_found_callback, complete_cb)
+                        task = threads.GeneratorTask(func, self._item_found_callback, complete_cb)
                         self.current_searches.append(task)
                         task.start(searchstring)
                     except:

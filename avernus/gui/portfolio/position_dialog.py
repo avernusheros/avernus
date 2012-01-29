@@ -1,12 +1,9 @@
 #!/usr/bin/env python
 
-from avernus import pubsub
-from avernus.gui import gui_utils, dialogs
+from avernus.gui import gui_utils, dialogs, threads
 from avernus.controller import controller
-from avernus.objects import stock
 from avernus.objects.position import MetaPosition
 import datetime
-import locale
 import logging
 from gi.repository import Gtk
 
@@ -98,7 +95,7 @@ class QuotationTable(Gtk.Table):
         self.update_labels()
 
     def on_get_button_clicked(self, button):
-        gui_utils.GeneratorTask(controller.datasource_manager.get_historical_prices, self.new_quotation_callback, complete_callback=self.update_labels).start(self.stock)
+        threads.GeneratorTask(controller.datasource_manager.get_historical_prices, self.new_quotation_callback, complete_callback=self.update_labels).start(self.stock)
 
     def new_quotation_callback(self, qt):
         self.count+=1

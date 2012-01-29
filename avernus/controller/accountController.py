@@ -1,16 +1,12 @@
-'''
-Created on 11.04.2011
-
-@author: bastian
-'''
 from avernus.config import avernusConfig
 
+
 class AccountController:
-    
+
     def __init__(self, account):
         self.account = account
-        
-    def get_transactions_by_category(self, category, base = None):
+
+    def get_transactions_by_category(self, category, base=None):
         if not base:
             base = self.account
         result = []
@@ -22,7 +18,7 @@ class AccountController:
             (pre and trans.category.is_parent(category)):
                     result.append(trans)
         return result
-    
+
     def get_transactions_in_period(self, start_date, end_date, transfers=False, base=None):
         res = []
         if not base:
@@ -31,7 +27,7 @@ class AccountController:
             if trans.date >= start_date and trans.date <= end_date:
                 res.append(trans)
         return res
-    
+
     def get_transactions_by_period_category(self, start_date, end_date, category):
         result = self.get_transactions_in_period(start_date, end_date)
         result = self.get_transactions_by_category(category, result)

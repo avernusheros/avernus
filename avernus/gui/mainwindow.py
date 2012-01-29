@@ -1,16 +1,16 @@
 #!/usr/bin/env python
 from avernus import pubsub, config
 from avernus.controller import controller, filterController
-from avernus.gui import progress_manager, gui_utils, threads
-from avernus.gui.account_transactions_tab import AccountTransactionTab
+from avernus.gui import progress_manager, threads
+from avernus.gui.account.account_transactions_tab import AccountTransactionTab
 from avernus.gui.container_overview_tab import ContainerOverviewTab
-from avernus.gui.csv_import_dialog import CSVImportDialog
-from avernus.gui.filterDialog import FilterDialog
+from avernus.gui.account.csv_import_dialog import CSVImportDialog
+from avernus.gui.account.filterDialog import FilterDialog
 from avernus.gui.left_pane import MainTreeBox
-from avernus.gui.portfolio_notebook import PortfolioNotebook
-from avernus.gui.positions_tab import PositionsTab
+from avernus.gui.portfolio.portfolio_notebook import PortfolioNotebook
+from avernus.gui.portfolio.positions_tab import PositionsTab
 from avernus.gui.preferences import PrefDialog
-from avernus.gui.exportDialog import ExportDialog
+from avernus.gui.account.exportDialog import ExportDialog
 from avernus.objects import model
 from webbrowser import open as web
 import avernus
@@ -60,10 +60,10 @@ class MenuBar(Gtk.MenuBar):
              ('prefs'         , Gtk.STOCK_PREFERENCES, '_Preferences'       , None        , None, parent.on_prefs),
              ('update'        , Gtk.STOCK_REFRESH    , '_Update all stocks' , 'F5'        , None, parent.on_update_all),
              ('historical'    , Gtk.STOCK_REFRESH     ,'Get _historical data', None       , None,  parent.on_historical),
-             ('help'          , Gtk.STOCK_HELP       , '_Help'              , 'F1'        , None, lambda x, y:web("https://answers.launchpad.net/avernus")),
-             ('website'       , None                 , '_Website'           , None        , None, lambda x, y:web("https://launchpad.net/avernus")),
-             ('feature'       , None                 , 'Request a _Feature' , None        , None, lambda x, y:web("https://blueprints.launchpad.net/avernus")),
-             ('bug'           , None                 , 'Report a _Bug'      , None        , None, lambda x, y:web("https://bugs.launchpad.net/avernus")),
+             ('help'          , Gtk.STOCK_HELP       , '_Help'              , 'F1'        , None, lambda x:web("https://answers.launchpad.net/avernus")),
+             ('website'       , None                 , '_Website'           , None        , None, lambda x:web("https://launchpad.net/avernus")),
+             ('feature'       , None                 , 'Request a _Feature' , None        , None, lambda x:web("https://blueprints.launchpad.net/avernus")),
+             ('bug'           , None                 , 'Report a _Bug'      , None        , None, lambda x:web("https://bugs.launchpad.net/avernus")),
              ('about'         , Gtk.STOCK_ABOUT      , '_About'             , None        , None, parent.on_about),
              ('filter'        , None                 , '_Category Filters'  , None        , None, parent.on_category_assignments),
              ('do_assignments', None                 , '_Run auto-assignments', None      , None, parent.on_do_category_assignments),

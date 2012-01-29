@@ -1,8 +1,3 @@
-'''
-Created on 18.04.2011
-
-@author: bastian
-'''
 from avernus.objects.account import AccountCategory
 from avernus.objects.model import SQLiteEntity
 

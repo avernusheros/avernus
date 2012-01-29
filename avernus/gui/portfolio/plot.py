@@ -2,7 +2,7 @@
 
 from gi.repository import Gtk
 from datetime import date
-from avernus.gui import gui_utils, charts
+from avernus.gui import threads, gui_utils, charts
 from avernus.controller import controller, chartController
 
 
@@ -36,7 +36,7 @@ class ChartWindow(Gtk.Window):
         self.vbox.pack_start(self.change_label, True, True, 0)
         self.vbox.pack_end(self.current_chart, True, True, 0)
         self.current_zoom = 'YTD'
-        gui_utils.GeneratorTask(controller.datasource_manager.get_historical_prices, complete_callback=self.add_chart).start(self.stock)
+        threads.GeneratorTask(controller.datasource_manager.get_historical_prices, complete_callback=self.add_chart).start(self.stock)
         self.add(self.vbox)
         self.show_all()
 

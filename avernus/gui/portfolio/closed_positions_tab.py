@@ -1,9 +1,7 @@
 #!/usr/bin/env python
 
 from gi.repository import Gtk
-from avernus import pubsub
 from avernus.gui import gui_utils, page
-from avernus.controller import controller
 
 
 class ClosedPositionsTab(Gtk.ScrolledWindow, page.Page):

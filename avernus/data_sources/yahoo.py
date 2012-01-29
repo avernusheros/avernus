@@ -1,9 +1,11 @@
 # -*- Mode: Python; coding: utf-8; indent-tabs-mode: nil; tab-width: 4 -*-
 from BeautifulSoup import BeautifulSoup
 from urllib import urlopen
-import csv, pytz, re, json
+import csv
+import pytz
+import re
+import json
 from datetime import datetime
-from avernus import config
 from avernus.objects import stock
 from avernus.controller import controller
 
