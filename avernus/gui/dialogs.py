@@ -259,10 +259,16 @@ class StockSelector(Gtk.VBox):
     def on_search(self, *args):
         self.stop_search()
         self.result_tree.clear()
-        searchstring = self.search_field.get_text()
+        searchstring = self.search_field.get_text().strip()
         self._show_spinner()
         for item in controller.getStockForSearchstring(searchstring):
-            self.insert_item(item)
+            if item.source == "yahoo":
+                icon = 'yahoo'
+            elif item.source == "onvista.de":
+                icon = 'onvista'
+            else:
+                icon = 'gtk-harddisk'
+            self.insert_item(item, icon)
         self.search_source_count = controller.datasource_manager.get_source_count()
         controller.datasource_manager.search(searchstring, self.insert_item, self.search_complete_callback)
 
@@ -275,7 +281,7 @@ class StockSelector(Gtk.VBox):
         self._hide_spinner()
         controller.datasource_manager.stop_search()
 
-    def insert_item(self, stock, icon='gtk-harddisk'):
+    def insert_item(self, stock, icon):
         #FIXME bond icon
         icons = ['fund', 'stock', 'etf', 'stock']
         self.result_tree.get_model().append(None, [

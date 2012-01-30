@@ -31,7 +31,7 @@ class Stock(SQLiteEntity):
                    'source': 'VARCHAR',
                   }
 
-    __comparisonPositives__ = ['isin', 'currency']
+    __comparisonPositives__ = ['isin', 'currency', 'source']
     __defaultValues__ = {
                          'exchange':None,
                          'currency':'',

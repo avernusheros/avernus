@@ -65,7 +65,7 @@ class DatasourceManager(object):
         if not self.validate_isin(item['isin']):
             return
         new = False
-        stock = controller.check_duplicate(Stock, **item)
+        stock = controller.check_duplicate(Stock, source=source.name, **item)
         if not stock:
             new = True
             item['source'] = source.name
