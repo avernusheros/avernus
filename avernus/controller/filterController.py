@@ -38,5 +38,8 @@ def run_auto_assignments():
     print "finished"
 
 config = avernusConfig()
-rules = get_all_active_by_priority()
+try:
+    rules = get_all_active_by_priority()
+except:
+    rules = []
 

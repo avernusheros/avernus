@@ -24,10 +24,10 @@ class DataSourcesTest(unittest.TestCase):
         model.store = self.store
         controller.createTables()
         self.dsm = DatasourceManager()
-        
+
     def test_yahoo_search(self):
         y = yahoo.Yahoo()
-        for res in y.search('google'): 
+        for res in y.search('google'):
             data = res[0]
             self.assertTrue(len(data['isin']) == 12)
             self.assertIsNotNone(data['exchange'])
@@ -46,7 +46,7 @@ class DataSourcesTest(unittest.TestCase):
             self.assertIsNotNone(data['currency'])
             self.assertTrue(data['type'] < 10)
             self.assertTrue(data['type'] >= 0)
-            
+
     def put_stocks_in_db(self):
         o = onvista.Onvista()
         for res in o.search("DE0008474248"):
@@ -55,7 +55,7 @@ class DataSourcesTest(unittest.TestCase):
         y = yahoo.Yahoo()
         for res in y.search('google'):
             item, source, source_info = res
-            self.dsm._item_found_callback(item, source, source_info) 
+            self.dsm._item_found_callback(item, source, source_info)
 
     def test_update_stocks(self):
         self.put_stocks_in_db()
@@ -63,7 +63,8 @@ class DataSourcesTest(unittest.TestCase):
         for st in controller.getAllStock():
             st.price = 0
             st.date = test_date
-        self.dsm.update_stocks(controller.getAllStock())
+        for item in self.dsm.update_stocks(controller.getAllStock()):
+            pass
         for st in controller.getAllStock():
             self.assertNotEqual(st.date, test_date)
             self.assertNotEqual(st.price, 0)
@@ -86,7 +87,7 @@ class DataSourcesTest(unittest.TestCase):
         for item in ITEMS_WITH_PROBLEMS:
             self.dsm.search(item, threaded = False)
             stock = controller.getStockForSearchstring(item)[0]
-            
+
             test_date = datetime.datetime(1900, 1, 1)
             stock.price = 0
             stock.date = test_date

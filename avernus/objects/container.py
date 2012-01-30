@@ -83,7 +83,8 @@ class Container(object):
         return change, percent
 
     def update_positions(self):
-        self.controller.datasource_manager.update_stocks([pos.stock for pos in self if pos.quantity>0])
+        for item in self.controller.datasource_manager.update_stocks([pos.stock for pos in self if pos.quantity>0]):
+            yield 0
         self.last_update = datetime.now()
         pubsub.publish("stocks.updated", self)
         yield 1
