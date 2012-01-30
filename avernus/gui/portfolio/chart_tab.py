@@ -128,6 +128,6 @@ class ChartTab(Gtk.ScrolledWindow, page.Page):
             self.remove(child)
 
     def on_zoom_change(self, combobox):
-        self.pfvalue_chart_controller.step = combobox.get_active_text()
-        self.pfvalue_chart_controller.calculate_values()
-        self.pfvalue_chart.draw_widget()
+        value = combobox.get_model()[combobox.get_active()][0]
+        self.pfvalue_chart_controller.step = value
+        self.pfvalue_chart.update()

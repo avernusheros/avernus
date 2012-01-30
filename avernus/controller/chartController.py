@@ -365,7 +365,9 @@ class PortfolioValueChartController():
         self.y_values = {'Portfolio value' : value}
         self.x_values = format_days(self.days, self.step)
         yield 1
-            
+
+    def update(self):
+        self.calculate_values()
 
 class DimensionChartController():
 
