@@ -38,10 +38,10 @@ class PositionDialog(Gtk.Dialog):
         notebook.append_page(self.quotation_table, Gtk.Label(label=_('Quotations')))
 
         self.previous_page = 0
-        notebook.connect("switch-page", self.on_switch_page)
 
         self.set_size_request(self.WIDTH, self.HEIGHT)
         self.show_all()
+        notebook.connect("switch-page", self.on_switch_page)
         self.run()
         self.process_result()
 
@@ -52,6 +52,7 @@ class PositionDialog(Gtk.Dialog):
         self.previous_page = page_num
 
     def process_result(self, widget=None):
+        self.position_table.process_result()
         self.stock_table.process_result()
         self.destroy()
 
