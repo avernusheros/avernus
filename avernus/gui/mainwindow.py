@@ -8,7 +8,7 @@ from avernus.gui.account.csv_import_dialog import CSVImportDialog
 from avernus.gui.account.filterDialog import FilterDialog
 from avernus.gui.left_pane import MainTreeBox
 from avernus.gui.portfolio.portfolio_notebook import PortfolioNotebook
-from avernus.gui.portfolio.positions_tab import PositionsTab
+from avernus.gui.portfolio.positions_tab import WatchlistPositionsTab
 from avernus.gui.preferences import PrefDialog
 from avernus.gui.account.exportDialog import ExportDialog
 from avernus.objects import model
@@ -129,7 +129,7 @@ class MainWindow(Gtk.Window):
 
         self.pages = {}
         self.pages['Portfolio'] = PortfolioNotebook
-        self.pages['Watchlist'] = PositionsTab
+        self.pages['Watchlist'] = WatchlistPositionsTab
         self.pages['Category']  = ContainerOverviewTab
         self.pages['Account']   = AccountTransactionTab
 

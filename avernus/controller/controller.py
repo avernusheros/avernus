@@ -425,8 +425,12 @@ def getTransactionsForPosition(position):
     return Transaction.getAllFromOneColumn("position", position.getPrimaryKey())
 
 def deleteAllPositionTransaction(position):
-    for trans in getTransactionForPosition(position):
+    for trans in getTransactionsForPosition(position):
         trans.delete()
+        
+def deleteAllPositionDividend(position):
+    for d in getDividendsForPosition(position):
+        d.delete()
 
 def deleteAllDimensionValue(dimension):
     for val in getAllDimensionValueForDimension(dimension):
@@ -453,7 +457,7 @@ def deleteAllWatchlistPosition(watchlist):
     for pos in getPositionForWatchlist(watchlist):
         pos.delete()
 
-def getDividendForPosition(pos):
+def getDividendsForPosition(pos):
     return Dividend.getAllFromOneColumn("position", pos.getPrimaryKey())
 
 def getTransactionsForAccount(account):

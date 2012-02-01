@@ -1,5 +1,5 @@
 from gi.repository import Gtk
-from avernus.gui.portfolio.positions_tab import PositionsTab
+from avernus.gui.portfolio.positions_tab import PortfolioPositionsTab
 from avernus.gui.portfolio.transactions_tab import TransactionsTab
 from avernus.gui.portfolio.dividends_tab import DividendsTab
 from avernus.gui.portfolio.closed_positions_tab import ClosedPositionsTab
@@ -10,7 +10,7 @@ class PortfolioNotebook(Gtk.Notebook):
 
     def __init__(self, portfolio):
         Gtk.Notebook.__init__(self)
-        self.append_page(PositionsTab(portfolio), Gtk.Label(label='Positions'))
+        self.append_page(PortfolioPositionsTab(portfolio), Gtk.Label(label='Positions'))
         self.append_page(TransactionsTab(portfolio), Gtk.Label(label='Transactions'))
         self.append_page(DividendsTab(portfolio), Gtk.Label(label='Dividends'))
         self.append_page(ClosedPositionsTab(portfolio), Gtk.Label(label='Closed positions'))

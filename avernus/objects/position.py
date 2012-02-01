@@ -69,6 +69,7 @@ class PortfolioPosition(SQLiteEntity, Position):
 
     def onDelete(self, **kwargs):
         self.controller.deleteAllPositionTransaction(self)
+        self.controller.deleteAllPositionDividend(self)
 
     __callbacks__ = {
                      'onDelete':onDelete
@@ -88,7 +89,7 @@ class PortfolioPosition(SQLiteEntity, Position):
 
     @property
     def dividends(self):
-        for div in self.controller.getDividendForPosition(self):
+        for div in self.controller.getDividendsForPosition(self):
             yield div
 
     def get_quantity_at_date(self, t):
