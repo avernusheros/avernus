@@ -25,8 +25,8 @@ sys.setdefaultencoding("utf-8")
 
 class AboutDialog(Gtk.AboutDialog):
 
-    def __init__(self, parent = None):
-        Gtk.AboutDialog.__init__(self, parent = parent)
+    def __init__(self, parent=None):
+        Gtk.AboutDialog.__init__(self, parent=parent)
 
         self.set_name(avernus.__appname__)
         self.set_version(avernus.__version__)
@@ -59,7 +59,7 @@ class MenuBar(Gtk.MenuBar):
              ('quit'          , Gtk.STOCK_QUIT       , '_Quit'              , '<Control>q', None, parent.on_destroy),
              ('prefs'         , Gtk.STOCK_PREFERENCES, '_Preferences'       , None        , None, parent.on_prefs),
              ('update'        , Gtk.STOCK_REFRESH    , '_Update all stocks' , 'F5'        , None, parent.on_update_all),
-             ('historical'    , Gtk.STOCK_REFRESH     ,'Get _historical data', None       , None,  parent.on_historical),
+             ('historical'    , Gtk.STOCK_REFRESH     , 'Get _historical data', None       , None, parent.on_historical),
              ('help'          , Gtk.STOCK_HELP       , '_Help'              , 'F1'        , None, lambda x:web("https://answers.launchpad.net/avernus")),
              ('website'       , None                 , '_Website'           , None        , None, lambda x:web("https://launchpad.net/avernus")),
              ('feature'       , None                 , 'Request a _Feature' , None        , None, lambda x:web("https://blueprints.launchpad.net/avernus")),
@@ -73,10 +73,10 @@ class MenuBar(Gtk.MenuBar):
         for action in actiongroup.list_actions():
             action.set_accel_group(accelgroup)
 
-        file_menu_items  = ['import','export CSV','---', 'quit']
+        file_menu_items = ['import', 'export CSV', '---', 'quit']
         edit_menu_items = ['prefs']
-        tools_menu_items = ['update', 'historical','filter', 'do_assignments']
-        help_menu_items  = ['help', 'website', 'feature', 'bug', '---', 'about']
+        tools_menu_items = ['update', 'historical', 'filter', 'do_assignments']
+        help_menu_items = ['help', 'website', 'feature', 'bug', '---', 'about']
 
         self._create_menu('Avernus', file_menu_items)
         self._create_menu('Edit', edit_menu_items)
@@ -130,8 +130,8 @@ class MainWindow(Gtk.Window):
         self.pages = {}
         self.pages['Portfolio'] = PortfolioNotebook
         self.pages['Watchlist'] = WatchlistPositionsTab
-        self.pages['Category']  = ContainerOverviewTab
-        self.pages['Account']   = AccountTransactionTab
+        self.pages['Category'] = ContainerOverviewTab
+        self.pages['Account'] = AccountTransactionTab
 
         #set min size
         screen = self.get_screen()
@@ -144,7 +144,7 @@ class MainWindow(Gtk.Window):
             width, height = eval(size)
             self.resize(width, height)
 
-        pos = self.config.get_option('hpaned position', 'Gui') or width*0.25
+        pos = self.config.get_option('hpaned position', 'Gui') or width * 0.25
         self.hpaned.set_position(int(pos))
 
         #config entries are strings...
@@ -157,7 +157,7 @@ class MainWindow(Gtk.Window):
         #display everything
         self.show_all()
 
-    def on_size_allocate(self, widget = None, data = None):
+    def on_size_allocate(self, widget=None, data=None):
         if not self.maximized:
             self.config.set_option('size', self.get_size(), 'Gui')
 
@@ -169,7 +169,7 @@ class MainWindow(Gtk.Window):
             self.maximized = False
             self.config.set_option('maximize', False, section='Gui')
 
-    def on_destroy(self, widget = None, data = None):
+    def on_destroy(self, widget=None, data=None):
         """on_destroy - called when the avernusWindow is closed. """
         #save db on quit
         self.config.set_option('hpaned position', self.hpaned.get_position(), 'Gui')
@@ -186,22 +186,22 @@ class MainWindow(Gtk.Window):
         page = self.hpaned.get_child2()
         if page:
             self.hpaned.remove(page)
-            del page
+            page.destroy()
 
     def on_prefs(self, *args):
-        PrefDialog(parent = self)
+        PrefDialog(parent=self)
 
     def on_category_assignments(self, *args):
-        FilterDialog(parent = self)
+        FilterDialog(parent=self)
 
     def on_csv_import(self, *args):
-        CSVImportDialog(parent = self)
+        CSVImportDialog(parent=self)
 
     def on_about(self, *args):
-        AboutDialog(parent = self)
+        AboutDialog(parent=self)
 
     def on_csv_export(self, *args):
-        ExportDialog(parent = self)
+        ExportDialog(parent=self)
 
     def on_do_category_assignments(self, *args):
         threads.GeneratorTask(filterController.run_auto_assignments).start()

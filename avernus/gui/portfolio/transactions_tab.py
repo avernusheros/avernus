@@ -2,8 +2,9 @@
 
 from gi.repository import Gtk
 from avernus import pubsub
-from avernus.gui import gui_utils, dialogs
+from avernus.gui import gui_utils
 from avernus.gui.gui_utils import Tree
+from avernus.gui.portfolio import dialogs
 
 
 class TransactionsTab(Gtk.ScrolledWindow):
@@ -26,7 +27,7 @@ class TransactionsTree(Tree):
     def __init__(self, portfolio):
         self.portfolio = portfolio
         Tree.__init__(self)
-        self.model = Gtk.TreeStore(object,str, str, object,float, float, float, float)
+        self.model = Gtk.TreeStore(object, str, str, object, float, float, float, float)
         self.set_model(self.model)
 
         self.create_column(_('Date'), 3, func=gui_utils.date_to_string)
@@ -42,7 +43,7 @@ class TransactionsTree(Tree):
 
         self.actiongroup = Gtk.ActionGroup('portfolio_transactions')
         self.actiongroup.add_actions([
-                ('edit' ,  Gtk.STOCK_EDIT, 'edit transaction',   None, _('Edit selected transaction'),   self.on_edit),
+                ('edit' , Gtk.STOCK_EDIT, 'edit transaction', None, _('Edit selected transaction'), self.on_edit),
                                 ])
         pubsub.subscribe('transaction.added', self.on_transaction_created)
         self.connect('button_press_event', self.on_button_press)
@@ -64,12 +65,12 @@ class TransactionsTree(Tree):
     def on_row_activated(self, treeview, path, column):
         self.on_edit(treeview)
 
-    def on_edit(self, widget, data = None):
+    def on_edit(self, widget, data=None):
         transaction, iter = self.get_selected_item()
         if transaction.type == 0: #SELL
-            dialogs.SellDialog(transaction.position, transaction,parent = self.get_toplevel())
+            dialogs.SellDialog(transaction.position, transaction, parent=self.get_toplevel())
         elif transaction.type == 1: #Buy
-            dialogs.BuyDialog(transaction.position.portfolio, transaction, parent = self.get_toplevel())
+            dialogs.BuyDialog(transaction.position.portfolio, transaction, parent=self.get_toplevel())
         else:
             print "TODO edit transaction"
 

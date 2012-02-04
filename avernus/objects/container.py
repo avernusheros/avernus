@@ -9,7 +9,7 @@ class Container(object):
     def __len__(self):
         count = 0
         for pos in self:
-            count+=1
+            count += 1
         return count
 
     @property
@@ -18,11 +18,11 @@ class Container(object):
         val = 0
         for pos in self:
             pos_val = pos.cvalue
-            ter+=pos_val*pos.stock.ter
-            val+=pos_val
-        if val==0:
+            ter += pos_val * pos.stock.ter
+            val += pos_val
+        if val == 0:
             return 0.0
-        return ter/val
+        return ter / val
 
     @property
     def bvalue(self):
@@ -66,7 +66,7 @@ class Container(object):
         if start == 0:
             percent = 0
         else:
-            percent = round(100.0 / start * absolute,2)
+            percent = round(100.0 / start * absolute, 2)
         return absolute, percent
 
     @property
@@ -74,16 +74,16 @@ class Container(object):
         change = 0.0
         for pos in self:
             stock, percent = pos.current_change
-            change +=stock * pos.quantity
+            change += stock * pos.quantity
         start = self.cvalue - change
         if start == 0.0:
             percent = 0
         else:
-            percent = round(100.0 / start * change,2)
+            percent = round(100.0 / start * change, 2)
         return change, percent
 
     def update_positions(self):
-        for item in self.controller.datasource_manager.update_stocks([pos.stock for pos in self if pos.quantity>0]):
+        for item in self.controller.datasource_manager.update_stocks([pos.stock for pos in self if pos.quantity > 0]):
             yield 0
         self.last_update = datetime.now()
         pubsub.publish("stocks.updated", self)
@@ -104,7 +104,7 @@ class PortfolioBase(Container):
     def getDividends(self):
         result = []
         for position in self:
-            result.extend(self.controller.getDividendForPosition(position))
+            result.extend(self.controller.getDividendsForPosition(position))
         return result
 
     @property
@@ -228,13 +228,13 @@ class ClosedPosition(object):
         self.buy_date = buy_transaction.date
         self.buy_price = buy_transaction.price
         self.buy_costs = buy_transaction.costs * self.quantity / buy_transaction.quantity
-        self.buy_total = self.quantity*self.buy_price + self.buy_costs
+        self.buy_total = self.quantity * self.buy_price + self.buy_costs
         self.sell_date = sell_transaction.date
         self.sell_price = sell_transaction.price
         self.sell_costs = sell_transaction.costs
         self.sell_total = sell_transaction.total
         self.gain = self.sell_total - self.buy_total
-        self.gain_percent = round(self.gain*100 / self.buy_total, 2)
+        self.gain_percent = round(self.gain * 100 / self.buy_total, 2)
         self.name = position.name
         self.type = sell_transaction.type
         self.stock = position.stock

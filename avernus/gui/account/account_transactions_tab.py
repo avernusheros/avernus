@@ -2,7 +2,8 @@
 
 from avernus import config, pubsub
 from avernus.config import avernusConfig
-from avernus.gui import gui_utils, dialogs, page, charts
+from avernus.gui import gui_utils, common_dialogs, page, charts
+from avernus.gui.portfolio import dialogs
 from avernus.controller import controller, chartController
 from gi.repository import Gtk
 from gi.repository import GObject
@@ -45,11 +46,11 @@ class AccountTransactionTab(Gtk.VBox, page.Page):
         self.start_entry = Gtk.Entry()
         self.end_entry = Gtk.Entry()
         self.start_entry.set_icon_from_stock(1, Gtk.STOCK_SELECT_COLOR)
-        self.start_entry.set_property("secondary-icon-tooltip-text","Pick Start date")
+        self.start_entry.set_property("secondary-icon-tooltip-text", "Pick Start date")
         self.start_entry.set_editable(False)
         self.start_entry.connect('icon-press', self.on_pick_start)
         self.end_entry.set_icon_from_stock(1, Gtk.STOCK_SELECT_COLOR)
-        self.end_entry.set_property("secondary-icon-tooltip-text","Pick End date")
+        self.end_entry.set_property("secondary-icon-tooltip-text", "Pick End date")
         self.end_entry.set_editable(False)
         self.end_entry.connect('icon-press', self.on_pick_end)
         hbox.pack_start(Gtk.Label(_('Start')), False, False, 0)
@@ -69,8 +70,8 @@ class AccountTransactionTab(Gtk.VBox, page.Page):
         actiongroup = Gtk.ActionGroup('transactions')
         self.transactions_tree = TransactionsTree(account, actiongroup, self.search_entry, self.update_ui)
         actiongroup.add_actions([
-                ('add',    Gtk.STOCK_ADD,    'new transaction',    None, _('Add new transaction'), self.transactions_tree.on_add),
-                ('edit' ,  Gtk.STOCK_EDIT,   'edit transaction',   None, _('Edit selected transaction'),   self.transactions_tree.on_edit),
+                ('add', Gtk.STOCK_ADD, 'new transaction', None, _('Add new transaction'), self.transactions_tree.on_add),
+                ('edit' , Gtk.STOCK_EDIT, 'edit transaction', None, _('Edit selected transaction'), self.transactions_tree.on_edit),
                 ('remove', Gtk.STOCK_DELETE, 'remove transaction', None, _('Remove selected transaction'), self.transactions_tree.on_remove),
                 ('dividend', Gtk.STOCK_CONVERT, 'dividend payment', None, _('Create dividend from transaction'), self.transactions_tree.on_dividend)
                                 ])
@@ -112,10 +113,10 @@ class AccountTransactionTab(Gtk.VBox, page.Page):
         actiongroup = Gtk.ActionGroup('categories')
         self.category_tree = CategoriesTree(actiongroup, self.transactions_tree.on_category_update)
         actiongroup.add_actions([
-                ('add',    Gtk.STOCK_ADD,    'new category',    None, _('Add new category'), self.category_tree.on_add),
-                ('edit' ,  Gtk.STOCK_EDIT,   'rename category',   None, _('Rename selected category'),   self.category_tree.on_edit),
+                ('add', Gtk.STOCK_ADD, 'new category', None, _('Add new category'), self.category_tree.on_add),
+                ('edit' , Gtk.STOCK_EDIT, 'rename category', None, _('Rename selected category'), self.category_tree.on_edit),
                 ('remove', Gtk.STOCK_DELETE, 'remove category', None, _('Remove selected category'), self.category_tree.on_remove),
-                ('unselect', Gtk.STOCK_CLEAR,'unselect category', None, _('Unselect selected category'), self.category_tree.on_unselect),
+                ('unselect', Gtk.STOCK_CLEAR, 'unselect category', None, _('Unselect selected category'), self.category_tree.on_unselect),
                                 ])
         self.category_tree.on_unselect()
         sw.add(self.category_tree)
@@ -123,12 +124,12 @@ class AccountTransactionTab(Gtk.VBox, page.Page):
         toolbar = Gtk.Toolbar()
         self.conditioned = ['remove', 'edit']
 
-        for action in ['add', 'remove', 'edit','unselect']:
+        for action in ['add', 'remove', 'edit', 'unselect']:
             button = actiongroup.get_action(action).create_tool_item()
             toolbar.insert(button, -1)
         vbox.pack_start(toolbar, False, False, 0)
 
-        expander = Gtk.Expander(label = _("Charts"))
+        expander = Gtk.Expander(label=_("Charts"))
         expander.connect("activate", self.on_expander_toggled)
         self.charts_notebook = None
         self.vpaned.pack1(expander)
@@ -154,14 +155,14 @@ class AccountTransactionTab(Gtk.VBox, page.Page):
         chart.draw_chart()
 
     def on_pick_start(self, entry, icon_pos, event):
-        dialog = dialogs.CalendarDialog(self.transactions_tree.range_start, parent = self.get_toplevel())
+        dialog = common_dialogs.CalendarDialog(self.transactions_tree.range_start, parent=self.get_toplevel())
         if dialog.date:
             self.transactions_tree.range_start = dialog.date
             self.update_range()
             self.update_ui()
 
     def on_pick_end(self, entry, icon_pos, event):
-        dialog = dialogs.CalendarDialog(self.transactions_tree.range_end, parent=self.get_toplevel())
+        dialog = common_dialogs.CalendarDialog(self.transactions_tree.range_end, parent=self.get_toplevel())
         if dialog.date:
             self.transactions_tree.range_end = dialog.date
             self.update_range()
@@ -243,19 +244,19 @@ class AccountChartsNotebook(Gtk.Notebook):
         chart = charts.Pie(chart_controller, 400)
         self.charts.append(chart)
         label = Gtk.Label()
-        label.set_markup('<b>'+_('Earnings')+'</b>')
+        label.set_markup('<b>' + _('Earnings') + '</b>')
         label.set_tooltip_text(_('Categorization of earnings.'))
-        table.attach(label,0,1,0,1,xoptions=Gtk.AttachOptions.FILL, yoptions=Gtk.AttachOptions.FILL)
-        table.attach(chart,0,1,1,2)
+        table.attach(label, 0, 1, 0, 1, xoptions=Gtk.AttachOptions.FILL, yoptions=Gtk.AttachOptions.FILL)
+        table.attach(chart, 0, 1, 1, 2)
 
         chart_controller = chartController.TransactionCategoryPieController(self.account.transactions, earnings=False)
         chart = charts.Pie(chart_controller, 400)
         self.charts.append(chart)
         label = Gtk.Label()
-        label.set_markup('<b>'+_('Spendings')+'</b>')
+        label.set_markup('<b>' + _('Spendings') + '</b>')
         label.set_tooltip_text(_('Categorization of spendings.'))
-        table.attach(label,1,2,0,1,xoptions=Gtk.AttachOptions.FILL, yoptions=Gtk.AttachOptions.FILL)
-        table.attach(chart,1,2,1,2)
+        table.attach(label, 1, 2, 0, 1, xoptions=Gtk.AttachOptions.FILL, yoptions=Gtk.AttachOptions.FILL)
+        table.attach(chart, 1, 2, 1, 2)
         label = Gtk.Label(label=_('Categories'))
         label.set_tooltip_text(_('Categorization of transactions.'))
         self.append_page(table, label)
@@ -291,7 +292,7 @@ class TransactionsTree(gui_utils.Tree):
 
         self.model = Gtk.ListStore(object, str, float, str, object, str)
         self.modelfilter = self.model.filter_new(None)
-        sorter = Gtk.TreeModelSort(model = self.modelfilter)
+        sorter = Gtk.TreeModelSort(model=self.modelfilter)
         self.set_model(sorter)
         self.modelfilter.set_visible_func(self.visible_cb, None)
         self.create_icon_column('', self.ICON)
@@ -417,7 +418,7 @@ class TransactionsTree(gui_utils.Tree):
         return None, None
 
     def on_add(self, widget=None, data=None):
-        dlg = EditTransaction(self.account, parent = self.get_toplevel())
+        dlg = EditTransaction(self.account, parent=self.get_toplevel())
         b_change, transaction = dlg.start()
         self.account.amount += transaction.amount
         self.insert_transaction(transaction)
@@ -425,14 +426,14 @@ class TransactionsTree(gui_utils.Tree):
     def on_edit(self, widget=None, data=None):
         transaction, iterator = self._get_selected_transaction()
         old_amount = transaction.amount
-        dlg = EditTransaction(self.account, transaction, parent = self.get_toplevel())
+        dlg = EditTransaction(self.account, transaction, parent=self.get_toplevel())
         b_change, transaction = dlg.start()
         if b_change:
             self.account.amount = self.account.amount - old_amount + transaction.amount
 
     def on_dividend(self, widget=None, data=None):
         trans, iterator = self._get_selected_transaction()
-        dialogs.DividendDialog(date=trans.date, price=trans.amount, parent = self.get_toplevel())
+        dialogs.DividendDialog(date=trans.date, price=trans.amount, parent=self.get_toplevel())
 
     def on_remove(self, widget=None, data=None):
         trans, iterator = self._get_selected_transaction()
@@ -451,7 +452,7 @@ class TransactionsTree(gui_utils.Tree):
         child_iter = self.get_model().convert_iter_to_child_iter(iterator)
         return self.modelfilter.convert_iter_to_child_iter(child_iter)
 
-    def on_set_transaction_category(self, category = None):
+    def on_set_transaction_category(self, category=None):
         trans, iterator = self._get_selected_transaction()
         trans.category = category
         self.get_model().remove(iterator)
@@ -468,12 +469,12 @@ class TransactionsTree(gui_utils.Tree):
             hierarchy = controller.getAllAccountCategoriesHierarchical()
 
             def insert_recursive(cat, menu):
-                item = Gtk.MenuItem(label = cat.name)
+                item = Gtk.MenuItem(label=cat.name)
                 menu.append(item)
                 if cat in hierarchy:
                     new_menu = Gtk.Menu()
                     item.set_submenu(new_menu)
-                    item = Gtk.MenuItem(label = cat.name)
+                    item = Gtk.MenuItem(label=cat.name)
                     new_menu.append(item)
                     item.connect('activate', lambda widget: self.on_set_transaction_category(cat))
                     new_menu.append(Gtk.SeparatorMenuItem())
@@ -508,16 +509,16 @@ class TransactionsTree(gui_utils.Tree):
 
     def on_toggle_uncategorized(self, button):
         if button.get_active():
-            self.b_show_uncategorized=True
+            self.b_show_uncategorized = True
         else:
-            self.b_show_uncategorized=False
+            self.b_show_uncategorized = False
         self.updater()
 
     def on_toggle_transfer(self, button):
         if button.get_active():
-            self.b_show_transfer=True
+            self.b_show_transfer = True
         else:
-            self.b_show_transfer=False
+            self.b_show_transfer = False
         self.updater()
 
     def on_toggle_date(self, button, start, end):
@@ -529,7 +530,7 @@ class TransactionsTree(gui_utils.Tree):
         self.updater()
 
     def reset_filter_dates(self):
-        self.start_filter = datetime.datetime(datetime.MINYEAR,1,1)
+        self.start_filter = datetime.datetime(datetime.MINYEAR, 1, 1)
         self.end_filter = datetime.datetime.now()
 
     def clear(self):
@@ -583,12 +584,12 @@ class CategoriesTree(gui_utils.Tree):
     def on_add(self, widget=None, data=None):
         parent, selection_iter = self.get_selected_item()
         item = controller.newAccountCategory('new category', parent=parent)
-        iterator = self.insert_item(item, parent = selection_iter)
+        iterator = self.insert_item(item, parent=selection_iter)
         model = self.get_model()
         if selection_iter:
-            self.expand_row( model.get_path(selection_iter), True)
+            self.expand_row(model.get_path(selection_iter), True)
         self.cell.set_property('editable', True)
-        self.set_cursor(model.get_path(iterator), focus_column = self.get_column(0), start_editing=True)
+        self.set_cursor(model.get_path(iterator), focus_column=self.get_column(0), start_editing=True)
 
     def on_row_changed(self, model, path, iterator):
         if not self.dnd_active:
@@ -605,7 +606,7 @@ class CategoriesTree(gui_utils.Tree):
     def on_edit(self, widget=None, data=None):
         cat, selection_iter = self.get_selected_item()
         self.cell.set_property('editable', True)
-        self.set_cursor(self.get_model().get_path(selection_iter), focus_column = self.get_column(0), start_editing=True)
+        self.set_cursor(self.get_model().get_path(selection_iter), focus_column=self.get_column(0), start_editing=True)
 
     def on_remove(self, widget=None, data=None):
         obj, iterator = self.get_selected_item()
@@ -614,7 +615,7 @@ class CategoriesTree(gui_utils.Tree):
         dlg = Gtk.MessageDialog(None,
              Gtk.DialogFlags.DESTROY_WITH_PARENT, Gtk.MessageType.QUESTION,
              Gtk.ButtonsType.OK_CANCEL)
-        msg = _("Permanently delete category <b>")+GObject.markup_escape_text(obj.name)+'</b>?'
+        msg = _("Permanently delete category <b>") + GObject.markup_escape_text(obj.name) + '</b>?'
         model = self.get_model()
         if model.iter_has_child(iterator):
                 msg += _("\nWill also delete subcategories")
@@ -630,10 +631,10 @@ class CategoriesTree(gui_utils.Tree):
                 #print "deleting from model ", currObj
                 currObj.delete()
                 if model.iter_has_child(currIter):
-                    for i in range(0,model.iter_n_children(currIter)):
+                    for i in range(0, model.iter_n_children(currIter)):
                         newIter = model.iter_nth_child(currIter, i)
                         queue.append((newIter, model[newIter][0]))
-                removeQueue.insert(0,currIter)
+                removeQueue.insert(0, currIter)
             for toRemove in removeQueue:
                 #print "removing from tree ", currIter
                 model.remove(toRemove)
@@ -681,7 +682,7 @@ class CategoriesTree(gui_utils.Tree):
 
 class EditTransaction(Gtk.Dialog):
 
-    def __init__(self, account, transaction = None, parent = None):
+    def __init__(self, account, transaction=None, parent=None):
         Gtk.Dialog.__init__(self, _("Edit transaction"), parent
                             , Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,
                      (Gtk.STOCK_CANCEL, Gtk.ResponseType.REJECT,
@@ -693,7 +694,7 @@ class EditTransaction(Gtk.Dialog):
             self.transaction = controller.newAccountTransaction(account=account)
 
         #description
-        frame = Gtk.Frame(label = 'Description')
+        frame = Gtk.Frame(label='Description')
         self.description_entry = Gtk.TextView()
         self.description_entry.set_wrap_mode(Gtk.WrapMode.WORD)
         entry_buffer = self.description_entry.get_buffer()
@@ -705,7 +706,7 @@ class EditTransaction(Gtk.Dialog):
         hbox = Gtk.HBox()
         label = Gtk.Label(label=_('Amount'))
         hbox.pack_start(label, True, True, 0)
-        self.amount_entry = Gtk.SpinButton(adjustment = Gtk.Adjustment(lower=-999999999, upper=999999999, step_increment=10, value = self.transaction.amount), digits=2)
+        self.amount_entry = Gtk.SpinButton(adjustment=Gtk.Adjustment(lower= -999999999, upper=999999999, step_increment=10, value=self.transaction.amount), digits=2)
         hbox.pack_start(self.amount_entry, True, True, 0)
         vbox.pack_start(hbox, True, True, 0)
 
@@ -714,7 +715,7 @@ class EditTransaction(Gtk.Dialog):
         label = Gtk.Label(label=_('Category'))
         hbox.pack_start(label, True, True, 0)
         treestore = Gtk.TreeStore(object, str)
-        self.combobox = Gtk.ComboBox(model = treestore)
+        self.combobox = Gtk.ComboBox(model=treestore)
         cell = Gtk.CellRendererText()
         self.combobox.pack_start(cell, True)
         self.combobox.add_attribute(cell, 'text', 1)
@@ -737,7 +738,7 @@ class EditTransaction(Gtk.Dialog):
 
         #date
         self.calendar = Gtk.Calendar()
-        self.calendar.select_month(self.transaction.date.month-1, self.transaction.date.year)
+        self.calendar.select_month(self.transaction.date.month - 1, self.transaction.date.year)
         self.calendar.select_day(self.transaction.date.day)
         vbox.pack_start(self.calendar, True, True, 0)
 
@@ -795,10 +796,10 @@ class EditTransaction(Gtk.Dialog):
     def process_result(self, response):
         if response == Gtk.ResponseType.ACCEPT:
             buffer = self.description_entry.get_buffer()
-            self.transaction.description = unicode(buffer.get_text(buffer.get_start_iter(), buffer.get_end_iter(), True), encoding = "utf8")
+            self.transaction.description = unicode(buffer.get_text(buffer.get_start_iter(), buffer.get_end_iter(), True), encoding="utf8")
             self.transaction.amount = self.amount_entry.get_value()
             year, month, day = self.calendar.get_date()
-            self.transaction.date = datetime.date(year, month+1, day)
+            self.transaction.date = datetime.date(year, month + 1, day)
             iter = self.combobox.get_active_iter()
             if iter is None:
                 self.transaction.category = None

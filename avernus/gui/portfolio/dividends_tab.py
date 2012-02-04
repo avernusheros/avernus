@@ -3,7 +3,8 @@
 from gi.repository import Gtk
 from avernus.gui.gui_utils import Tree, get_name_string
 from avernus.controller import controller
-from avernus.gui import gui_utils, dialogs, page
+from avernus.gui import gui_utils, page
+from avernus.gui.portfolio import dialogs
 
 
 class DividendsTab(Gtk.VBox, page.Page):
@@ -19,9 +20,9 @@ class DividendsTab(Gtk.VBox, page.Page):
         self.tree = DividendsTree(self.portfolio, actiongroup)
 
         actiongroup.add_actions([
-                ('add',    Gtk.STOCK_ADD,     'add',    None, _('Add new dividend'),         self.on_add),
-                ('remove', Gtk.STOCK_DELETE,  'remove', None, _('Delete selected dividend'), self.tree.on_remove),
-                ('edit', Gtk.STOCK_EDIT,  'remove', None, _('Edit selected dividend'), self.tree.on_edit),
+                ('add', Gtk.STOCK_ADD, 'add', None, _('Add new dividend'), self.on_add),
+                ('remove', Gtk.STOCK_DELETE, 'remove', None, _('Delete selected dividend'), self.tree.on_remove),
+                ('edit', Gtk.STOCK_EDIT, 'remove', None, _('Edit selected dividend'), self.tree.on_edit),
                  ])
         actiongroup.get_action('remove').set_sensitive(False)
         actiongroup.get_action('edit').set_sensitive(False)
@@ -39,8 +40,8 @@ class DividendsTab(Gtk.VBox, page.Page):
         self.pack_start(tb, False, False, 0)
         self.pack_start(sw, True, True, 0)
 
-    def on_add(self, widget = None, data = None):
-        dialogs.DividendDialog(self.portfolio, tree = self.tree, parent = self.get_toplevel())
+    def on_add(self, widget=None, data=None):
+        dialogs.DividendDialog(self.portfolio, tree=self.tree, parent=self.get_toplevel())
         self.update_page()
 
     def show(self):
@@ -55,11 +56,11 @@ class DividendsTab(Gtk.VBox, page.Page):
 
 class DividendsTree(Tree):
 
-    POSITION=1
-    DATE=2
-    AMOUNT=3
-    TA_COSTS=4
-    TOTAL=5
+    POSITION = 1
+    DATE = 2
+    AMOUNT = 3
+    TA_COSTS = 4
+    TOTAL = 5
 
     def __init__(self, portfolio, actiongroup):
         self.portfolio = portfolio
@@ -76,7 +77,7 @@ class DividendsTree(Tree):
         self.create_column(_('Date'), self.DATE, func=gui_utils.date_to_string)
         self.create_column(_('Amount'), self.AMOUNT, func=gui_utils.currency_format)
         self.create_column(_('Transaction costs'), self.TA_COSTS, func=gui_utils.currency_format)
-        self.create_column(_('Total'), self.TOTAL, func = gui_utils.currency_format)
+        self.create_column(_('Total'), self.TOTAL, func=gui_utils.currency_format)
         self.get_model().set_sort_func(self.DATE, gui_utils.sort_by_time, self.DATE)
 
     def on_cursor_changed(self, widget):
@@ -117,12 +118,12 @@ class DividendsTree(Tree):
                 div.costs,
                 div.total])
 
-    def on_edit(self, widget, data = None):
+    def on_edit(self, widget, data=None):
         obj, iterator = self.get_selected_item()
         if obj:
-            dialogs.DividendDialog(self.portfolio, tree = self, dividend=obj, parent = self.get_toplevel())
+            dialogs.DividendDialog(self.portfolio, tree=self, dividend=obj, parent=self.get_toplevel())
 
-    def on_remove(self, widget=None, data = None):
+    def on_remove(self, widget=None, data=None):
         obj, iterator = self.get_selected_item()
         if obj is None:
             return

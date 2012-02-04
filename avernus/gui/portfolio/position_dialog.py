@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
-from avernus.gui import gui_utils, dialogs, threads
+from avernus.gui import gui_utils, threads, common_dialogs
+from avernus.gui.portfolio import dialogs
 from avernus.controller import controller
 from avernus.objects.position import MetaPosition
 import datetime
@@ -16,8 +17,8 @@ class PositionDialog(Gtk.Dialog):
     WIDTH = 600
     HEIGHT = 400
 
-    def __init__(self, position, parent = None):
-        Gtk.Dialog.__init__(self, _("Edit position - ")+position.name, parent
+    def __init__(self, position, parent=None):
+        Gtk.Dialog.__init__(self, _("Edit position - ") + position.name, parent
                             , Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,
                      (Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT))
         vbox = self.get_content_area()
@@ -63,32 +64,32 @@ class QuotationTable(Gtk.Table):
         Gtk.Table.__init__(self)
         self.stock = stock
 
-        self.attach(Gtk.Label(label=_('First quotation')), 0,1,0,1, yoptions=Gtk.AttachOptions.FILL)
+        self.attach(Gtk.Label(label=_('First quotation')), 0, 1, 0, 1, yoptions=Gtk.AttachOptions.FILL)
         self.first_label = Gtk.Label()
-        self.attach(self.first_label, 1,2,0,1, yoptions=Gtk.AttachOptions.FILL)
-        self.attach(Gtk.Label(label=_('Last quotation')), 0,1,1,2, yoptions=Gtk.AttachOptions.FILL)
+        self.attach(self.first_label, 1, 2, 0, 1, yoptions=Gtk.AttachOptions.FILL)
+        self.attach(Gtk.Label(label=_('Last quotation')), 0, 1, 1, 2, yoptions=Gtk.AttachOptions.FILL)
         self.last_label = Gtk.Label()
-        self.attach(self.last_label, 1,2,1,2, yoptions=Gtk.AttachOptions.FILL)
-        self.attach(Gtk.Label(label=_('# quotations')), 0,1,2,3, yoptions=Gtk.AttachOptions.FILL)
+        self.attach(self.last_label, 1, 2, 1, 2, yoptions=Gtk.AttachOptions.FILL)
+        self.attach(Gtk.Label(label=_('# quotations')), 0, 1, 2, 3, yoptions=Gtk.AttachOptions.FILL)
         self.count_label = Gtk.Label()
-        self.attach(self.count_label, 1,2,2,3, yoptions=Gtk.AttachOptions.FILL)
+        self.attach(self.count_label, 1, 2, 2, 3, yoptions=Gtk.AttachOptions.FILL)
 
         button = Gtk.Button(_('Get quotations'))
         button.connect('clicked', self.on_get_button_clicked)
-        self.attach(button, 0,2,4,5, yoptions=Gtk.AttachOptions.FILL)
+        self.attach(button, 0, 2, 4, 5, yoptions=Gtk.AttachOptions.FILL)
 
         button = Gtk.Button(_('Delete quotations'))
         button.connect('clicked', self.on_delete_button_clicked)
-        self.attach(button, 0,2,5,6, yoptions=Gtk.AttachOptions.FILL)
+        self.attach(button, 0, 2, 5, 6, yoptions=Gtk.AttachOptions.FILL)
 
         button = Gtk.Button(_('Edit quotations'))
         button.connect('clicked', self.on_edit_button_clicked)
-        self.attach(button, 0,2,6,7, yoptions=Gtk.AttachOptions.FILL)
+        self.attach(button, 0, 2, 6, 7, yoptions=Gtk.AttachOptions.FILL)
 
         self.update_labels()
 
     def on_edit_button_clicked(self, button):
-        EditHistoricalQuotationsDialog(self.stock, parent = self.get_toplevel())
+        EditHistoricalQuotationsDialog(self.stock, parent=self.get_toplevel())
         self.update_labels()
 
     def on_delete_button_clicked(self, button):
@@ -99,7 +100,7 @@ class QuotationTable(Gtk.Table):
         threads.GeneratorTask(controller.datasource_manager.get_historical_prices, self.new_quotation_callback, complete_callback=self.update_labels).start(self.stock)
 
     def new_quotation_callback(self, qt):
-        self.count+=1
+        self.count += 1
         self.count_label.set_text(str(self.count))
 
     def update_labels(self):
@@ -197,7 +198,7 @@ class TransactionsTab(Gtk.VBox):
     def on_row_activated(self, treeview, path, view_column):
         if view_column == self.date_column:
             transaction = self.model[path][0]
-            dlg = dialogs.CalendarDialog(transaction.date, parent = self.get_toplevel())
+            dlg = common_dialogs.CalendarDialog(transaction.date, parent=self.get_toplevel())
             if dlg.date:
                 #be carefull, transactions have datetimes...
                 transaction.date = transaction.date.replace(dlg.date.year, dlg.date.month, dlg.date.day)
@@ -212,7 +213,7 @@ class TransactionsTab(Gtk.VBox):
                     date=datetime.datetime.now(),
                     quantity=last_transaction.quantity,
                     portfolio=self.position.portfolio,
-                    stock = self.position.stock)
+                    stock=self.position.stock)
         transaction = controller.newTransaction(
                     type=1,
                     date=position.date,
@@ -248,7 +249,7 @@ class TransactionsTab(Gtk.VBox):
 
     def on_shares_edited(self, cellrenderertext, path, new_text, columnnumber):
         try:
-            value = float(new_text.replace(",","."))
+            value = float(new_text.replace(",", "."))
             self.model[path][columnnumber] = value
             self.model[path][0].quantity = value
             self.model[path][0].position.quantity = value
@@ -257,7 +258,7 @@ class TransactionsTab(Gtk.VBox):
 
     def on_price_edited(self, cellrenderertext, path, new_text, columnnumber):
         try:
-            value = float(new_text.replace(",","."))
+            value = float(new_text.replace(",", "."))
             ta = self.model[path][0]
             ta.price = value
             ta.position.price = value
@@ -269,7 +270,7 @@ class TransactionsTab(Gtk.VBox):
 
     def on_costs_edited(self, cellrenderertext, path, new_text, columnnumber):
         try:
-            value = float(new_text.replace(",","."))
+            value = float(new_text.replace(",", "."))
             ta = self.model[path][0]
             ta.costs = value
             ta.position.costs = value
@@ -283,10 +284,10 @@ class TransactionsTab(Gtk.VBox):
 
 class EditHistoricalQuotationsDialog(Gtk.Dialog):
 
-    def __init__(self, stock, parent = None):
+    def __init__(self, stock, parent=None):
         self.stock = stock
 
-        Gtk.Dialog.__init__(self, _("Quotations")+" - "+stock.name, parent
+        Gtk.Dialog.__init__(self, _("Quotations") + " - " + stock.name, parent
                             , Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,
                      (Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT))
         self.set_default_size(300, 300)
@@ -339,12 +340,12 @@ class EditHistoricalQuotationsDialog(Gtk.Dialog):
     def on_row_activated(self, treeview, path, view_column):
         if view_column == self.date_column:
             quotation = self.model[path][0]
-            dlg = dialogs.CalendarDialog(quotation.date, parent = self.get_toplevel())
+            dlg = common_dialogs.CalendarDialog(quotation.date, parent=self.get_toplevel())
             if dlg.date:
                 quotation.date = self.model[path][1] = dlg.date
 
     def on_add(self, button):
-        quotation = controller.newQuotation(datetime.date.today(), self.stock, detectDuplicates = False)
+        quotation = controller.newQuotation(datetime.date.today(), self.stock, detectDuplicates=False)
         iter = self.model.append([quotation, quotation.date, quotation.close])
         path = self.model.get_path(iter)
         self.tree.set_cursor(path, focus_column=self.price_column, start_editing=True)
@@ -358,7 +359,7 @@ class EditHistoricalQuotationsDialog(Gtk.Dialog):
 
     def on_cell_edited(self, cellrenderertext, path, new_text):
         try:
-            value = float(new_text.replace(",","."))
+            value = float(new_text.replace(",", "."))
             self.model[path][2] = self.model[path][0].close = value
         except:
             logger.debug("entered value is not a float", new_text)
@@ -372,8 +373,8 @@ class EditPositionTable(Gtk.Table):
 
         self.attach(Gtk.Label(label=_('Shares')), 0, 1, 0, 1)
         adjustment = Gtk.Adjustment(lower=0, upper=100000, step_increment=1.0)
-        self.shares_entry = Gtk.SpinButton(adjustment=adjustment, digits = 2)
-        self.attach(self.shares_entry,1,2,0,1)
+        self.shares_entry = Gtk.SpinButton(adjustment=adjustment, digits=2)
+        self.attach(self.shares_entry, 1, 2, 0, 1)
 
         self.attach(Gtk.Label(label=_('Buy price')), 0, 1, 1, 2)
         adjustment = Gtk.Adjustment(lower=0, upper=100000, step_increment=0.1)
@@ -405,7 +406,7 @@ class EditPositionTable(Gtk.Table):
         self.pos.quantity = self.shares_entry.get_value()
         self.pos.price = self.price_entry.get_value()
         year, month, day = self.calendar.get_date()
-        self.pos.date = datetime.datetime(year, month+1, day)
+        self.pos.date = datetime.datetime(year, month + 1, day)
         buffer = self.comment_entry.get_buffer()
         self.pos.comment = unicode(buffer.get_text(buffer.get_start_iter(), buffer.get_end_iter(), True))
         if hasattr(self.pos, "buy_transaction"):
