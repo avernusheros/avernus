@@ -10,20 +10,18 @@ from gi.repository import Gtk, GObject
 import optparse
 import logging
 
-__file__ = '/home/bastian/workspace/avernus'
-
 # Add project root directory (enable symlink, and trunk execution).
 PROJECT_ROOT_DIRECTORY = os.path.abspath(
     os.path.dirname(os.path.dirname(os.path.realpath(sys.argv[0]))))
 
 b_from_source = False
 python_path = []
-#if os.path.abspath(__file__).startswith('/opt'):
-#    syspath = sys.path[:] # copy to avoid infinite loop in pending objects
-#    for path in syspath:
-#        opt_path = path.replace('/usr', '/opt/extras.ubuntu.com/avernus')
-#        python_path.insert(0, opt_path)
-#        sys.path.insert(0, opt_path)
+if os.path.abspath(__file__).startswith('/opt'):
+    syspath = sys.path[:] # copy to avoid infinite loop in pending objects
+    for path in syspath:
+        opt_path = path.replace('/usr', '/opt/extras.ubuntu.com/avernus')
+        python_path.insert(0, opt_path)
+        sys.path.insert(0, opt_path)
 if (os.path.exists(os.path.join(PROJECT_ROOT_DIRECTORY, 'avernus'))
     and PROJECT_ROOT_DIRECTORY not in sys.path):
     b_from_source = True
