@@ -25,14 +25,63 @@ class PrefDialog(Gtk.Dialog):
         vbox.pack_start(notebook, True, True, 0)
         notebook.append_page(DimensionList(), Gtk.Label(label='Dimensions'))
         notebook.append_page(AccountPreferences(), Gtk.Label(label='Account'))
+		notebook.append_page(PortfolioPreferences(), Gtk.Label(label='Portfolio'))
 
         self.show_all()
         self.run()
         self.destroy()
         logger.debug("PrefDialog destroyed")
+        
+class PreferencesVBox(Gtk.VBox):
+	
+	def _add_section(self, name):
+        frame = Gtk.Frame()
+        frame.set_shadow_type(Gtk.ShadowType.NONE)
+        label = Gtk.Label()
+        label.set_markup('<b>'+name+'</b>')
+        frame.set_label_widget(label)
+        self.pack_start(frame, False, False, 10)
+        alignment = Gtk.Alignment.new(0.5, 0.5, 1.0, 1.0)
+        alignment.set_property("left-padding", 12)
+        frame.add(alignment)
+        return alignment
+        
+    def _add_option(self, allignment, name, option):
+        button = Gtk.CheckButton(label = name)
+        allignment.add(button)
+        button.connect('toggled', self.on_toggled, option)
+        pre = self.configParser.get_option(option, self.parser_section)
+        pre = pre == "True"
+        button.set_active(pre)
+
+    def on_toggled(self, button, option):
+        self.configParser.set_option(option, button.get_active(), self.parser_section)
+        
+class PortfolioPreferences(PreferencesVBox):
+	
+	parser_section = "General"
+
+	
+	def __init__(self):
+        Gtk.VBox.__init__(self)
+        self.configParser = avernusConfig()
+        
+        section = self._add_section('Appearance')
+        self._add_option(section, _('Show smaller Position font'), 'smallPosition')
+        
+    def _add_option(self, allignment, name, option):
+        button = Gtk.CheckButton(label = name)
+        allignment.add(button)
+        button.connect('toggled', self.on_toggled, option)
+        pre = self.configParser.get_option(option, 'General')
+        pre = pre == "True"
+        button.set_active(pre)   
 
 
-class AccountPreferences(Gtk.VBox):
+
+class AccountPreferences(PreferencesVBox):
+	
+	parser_section = "Account"
 
     def __init__(self):
         Gtk.VBox.__init__(self)
@@ -46,28 +95,7 @@ class AccountPreferences(Gtk.VBox):
         section = self._add_section('Category Assignments')
         self._add_option(section, _('Include already categorized transactions'), 'assignments categorized transactions')
 
-    def _add_option(self, allignment, name, option):
-        button = Gtk.CheckButton(label = name)
-        allignment.add(button)
-        button.connect('toggled', self.on_toggled, option)
-        pre = self.configParser.get_option(option, 'Account')
-        pre = pre == "True"
-        button.set_active(pre)
-
-    def _add_section(self, name):
-        frame = Gtk.Frame()
-        frame.set_shadow_type(Gtk.ShadowType.NONE)
-        label = Gtk.Label()
-        label.set_markup('<b>'+name+'</b>')
-        frame.set_label_widget(label)
-        self.pack_start(frame, False, False, 10)
-        alignment = Gtk.Alignment.new(0.5, 0.5, 1.0, 1.0)
-        alignment.set_property("left-padding", 12)
-        frame.add(alignment)
-        return alignment
-
-    def on_toggled(self, button, option):
-        self.configParser.set_option(option, button.get_active(), 'Account')
+    
 
 
 class DimensionList(Gtk.VBox):

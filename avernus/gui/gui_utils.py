@@ -184,12 +184,13 @@ def to_local_time(date):
         return date.replace(tzinfo = None)
 
 def get_name_string(stock):
-    #return '<b>%s</b>\n<small>%s\n%s</small>' % (GObject.markup_escape_text(stock.name),
-    #                                             GObject.markup_escape_text(stock.isin),
-    #                                             GObject.markup_escape_text(stock.exchange.encode('utf8')))
-	return '%s\n<small>%s | %s</small>' % (GObject.markup_escape_text(stock.name),
-                                                 GObject.markup_escape_text(stock.isin),
-                                                 GObject.markup_escape_text(stock.exchange.encode('utf8')))
+    configParser = config.AvernusConfig()
+    option = configParser.get_option('smallPosition','General')
+    if option == "True":
+        format_string = '%s\n<small>%s | %s</small>'
+    else:
+        format_string = '<b>%s</b>\n<small>%s\n%s</small>'
+    return format_string % (GObject.markup_escape_text(stock.name), GObject.markup_escape_text(stock.isin), GObject.markup_escape_text(stock.exchange.encode('utf8')))
 
 def get_green_red_string(num, text = None):
     if text is None:
