@@ -143,6 +143,12 @@ class PortfolioBase(Container):
     def birthday(self):
         return min(t.date for t in self.transactions)
 
+    def fraction(self, position):
+        if self.cvalue == 0:
+            return 0
+        else:
+            return 100 * position.cvalue / self.cvalue
+
 
 class Portfolio(SQLiteEntity, PortfolioBase):
 

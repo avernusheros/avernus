@@ -252,7 +252,7 @@ class PortfolioPositionsTree(PositionsTree):
                gain_icon,
                float(c_change[1]),
                icons[position.stock.type],
-               float(position.portfolio_fraction)]
+               float(self.container.fraction(position))]
 
         if isinstance(position, MetaPosition):
             ret[self.COLS['shares']] = unichr(8721) + " " + ret[self.COLS['shares']]
@@ -299,14 +299,14 @@ class PortfolioPositionsTree(PositionsTree):
                 row[self.COLS['gain_icon']] = get_arrow_icon(gain_percent)
                 row[self.COLS['days_gain']] = item.days_gain
                 row[self.COLS['mkt_value']] = item.cvalue
-                row[self.COLS['pf_percent']] = item.portfolio_fraction
+                row[self.COLS['pf_percent']] = self.container.fraction(item)
 
     def on_position_added(self, item):
         self.insert_position(item)
         #update portfolio fractions
         for row in self.model:
             pos = row[self.COLS['obj']]
-            row[self.COLS['pf_percent']] = float(pos.portfolio_fraction)
+            row[self.COLS['pf_percent']] = float(self.container.fraction(item))
 
     def on_unselect(self):
         for action in ['edit', 'sell', 'remove', 'chart']:

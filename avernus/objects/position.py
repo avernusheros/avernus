@@ -15,18 +15,18 @@ class Position(object):
         if self.stock:
             stock = self.stock.price - self.price
         else:
-            return 0,0
+            return 0, 0
         absolute = stock * self.quantity
         if self.price * self.quantity == 0:
             percent = 0
         else:
-            percent = absolute * 100 / (self.price*self.quantity)
+            percent = absolute * 100 / (self.price * self.quantity)
         return absolute, percent
 
     @property
     def current_change(self):
         if not self.stock:
-            return 0,0
+            return 0, 0
         return self.stock.change, self.stock.percent
 
     @property
@@ -44,13 +44,6 @@ class Position(object):
         if not self.stock:
             return "No Stock"
         return self.stock.name
-
-    @property
-    def portfolio_fraction(self):
-        if self.portfolio.cvalue == 0:
-            return 0
-        else:
-            return 100 * self.cvalue / self.portfolio.cvalue
 
 
 class PortfolioPosition(SQLiteEntity, Position):
@@ -147,7 +140,7 @@ class MetaPosition(Position):
         self._recalc_values_after_adding(position)
 
     def _recalc_values_after_adding(self, position):
-        amount = self.price*self.quantity + position.bvalue
+        amount = self.price * self.quantity + position.bvalue
         self.quantity += position.quantity
         self.price = amount / self.quantity
         if position.date < self.date:
