@@ -184,7 +184,10 @@ def to_local_time(date):
         return date.replace(tzinfo = None)
 
 def get_name_string(stock):
-    return '<b>%s</b>\n<small>%s\n%s</small>' % (GObject.markup_escape_text(stock.name),
+    #return '<b>%s</b>\n<small>%s\n%s</small>' % (GObject.markup_escape_text(stock.name),
+    #                                             GObject.markup_escape_text(stock.isin),
+    #                                             GObject.markup_escape_text(stock.exchange.encode('utf8')))
+	return '%s\n<small>%s | %s</small>' % (GObject.markup_escape_text(stock.name),
                                                  GObject.markup_escape_text(stock.isin),
                                                  GObject.markup_escape_text(stock.exchange.encode('utf8')))
 
