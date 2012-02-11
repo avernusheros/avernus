@@ -33,7 +33,7 @@ class DatasourceManager(object):
     def get_source_count(self):
         return len(sources.items())
 
-    def search(self, searchstring, callback = None, complete_cb = None, threaded = True):
+    def search(self, searchstring, callback=None, complete_cb=None, threaded=True):
         self.stop_search()
         self.search_callback = callback
         if not self.b_online:
@@ -49,7 +49,7 @@ class DatasourceManager(object):
                         self.current_searches.append(task)
                         task.start(searchstring)
                     except:
-                        logger.error("data source "+name+" not working")
+                        logger.error("data source " + name + " not working")
                 else:
                     for res in func(searchstring):
                         item, source, source_info = res
@@ -96,13 +96,13 @@ class DatasourceManager(object):
         if end_date is None:
             end_date = datetime.date.today() - datetime.timedelta(days=1)
         if start_date is None:
-            start_date = datetime.date(end_date.year -20, end_date.month, end_date.day)
+            start_date = datetime.date(end_date.year - 20, end_date.month, end_date.day)
         if start_date <= end_date:
             for qt in sources[stock.source].update_historical_prices(stock, start_date, end_date):
                 #qt : (stock, exchange, date, open, high, low, close, vol)
-                yield controller.newQuotation(stock=qt[0], exchange=qt[1],\
-                            date=qt[2], open=qt[3], high=qt[4],\
-                            low=qt[5], close=qt[6], vol=qt[7],\
+                yield controller.newQuotation(stock=qt[0], exchange=qt[1], \
+                            date=qt[2], open=qt[3], high=qt[4], \
+                            low=qt[5], close=qt[6], vol=qt[7], \
                             detectDuplicates=True)
         #needed to run as generator thread
         yield 1
@@ -113,5 +113,5 @@ class DatasourceManager(object):
         end_date = datetime.date.today() - datetime.timedelta(days=1)
         start_date = controller.getNewestQuotation(stock)
         if start_date == None:
-            start_date = datetime.date(end_date.year -20, end_date.month, end_date.day)
+            start_date = datetime.date(end_date.year - 20, end_date.month, end_date.day)
         yield self.get_historical_prices(stock, start_date, end_date)

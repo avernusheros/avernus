@@ -39,8 +39,8 @@ modelClasses = [Portfolio, Transaction, Watchlist, Dividend, SourceInfo,
 #these classes will be loaded with one single call and will also load composite
 #relations. therefore it is important that the list is complete in the sense
 #that there are no classes holding composite keys to classes outside the list
-initialLoadingClasses = [Portfolio,Transaction,Watchlist,Dividend,
-                         PortfolioPosition, WatchlistPosition,Account, Meta, Stock,
+initialLoadingClasses = [Portfolio, Transaction, Watchlist, Dividend,
+                         PortfolioPosition, WatchlistPosition, Account, Meta, Stock,
                          AccountTransaction, AccountCategory, Dimension, DimensionValue,
                          AssetDimensionValue]
 
@@ -51,26 +51,26 @@ datasource_manager = None
 controller = sys.modules[__name__]
 
 DIMENSIONS = {_('Region'): [_('Emerging markets'), _('America'), _('Europe'), _('Pacific')],
-              _('Asset Class'): [_('Bond'),_('Stocks developed countries'),_('Commodities')],
-              _('Risk'): [_('high'),_('medium'),_('low')],
-              _('Currency'): [_('Euro'),_('Dollar'),_('Yen')],
-              _('Company Size'): [_('large'),_('medium'),_('small')],
-              _('Sector'): ['Basic Materials','Conglomerates','Consumer Goods','Energy','Financial','Healthcare','Industrial Goods','Services','Technology','Transportation','Utilities']
+              _('Asset Class'): [_('Bond'), _('Stocks developed countries'), _('Commodities')],
+              _('Risk'): [_('high'), _('medium'), _('low')],
+              _('Currency'): [_('Euro'), _('Dollar'), _('Yen')],
+              _('Company Size'): [_('large'), _('medium'), _('small')],
+              _('Sector'): ['Basic Materials', 'Conglomerates', 'Consumer Goods', 'Energy', 'Financial', 'Healthcare', 'Industrial Goods', 'Services', 'Technology', 'Transportation', 'Utilities']
               }
 CATEGORIES = {
-    _('Utilities'): [_('Gas'),_('Phone'), _('Water'), _('Electricity')],
-    _('Entertainment'): [_('Books'),_('Movies'), _('Music'), _('Amusement')],
+    _('Utilities'): [_('Gas'), _('Phone'), _('Water'), _('Electricity')],
+    _('Entertainment'): [_('Books'), _('Movies'), _('Music'), _('Amusement')],
     _('Fees'):[],
     _('Gifts'):[],
-    _('Health care'): [_('Doctor'),_('Pharmacy'), _('Health insurance')],
-    _('Food'): [_('Groceries'),_('Restaurants'), _('Coffee')],
-    _('Transport'): [_('Car'),_('Train'), _('Fuel')],
+    _('Health care'): [_('Doctor'), _('Pharmacy'), _('Health insurance')],
+    _('Food'): [_('Groceries'), _('Restaurants'), _('Coffee')],
+    _('Transport'): [_('Car'), _('Train'), _('Fuel')],
     _('Services'): [_('Shipping')],
     _('Home'): [_('Rent'), _('Home improvements')],
     _('Personal care'): [],
     _('Taxes'): [],
     _('Income'): [],
-    _('Shopping'): [_('Clothes'),_('Electronics'),_('Hobbies'),_('Sporting Goods')],
+    _('Shopping'): [_('Clothes'), _('Electronics'), _('Hobbies'), _('Sporting Goods')],
     _('Travel'): [_('Lodging'), _('Transportation')]
 }
 
@@ -91,7 +91,7 @@ def is_duplicate(tp, **kwargs):
     sqlArgs = {}
     for req in tp.__comparisonPositives__:
         sqlArgs[req] = kwargs[req]
-    present = tp.getByColumns(sqlArgs,operator=" AND ",create=True)
+    present = tp.getByColumns(sqlArgs, operator=" AND ", create=True)
     if present:
         return True
     else: return False
@@ -100,17 +100,17 @@ def check_duplicate(tp, **kwargs):
     sqlArgs = {}
     for req in tp.__comparisonPositives__:
         sqlArgs[req] = kwargs[req]
-    present = tp.getByColumns(sqlArgs,operator=" AND ",create=True)
+    present = tp.getByColumns(sqlArgs, operator=" AND ", create=True)
     if present:
         return present[0]
     return None
 
-def detectDuplicate(tp,**kwargs):
+def detectDuplicate(tp, **kwargs):
     #print tp, kwargs
     sqlArgs = {}
     for req in tp.__comparisonPositives__:
         sqlArgs[req] = kwargs[req]
-    present = tp.getByColumns(sqlArgs,operator=" AND ",create=True)
+    present = tp.getByColumns(sqlArgs, operator=" AND ", create=True)
     if present:
         if len(present) == 1:
             return present[0]
@@ -136,14 +136,14 @@ def createTables():
         load_sample_data()
 
 def upgrade_db(db_version):
-    if db_version==1:
+    if db_version == 1:
         print "Updating database v.1 to v.2!"
         model.store.execute('ALTER TABLE stock ADD COLUMN ter FLOAT DEFAULT 0.0')
-        db_version+=1
-    if db_version==VERSION:
+        db_version += 1
+    if db_version == VERSION:
         set_db_version(db_version)
         print "Successfully updated your database to the current version!"
-    if db_version>VERSION:
+    if db_version > VERSION:
         print "ERROR: unknown db version"
 
 def set_db_version(version):
@@ -161,35 +161,36 @@ def load_sample_data():
             newAccountCategory(name=subcat, parent=parent)
     acc = newAccount(_('sample account'))
     newAccountTransaction(account=acc, description='this is a sample transaction', amount=99.99, date=datetime.date.today())
-    newAccountTransaction(account=acc, description='another sample transaction', amount=-33.90, date=datetime.date.today())
+    newAccountTransaction(account=acc, description='another sample transaction', amount= -33.90, date=datetime.date.today())
     newPortfolio(_('sample portfolio'))
     newWatchlist(_('sample watchlist'))
 
 def update_all():
     for ret in datasource_manager.update_stocks(get_all_used_stocks()):
         yield 0
-    for container in getAllPortfolio()+getAllWatchlist():
+    for container in getAllPortfolio() + getAllWatchlist():
         container.last_update = datetime.datetime.now()
     yield 1
 
 def update_historical_prices():
     stocks = get_all_used_stocks()
     l = len(stocks)
-    i=0
+    i = 0.0
     for st in stocks:
         for qt in datasource_manager.get_historical_prices(st):
-            yield 0
-        i+=1
-        yield 1
+            yield i / l
+        i += 1.0
+        yield i / l
+    yield 1
 
-def newPortfolio(name, pf_id=None, last_update = datetime.datetime.now(), comment=""):
-    result = Portfolio(id=pf_id, name=name,last_update=last_update,comment=comment)
+def newPortfolio(name, pf_id=None, last_update=datetime.datetime.now(), comment=""):
+    result = Portfolio(id=pf_id, name=name, last_update=last_update, comment=comment)
     result.controller = controller
     result.insert()
     return result
 
-def newWatchlist(name, wl_id=None, last_update = datetime.datetime.now(), comment=""):
-    result = Watchlist(id=wl_id, name=name,last_update=last_update,comment=comment)
+def newWatchlist(name, wl_id=None, last_update=datetime.datetime.now(), comment=""):
+    result = Watchlist(id=wl_id, name=name, last_update=last_update, comment=comment)
     result.controller = controller
     result.insert()
     return result
@@ -200,9 +201,9 @@ def newAccount(name, a_id=None, amount=0, accounttype=1):
     result.insert()
     return result
 
-def newAccountTransaction(id=None, description='', amount=0.0, account=None, category=None, date=datetime.date.today(), transferid=-1, detect_duplicates=False):
+def newAccountTransaction(id=None, description='', amount=0.0, account=None, category=None, date=datetime.date.today(), transferid= -1, detect_duplicates=False):
     if detect_duplicates:
-        duplicates = check_duplicate(AccountTransaction,\
+        duplicates = check_duplicate(AccountTransaction, \
                                description=description, \
                                amount=amount, \
                                date=date, \
@@ -222,7 +223,7 @@ def newAccountTransaction(id=None, description='', amount=0.0, account=None, cat
 
 def newAccountCategory(name='', cid=None, parent=None):
     if parent is None:
-        parentid =-1
+        parentid = -1
     else:
         parentid = parent.id
     result = AccountCategory(id=cid, name=name, parentid=parentid)
@@ -234,38 +235,38 @@ def newDividend(new_id=None, price=0, date=datetime.date.today(), costs=0, posit
     result.insert()
     return result
 
-def newTransaction(date=datetime.datetime.now(),\
-                   portfolio=None,\
-                   position=None,\
-                   type=0,\
-                   quantity=0,\
-                   price=0.0,\
+def newTransaction(date=datetime.datetime.now(), \
+                   portfolio=None, \
+                   position=None, \
+                   type=0, \
+                   quantity=0, \
+                   price=0.0, \
                    costs=0.0):
-    result = Transaction(id=None,\
-                         portfolio=portfolio,\
-                         position=position,\
-                         date=date,\
-                         type=type,\
-                         quantity=quantity,\
-                         price=price,\
+    result = Transaction(id=None, \
+                         portfolio=portfolio, \
+                         position=position, \
+                         date=date, \
+                         type=type, \
+                         quantity=quantity, \
+                         price=price, \
                          costs=costs)
     result.insert()
     return result
 
 
-def newPortfolioPosition(price=0,\
-                         date=datetime.datetime.now(),\
-                         quantity=1,\
-                         portfolio=None,\
-                         stock=None,\
+def newPortfolioPosition(price=0, \
+                         date=datetime.datetime.now(), \
+                         quantity=1, \
+                         portfolio=None, \
+                         stock=None, \
                          comment=''\
                          ):
-    result = PortfolioPosition(id=None,\
-                               price=price,\
-                               date=date,\
-                               quantity=quantity,\
-                               portfolio=portfolio,\
-                               stock = stock,\
+    result = PortfolioPosition(id=None, \
+                               price=price, \
+                               date=date, \
+                               quantity=quantity, \
+                               portfolio=portfolio, \
+                               stock=stock, \
                                comment=comment\
                                )
     result.controller = controller
@@ -273,18 +274,18 @@ def newPortfolioPosition(price=0,\
     return result
 
 
-def newWatchlistPosition(price=0,\
-                         date=datetime.datetime.now(),\
-                         quantity=1,\
-                         watchlist=None,\
-                         stock=None,\
+def newWatchlistPosition(price=0, \
+                         date=datetime.datetime.now(), \
+                         quantity=1, \
+                         watchlist=None, \
+                         stock=None, \
                          comment=''\
                          ):
-    result = WatchlistPosition(id=None,\
-                               price=price,\
-                               date=date,\
-                               watchlist=watchlist,\
-                               stock = stock,\
+    result = WatchlistPosition(id=None, \
+                               price=price, \
+                               date=date, \
+                               watchlist=watchlist, \
+                               stock=stock, \
                                comment=comment\
                                )
     result.insert()
@@ -321,34 +322,34 @@ def newStock(insert=True, **kwargs):
         result.insert()
     return result
 
-def newQuotation(date=datetime.date.today(),\
-                 stock=None,\
-                 open=0,\
-                 high=0,\
-                 low=0,\
-                 close=0,\
-                 vol=0,\
-                 exchange='',\
-                 detectDuplicates = True):
+def newQuotation(date=datetime.date.today(), \
+                 stock=None, \
+                 open=0, \
+                 high=0, \
+                 low=0, \
+                 close=0, \
+                 vol=0, \
+                 exchange='', \
+                 detectDuplicates=True):
     if detectDuplicates:
-        return detectDuplicate(Quotation,\
-                               date=date,\
-                               open=open,\
-                               high=high,\
-                               low=low,\
-                               close=close,\
-                               stock=stock.id,\
-                               exchange=exchange,\
+        return detectDuplicate(Quotation, \
+                               date=date, \
+                               open=open, \
+                               high=high, \
+                               low=low, \
+                               close=close, \
+                               stock=stock.id, \
+                               exchange=exchange, \
                                volume=vol)
     else:
-        result = Quotation(id=None,\
-                           date=date,\
-                           open=open,\
-                           high=high,\
-                           low=low,\
-                           close=close,\
-                           stock=stock,\
-                           exchange=exchange,\
+        result = Quotation(id=None, \
+                           date=date, \
+                           open=open, \
+                           high=high, \
+                           low=low, \
+                           close=close, \
+                           stock=stock, \
+                           exchange=exchange, \
                            volume=vol)
         result.insert()
         return result
@@ -427,7 +428,7 @@ def getTransactionsForPosition(position):
 def deleteAllPositionTransaction(position):
     for trans in getTransactionsForPosition(position):
         trans.delete()
-        
+
 def deleteAllPositionDividend(position):
     for d in getDividendsForPosition(position):
         d.delete()
@@ -462,7 +463,7 @@ def getDividendsForPosition(pos):
 
 def getTransactionsForAccount(account):
     key = account.getPrimaryKey()
-    return AccountTransaction.getAllFromOneColumn("account",key)
+    return AccountTransaction.getAllFromOneColumn("account", key)
 
 def yield_matching_transfer_tranactions(transaction):
     for account in getAllAccount():
@@ -477,8 +478,8 @@ def deleteAllAccountTransaction(account):
 def getStockForSearchstring(searchstring):
     sqlArgs = {}
     for req in ['name', 'isin']:
-        sqlArgs[req] = '%'+searchstring+'%'
-    return Stock.getByColumns(sqlArgs,operator=" OR ",operator2=' LIKE ', create=True)
+        sqlArgs[req] = '%' + searchstring + '%'
+    return Stock.getByColumns(sqlArgs, operator=" OR ", operator2=' LIKE ', create=True)
 
 def getQuotationsFromStock(stock, start=None):
     args = {'stock': stock.getPrimaryKey(), 'exchange':stock.exchange}

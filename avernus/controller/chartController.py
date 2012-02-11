@@ -11,9 +11,9 @@ logger = logging.getLogger(__name__)
 
 
 def get_step_for_range(start, end):
-    if start + relativedelta(months=+1) > end:
+    if start + relativedelta(months= +1) > end:
         return relativedelta(days=1)
-    if start + relativedelta(months=+10) > end:
+    if start + relativedelta(months= +10) > end:
         return relativedelta(weeks=1)
     return relativedelta(months=1)
 
@@ -45,28 +45,6 @@ def calculate_x_values(step, start, end):
         result.append(end)
         return result
 
-
-class InvestmentChartController:
-
-    def __init__(self, portfolio):
-        self.items = portfolio.getTransactions() + portfolio.getDividends()
-        self.start_date = compute_start_date(self.items)
-        self.end_date = datetime.date.today()
-        self.step = get_step_for_range(self.start_date, self.end_date)
-
-    def calculate_values(self):
-        self.days = calculate_x_values(self.step, self.start_date, self.end_date)
-        self.x_values = format_days(self.days, "daily")
-        self.items = sorted(self.items, key=lambda t: t.date)
-        self.y_values = {'invested capital': []}
-        count = 0
-        i = 0
-        for current in self.days:
-            while i < len(self.items) and self.items[i].date.date() < current:
-                count -= self.items[i].total
-                i += 1
-            self.y_values['invested capital'].append(count)
-        yield 1
 
 class TransactionChartController:
 
@@ -129,7 +107,7 @@ class TransactionValueOverTimeChartController(TransactionChartController):
     def remove_zero(self):
         # if the second is the same as the first or the last the same as the one before
         # only do it if we have more than 4
-        if len(self.y_values['Transaction value'])>4:
+        if len(self.y_values['Transaction value']) > 4:
             if (self.y_values['Transaction value'][0] == self.y_values['Transaction value'][1]):
                 del self.y_values['Transaction value'][0]
                 del self.x_values[0]
@@ -146,16 +124,16 @@ class TransactionValueOverTimeChartController(TransactionChartController):
         temp[x] = 0
         for t in self.transactions:
             if t.date > x:
-                i +=1
+                i += 1
                 x = self.days[i]
-                temp[x] = temp[self.days[i-1]]
+                temp[x] = temp[self.days[i - 1]]
             temp[x] += t.amount
         if len(self.days) > len(temp):
             logger.debug("more x than y, defaulting to the value of the last")
             for x in self.days:
                 if not x in temp:
-                    logger.debug("X: " + str(x) +  " index " + str(self.days.index(x)))
-                    temp[x] = temp[self.days[self.days.index(x)-1]]
+                    logger.debug("X: " + str(x) + " index " + str(self.days.index(x)))
+                    temp[x] = temp[self.days[self.days.index(x) - 1]]
         for x in self.days:
             value = x
             self.y_values['Transaction value'].append(temp[value])
@@ -170,7 +148,7 @@ class TransactionValueOverTimeChartController(TransactionChartController):
             if len(temp_values) == 0:
                 temp_values.append(y)
             else:
-                temp_values.append((y+temp_values[-1])/2)
+                temp_values.append((y + temp_values[-1]) / 2)
         self.y_values['Rolling average'] = temp_values
 
 
@@ -235,6 +213,7 @@ class EarningsVsSpendingsController():
         self.x_values = map(str, self.x_values)
         yield 1
 
+
 class TransactionCategoryPieController():
 
     def __init__(self, transactions, earnings):
@@ -253,6 +232,7 @@ class TransactionCategoryPieController():
                 data[str(trans.category)] = abs(trans.amount)
         self.values = data
         yield 1
+
 
 class AccountBalanceOverTimeChartController(TransactionChartController):
 
@@ -289,6 +269,7 @@ class AccountBalanceOverTimeChartController(TransactionChartController):
         self.y_values = {'Balance': y_values}
         yield 1
 
+
 class DividendsPerYearChartController():
 
     def __init__(self, portfolio):
@@ -300,7 +281,7 @@ class DividendsPerYearChartController():
             data[str(year)] = 0.0
         for pos in self.portfolio:
             for div in pos.dividends:
-                data[str(div.date.year)]+=div.total
+                data[str(div.date.year)] += div.total
         self.x_values = sorted(data.keys())
         self.y_values = []
         for x_value in self.x_values:
@@ -318,9 +299,9 @@ class DividendsPerPositionChartController():
         for pos in self.portfolio:
             for div in pos.dividends:
                 try:
-                    data[pos.name]+=div.total
+                    data[pos.name] += div.total
                 except:
-                    data[pos.name]=div.total
+                    data[pos.name] = div.total
         self.x_values = sorted(data.keys())
         self.y_values = []
         for x_value in self.x_values:
@@ -333,41 +314,64 @@ class StockChartPlotController():
     def __init__(self, quotations):
         self.y_values = [d.close for d in quotations]
         quotation_count = len(quotations)
-        self.x_values = [gui_utils.get_date_string(quotations[int(quotation_count/18 *i)].date) for i in range(18)]
-        self.x_values.insert(0,str(quotations[0].date))
-        self.x_values.insert(len(self.x_values),str(quotations[-1].date))
+        self.x_values = [gui_utils.get_date_string(quotations[int(quotation_count / 18 * i)].date) for i in range(18)]
+        self.x_values.insert(0, str(quotations[0].date))
+        self.x_values.insert(len(self.x_values), str(quotations[-1].date))
 
 
-class PortfolioValueChartController():
+class PortfolioChartController():
     MAX_VALUES = 25
 
     def __init__(self, portfolio, step):
         self.portfolio = portfolio
+        self.items = portfolio.getTransactions() + portfolio.getDividends()
         self.step = step
 
     def _calc_days(self):
         if self.step == 'daily':
-            self.days = list(rrule(DAILY, dtstart = self.portfolio.birthday, until = datetime.date.today()))[-self.MAX_VALUES:]
+            self.days = list(rrule(DAILY, dtstart=self.portfolio.birthday, until=datetime.date.today()))[-self.MAX_VALUES:]
         elif self.step == 'weekly':
-            self.days = list(rrule(WEEKLY, dtstart = self.portfolio.birthday, until = datetime.date.today(), byweekday=FR))[-self.MAX_VALUES:]
+            self.days = list(rrule(WEEKLY, dtstart=self.portfolio.birthday, until=datetime.date.today(), byweekday=FR))[-self.MAX_VALUES:]
         elif self.step == 'monthly':
-            self.days = list(rrule(MONTHLY, dtstart = self.portfolio.birthday, until = datetime.date.today(), bymonthday=-1))[-self.MAX_VALUES:]
+            self.days = list(rrule(MONTHLY, dtstart=self.portfolio.birthday, until=datetime.date.today(), bymonthday= -1))[-self.MAX_VALUES:]
         elif self.step == 'yearly':
-            self.days = list(rrule(YEARLY, dtstart = self.portfolio.birthday, until = datetime.date.today(), bymonthday=-1, bymonth=12))[-self.MAX_VALUES:]
+            self.days = list(rrule(YEARLY, dtstart=self.portfolio.birthday, until=datetime.date.today(), bymonthday= -1, bymonth=12))[-self.MAX_VALUES:]
 
     def calculate_values(self):
         self._calc_days()
+        self.x_values = format_days(self.days, self.step)
+        self.y_values = {}
+        #FIXME do both things in parallel
+        for foo in self.calculate_valueovertime():
+            yield foo
+        for foo in self.calculate_investmentsovertime():
+            yield foo
+        yield 1
+
+    def calculate_valueovertime(self):
         value = [0.0] * len(self.days)
         for pos in self.portfolio:
             for i in range(len(self.days)):
                 value[i] += pos.get_value_at_date(self.days[i])
                 yield 0
-        self.y_values = {'Portfolio value' : value}
-        self.x_values = format_days(self.days, self.step)
+        self.y_values['portfolio value'] = value
         yield 1
 
     def update(self):
         self.calculate_values()
+
+    def calculate_investmentsovertime(self):
+        self.items = sorted(self.items, key=lambda t: t.date)
+        self.y_values['invested capital'] = []
+        count = 0
+        i = 0
+        for current in self.days:
+            while i < len(self.items) and self.items[i].date < current:
+                count -= self.items[i].total
+                i += 1
+            self.y_values['invested capital'].append(count)
+        yield 1
+
 
 class DimensionChartController():
 

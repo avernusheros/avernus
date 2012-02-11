@@ -3,7 +3,6 @@ from avernus.gui import gui_utils, threads
 from avernus import cairoplot
 
 
-
 class ChartBase(Gtk.VBox):
     SPINNER_SIZE = 40
 

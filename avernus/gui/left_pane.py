@@ -29,8 +29,8 @@ class MainTreeBox(Gtk.VBox):
         self.pack_start(main_tree, True, True, 0)
 
         actiongroup.add_actions([
-                ('add',    Gtk.STOCK_ADD,    'new container',    None, _('Add new portfolio or watchlist'),         main_tree.on_add),
-                ('edit' ,  Gtk.STOCK_EDIT,   'edit container',   None, _('Edit selected portfolio or watchlist'),   main_tree.on_edit),
+                ('add', Gtk.STOCK_ADD, 'new container', None, _('Add new portfolio or watchlist'), main_tree.on_add),
+                ('edit' , Gtk.STOCK_EDIT, 'edit container', None, _('Edit selected portfolio or watchlist'), main_tree.on_edit),
                 ('remove', Gtk.STOCK_DELETE, 'remove container', None, _('Delete selected portfolio or watchlist'), main_tree.on_remove)
                                 ])
 
@@ -70,7 +70,7 @@ class InfoBox(Gtk.Table):
         info.set_markup(info_text)
         label.set_justify(Gtk.Justification.RIGHT)
         info.set_justify(Gtk.Justification.LEFT)
-        label.set_markup("<span font_weight=\"bold\">"+label_text+':'+"</span>")
+        label.set_markup("<span font_weight=\"bold\">" + label_text + ':' + "</span>")
 
         label.set_alignment(1, 0);
         info.set_alignment(0, 0);
@@ -81,7 +81,7 @@ class InfoBox(Gtk.Table):
         self.attach(label, 0, 1, self.line_count, self.line_count + 1, xoptions=Gtk.AttachOptions.FILL, yoptions=Gtk.AttachOptions.FILL)
         self.attach(info, 1, 2, self.line_count, self.line_count + 1)
 
-        self.line_count+=1
+        self.line_count += 1
 
     def clear(self):
         for child in self:
@@ -146,9 +146,9 @@ class MainTree(gui_utils.Tree):
 
     def _init_widgets(self):
         #object, icon, name
-        self.set_model(Gtk.TreeStore(object,str, str, str))
+        self.set_model(Gtk.TreeStore(object, str, str, str))
         self.set_headers_visible(False)
-        col, cell = self.create_icon_text_column('', 1,2)
+        col, cell = self.create_icon_text_column('', 1, 2)
         cell.set_property('editable', True)
         cell.connect('edited', self.on_cell_edited)
         self.create_column('', 3)
@@ -172,9 +172,9 @@ class MainTree(gui_utils.Tree):
         return False
 
     def insert_categories(self):
-        self.pf_iter = self.get_model().append(None, [Category('Portfolios'),'portfolios', _("<b>Portfolios</b>"),''])
-        self.wl_iter = self.get_model().append(None, [Category('Watchlists'),'watchlists', _("<b>Watchlists</b>"),''])
-        self.accounts_iter = self.get_model().append(None, [Category('Accounts'),'accounts', _("<b>Accounts</b>"),''])
+        self.pf_iter = self.get_model().append(None, [Category('Portfolios'), 'portfolios', _("<b>Portfolios</b>"), ''])
+        self.wl_iter = self.get_model().append(None, [Category('Watchlists'), 'watchlists', _("<b>Watchlists</b>"), ''])
+        self.accounts_iter = self.get_model().append(None, [Category('Accounts'), 'accounts', _("<b>Accounts</b>"), ''])
         #self.index_iter = self.get_model().append(None, [Category('Indices'),'indices', _("<b>Indices</b>"),''])
 
     def insert_watchlist(self, item):
@@ -259,7 +259,7 @@ class MainTree(gui_utils.Tree):
         elif obj.__name__ == 'Account':
             EditAccount(obj, parent)
 
-    def on_cell_edited(self,  cellrenderertext, path, new_text):
+    def on_cell_edited(self, cellrenderertext, path, new_text):
         m = self.get_model()
         m[path][0].name = m[path][2] = new_text
 
@@ -283,22 +283,22 @@ class MainTree(gui_utils.Tree):
                 cat_type = 'account'
         if cat_type == 'portfolio':
             parent_iter = self.pf_iter
-            item = controller.newPortfolio('new '+cat_type)
+            item = controller.newPortfolio('new ' + cat_type)
         elif cat_type == 'watchlist':
             parent_iter = self.wl_iter
-            item = controller.newWatchlist('new '+cat_type)
+            item = controller.newWatchlist('new ' + cat_type)
         elif cat_type == 'account':
             parent_iter = self.accounts_iter
-            item = controller.newAccount('new '+cat_type)
+            item = controller.newAccount('new ' + cat_type)
         iterator = model.append(parent_iter, [item, cat_type, item.name, ''])
-        self.expand_row( model.get_path(parent_iter), True)
-        self.set_cursor(model.get_path(iterator), focus_column = self.get_column(0), start_editing=True)
+        self.expand_row(model.get_path(parent_iter), True)
+        self.set_cursor(model.get_path(iterator), focus_column=self.get_column(0), start_editing=True)
 
 
 class EditWatchlist(Gtk.Dialog):
 
-    def __init__(self, wl, parent = None):
-        Gtk.Dialog.__init__(self, _("Edit watchlist - ")+wl.name, parent
+    def __init__(self, wl, parent=None):
+        Gtk.Dialog.__init__(self, _("Edit watchlist - ") + wl.name, parent
                             , Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,
                      (Gtk.STOCK_CANCEL, Gtk.ResponseType.REJECT,
                       Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT))
@@ -317,9 +317,9 @@ class EditWatchlist(Gtk.Dialog):
         self.show_all()
         self.name_entry.connect("activate", self.process_result)
         response = self.run()
-        self.process_result(response = response)
+        self.process_result(response=response)
 
-    def process_result(self, widget=None, response = Gtk.ResponseType.ACCEPT):
+    def process_result(self, widget=None, response=Gtk.ResponseType.ACCEPT):
         if response == Gtk.ResponseType.ACCEPT:
             self.wl.name = self.name_entry.get_text()
             pubsub.publish("container.edited", self.wl)
@@ -328,8 +328,8 @@ class EditWatchlist(Gtk.Dialog):
 
 class EditAccount(Gtk.Dialog):
 
-    def __init__(self, acc, parent = None):
-        Gtk.Dialog.__init__(self, _("Edit watchlist - ")+acc.name, parent
+    def __init__(self, acc, parent=None):
+        Gtk.Dialog.__init__(self, _("Edit watchlist - ") + acc.name, parent
                             , Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,
                      (Gtk.STOCK_CANCEL, Gtk.ResponseType.REJECT,
                       Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT))
@@ -339,24 +339,24 @@ class EditAccount(Gtk.Dialog):
         vbox.pack_start(table, True, True, 0)
 
         label = Gtk.Label(label=_("Name:"))
-        table.attach(label, 0,1,0,1)
+        table.attach(label, 0, 1, 0, 1)
         self.name_entry = Gtk.Entry()
         self.name_entry.set_text(acc.name)
-        table.attach(self.name_entry, 1,2,0,1)
+        table.attach(self.name_entry, 1, 2, 0, 1)
 
         #cash entry
         label = Gtk.Label(label=_('Current balance:'))
-        table.attach(label, 0,1,1,2)
-        self.cash_entry = Gtk.SpinButton(adjustment = Gtk.Adjustment(lower=-999999999, upper=999999999,step_increment=10, value = acc.amount), digits=2)
-        table.attach(self.cash_entry,1,2,1,2)
+        table.attach(label, 0, 1, 1, 2)
+        self.cash_entry = Gtk.SpinButton(adjustment=Gtk.Adjustment(lower= -999999999, upper=999999999, step_increment=10, value=acc.amount), digits=2)
+        table.attach(self.cash_entry, 1, 2, 1, 2)
 
         self.show_all()
 
         self.name_entry.connect("activate", self.process_result)
         response = self.run()
-        self.process_result(response = response)
+        self.process_result(response=response)
 
-    def process_result(self, widget=None, response = Gtk.ResponseType.ACCEPT):
+    def process_result(self, widget=None, response=Gtk.ResponseType.ACCEPT):
         if response == Gtk.ResponseType.ACCEPT:
             self.acc.name = self.name_entry.get_text()
             self.acc.amount = self.cash_entry.get_value()
@@ -365,8 +365,8 @@ class EditAccount(Gtk.Dialog):
 
 class EditPortfolio(Gtk.Dialog):
 
-    def __init__(self, pf, parent = None):
-        Gtk.Dialog.__init__(self, _("Edit watchlist - ")+pf.name, parent
+    def __init__(self, pf, parent=None):
+        Gtk.Dialog.__init__(self, _("Edit watchlist - ") + pf.name, parent
                             , Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,
                      (Gtk.STOCK_CANCEL, Gtk.ResponseType.REJECT,
                       Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT))
@@ -378,17 +378,17 @@ class EditPortfolio(Gtk.Dialog):
 
         #name entry
         label = Gtk.Label(label=_('Name:'))
-        table.attach(label, 0,1,0,1)
+        table.attach(label, 0, 1, 0, 1)
         self.name_entry = Gtk.Entry()
         self.name_entry.set_text(pf.name)
-        table.attach(self.name_entry,1,2,0,1)
+        table.attach(self.name_entry, 1, 2, 0, 1)
 
         self.show_all()
         self.name_entry.connect("activate", self.process_result)
         response = self.run()
-        self.process_result(response = response)
+        self.process_result(response=response)
 
-    def process_result(self, widget=None, response = Gtk.ResponseType.ACCEPT):
+    def process_result(self, widget=None, response=Gtk.ResponseType.ACCEPT):
         if response == Gtk.ResponseType.ACCEPT:
             self.pf.name = self.name_entry.get_text()
             self.pf.cash = self.cash_entry.get_value()
@@ -406,4 +406,4 @@ class ContainerContextMenu(gui_utils.ContextMenu):
 
         if container.__name__ == 'Account':
             self.append(Gtk.SeparatorMenuItem())
-            self.add_item(_('Import transactions'),  lambda x: CSVImportDialog(account = container) , 'gtk-add')
+            self.add_item(_('Import transactions'), lambda x: CSVImportDialog(account=container) , 'gtk-add')

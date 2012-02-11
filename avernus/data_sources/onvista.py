@@ -355,9 +355,6 @@ class Onvista():
 
 if __name__ == "__main__":
 
-    class Exchange():
-        name = 'KAG-Kurs'
-
     class Stock():
         def __init__(self, isin, ex, type):
             self.isin = isin
@@ -366,13 +363,10 @@ if __name__ == "__main__":
             self.currency = 'EUR'
             self.date = datetime(2008,5,1)
 
-    ex = Exchange()
-    s1 = Stock('DE0008474248', ex, stock.FUND)
-    s2 = Stock('LU0382362290', ex, stock.ETF)
 
     def test_update(s):
-
-        plugin.update_stocks([s])
+        for item in plugin.update_stocks([s]):
+            pass
         print s.price, s.change, s.date
         #print s2.price, s2.change, s2.date
 
@@ -382,9 +376,7 @@ if __name__ == "__main__":
 
     def test_historicals():
         print "los"
-        for quot in plugin.update_historical_prices(s3, date(1920,1,1), date.today()):
-            print quot
-        for quot in plugin.update_historical_prices(s2, date(1920,1,1), date.today()):
+        for quot in plugin.update_historical_prices(s2, date(2010,1,1), date.today()):
             print quot
         print "fertsch"
 
@@ -400,13 +392,11 @@ if __name__ == "__main__":
 
 
     plugin = Onvista()
-    ex = Exchange()
-    s1 = Stock('DE000A0F5G98', ex, stock.FUND)
-    s2 = Stock('LU0103598305', ex, stock.FUND)
-    s3 = Stock('LU0103598305', ex, stock.FUND)
-    test_search()
+    s1 = Stock('DE000A0RFEE5', 'foo', stock.FUND)
+    s2 = Stock('LU0103598305', 'foo', stock.FUND)
+    #test_search()
     #print plugin.search_kurse(s1)
     #print plugin.search_kurse(s3)
     #test_parse_kurse()
-    test_update(s3)
+    test_update(s1)
     #test_historicals()
