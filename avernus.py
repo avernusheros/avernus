@@ -79,12 +79,12 @@ def init_icons():
     from avernus.gui.icons import IconManager
     icons = IconManager()
 
-    path = os.path.join(config.getdatapath(),'images')
+    path = os.path.join(config.getdatapath(), 'images')
     iconNames = [
-    'avernus','tags','tag','watchlists','watchlist','portfolio',
-    'portfolios', 'index', 'indices','arrow_down','arrow_med_down',
-    'arrow_up','arrow_med_up','arrow_right','A','F','fund','stock',
-    'etf','accounts','account','onvista','yahoo'
+    'avernus', 'tags', 'tag', 'watchlists', 'watchlist', 'portfolio',
+    'portfolios', 'index', 'indices', 'arrow_down', 'arrow_med_down',
+    'arrow_up', 'arrow_med_up', 'arrow_right', 'A', 'F', 'fund', 'stock',
+    'etf', 'accounts', 'account', 'onvista', 'yahoo'
     ]
     for name in iconNames:
         icons.add_icon_name_from_directory(name, path)
@@ -95,9 +95,9 @@ def init_icons():
 
 init_translations()
 # Support for command line options.
-parser = optparse.OptionParser(version='%prog '+avernus.__version__)
+parser = optparse.OptionParser(version='%prog ' + avernus.__version__)
 parser.add_option("-d", "--debug", action="store_true", dest="debug", help=_("enable debug output"))
-parser.add_option("-f", "--file",  dest="datafile", help="set database file")
+parser.add_option("-f", "--file", dest="datafile", help="set database file")
 (options, args) = parser.parse_args()
 
 init_logger(options.debug)
@@ -106,7 +106,7 @@ db_file = options.datafile
 if db_file == None:
     configs = config.avernusConfig()
     default_file = os.path.join(config.config_path, 'avernus.db')
-    db_file = configs.get_option('database file', default = default_file)
+    db_file = configs.get_option('database file', default=default_file)
 
 
 #fixme check if dbfile exists
@@ -115,16 +115,17 @@ GObject.threads_init()
 
 
 from avernus.objects import model, store
-from avernus.controller import controller
+from avernus.controller import controller, portfolio_controller
 model.store = store.Store(db_file)
 controller.createTables()
-controller.initialLoading()
+controller.initialLoading(controller)
+controller.initialLoading(portfolio_controller)
 
 from avernus.gui.mainwindow import MainWindow
 from avernus.datasource_manager import DatasourceManager
 dsm = DatasourceManager()
 main_window = MainWindow()
-controller.datasource_manager = dsm
+portfolio_controller.datasource_manager = dsm
 
 #FIXME fix or remove the network manager code
 #from avernus.network_manager import DBusNetwork

@@ -83,8 +83,13 @@ class Container(object):
         return change, percent
 
     def update_positions(self):
-        for item in self.controller.datasource_manager.update_stocks([pos.stock for pos in self if pos.quantity > 0]):
-            yield 0
+        # using set to ignore duplicate stocks
+        items = set(pos.stock for pos in self if pos.quantity > 0)
+        itemcount = len(items)
+        count = 0.0
+        for item in self.controller.datasource_manager.update_stocks(items):
+            count += 1.0
+            yield count / itemcount
         self.last_update = datetime.now()
         pubsub.publish("stocks.updated", self)
         yield 1
@@ -104,7 +109,8 @@ class PortfolioBase(Container):
     def getDividends(self):
         result = []
         for position in self:
-            result.extend(self.controller.getDividendsForPosition(position))
+            for div in position.dividends:
+                result.append(div)
         return result
 
     @property

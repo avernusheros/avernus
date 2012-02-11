@@ -7,6 +7,8 @@ from avernus import pubsub
 from avernus.gui import gui_utils, progress_manager
 from avernus.gui.account.csv_import_dialog import CSVImportDialog
 from avernus.controller import controller
+from avernus.controller import portfolio_controller as pfctlr
+
 
 from avernus.objects.container import AllPortfolio
 from avernus.objects.account import AllAccount
@@ -111,15 +113,15 @@ class MainTree(gui_utils.Tree):
         self._load_items()
 
     def _load_items(self):
-        portfolios = controller.getAllPortfolio()
+        portfolios = pfctlr.getAllPortfolio()
         if len(portfolios) > 1:
             all_pf = AllPortfolio()
-            all_pf.controller = controller
+            all_pf.controller = pfctlr
             all_pf.name = "<i>%s</i>" % (_('All'),)
             self.insert_portfolio(all_pf)
         for pf in portfolios:
             self.insert_portfolio(pf)
-        for wl in controller.getAllWatchlist():
+        for wl in pfctlr.getAllWatchlist():
             self.insert_watchlist(wl)
 
         accounts = controller.getAllAccount()

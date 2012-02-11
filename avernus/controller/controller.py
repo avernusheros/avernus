@@ -39,13 +39,12 @@ modelClasses = [Portfolio, Transaction, Watchlist, Dividend, SourceInfo,
 #these classes will be loaded with one single call and will also load composite
 #relations. therefore it is important that the list is complete in the sense
 #that there are no classes holding composite keys to classes outside the list
-initialLoadingClasses = [Portfolio, Transaction, Watchlist, Dividend,
+initialLoadingClasses = [Transaction, Watchlist, Dividend,
                          PortfolioPosition, WatchlistPosition, Account, Meta, Stock,
                          AccountTransaction, AccountCategory, Dimension, DimensionValue,
                          AssetDimensionValue]
 
 VERSION = 2
-datasource_manager = None
 
 #FIXME very hackish, but allows to remove the circular controller imports in the objects
 controller = sys.modules[__name__]
@@ -74,18 +73,20 @@ CATEGORIES = {
     _('Travel'): [_('Lodging'), _('Transportation')]
 }
 
-def initialLoading():
+
+def initialLoading(ctlr):
     #first load all the objects from the database so that they are cached
-    for cl in initialLoadingClasses:
+    for cl in ctlr.initialLoadingClasses:
         logger.debug("Loading Objects of Class: " + cl.__name__)
         cl.getAll()
     #now load all of the composite
-    for cl in initialLoadingClasses:
+    for cl in ctlr.initialLoadingClasses:
         #this will now be much faster as everything is in the cache
         for obj in cl.getAll():
-            obj.controller = controller
-            logger.debug("Loading Composites of Objekt: " + unicode(obj))
+            obj.controller = ctlr
+            logger.debug("Loading Composites of object: " + unicode(obj))
             obj.retrieveAllComposite()
+
 
 def is_duplicate(tp, **kwargs):
     sqlArgs = {}
@@ -165,23 +166,6 @@ def load_sample_data():
     newPortfolio(_('sample portfolio'))
     newWatchlist(_('sample watchlist'))
 
-def update_all():
-    for ret in datasource_manager.update_stocks(get_all_used_stocks()):
-        yield 0
-    for container in getAllPortfolio() + getAllWatchlist():
-        container.last_update = datetime.datetime.now()
-    yield 1
-
-def update_historical_prices():
-    stocks = get_all_used_stocks()
-    l = len(stocks)
-    i = 0.0
-    for st in stocks:
-        for qt in datasource_manager.get_historical_prices(st):
-            yield i / l
-        i += 1.0
-        yield i / l
-    yield 1
 
 def newPortfolio(name, pf_id=None, last_update=datetime.datetime.now(), comment=""):
     result = Portfolio(id=pf_id, name=name, last_update=last_update, comment=comment)
@@ -355,17 +339,9 @@ def newQuotation(date=datetime.date.today(), \
         return result
 
 
-def getAllPortfolio():
-    return Portfolio.getAll()
-
-def getAllPosition():
-    return PortfolioPosition.getAll()
-
 def getAllTransaction():
     return Transaction.getAll()
 
-def getAllWatchlist():
-    return Watchlist.getAll()
 
 def getAllAccount():
     return Account.getAll()
@@ -411,16 +387,6 @@ def getAssetDimensionValueForStock(stock, dim):
 def getAllStock():
     return Stock.getAll()
 
-def get_all_used_stocks():
-    query = """
-    select distinct stock from portfolioposition
-    union
-    select distinct stock from watchlistposition
-    """
-    return [Stock.getByPrimaryKey(stockid[0]) for stockid in model.store.select(query)]
-
-def getPositionForPortfolio(portfolio):
-    return PortfolioPosition.getAllFromOneColumn("portfolio", portfolio.getPrimaryKey())
 
 def getTransactionsForPosition(position):
     return Transaction.getAllFromOneColumn("position", position.getPrimaryKey())

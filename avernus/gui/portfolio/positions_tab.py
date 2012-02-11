@@ -11,6 +11,8 @@ from avernus.gui.gui_utils import Tree, get_name_string
 from avernus.gui import gui_utils, progress_manager, page, threads
 from avernus.objects.position import MetaPosition
 from avernus.controller import controller
+from avernus.controller import portfolio_controller as pfctrl
+
 
 gain_thresholds = {
                    (-sys.maxint, -0.5):'arrow_down',
@@ -20,10 +22,12 @@ gain_thresholds = {
                    (0.5, sys.maxint):'arrow_up'
                    }
 
+
 def get_arrow_icon(perc):
     for (min_val, max_val), name in gain_thresholds.items():
         if min_val <= perc and max_val >= perc:
             return name
+
 
 def start_price_markup(column, cell, model, iter, user_data):
     pos = model.get_value(iter, 0)
@@ -31,6 +35,7 @@ def start_price_markup(column, cell, model, iter, user_data):
     if isinstance(pos, MetaPosition):
         markup = unichr(8709) + " " + markup
     cell.set_property('markup', markup)
+
 
 def current_price_markup(column, cell, model, iter, user_data):
     stock = model.get_value(iter, 0).stock
@@ -87,7 +92,7 @@ class PositionsTree(Tree):
         for action in self.actiongroup.list_actions():
             self.context_menu.add(action.create_menu_item())
 
-        all_portfolios = controller.getAllPortfolio()
+        all_portfolios = pfctrl.getAllPortfolio()
         if len(all_portfolios) > 1:
             self.context_menu.add_item('----')
 
@@ -115,8 +120,7 @@ class PositionsTree(Tree):
         def finished_cb():
             progress_manager.remove_monitor(555)
         m = progress_manager.add_monitor(555, _('updating stocks...'), Gtk.STOCK_REFRESH)
-        m.progress_update_auto()
-        threads.GeneratorTask(self.container.update_positions, complete_callback=finished_cb).start()
+        threads.GeneratorTask(self.container.update_positions, m.progress_update, complete_callback=finished_cb).start()
 
     def on_chart(self, widget, user_data=None):
         ChartWindow(self.selected_item[0].stock)

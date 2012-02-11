@@ -3,6 +3,7 @@ from gi.repository import Gtk
 from avernus import pubsub
 from avernus.gui import gui_utils
 from avernus.controller import controller
+from avernus.controller import portfolio_controller as pfctlr
 from avernus.objects import stock
 import locale
 import datetime
@@ -579,8 +580,8 @@ class StockSelector(Gtk.VBox):
             else:
                 icon = 'gtk-harddisk'
             self.insert_item(item, icon)
-        self.search_source_count = controller.datasource_manager.get_source_count()
-        controller.datasource_manager.search(searchstring, self.insert_item, self.search_complete_callback)
+        self.search_source_count = pfctlr.datasource_manager.get_source_count()
+        pfctlr.datasource_manager.search(searchstring, self.insert_item, self.search_complete_callback)
 
     def search_complete_callback(self):
         self.search_source_count -= 1
@@ -589,7 +590,7 @@ class StockSelector(Gtk.VBox):
 
     def stop_search(self):
         self._hide_spinner()
-        controller.datasource_manager.stop_search()
+        pfctlr.datasource_manager.stop_search()
 
     def insert_item(self, stock, icon):
         #FIXME bond icon

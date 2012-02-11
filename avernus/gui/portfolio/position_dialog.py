@@ -3,13 +3,13 @@
 from avernus.gui import gui_utils, threads, common_dialogs
 from avernus.gui.portfolio import dialogs
 from avernus.controller import controller
+from avernus.controller import portfolio_controller as pfctrl
 from avernus.objects.position import MetaPosition
 import datetime
 import logging
 from gi.repository import Gtk
 
 logger = logging.getLogger(__name__)
-
 
 
 class PositionDialog(Gtk.Dialog):
@@ -97,7 +97,7 @@ class QuotationTable(Gtk.Table):
         self.update_labels()
 
     def on_get_button_clicked(self, button):
-        threads.GeneratorTask(controller.datasource_manager.get_historical_prices, self.new_quotation_callback, complete_callback=self.update_labels).start(self.stock)
+        threads.GeneratorTask(pfctrl.datasource_manager.get_historical_prices, self.new_quotation_callback, complete_callback=self.update_labels).start(self.stock)
 
     def new_quotation_callback(self, qt):
         self.count += 1
