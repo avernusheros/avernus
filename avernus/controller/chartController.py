@@ -169,7 +169,6 @@ class TransactionStepValueChartController(TransactionValueOverTimeChartControlle
         # see if the first or last x is zero
         for x in self.days:
             self.y_values['Transaction value'].append(temp[x])
-        yield 1
 
     def remove_zero(self):
         if self.y_values['Transaction value'][0] == 0:
