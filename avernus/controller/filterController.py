@@ -3,15 +3,17 @@ from avernus.controller import controller
 from avernus.config import avernusConfig
 
 
-def create(rule, category, priority = 10, active = False):
+def create(rule, category, priority=10, active=False):
     result = CategoryFilter(rule=rule, category=category, active=active, priority=priority)
     result.insert()
     #update rule list
     rules = get_all_active_by_priority()
     return result
 
+
 def get_all():
     return CategoryFilter.getAll()
+
 
 def get_all_active_by_priority():
     return sorted([f for f in get_all() if f.active], key=lambda f: f.priority)

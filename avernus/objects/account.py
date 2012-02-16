@@ -4,6 +4,7 @@ import datetime
 
 
 class AccountBase():
+    __name__ = 'Account'
 
     def __len__(self):
         return self.transaction_count
@@ -72,7 +73,6 @@ class Account(SQLiteEntity, AccountBase):
 class AllAccount(AccountBase):
     name = ''
     id = -1
-    __name__ = 'Account'
 
     @property
     def transactions(self):

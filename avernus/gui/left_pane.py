@@ -14,6 +14,21 @@ from avernus.objects.container import AllPortfolio
 from avernus.objects.account import AllAccount
 
 
+UI_INFO = """
+<ui>
+  <popup name='Popup'>
+    <menuitem action='add' />
+    <separator />
+    <menuitem action='edit' />
+    <menuitem action='remove' />
+  </popup>
+  <popup name='CategoryPopup'>
+    <menuitem action='add' />
+  </popup>
+</ui>
+"""
+
+
 class Category(object):
     __name__ = 'Category'
     id = -1
@@ -25,24 +40,9 @@ class MainTreeBox(Gtk.VBox):
 
     def __init__(self):
         super(Gtk.VBox, self).__init__()
-        actiongroup = Gtk.ActionGroup('left_pane')
 
-        main_tree = MainTree(actiongroup)
+        main_tree = MainTree()
         self.pack_start(main_tree, True, True, 0)
-
-        actiongroup.add_actions([
-                ('add', Gtk.STOCK_ADD, 'new container', None, _('Add new portfolio or watchlist'), main_tree.on_add),
-                ('edit' , Gtk.STOCK_EDIT, 'edit container', None, _('Edit selected portfolio or watchlist'), main_tree.on_edit),
-                ('remove', Gtk.STOCK_DELETE, 'remove container', None, _('Delete selected portfolio or watchlist'), main_tree.on_remove)
-                                ])
-
-        main_tree_toolbar = Gtk.Toolbar()
-        self.conditioned = ['remove', 'edit']
-
-        for action in actiongroup.list_actions():
-            button = action.create_tool_item()
-            main_tree_toolbar.insert(button, -1)
-        self.pack_start(main_tree_toolbar, False, False, 0)
 
         vbox = Gtk.VBox()
         self.pack_start(vbox, False, False, 0)
@@ -102,10 +102,24 @@ class InfoBox(Gtk.Table):
 
 class MainTree(gui_utils.Tree):
 
-    def __init__(self, actiongroup):
+    def __init__(self):
         super(gui_utils.Tree, self).__init__()
-        self.actiongroup = actiongroup
+        actiongroup = Gtk.ActionGroup('left_pane')
         self.selected_item = None
+
+        actiongroup.add_actions([
+            ('add', Gtk.STOCK_ADD, _('New'), None, _('New'), self.on_add),
+            ('edit', Gtk.STOCK_EDIT, _('Edit'), None, _('Edit'), self.on_edit),
+            ('remove', Gtk.STOCK_DELETE, _('Remove'), None, _('Delete'), self.on_remove)
+        ])
+
+        self.uimanager = Gtk.UIManager()
+        self.uimanager.insert_action_group(actiongroup)
+        self.uimanager.add_ui_from_string(UI_INFO)
+        # Add the accelerator group to the toplevel window
+        accelgroup = self.uimanager.get_accel_group()
+        #FIXME add accelgroup to toplevel window for keyboard shortcuts
+        #self.get_toplevel().add_accel_group(accelgroup)
 
         self._init_widgets()
         self.insert_categories()
@@ -136,7 +150,6 @@ class MainTree(gui_utils.Tree):
 
     def _subscribe(self):
         self.connect('button-press-event', self.on_button_press_event)
-        self.connect('key-press-event', self.on_key_press)
         self.connect('cursor_changed', self.on_cursor_changed)
         self.subscriptions = (
                     ("container.edited", self.on_updated),
@@ -159,19 +172,16 @@ class MainTree(gui_utils.Tree):
         target = self.get_path_at_pos(int(event.x), int(event.y))
         if target and event.type == Gdk.EventType.BUTTON_PRESS:
             obj = self.get_model()[target[0]][0]
-            if event.button == 3 and not isinstance(obj, Category):
-                self.popup = ContainerContextMenu(obj, self.actiongroup)
-                self.popup.popup(None, None, None, None, event.button, event.time)
+            if event.button == 3:
+                if isinstance(obj, Category):
+                    popup = self.uimanager.get_widget("/CategoryPopup")
+                else:
+                    popup = self.uimanager.get_widget("/Popup")
+                popup.popup(None, None, None, None, event.button, event.time)
                 return True
-            elif self.get_selection().path_is_selected(target[0]) and obj.id == -1 :
+            if self.get_selection().path_is_selected(target[0]) and obj.id == -1 :
                 #disable editing of categories
                 return True
-
-    def on_key_press(self, widget, event):
-        if Gdk.keyval_name(event.keyval) == 'Delete':
-            self.on_remove()
-            return True
-        return False
 
     def insert_categories(self):
         self.pf_iter = self.get_model().append(None, [Category('Portfolios'), 'portfolios', _("<b>Portfolios</b>"), ''])
@@ -228,23 +238,10 @@ class MainTree(gui_utils.Tree):
             obj = treestore.get_value(selection_iter, 0)
             if self.selected_item is None or self.selected_item[0] != obj:
                 self.selected_item = obj, selection_iter
-                self.on_select(obj)
                 pubsub.publish('maintree.select', obj)
             return
         self.selected_item = None
         pubsub.publish('maintree.unselect')
-        self.on_unselect()
-
-    def on_unselect(self):
-        for action in ['remove', 'edit']:
-            self.actiongroup.get_action(action).set_sensitive(False)
-
-    def on_select(self, obj):
-        if isinstance(obj, Category):
-            self.on_unselect()
-        else:
-            for action in ['remove', 'edit']:
-                self.actiongroup.get_action(action).set_sensitive(True)
 
     def on_edit(self, treeview=None, iter=None, path=None):
         if self.selected_item is None:
@@ -253,79 +250,33 @@ class MainTree(gui_utils.Tree):
         #all portfolio and all account are not editable
         if obj.id == -1:
             return
-        parent = self.get_parent().get_parent().get_parent().get_parent()
-        if obj.__name__ == 'Portfolio':
-            EditPortfolio(obj, parent)
-        elif obj.__name__ == 'Watchlist':
-            EditWatchlist(obj, parent)
-        elif obj.__name__ == 'Account':
+        parent = self.get_toplevel()
+        if obj.__name__ == 'Account':
             EditAccount(obj, parent)
+        else:
+            obj, selection_iter = self.selected_item
+            self.set_cursor(self.get_model().get_path(selection_iter), focus_column=self.get_column(0), start_editing=True)
 
     def on_cell_edited(self, cellrenderertext, path, new_text):
         m = self.get_model()
         m[path][0].name = m[path][2] = new_text
 
     def on_add(self, widget=None, data=None):
-        #FIXME sehr unschoen
         obj, row = self.selected_item
         model = self.get_model()
-        if isinstance(obj, Category):
-            if obj.name == 'Portfolios':
-                cat_type = 'portfolio'
-            elif obj.name == 'Watchlists':
-                cat_type = 'watchlist'
-            elif obj.name == 'Accounts':
-                cat_type = 'account'
-        else:
-            if obj.__name__ == 'Portfolio':
-                cat_type = 'portfolio'
-            elif obj.__name__ == 'Watchlist':
-                cat_type = 'watchlist'
-            elif obj.__name__ == 'Account':
-                cat_type = 'account'
-        if cat_type == 'portfolio':
+
+        if obj.__name__ == 'Portfolio' or obj.name == 'Portfolios':
             parent_iter = self.pf_iter
             item = controller.newPortfolio('new ' + cat_type)
-        elif cat_type == 'watchlist':
+        elif obj.__name__ == 'Watchlist' or obj.name == 'Portfolios':
             parent_iter = self.wl_iter
             item = controller.newWatchlist('new ' + cat_type)
-        elif cat_type == 'account':
+        elif obj.__name__ == 'Account' or obj.name == 'Accounts':
             parent_iter = self.accounts_iter
             item = controller.newAccount('new ' + cat_type)
         iterator = model.append(parent_iter, [item, cat_type, item.name, ''])
         self.expand_row(model.get_path(parent_iter), True)
         self.set_cursor(model.get_path(iterator), focus_column=self.get_column(0), start_editing=True)
-
-
-class EditWatchlist(Gtk.Dialog):
-
-    def __init__(self, wl, parent=None):
-        Gtk.Dialog.__init__(self, _("Edit watchlist - ") + wl.name, parent
-                            , Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,
-                     (Gtk.STOCK_CANCEL, Gtk.ResponseType.REJECT,
-                      Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT))
-        self.wl = wl
-        vbox = self.get_content_area()
-
-        #name entry
-        hbox = Gtk.HBox()
-        vbox.pack_start(hbox, True, True, 0)
-        label = Gtk.Label(label=_('Name:'))
-        hbox.pack_start(label, True, True, 0)
-        self.name_entry = Gtk.Entry()
-        self.name_entry.set_text(wl.name)
-        hbox.pack_start(self.name_entry, True, True, 0)
-
-        self.show_all()
-        self.name_entry.connect("activate", self.process_result)
-        response = self.run()
-        self.process_result(response=response)
-
-    def process_result(self, widget=None, response=Gtk.ResponseType.ACCEPT):
-        if response == Gtk.ResponseType.ACCEPT:
-            self.wl.name = self.name_entry.get_text()
-            pubsub.publish("container.edited", self.wl)
-        self.destroy()
 
 
 class EditAccount(Gtk.Dialog):
@@ -364,48 +315,3 @@ class EditAccount(Gtk.Dialog):
             self.acc.amount = self.cash_entry.get_value()
         self.destroy()
 
-
-class EditPortfolio(Gtk.Dialog):
-
-    def __init__(self, pf, parent=None):
-        Gtk.Dialog.__init__(self, _("Edit watchlist - ") + pf.name, parent
-                            , Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,
-                     (Gtk.STOCK_CANCEL, Gtk.ResponseType.REJECT,
-                      Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT))
-
-        self.pf = pf
-        vbox = self.get_content_area()
-        table = Gtk.Table()
-        vbox.pack_start(table, True, True, 0)
-
-        #name entry
-        label = Gtk.Label(label=_('Name:'))
-        table.attach(label, 0, 1, 0, 1)
-        self.name_entry = Gtk.Entry()
-        self.name_entry.set_text(pf.name)
-        table.attach(self.name_entry, 1, 2, 0, 1)
-
-        self.show_all()
-        self.name_entry.connect("activate", self.process_result)
-        response = self.run()
-        self.process_result(response=response)
-
-    def process_result(self, widget=None, response=Gtk.ResponseType.ACCEPT):
-        if response == Gtk.ResponseType.ACCEPT:
-            self.pf.name = self.name_entry.get_text()
-            self.pf.cash = self.cash_entry.get_value()
-            pubsub.publish("container.edited", self.pf)
-        self.destroy()
-
-
-class ContainerContextMenu(gui_utils.ContextMenu):
-
-    def __init__(self, container, actiongroup):
-        gui_utils.ContextMenu.__init__(self)
-
-        for action in ['edit', 'remove']:
-            self.append(actiongroup.get_action(action).create_menu_item())
-
-        if container.__name__ == 'Account':
-            self.append(Gtk.SeparatorMenuItem())
-            self.add_item(_('Import transactions'), lambda x: CSVImportDialog(account=container) , 'gtk-add')

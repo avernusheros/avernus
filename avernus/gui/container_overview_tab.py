@@ -2,6 +2,7 @@
 
 from gi.repository import Gtk
 from avernus import pubsub
+from avernus.controller import portfolio_controller as pfctlr
 from avernus.controller import controller
 from avernus.gui import gui_utils
 
@@ -100,9 +101,9 @@ class ContainerOverviewTree(gui_utils.Tree):
     def load_items(self):
         items = []
         if self.container.name == 'Watchlists':
-            items = controller.getAllWatchlist()
+            items = pfctlr.getAllWatchlist()
         elif self.container.name == 'Portfolios':
-            items = controller.getAllPortfolio()
+            items = pfctlr.getAllPortfolio()
         self.overall_value = sum([i.cvalue for i in items])
         if self.overall_value == 0.0:
             self.overall_value = 1

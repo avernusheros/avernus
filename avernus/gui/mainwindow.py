@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from avernus import pubsub, config
-from avernus.controller import controller, filterController
+from avernus.controller import filterController
 from avernus.controller import portfolio_controller
 from avernus.gui import progress_manager, threads
 from avernus.gui.account.account_transactions_tab import AccountTransactionTab
@@ -24,6 +24,39 @@ reload(sys)
 sys.setdefaultencoding("utf-8")
 
 
+
+UI_INFO = """
+<ui>
+  <menubar name='MenuBar'>
+    <menu action='AvernusMenu'>
+      <menuitem action='import' />
+      <menuitem action='export CSV' />
+      <separator />
+      <menuitem action='quit' />
+    </menu>
+    <menu action='EditMenu'>
+      <menuitem action='Preferences' />
+    </menu>
+    <menu action='ToolsMenu'>
+      <menuitem action='update'/>
+      <menuitem action='historical'/>
+      <menuitem action='filter'/>
+      <menuitem action='do_assignments'/>
+    </menu>
+    <menu action='HelpMenu'>
+      <menuitem action='help'/>
+      <menuitem action='website'/>
+      <menuitem action='feature'/>
+      <menuitem action='bug'/>
+      <separator />
+      <menuitem action='about'/>
+    </menu>
+  </menubar>
+</ui>
+"""
+
+
+
 class AboutDialog(Gtk.AboutDialog):
 
     def __init__(self, parent=None):
@@ -42,61 +75,6 @@ class AboutDialog(Gtk.AboutDialog):
         self.hide()
 
 
-class MenuBar(Gtk.MenuBar):
-
-    def __init__(self, parent, actiongroup, accelgroup):
-        self.actiongroup = actiongroup
-        super(Gtk.MenuBar, self).__init__()
-
-        # Create actions
-        #item: name, stockid, label, accel, tooltip, callback
-        actiongroup.add_actions(
-            [('Avernus'  , None                 , '_Avernus'),
-             ('Edit'          , None                 , '_Edit'),
-             ('Tools'         , None                 , '_Tools'),
-             ('Help'          , None                 , '_Help'),
-             ('import'        , None                 , '_Import CSV'        , None        , None, parent.on_csv_import),
-             ('export CSV'    , None                 , '_Export Account Transactions', None, None, parent.on_csv_export),
-             ('quit'          , Gtk.STOCK_QUIT       , '_Quit'              , '<Control>q', None, parent.on_destroy),
-             ('prefs'         , Gtk.STOCK_PREFERENCES, '_Preferences'       , None        , None, parent.on_prefs),
-             ('update'        , Gtk.STOCK_REFRESH    , '_Update all stocks' , 'F5'        , None, parent.on_update_all),
-             ('historical'    , Gtk.STOCK_REFRESH     , 'Get _historical data', None       , None, parent.on_historical),
-             ('help'          , Gtk.STOCK_HELP       , '_Help'              , 'F1'        , None, lambda x:web("https://answers.launchpad.net/avernus")),
-             ('website'       , None                 , '_Website'           , None        , None, lambda x:web("https://launchpad.net/avernus")),
-             ('feature'       , None                 , 'Request a _Feature' , None        , None, lambda x:web("https://blueprints.launchpad.net/avernus")),
-             ('bug'           , None                 , 'Report a _Bug'      , None        , None, lambda x:web("https://bugs.launchpad.net/avernus")),
-             ('about'         , Gtk.STOCK_ABOUT      , '_About'             , None        , None, parent.on_about),
-             ('filter'        , None                 , '_Category Filters'  , None        , None, parent.on_category_assignments),
-             ('do_assignments', None                 , '_Run auto-assignments', None      , None, parent.on_do_category_assignments),
-
-             ])
-
-        for action in actiongroup.list_actions():
-            action.set_accel_group(accelgroup)
-
-        file_menu_items = ['import', 'export CSV', '---', 'quit']
-        edit_menu_items = ['prefs']
-        tools_menu_items = ['update', 'historical', 'filter', 'do_assignments']
-        help_menu_items = ['help', 'website', 'feature', 'bug', '---', 'about']
-
-        self._create_menu('Avernus', file_menu_items)
-        self._create_menu('Edit', edit_menu_items)
-        self._create_menu('Tools', tools_menu_items)
-        self._create_menu('Help', help_menu_items)
-
-    def _create_menu(self, action, items):
-        menu_item = self.actiongroup.get_action(action).create_menu_item()
-        #menu_item.mname = action #used in plugin api
-        self.append(menu_item)
-        menu = Gtk.Menu()
-        menu_item.set_submenu(menu)
-        for item in items:
-            if item == '---':
-                menu.append(Gtk.SeparatorMenuItem())
-            else:
-                menu.append(self.actiongroup.get_action(item).create_menu_item())
-
-
 class MainWindow(Gtk.Window):
 
     def __init__(self):
@@ -107,15 +85,19 @@ class MainWindow(Gtk.Window):
         vbox = Gtk.VBox()
         self.add(vbox)
 
-        # Create an accelerator group
-        accelgroup = Gtk.AccelGroup()
-        # Add the accelerator group to the toplevel window
-        self.add_accel_group(accelgroup)
-        # Create an ActionGroup
-        actiongroup = Gtk.ActionGroup('main_window')
+        actiongroup = Gtk.ActionGroup('main')
+        self.add_actions(actiongroup)
 
-        self.main_menu = MenuBar(self, actiongroup, accelgroup)
-        vbox.pack_start(self.main_menu, False, False, 0)
+        uimanager = Gtk.UIManager()
+        # Throws exception if something went wrong
+        uimanager.add_ui_from_string(UI_INFO)
+        # Add the accelerator group to the toplevel window
+        accelgroup = uimanager.get_accel_group()
+        self.add_accel_group(accelgroup)
+        uimanager.insert_action_group(actiongroup)
+
+        menubar = uimanager.get_widget("/MenuBar")
+        vbox.pack_start(menubar, False, False, 0)
 
         self.hpaned = Gtk.HPaned()
         vbox.pack_start(self.hpaned, True, True, 0)
@@ -157,6 +139,33 @@ class MainWindow(Gtk.Window):
 
         #display everything
         self.show_all()
+
+    def add_actions(self, actiongroup):
+        actiongroup.add_actions([
+            ("EditMenu", None, "Edit"),
+            ("Preferences", Gtk.STOCK_PREFERENCES, '_Preferences', None, None,
+             self.on_prefs),
+
+            ("AvernusMenu", None, "_Avernus"),
+            ('import', None, '_Import Account Transactions', None, None, self.on_csv_import),
+            ('export CSV', None, '_Export Account Transactions', None, None, self.on_csv_export),
+            ('quit', Gtk.STOCK_QUIT, '_Quit', '<Control>q', None, self.on_destroy),
+
+            ('ToolsMenu', None, '_Tools'),
+            ('update', Gtk.STOCK_REFRESH, '_Update all stocks', 'F5', None, self.on_update_all),
+            ('historical', Gtk.STOCK_REFRESH, 'Get _historical data', None, None, self.on_historical),
+            ('filter', None, '_Category Filters', None, None, self.on_category_assignments),
+            ('do_assignments', None, '_Run auto-assignments', None, None, self.on_do_category_assignments),
+
+
+            ('HelpMenu', None, '_Help'),
+            ('help', Gtk.STOCK_HELP, '_Help', 'F1', None, lambda x:web("https://answers.launchpad.net/avernus")),
+            ('website', None, '_Website', None, None, lambda x:web("https://launchpad.net/avernus")),
+            ('feature', None, 'Request a _Feature' , None, None, lambda x:web("https://blueprints.launchpad.net/avernus")),
+            ('bug', None, 'Report a _Bug', None, None, lambda x:web("https://bugs.launchpad.net/avernus")),
+            ('about', Gtk.STOCK_ABOUT, '_About', None, None, self.on_about),
+
+            ])
 
     def on_size_allocate(self, widget=None, data=None):
         if not self.maximized:
