@@ -319,13 +319,15 @@ class StockChartPlotController():
 
 
 class PortfolioChartController():
+    
     MAX_VALUES = 25
+    BENCHMARK_INTEREST = 0.05
 
     def __init__(self, portfolio, step):
         self.portfolio = portfolio
         self.items = portfolio.getTransactions() + portfolio.getDividends()
         self.step = step
-
+       
     def _calc_days(self):
         if self.step == 'daily':
             self.days = list(rrule(DAILY, dtstart=self.portfolio.birthday, until=datetime.date.today()))[-self.MAX_VALUES:]
@@ -345,6 +347,14 @@ class PortfolioChartController():
             yield foo
         for foo in self.calculate_investmentsovertime():
             yield foo
+        benchmark = [0.0] * len(self.days)
+        daily = self.BENCHMARK_INTEREST / len(self.days)
+        print len(self.days), daily
+        for i in range(1,len(benchmark)):
+            print "alive"
+            benchmark[i] = benchmark[i-1] + self.y_values['invested capital'][i] * (1 + daily)
+        self.y_values['benchmark'] = benchmark
+        print "hi"
         yield 1
 
     def calculate_valueovertime(self):
