@@ -309,6 +309,7 @@ class DividendsPerPositionChartController():
 
 
 class StockChartPlotController():
+    #FIXME move code from plot.py here
 
     def __init__(self, quotations):
         self.y_values = [d.close for d in quotations]
@@ -316,6 +317,9 @@ class StockChartPlotController():
         self.x_values = [gui_utils.get_date_string(quotations[int(quotation_count / 18 * i)].date) for i in range(18)]
         self.x_values.insert(0, str(quotations[0].date))
         self.x_values.insert(len(self.x_values), str(quotations[-1].date))
+
+    def calculate_values(self):
+        yield 1
 
 
 class PortfolioChartController():

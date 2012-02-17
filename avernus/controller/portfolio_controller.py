@@ -118,13 +118,12 @@ def deleteAllWatchlistPosition(watchlist):
 
 
 def getQuotationsFromStock(stock, start=None):
-    args = {'stock': stock.getPrimaryKey(), 'exchange':stock.exchange}
+    args = {'stock': stock.getPrimaryKey()}
     erg = Quotation.getByColumns(args, create=True)
     if start:
         erg = filter(lambda quote: quote.date > start, erg)
     erg = sorted(erg, key=lambda stock: stock.date)
     return erg
-
 
 
 def newPortfolio(name, pf_id=None, last_update=datetime.datetime.now(), comment=""):
