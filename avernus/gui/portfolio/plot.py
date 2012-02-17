@@ -3,13 +3,13 @@
 from gi.repository import Gtk
 from datetime import date
 from avernus.gui import threads, gui_utils, charts
-from avernus.controller import controller, chartController
+from avernus.controller import chartController
 from avernus.controller import portfolio_controller as pfctlr
 
 
 class ChartWindow(Gtk.Window):
 
-    def __init__ (self, stock):
+    def __init__(self, stock):
         Gtk.Window.__init__(self)
         self.stock = stock
         self._init_widgets()
@@ -17,9 +17,9 @@ class ChartWindow(Gtk.Window):
     def _init_widgets(self):
         self.vbox = Gtk.VBox()
         hbox = Gtk.HBox()
-        self.vbox.pack_start(hbox, True, True, 0)
+        self.vbox.pack_start(hbox, False, False, 0)
         label = Gtk.Label()
-        label.set_markup('<b>' + self.stock.name + '</b>\n' + self.stock.exchange)
+        label.set_markup('<b>' + self.stock.name + '</b>')
         hbox.add(label)
         hbox.add(Gtk.VSeparator())
         hbox.add(Gtk.Label(label='Zoom:'))
@@ -32,9 +32,9 @@ class ChartWindow(Gtk.Window):
         combobox.connect('changed', self.on_zoom_change)
         hbox.add(combobox)
         self.noDataLabelShown = False
-        self.current_chart = Gtk.Label(label='Fetching data...')
+        self.current_chart = Gtk.Label(label=_('Fetching data...'))
         self.change_label = Gtk.Label(label='')
-        self.vbox.pack_start(self.change_label, True, True, 0)
+        self.vbox.pack_start(self.change_label, False, False, 0)
         self.vbox.pack_end(self.current_chart, True, True, 0)
         self.current_zoom = 'YTD'
         threads.GeneratorTask(pfctlr.datasource_manager.get_historical_prices, complete_callback=self.add_chart).start(self.stock)
@@ -73,16 +73,16 @@ class ChartWindow(Gtk.Window):
         date1 = date.today()
         date2 = self.get_date2(self.current_zoom, date1)
 
-        data = controller.getQuotationsFromStock(self.stock, date2)
+        data = pfctlr.getQuotationsFromStock(self.stock, date2)
         if len(data) == 0:
             if not self.noDataLabelShown:
                 self.noDataLabelShown = True
-                self.vbox.pack_end(Gtk.Label(label='No historical data found!'))
+                self.vbox.pack_end(Gtk.Label(label='No historical data found!'), True, True, 0)
                 self.show_all()
             return
         chart_controller = chartController.StockChartPlotController(data)
         self.current_chart = charts.SimpleLineChart(chart_controller, 600, dots=0)
-        self.vbox.pack_end(self.current_chart)
+        self.vbox.pack_end(self.current_chart, True, True, 0)
 
         change = chart_controller.y_values[-1] - chart_controller.y_values[0]
         if chart_controller.y_values[0] == 0:

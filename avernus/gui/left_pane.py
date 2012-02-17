@@ -108,9 +108,9 @@ class MainTree(gui_utils.Tree):
         self.selected_item = None
 
         actiongroup.add_actions([
-            ('add', Gtk.STOCK_ADD, _('New'), None, _('New'), self.on_add),
-            ('edit', Gtk.STOCK_EDIT, _('Edit'), None, _('Edit'), self.on_edit),
-            ('remove', Gtk.STOCK_DELETE, _('Remove'), None, _('Delete'), self.on_remove)
+            ('add', Gtk.STOCK_ADD, _('New'), "plus", _('New'), self.on_add),
+            ('edit', Gtk.STOCK_EDIT, _('Edit'), "F2", _('Edit'), self.on_edit),
+            ('remove', Gtk.STOCK_DELETE, _('Remove'), 'Delete', _('Delete'), self.on_remove)
         ])
 
         self.uimanager = Gtk.UIManager()
@@ -267,13 +267,16 @@ class MainTree(gui_utils.Tree):
 
         if obj.__name__ == 'Portfolio' or obj.name == 'Portfolios':
             parent_iter = self.pf_iter
-            item = controller.newPortfolio('new ' + cat_type)
-        elif obj.__name__ == 'Watchlist' or obj.name == 'Portfolios':
+            cat_type = "portfolio"
+            item = pfctlr.newPortfolio(_('new portfolio'))
+        elif obj.__name__ == 'Watchlist' or obj.name == 'Watchlists':
             parent_iter = self.wl_iter
-            item = controller.newWatchlist('new ' + cat_type)
+            cat_type = "watchlist"
+            item = pfctlr.newWatchlist(_('new watchlist'))
         elif obj.__name__ == 'Account' or obj.name == 'Accounts':
             parent_iter = self.accounts_iter
-            item = controller.newAccount('new ' + cat_type)
+            cat_type = "account"
+            item = controller.newAccount(_('new account'))
         iterator = model.append(parent_iter, [item, cat_type, item.name, ''])
         self.expand_row(model.get_path(parent_iter), True)
         self.set_cursor(model.get_path(iterator), focus_column=self.get_column(0), start_editing=True)

@@ -1,6 +1,7 @@
 from avernus.objects.model import SQLiteEntity
 from avernus.objects.position import PortfolioPosition
 
+
 class Dividend(SQLiteEntity):
 
     __primaryKey__ = 'id'
@@ -16,7 +17,7 @@ class Dividend(SQLiteEntity):
 
     @property
     def total(self):
-        return self.price-self.costs
+        return self.price - self.costs
 
     def __repr__(self):
         return "Dividend " + self.position.stock.name + "|" + str(self.date) + "|" + str(self.total)

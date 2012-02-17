@@ -309,6 +309,7 @@ class DividendsPerPositionChartController():
 
 
 class StockChartPlotController():
+    #FIXME move code from plot.py here
 
     def __init__(self, quotations):
         self.y_values = [d.close for d in quotations]
@@ -316,6 +317,9 @@ class StockChartPlotController():
         self.x_values = [gui_utils.get_date_string(quotations[int(quotation_count / 18 * i)].date) for i in range(18)]
         self.x_values.insert(0, str(quotations[0].date))
         self.x_values.insert(len(self.x_values), str(quotations[-1].date))
+
+    def calculate_values(self):
+        yield 1
 
 
 class PortfolioChartController():
@@ -349,12 +353,10 @@ class PortfolioChartController():
             yield foo
         benchmark = [0.0] * len(self.days)
         daily = self.BENCHMARK_INTEREST / len(self.days)
-        print len(self.days), daily
+        benchmark[0] = self.y_values['invested capital'][0]
         for i in range(1,len(benchmark)):
-            print "alive"
-            benchmark[i] = benchmark[i-1] + self.y_values['invested capital'][i] * (1 + daily)
+            benchmark[i] = benchmark[i-1] * (1 + daily)+ self.y_values['invested capital'][i] - self.y_values['invested capital'][i-1]  
         self.y_values['benchmark'] = benchmark
-        print "hi"
         yield 1
 
     def calculate_valueovertime(self):

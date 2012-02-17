@@ -13,7 +13,7 @@ class PrefDialog(Gtk.Dialog):
     DEFAULT_WIDTH = 400
     DEFAULT_HEIGHT = 500
 
-    def __init__(self, parent = None):
+    def __init__(self, parent=None):
         Gtk.Dialog.__init__(self, "Preferences", parent,
                             Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,
                             (Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT),
@@ -25,29 +25,29 @@ class PrefDialog(Gtk.Dialog):
         vbox.pack_start(notebook, True, True, 0)
         notebook.append_page(DimensionList(), Gtk.Label(label='Dimensions'))
         notebook.append_page(AccountPreferences(), Gtk.Label(label='Account'))
-		notebook.append_page(PortfolioPreferences(), Gtk.Label(label='Portfolio'))
+        notebook.append_page(PortfolioPreferences(), Gtk.Label(label='Portfolio'))
 
         self.show_all()
         self.run()
         self.destroy()
         logger.debug("PrefDialog destroyed")
-        
+
 class PreferencesVBox(Gtk.VBox):
-	
+
 	def _add_section(self, name):
         frame = Gtk.Frame()
         frame.set_shadow_type(Gtk.ShadowType.NONE)
         label = Gtk.Label()
-        label.set_markup('<b>'+name+'</b>')
+        label.set_markup('<b>' + name + '</b>')
         frame.set_label_widget(label)
         self.pack_start(frame, False, False, 10)
         alignment = Gtk.Alignment.new(0.5, 0.5, 1.0, 1.0)
         alignment.set_property("left-padding", 12)
         frame.add(alignment)
         return alignment
-        
+
     def _add_option(self, allignment, name, option):
-        button = Gtk.CheckButton(label = name)
+        button = Gtk.CheckButton(label=name)
         allignment.add(button)
         button.connect('toggled', self.on_toggled, option)
         pre = self.configParser.get_option(option, self.parser_section)
@@ -56,31 +56,31 @@ class PreferencesVBox(Gtk.VBox):
 
     def on_toggled(self, button, option):
         self.configParser.set_option(option, button.get_active(), self.parser_section)
-        
+
 class PortfolioPreferences(PreferencesVBox):
-	
+
 	parser_section = "General"
 
-	
+
 	def __init__(self):
         Gtk.VBox.__init__(self)
         self.configParser = avernusConfig()
-        
+
         section = self._add_section('Appearance')
         self._add_option(section, _('Show smaller Position font'), 'smallPosition')
-        
+
     def _add_option(self, allignment, name, option):
-        button = Gtk.CheckButton(label = name)
+        button = Gtk.CheckButton(label=name)
         allignment.add(button)
         button.connect('toggled', self.on_toggled, option)
         pre = self.configParser.get_option(option, 'General')
         pre = pre == "True"
-        button.set_active(pre)   
+        button.set_active(pre)
 
 
 
 class AccountPreferences(PreferencesVBox):
-	
+
 	parser_section = "Account"
 
     def __init__(self):
@@ -95,7 +95,7 @@ class AccountPreferences(PreferencesVBox):
         section = self._add_section('Category Assignments')
         self._add_option(section, _('Include already categorized transactions'), 'assignments categorized transactions')
 
-    
+
 
 
 class DimensionList(Gtk.VBox):
@@ -107,7 +107,7 @@ class DimensionList(Gtk.VBox):
         Gtk.VBox.__init__(self)
         text = _("Dimensions are used to categorize your assets. You can define dimensions and categories for those dimensions.")
 
-        label = Gtk.Label(label = text)
+        label = Gtk.Label(label=text)
         label.set_line_wrap(True)
         self.pack_start(label, False, False, 0)
 
@@ -130,9 +130,9 @@ class DimensionList(Gtk.VBox):
 
         actiongroup = Gtk.ActionGroup('dimensions')
         actiongroup.add_actions([
-                ('add',     Gtk.STOCK_ADD,    'new dimension',      None, _('Add new dimension'), self.on_add),
-                ('rename',  Gtk.STOCK_EDIT,   'rename dimension',   None, _('Rename selected dimension'), self.on_edit),
-                ('remove',  Gtk.STOCK_DELETE, 'remove dimension',   None, _('Remove selected dimension'), self.on_remove)
+                ('add', Gtk.STOCK_ADD, 'new dimension', None, _('Add new dimension'), self.on_add),
+                ('rename', Gtk.STOCK_EDIT, 'rename dimension', None, _('Rename selected dimension'), self.on_edit),
+                ('remove', Gtk.STOCK_DELETE, 'remove dimension', None, _('Remove selected dimension'), self.on_remove)
                      ])
         toolbar = Gtk.Toolbar()
         self.conditioned = ['rename', 'edit']

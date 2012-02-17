@@ -18,6 +18,7 @@ import datetime
 import itertools
 import logging
 import sys
+from avernus.controller import portfolio_controller as pfctlr
 
 
 
@@ -39,10 +40,8 @@ modelClasses = [Portfolio, Transaction, Watchlist, Dividend, SourceInfo,
 #these classes will be loaded with one single call and will also load composite
 #relations. therefore it is important that the list is complete in the sense
 #that there are no classes holding composite keys to classes outside the list
-initialLoadingClasses = [Transaction, Watchlist, Dividend,
-                         PortfolioPosition, WatchlistPosition, Account, Meta, Stock,
-                         AccountTransaction, AccountCategory, Dimension, DimensionValue,
-                         AssetDimensionValue]
+initialLoadingClasses = [Account, Meta, Stock,
+                         AccountTransaction, AccountCategory]
 
 VERSION = 2
 
@@ -163,21 +162,10 @@ def load_sample_data():
     acc = newAccount(_('sample account'))
     newAccountTransaction(account=acc, description='this is a sample transaction', amount=99.99, date=datetime.date.today())
     newAccountTransaction(account=acc, description='another sample transaction', amount= -33.90, date=datetime.date.today())
-    newPortfolio(_('sample portfolio'))
-    newWatchlist(_('sample watchlist'))
+    pfctlr.newPortfolio(_('sample portfolio'))
+    pfctlr.newWatchlist(_('sample watchlist'))
 
 
-def newPortfolio(name, pf_id=None, last_update=datetime.datetime.now(), comment=""):
-    result = Portfolio(id=pf_id, name=name, last_update=last_update, comment=comment)
-    result.controller = controller
-    result.insert()
-    return result
-
-def newWatchlist(name, wl_id=None, last_update=datetime.datetime.now(), comment=""):
-    result = Watchlist(id=wl_id, name=name, last_update=last_update, comment=comment)
-    result.controller = controller
-    result.insert()
-    return result
 
 def newAccount(name, a_id=None, amount=0, accounttype=1):
     result = Account(id=a_id, name=name, amount=amount, type=accounttype)
@@ -366,10 +354,7 @@ def getAllAccountCategoriesHierarchical():
 def getAllDimension():
     return Dimension.getAll()
 
-def getAllDimensionValueForDimension(dim):
-    for value in DimensionValue.getAll():
-        if value.dimension == dim:
-            yield value
+
 
 def getAccountCategoryForName(name):
     cats = getAllAccountCategories()
@@ -387,45 +372,6 @@ def getAssetDimensionValueForStock(stock, dim):
 def getAllStock():
     return Stock.getAll()
 
-
-def getTransactionsForPosition(position):
-    return Transaction.getAllFromOneColumn("position", position.getPrimaryKey())
-
-def deleteAllPositionTransaction(position):
-    for trans in getTransactionsForPosition(position):
-        trans.delete()
-
-def deleteAllPositionDividend(position):
-    for d in getDividendsForPosition(position):
-        d.delete()
-
-def deleteAllDimensionValue(dimension):
-    for val in getAllDimensionValueForDimension(dimension):
-        deleteAllAssetDimensionValue(val)
-        val.delete()
-
-def deleteAllAssetDimensionValue(dimvalue):
-    for adm in AssetDimensionValue.getAll():
-        if adm.dimensionValue == dimvalue:
-            adm.delete()
-
-def deleteAllQuotationsFromStock(stock):
-    query = """
-    DELETE FROM quotation
-    WHERE stock = ?
-    """
-    model.store.execute(query, [stock.id])
-
-def getPositionForWatchlist(watchlist):
-    key = watchlist.getPrimaryKey()
-    return WatchlistPosition.getAllFromOneColumn("watchlist", key)
-
-def deleteAllWatchlistPosition(watchlist):
-    for pos in getPositionForWatchlist(watchlist):
-        pos.delete()
-
-def getDividendsForPosition(pos):
-    return Dividend.getAllFromOneColumn("position", pos.getPrimaryKey())
 
 def getTransactionsForAccount(account):
     key = account.getPrimaryKey()
@@ -447,38 +393,5 @@ def getStockForSearchstring(searchstring):
         sqlArgs[req] = '%' + searchstring + '%'
     return Stock.getByColumns(sqlArgs, operator=" OR ", operator2=' LIKE ', create=True)
 
-def getQuotationsFromStock(stock, start=None):
-    args = {'stock': stock.getPrimaryKey(), 'exchange':stock.exchange}
-    erg = Quotation.getByColumns(args, create=True)
-    if start:
-        erg = filter(lambda quote: quote.date > start, erg)
-    erg = sorted(erg, key=lambda stock: stock.date)
-    return erg
 
-def getPriceFromStockAtDate(stock, date):
-    args = {'stock': stock.id, 'date':date.date()}
-    res = Quotation.getByColumns(args, create=False)
-    for item in res:
-        return item[5]
-    return None
 
-def getAllQuotationsFromStock(stock, start=None):
-    """from all exchanges"""
-    erg = Quotation.getByColumns({'stock': stock.id}, create=True)
-    return sorted(erg, key=lambda stock: stock.date)
-
-def getNewestQuotation(stock):
-    key = stock.getPrimaryKey()
-    erg = Quotation.getAllFromOneColumn("stock", key)
-    if len(erg) == 0:
-        return None
-    else:
-        return erg[0].date
-
-def getBuyTransaction(portfolio_position):
-    for ta in Transaction.getByColumns({'position': portfolio_position.id, 'type':1}, create=True):
-        return ta
-
-def yieldSellTransactions(portfolio_position):
-    for ta in Transaction.getByColumns({'position': portfolio_position.id, 'type':0}, create=True):
-        yield ta
