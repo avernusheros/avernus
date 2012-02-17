@@ -47,7 +47,8 @@ class GeneratorTask(object):
             logger.debug("finished thread")
         except:
             logger.debug("thread failed")
-            GObject.idle_add(self.complete_callback)
+            if self.complete_callback is not None:
+                GObject.idle_add(self.complete_callback)
         self._terminate()
 
     def _terminate(self):

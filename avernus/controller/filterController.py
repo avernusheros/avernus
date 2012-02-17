@@ -37,7 +37,6 @@ def run_auto_assignments():
             cat = get_category(transaction)
             if cat != transaction.category:
                 transaction.category = get_category(transaction)
-    print "finished"
 
 config = avernusConfig()
 try:

@@ -3,7 +3,7 @@
 from avernus.gui import gui_utils, threads, common_dialogs
 from avernus.gui.portfolio import dialogs
 from avernus.controller import controller
-from avernus.controller import portfolio_controller as pfctrl
+from avernus.controller import portfolio_controller as pfctlr
 from avernus.objects.position import MetaPosition
 import datetime
 import logging
@@ -93,18 +93,18 @@ class QuotationTable(Gtk.Table):
         self.update_labels()
 
     def on_delete_button_clicked(self, button):
-        controller.deleteAllQuotationsFromStock(self.stock)
+        pfctlr.deleteAllQuotationsFromStock(self.stock)
         self.update_labels()
 
     def on_get_button_clicked(self, button):
-        threads.GeneratorTask(pfctrl.datasource_manager.get_historical_prices, self.new_quotation_callback, complete_callback=self.update_labels).start(self.stock)
+        threads.GeneratorTask(pfctlr.datasource_manager.get_historical_prices, self.new_quotation_callback, complete_callback=self.update_labels).start(self.stock)
 
     def new_quotation_callback(self, qt):
         self.count += 1
         self.count_label.set_text(str(self.count))
 
     def update_labels(self):
-        quotations = controller.getAllQuotationsFromStock(self.stock)
+        quotations = pfctlr.getAllQuotationsFromStock(self.stock)
         self.count = len(quotations)
         self.count_label.set_text(str(self.count))
         if self.count == 0:
@@ -329,7 +329,7 @@ class EditHistoricalQuotationsDialog(Gtk.Dialog):
             toolbar.insert(action.create_tool_item(), -1)
 
         #load values
-        for quotation in controller.getAllQuotationsFromStock(self.stock):
+        for quotation in pfctlr.getAllQuotationsFromStock(self.stock):
             self.model.append([quotation, quotation.date, quotation.close])
 
         #show dialog

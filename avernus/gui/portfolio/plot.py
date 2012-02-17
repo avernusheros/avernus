@@ -3,13 +3,13 @@
 from gi.repository import Gtk
 from datetime import date
 from avernus.gui import threads, gui_utils, charts
-from avernus.controller import controller, chartController
+from avernus.controller import chartController
 from avernus.controller import portfolio_controller as pfctlr
 
 
 class ChartWindow(Gtk.Window):
 
-    def __init__ (self, stock):
+    def __init__(self, stock):
         Gtk.Window.__init__(self)
         self.stock = stock
         self._init_widgets()
@@ -73,7 +73,7 @@ class ChartWindow(Gtk.Window):
         date1 = date.today()
         date2 = self.get_date2(self.current_zoom, date1)
 
-        data = controller.getQuotationsFromStock(self.stock, date2)
+        data = pfctlr.getQuotationsFromStock(self.stock, date2)
         if len(data) == 0:
             if not self.noDataLabelShown:
                 self.noDataLabelShown = True
