@@ -141,6 +141,7 @@ class DimensionList(Gtk.VBox):
         sw.add(self.tree)
         for dim in sorted(controller.getAllDimension()):
             iterator = self.model.append(None, [dim, dim.name])
+            # FIXME that was uncommented, but the preferences dialog crashes and I have no idea what this does...
             #for val in sorted(controller.getAllDimensionValueForDimension(dim)):
             #    self.model.append(iterator, [val, val.name])
 
