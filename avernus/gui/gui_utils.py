@@ -204,7 +204,12 @@ def datetime_format(datetime, nl=True):
         if not nl:
             return datetime.strftime(locale.nl_langinfo(locale.D_T_FMT))
         else:
-            return get_date_string(datetime.date()) + '\n' + datetime.time().strftime(locale.nl_langinfo(locale.T_FMT))
+            configParser = config.AvernusConfig()
+            option = configParser.get_option('smallPosition', 'General')
+            if option == "True":
+                return get_date_string(datetime.date())
+            else:
+                return get_date_string(datetime.date()) + '\n' + datetime.time().strftime(locale.nl_langinfo(locale.T_FMT))
     return 'never'
 
 def get_date_string(date):
