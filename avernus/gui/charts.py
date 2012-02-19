@@ -85,6 +85,8 @@ class SimpleLineChart(ChartBase):
 
     def draw_widget(self):
         self.remove_widget()
+        y_bounds = self.controller.get_y_bounds()
+        print y_bounds
         plot = cairoplot.plots.DotLinePlot('gtk',
                                 data=self.controller.y_values,
                                 width=self.width,
@@ -96,7 +98,8 @@ class SimpleLineChart(ChartBase):
                                 grid=True,
                                 series_legend=True,
                                 dots=self.dots,
-                                series_colors=['blue','green','red'])
+                                series_colors=['blue','green','red'],
+                                y_bounds = y_bounds)
         self.current_widget = plot.handler
         self.current_widget.show()
         self.pack_start(self.current_widget, True, True, 0)

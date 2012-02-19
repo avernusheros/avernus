@@ -5,6 +5,7 @@ from dateutil.relativedelta import relativedelta
 from dateutil.rrule import *
 from itertools import ifilter
 import datetime
+import sys
 import logging
 
 logger = logging.getLogger(__name__)
@@ -44,9 +45,18 @@ def calculate_x_values(step, start, end):
             current += step
         result.append(end)
         return result
+    
+class Controller:
+    
+    def get_y_bounds(self):
+        i = sys.maxint
+        a = sys.maxint * (-1)
+        for series in self.y_values.values():
+            i = min(min(series), i)
+            a = max(max(series), a)
+        return (i,a)
 
-
-class TransactionChartController:
+class TransactionChartController(Controller):
 
     def get_step(self):
         return get_step_for_range(self.start_date, self.end_date)
@@ -179,7 +189,7 @@ class TransactionStepValueChartController(TransactionValueOverTimeChartControlle
             del self.x_values[-1]
 
 
-class EarningsVsSpendingsController():
+class EarningsVsSpendingsController(Controller):
 
     def __init__(self, transactions, date_range):
         self.update(transactions, date_range)
@@ -213,7 +223,7 @@ class EarningsVsSpendingsController():
         yield 1
 
 
-class TransactionCategoryPieController():
+class TransactionCategoryPieController(Controller):
 
     def __init__(self, transactions, earnings):
         self.earnings = earnings
@@ -269,7 +279,7 @@ class AccountBalanceOverTimeChartController(TransactionChartController):
         yield 1
 
 
-class DividendsPerYearChartController():
+class DividendsPerYearChartController(Controller):
 
     def __init__(self, portfolio):
         self.portfolio = portfolio
@@ -288,7 +298,7 @@ class DividendsPerYearChartController():
         yield 1
 
 
-class DividendsPerPositionChartController():
+class DividendsPerPositionChartController(Controller):
 
     def __init__(self, portfolio):
         self.portfolio = portfolio
@@ -308,7 +318,7 @@ class DividendsPerPositionChartController():
         yield 1
 
 
-class StockChartPlotController():
+class StockChartPlotController(Controller):
     #FIXME move code from plot.py here
 
     def __init__(self, quotations):
@@ -322,7 +332,7 @@ class StockChartPlotController():
         yield 1
 
 
-class PortfolioChartController():
+class PortfolioChartController(Controller):
     
     MAX_VALUES = 25
     BENCHMARK_INTEREST = 0.05
