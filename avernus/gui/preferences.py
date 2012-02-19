@@ -76,6 +76,9 @@ class ChartPreferences(PreferencesVBox):
         section = self._add_section('Portfolio Benchmark')
         self._add_option(section, _('Show 5% Benchmark'), 'benchmark_5')
         self._add_option(section, _('Show 10% Benchmark'), 'benchmark_10')
+        
+        section = self._add_section('Axis')
+        self._add_option(section, _('Normalize Y Axis'), 'normalize_y_axis')
 
    
 class PortfolioPreferences(PreferencesVBox):

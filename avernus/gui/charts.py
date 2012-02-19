@@ -1,6 +1,6 @@
 from gi.repository import Gtk
 from avernus.gui import gui_utils, threads
-from avernus import cairoplot
+from avernus import cairoplot, config
 
 
 class ChartBase(Gtk.VBox):
@@ -85,7 +85,12 @@ class SimpleLineChart(ChartBase):
 
     def draw_widget(self):
         self.remove_widget()
-        y_bounds = self.controller.get_y_bounds()
+        configParser = config.AvernusConfig()
+        option = configParser.get_option('normalize_y_axis', 'Chart')
+        if option =="True":
+            y_bounds = self.controller.get_y_bounds()
+        else:
+            y_bounds = None
         plot = cairoplot.plots.DotLinePlot('gtk',
                                 data=self.controller.y_values,
                                 width=self.width,
