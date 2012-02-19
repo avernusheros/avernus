@@ -71,8 +71,8 @@ class Account(SQLiteEntity, AccountBase):
 
 
 class AllAccount(AccountBase):
+    __name__ = 'Account'
     name = ''
-    id = -1
 
     @property
     def transactions(self):

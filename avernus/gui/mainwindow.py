@@ -4,12 +4,13 @@ from avernus.controller import filterController
 from avernus.controller import portfolio_controller
 from avernus.gui import progress_manager, threads
 from avernus.gui.account.account_transactions_tab import AccountTransactionTab
-from avernus.gui.container_overview_tab import ContainerOverviewTab
+from avernus.gui.account_overview import AccountOverview
 from avernus.gui.account.csv_import_dialog import CSVImportDialog
 from avernus.gui.account.filterDialog import FilterDialog
 from avernus.gui.left_pane import MainTreeBox
 from avernus.gui.portfolio.portfolio_notebook import PortfolioNotebook
 from avernus.gui.portfolio.positions_tab import WatchlistPositionsTab
+from avernus.gui.portfolio.overview_notebook import OverviewNotebook
 from avernus.gui.preferences import PrefDialog
 from avernus.gui.account.exportDialog import ExportDialog
 from avernus.objects import model
@@ -113,7 +114,8 @@ class MainWindow(Gtk.Window):
         self.pages = {}
         self.pages['Portfolio'] = PortfolioNotebook
         self.pages['Watchlist'] = WatchlistPositionsTab
-        self.pages['Category'] = ContainerOverviewTab
+        self.pages['Category Accounts'] = AccountOverview
+        self.pages['Category Portfolios'] = OverviewNotebook
         self.pages['Account'] = AccountTransactionTab
 
         #set min size
@@ -190,7 +192,16 @@ class MainWindow(Gtk.Window):
 
     def on_maintree_select(self, item):
         self.on_maintree_unselect()
-        self.hpaned.pack2(self.pages[item.__name__](item))
+        page = None
+        if item.__name__ == 'Category':
+            if item.name == 'Portfolios':
+                page = "Category Portfolios"
+            elif item.name == 'Accounts':
+                page = "Category Accounts"
+        else:
+            page = item.__name__
+        if page is not None:
+            self.hpaned.pack2(self.pages[page](item))
 
     def on_maintree_unselect(self):
         page = self.hpaned.get_child2()

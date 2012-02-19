@@ -1,54 +1,59 @@
-#!/usr/bin/env python
-
 from gi.repository import Gtk
+from avernus.gui import gui_utils
 from avernus import pubsub
 from avernus.controller import portfolio_controller as pfctlr
-from avernus.controller import controller
-from avernus.gui import gui_utils
+from avernus.controller import chartController
+from avernus.gui import charts
 
 
-class ContainerOverviewTab(Gtk.VBox):
+class OverviewNotebook(Gtk.Notebook):
 
-    def __init__(self, item):
-        Gtk.VBox.__init__(self)
-        if item.name == 'Accounts':
-            tree = AccountOverviewTree()
-        else:
-            tree = ContainerOverviewTree(item)
-        sw = Gtk.ScrolledWindow()
-        sw.set_property('hscrollbar-policy', Gtk.PolicyType.AUTOMATIC)
-        sw.set_property('vscrollbar-policy', Gtk.PolicyType.AUTOMATIC)
-        sw.add(tree)
+    def __init__(self, portfolio):
+        Gtk.Notebook.__init__(self)
+        tree = PortfolioOverviewTree(portfolio)
+        self.append_page(tree, Gtk.Label(label=_('Overview')))
+        self.append_page(OverviewCharts(), Gtk.Label(label=_('Charts')))
 
-        self.pack_start(sw, True, True, 0)
+        self.connect('switch-page', self.on_notebook_selection)
+        self.on_notebook_selection(self, tree, 0)
+        self.set_current_page(0)
         self.show_all()
 
+    def on_notebook_selection(self, notebook, page, page_num):
+        page.show()
 
-class AccountOverviewTree(gui_utils.Tree):
+
+class OverviewCharts(Gtk.ScrolledWindow):
 
     def __init__(self):
-        gui_utils.Tree.__init__(self)
-        self.set_rules_hint(True)
-        self.model = Gtk.ListStore(object, str, float, int, object, object)
-        self.set_model(self.model)
-        self.create_column(_('Name'), 1)
-        self.create_column(_('Amount'), 2, func=gui_utils.currency_format)
-        self.create_column(_('# Transactions'), 3)
-        self.create_column(_('First transaction'), 4, func=gui_utils.date_to_string)
-        self.create_column(_('Last transaction'), 5, func=gui_utils.date_to_string)
-        self._load_accounts()
+        Gtk.ScrolledWindow.__init__(self)
+        self.set_property('hscrollbar-policy', Gtk.PolicyType.AUTOMATIC)
+        self.set_property('vscrollbar-policy', Gtk.PolicyType.AUTOMATIC)
+        self.show_all()
 
-    def _load_accounts(self):
-        for acc in controller.getAllAccount():
-            self.model.append([acc,
-                               acc.name,
-                               acc.amount,
-                               acc.transaction_count,
-                               acc.birthday,
-                               acc.lastday])
+    def show(self):
+        width = self.get_allocation().width
+        self.clear()
+        table = Gtk.Table()
+        y = 0
+
+        label = Gtk.Label()
+        label.set_markup('<b>' + _('Market value') + '</b>')
+        #FIXME label.set_tooltip_text(_(""))
+        table.attach(label, 0, 1, y, y + 1)
+        chart_controller = chartController.PortfolioAttributeChartController('name')
+        chart = charts.Pie(chart_controller, width / 2)
+        table.attach(chart, 0, 1, y, y + 1)
+
+        self.add_with_viewport(table)
+        self.show_all()
+
+    def clear(self):
+        for child in self.get_children():
+            self.remove(child)
 
 
-class ContainerOverviewTree(gui_utils.Tree):
+class PortfolioOverviewTree(gui_utils.Tree):
 
     OBJ = 0
     NAME = 1
@@ -63,7 +68,7 @@ class ContainerOverviewTree(gui_utils.Tree):
     def __init__(self, container):
         self.container = container
         gui_utils.Tree.__init__(self)
-        self.set_model(Gtk.ListStore(object,str, float,float, float, float, object,int,float))
+        self.set_model(Gtk.ListStore(object, str, float, float, float, float, object, int, float))
 
         self.create_column(_('Name'), self.NAME)
         self.create_column(_('Current value'), self.VALUE, func=gui_utils.currency_format)
@@ -72,7 +77,7 @@ class ContainerOverviewTree(gui_utils.Tree):
         self.create_column(_('# positions'), self.COUNT)
         col, cell = self.create_column(_('Change'), self.CHANGE, func=gui_utils.float_to_red_green_string)
         col, cell = self.create_column(_('Change %'), self.CHANGE_PERCENT, func=gui_utils.float_to_red_green_string)
-        col, cell = self.create_column(unichr(8709)+' TER', self.TER, func=gui_utils.float_format)
+        col, cell = self.create_column(unichr(8709) + ' TER', self.TER, func=gui_utils.float_format)
 
         self.set_rules_hint(True)
         self.load_items()
@@ -129,4 +134,4 @@ class ContainerOverviewTree(gui_utils.Tree):
                                item.ter,
                                item.last_update,
                                len(item),
-                               100*item.cvalue/self.overall_value])
+                               100 * item.cvalue / self.overall_value])

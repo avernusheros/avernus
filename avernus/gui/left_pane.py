@@ -31,7 +31,7 @@ UI_INFO = """
 
 class Category(object):
     __name__ = 'Category'
-    id = -1
+
     def __init__(self, name):
         self.name = name
 
@@ -179,7 +179,7 @@ class MainTree(gui_utils.Tree):
                     popup = self.uimanager.get_widget("/Popup")
                 popup.popup(None, None, None, None, event.button, event.time)
                 return True
-            if self.get_selection().path_is_selected(target[0]) and obj.id == -1 :
+            if self.get_selection().path_is_selected(target[0]) and obj.__name__ == 'Category' :
                 #disable editing of categories
                 return True
 
@@ -248,10 +248,11 @@ class MainTree(gui_utils.Tree):
             return
         obj, row = self.selected_item
         #all portfolio and all account are not editable
-        if obj.id == -1:
+        objtype = type(obj)
+        if objtype == 'Category' or objtype == "AllPortfolio" or objtype == 'AllAccount':
             return
         parent = self.get_toplevel()
-        if obj.__name__ == 'Account':
+        if objtype == 'Account':
             EditAccount(obj, parent)
         else:
             obj, selection_iter = self.selected_item

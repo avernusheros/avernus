@@ -191,7 +191,6 @@ class Portfolio(SQLiteEntity, PortfolioBase):
 
 class AllPortfolio(PortfolioBase):
     name = ''
-    id = -1
     __name__ = 'Portfolio'
 
     def __iter__(self):

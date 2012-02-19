@@ -1,5 +1,6 @@
 from avernus.gui import gui_utils
 from avernus import date_utils, config
+from avernus.controller import portfolio_controller as pfctlr
 
 from dateutil.relativedelta import relativedelta
 from dateutil.rrule import *
@@ -45,16 +46,16 @@ def calculate_x_values(step, start, end):
             current += step
         result.append(end)
         return result
-    
+
 class Controller:
-    
+
     def get_y_bounds(self):
         i = sys.maxint
         a = sys.maxint * (-1)
         for series in self.y_values.values():
             i = min(min(series), i)
             a = max(max(series), a)
-        return (i,a)
+        return (i, a)
 
 class TransactionChartController(Controller):
 
@@ -333,14 +334,14 @@ class StockChartPlotController(Controller):
 
 
 class PortfolioChartController(Controller):
-    
+
     MAX_VALUES = 25
-    
+
     def __init__(self, portfolio, step):
         self.portfolio = portfolio
         self.items = portfolio.getTransactions() + portfolio.getDividends()
         self.step = step
-       
+
     def _calc_days(self):
         if self.step == 'daily':
             self.days = list(rrule(DAILY, dtstart=self.portfolio.birthday, until=datetime.date.today()))[-self.MAX_VALUES:]
@@ -368,13 +369,13 @@ class PortfolioChartController(Controller):
         if option == "True":
             self.calculate_benchmark(0.1)
         yield 1
-        
+
     def calculate_benchmark(self, percent):
         benchmark = [0.0] * len(self.days)
         daily = percent / len(self.days)
         benchmark[0] = self.y_values['invested capital'][0]
-        for i in range(1,len(benchmark)):
-            benchmark[i] = benchmark[i-1] * (1 + daily)+ self.y_values['invested capital'][i] - self.y_values['invested capital'][i-1]  
+        for i in range(1, len(benchmark)):
+            benchmark[i] = benchmark[i - 1] * (1 + daily) + self.y_values['invested capital'][i] - self.y_values['invested capital'][i - 1]
         key = 'benchmark_' + str(percent * 100) + '%'
         self.y_values[key] = benchmark
 
@@ -439,6 +440,28 @@ class PositionAttributeChartController():
                 data[item] += pos.cvalue
             except:
                 data[item] = pos.cvalue
+        if sum(data.values()) == 0:
+            self.values = {' ':1}
+        else:
+            self.values = data
+        yield 1
+
+
+
+class PortfolioAttributeChartController():
+
+    def __init__(self, attribute):
+        self.attribute = attribute
+
+    def calculate_values(self):
+        portfolios = pfctlr.getAllPortfolio()
+        data = {}
+        for pf in portfolios:
+            item = str(getattr(pf, self.attribute))
+            try:
+                data[item] += pf.cvalue
+            except:
+                data[item] = pf.cvalue
         if sum(data.values()) == 0:
             self.values = {' ':1}
         else:
