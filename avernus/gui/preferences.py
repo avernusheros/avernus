@@ -26,6 +26,7 @@ class PrefDialog(Gtk.Dialog):
         notebook.append_page(DimensionList(), Gtk.Label(label='Dimensions'))
         notebook.append_page(AccountPreferences(), Gtk.Label(label='Account'))
         notebook.append_page(PortfolioPreferences(), Gtk.Label(label='Portfolio'))
+        notebook.append_page(ChartPreferences(), Gtk.Label(label='Chart'))
 
         self.show_all()
         self.run()
@@ -40,15 +41,21 @@ class PreferencesVBox(Gtk.VBox):
         label = Gtk.Label()
         label.set_markup('<b>' + name + '</b>')
         frame.set_label_widget(label)
+        vbox = Gtk.VBox()
+        frame.add(vbox)
         self.pack_start(frame, False, False, 10)
+        return vbox
+    
+    def _get_alignment(self):
         alignment = Gtk.Alignment.new(0.5, 0.5, 1.0, 1.0)
         alignment.set_property("left-padding", 12)
-        frame.add(alignment)
         return alignment
 
-    def _add_option(self, allignment, name, option):
+    def _add_option(self, vbox, name, option):
+        alignment = self._get_alignment()
+        vbox.add(alignment)
         button = Gtk.CheckButton(label=name)
-        allignment.add(button)
+        alignment.add(button)
         button.connect('toggled', self.on_toggled, option)
         pre = self.configParser.get_option(option, self.parser_section)
         pre = pre == "True"
@@ -56,7 +63,21 @@ class PreferencesVBox(Gtk.VBox):
 
     def on_toggled(self, button, option):
         self.configParser.set_option(option, button.get_active(), self.parser_section)
+        
 
+class ChartPreferences(PreferencesVBox):
+
+    parser_section = "Chart"
+
+
+    def __init__(self):
+        Gtk.VBox.__init__(self)
+        self.configParser = avernusConfig()
+        section = self._add_section('Portfolio Benchmark')
+        self._add_option(section, _('Show 5% Benchmark'), 'benchmark_5')
+        self._add_option(section, _('Show 10% Benchmark'), 'benchmark_10')
+
+   
 class PortfolioPreferences(PreferencesVBox):
 
 	parser_section = "General"
@@ -67,15 +88,7 @@ class PortfolioPreferences(PreferencesVBox):
         self.configParser = avernusConfig()
 
         section = self._add_section('Appearance')
-        self._add_option(section, _('Show smaller Position font'), 'smallPosition')
-
-    def _add_option(self, allignment, name, option):
-        button = Gtk.CheckButton(label=name)
-        allignment.add(button)
-        button.connect('toggled', self.on_toggled, option)
-        pre = self.configParser.get_option(option, 'General')
-        pre = pre == "True"
-        button.set_active(pre)
+        self._add_option(section, _('Save vertical space'), 'smallPosition')
 
 
 
@@ -125,8 +138,8 @@ class DimensionList(Gtk.VBox):
         sw.add(self.tree)
         for dim in sorted(controller.getAllDimension()):
             iterator = self.model.append(None, [dim, dim.name])
-            for val in sorted(controller.getAllDimensionValueForDimension(dim)):
-                self.model.append(iterator, [val, val.name])
+            #for val in sorted(controller.getAllDimensionValueForDimension(dim)):
+            #    self.model.append(iterator, [val, val.name])
 
         actiongroup = Gtk.ActionGroup('dimensions')
         actiongroup.add_actions([
