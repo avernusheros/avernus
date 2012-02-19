@@ -2,6 +2,7 @@
 from avernus.config import avernusConfig
 from avernus.gui import gui_utils
 from avernus.controller import controller
+from avernus.controller import portfolio_controller as pfctlr
 from gi.repository import Gtk
 import logging
 import sys
@@ -35,7 +36,7 @@ class PrefDialog(Gtk.Dialog):
 
 class PreferencesVBox(Gtk.VBox):
 
-	def _add_section(self, name):
+    def _add_section(self, name):
         frame = Gtk.Frame()
         frame.set_shadow_type(Gtk.ShadowType.NONE)
         label = Gtk.Label()
@@ -45,7 +46,7 @@ class PreferencesVBox(Gtk.VBox):
         frame.add(vbox)
         self.pack_start(frame, False, False, 10)
         return vbox
-    
+
     def _get_alignment(self):
         alignment = Gtk.Alignment.new(0.5, 0.5, 1.0, 1.0)
         alignment.set_property("left-padding", 12)
@@ -63,7 +64,7 @@ class PreferencesVBox(Gtk.VBox):
 
     def on_toggled(self, button, option):
         self.configParser.set_option(option, button.get_active(), self.parser_section)
-        
+
 
 class ChartPreferences(PreferencesVBox):
 
@@ -76,17 +77,17 @@ class ChartPreferences(PreferencesVBox):
         section = self._add_section('Portfolio Benchmark')
         self._add_option(section, _('Show 5% Benchmark'), 'benchmark_5')
         self._add_option(section, _('Show 10% Benchmark'), 'benchmark_10')
-        
+
         section = self._add_section('Axis')
         self._add_option(section, _('Normalize Y Axis'), 'normalize_y_axis')
 
-   
+
 class PortfolioPreferences(PreferencesVBox):
 
-	parser_section = "General"
+    parser_section = "General"
 
 
-	def __init__(self):
+    def __init__(self):
         Gtk.VBox.__init__(self)
         self.configParser = avernusConfig()
 
@@ -97,7 +98,7 @@ class PortfolioPreferences(PreferencesVBox):
 
 class AccountPreferences(PreferencesVBox):
 
-	parser_section = "Account"
+    parser_section = "Account"
 
     def __init__(self):
         Gtk.VBox.__init__(self)
@@ -141,9 +142,8 @@ class DimensionList(Gtk.VBox):
         sw.add(self.tree)
         for dim in sorted(controller.getAllDimension()):
             iterator = self.model.append(None, [dim, dim.name])
-            # FIXME that was uncommented, but the preferences dialog crashes and I have no idea what this does...
-            #for val in sorted(controller.getAllDimensionValueForDimension(dim)):
-            #    self.model.append(iterator, [val, val.name])
+            for val in sorted(pfctlr.getAllDimensionValueForDimension(dim)):
+                self.model.append(iterator, [val, val.name])
 
         actiongroup = Gtk.ActionGroup('dimensions')
         actiongroup.add_actions([
