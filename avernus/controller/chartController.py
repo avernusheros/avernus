@@ -1,5 +1,5 @@
 from avernus.gui import gui_utils
-from avernus import date_utils
+from avernus import date_utils, config
 
 from dateutil.relativedelta import relativedelta
 from dateutil.rrule import *
@@ -335,8 +335,7 @@ class StockChartPlotController(Controller):
 class PortfolioChartController(Controller):
     
     MAX_VALUES = 25
-    BENCHMARK_INTEREST = 0.05
-
+    
     def __init__(self, portfolio, step):
         self.portfolio = portfolio
         self.items = portfolio.getTransactions() + portfolio.getDividends()
@@ -361,13 +360,23 @@ class PortfolioChartController(Controller):
             yield foo
         for foo in self.calculate_investmentsovertime():
             yield foo
+        configParser = config.AvernusConfig()
+        option = configParser.get_option('benchmark_5', 'Chart')
+        if option == "True":
+            self.calculate_benchmark(0.05)
+        option = configParser.get_option('benchmark_10', 'Chart')
+        if option == "True":
+            self.calculate_benchmark(0.1)
+        yield 1
+        
+    def calculate_benchmark(self, percent):
         benchmark = [0.0] * len(self.days)
-        daily = self.BENCHMARK_INTEREST / len(self.days)
+        daily = percent / len(self.days)
         benchmark[0] = self.y_values['invested capital'][0]
         for i in range(1,len(benchmark)):
             benchmark[i] = benchmark[i-1] * (1 + daily)+ self.y_values['invested capital'][i] - self.y_values['invested capital'][i-1]  
-        self.y_values['benchmark'] = benchmark
-        yield 1
+        key = 'benchmark_' + str(percent * 100) + '%'
+        self.y_values[key] = benchmark
 
     def calculate_valueovertime(self):
         value = [0.0] * len(self.days)

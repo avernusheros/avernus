@@ -102,7 +102,7 @@ class SimpleLineChart(ChartBase):
                                 grid=True,
                                 series_legend=True,
                                 dots=self.dots,
-                                series_colors=['blue','green','red'],
+                                series_colors=['blue','green','red','magenta'],
                                 y_bounds = y_bounds)
         self.current_widget = plot.handler
         self.current_widget.show()
