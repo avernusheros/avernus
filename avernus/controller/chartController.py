@@ -379,7 +379,7 @@ class PortfolioChartController(ChartController):
         benchmark[0] = self.y_values['invested capital'][0]
         for i in range(1, len(benchmark)):
             benchmark[i] = benchmark[i - 1] * (1 + daily) + self.y_values['invested capital'][i] - self.y_values['invested capital'][i - 1]
-        key = 'benchmark_' + str(percent * 100) + '%'
+        key = 'Benchmark ' + str(int(percent * 100)) + '%'
         self.y_values[key] = benchmark
 
     def calculate_valueovertime(self, name):
