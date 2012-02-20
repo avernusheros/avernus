@@ -47,7 +47,8 @@ def calculate_x_values(step, start, end):
         result.append(end)
         return result
 
-class Controller:
+
+class ChartController:
 
     def get_y_bounds(self):
         i = sys.maxint
@@ -57,7 +58,8 @@ class Controller:
             a = max(max(series), a)
         return (i, a)
 
-class TransactionChartController(Controller):
+
+class TransactionChartController(ChartController):
 
     def get_step(self):
         return get_step_for_range(self.start_date, self.end_date)
@@ -190,7 +192,7 @@ class TransactionStepValueChartController(TransactionValueOverTimeChartControlle
             del self.x_values[-1]
 
 
-class EarningsVsSpendingsController(Controller):
+class EarningsVsSpendingsController(ChartController):
 
     def __init__(self, transactions, date_range):
         self.update(transactions, date_range)
@@ -224,7 +226,7 @@ class EarningsVsSpendingsController(Controller):
         yield 1
 
 
-class TransactionCategoryPieController(Controller):
+class TransactionCategoryPieController(ChartController):
 
     def __init__(self, transactions, earnings):
         self.earnings = earnings
@@ -280,7 +282,7 @@ class AccountBalanceOverTimeChartController(TransactionChartController):
         yield 1
 
 
-class DividendsPerYearChartController(Controller):
+class DividendsPerYearChartController(ChartController):
 
     def __init__(self, portfolio):
         self.portfolio = portfolio
@@ -299,7 +301,7 @@ class DividendsPerYearChartController(Controller):
         yield 1
 
 
-class DividendsPerPositionChartController(Controller):
+class DividendsPerPositionChartController(ChartController):
 
     def __init__(self, portfolio):
         self.portfolio = portfolio
@@ -319,7 +321,7 @@ class DividendsPerPositionChartController(Controller):
         yield 1
 
 
-class StockChartPlotController(Controller):
+class StockChartPlotController(ChartController):
     #FIXME move code from plot.py here
 
     def __init__(self, quotations):
@@ -333,33 +335,34 @@ class StockChartPlotController(Controller):
         yield 1
 
 
-class PortfolioChartController(Controller):
+class PortfolioChartController(ChartController):
 
     MAX_VALUES = 25
 
     def __init__(self, portfolio, step):
         self.portfolio = portfolio
+        self.birthday = self.portfolio.birthday
         self.items = portfolio.getTransactions() + portfolio.getDividends()
         self.step = step
 
     def _calc_days(self):
         if self.step == 'daily':
-            self.days = list(rrule(DAILY, dtstart=self.portfolio.birthday, until=datetime.date.today()))[-self.MAX_VALUES:]
+            self.days = list(rrule(DAILY, dtstart=self.birthday, until=datetime.date.today()))[-self.MAX_VALUES:]
         elif self.step == 'weekly':
-            self.days = list(rrule(WEEKLY, dtstart=self.portfolio.birthday, until=datetime.date.today(), byweekday=FR))[-self.MAX_VALUES:]
+            self.days = list(rrule(WEEKLY, dtstart=self.birthday, until=datetime.date.today(), byweekday=FR))[-self.MAX_VALUES:]
         elif self.step == 'monthly':
-            self.days = list(rrule(MONTHLY, dtstart=self.portfolio.birthday, until=datetime.date.today(), bymonthday= -1))[-self.MAX_VALUES:]
+            self.days = list(rrule(MONTHLY, dtstart=self.birthday, until=datetime.date.today(), bymonthday= -1))[-self.MAX_VALUES:]
         elif self.step == 'yearly':
-            self.days = list(rrule(YEARLY, dtstart=self.portfolio.birthday, until=datetime.date.today(), bymonthday= -1, bymonth=12))[-self.MAX_VALUES:]
+            self.days = list(rrule(YEARLY, dtstart=self.birthday, until=datetime.date.today(), bymonthday= -1, bymonth=12))[-self.MAX_VALUES:]
 
     def calculate_values(self):
         self._calc_days()
         self.x_values = format_days(self.days, self.step)
         self.y_values = {}
         #FIXME do both things in parallel
-        for foo in self.calculate_valueovertime():
+        for foo in self.calculate_valueovertime('portfolio value'):
             yield foo
-        for foo in self.calculate_investmentsovertime():
+        for foo in self.calculate_investmentsovertime('invested capital'):
             yield foo
         configParser = config.AvernusConfig()
         option = configParser.get_option('benchmark_5', 'Chart')
@@ -379,28 +382,63 @@ class PortfolioChartController(Controller):
         key = 'benchmark_' + str(percent * 100) + '%'
         self.y_values[key] = benchmark
 
-    def calculate_valueovertime(self):
-        value = [0.0] * len(self.days)
+    def calculate_valueovertime(self, name):
+        self.y_values[name] = [0.0] * len(self.days)
         for pos in self.portfolio:
             for i in range(len(self.days)):
-                value[i] += pos.get_value_at_date(self.days[i])
+                self.y_values[name][i] += pos.get_value_at_date(self.days[i])
                 yield 0
-        self.y_values['portfolio value'] = value
         yield 1
 
     def update(self):
         self.calculate_values()
 
-    def calculate_investmentsovertime(self):
+    def calculate_investmentsovertime(self, name):
         self.items = sorted(self.items, key=lambda t: t.date)
-        self.y_values['invested capital'] = []
+        self.y_values[name] = []
         count = 0
         i = 0
         for current in self.days:
             while i < len(self.items) and self.items[i].date < current:
                 count -= self.items[i].total
                 i += 1
-            self.y_values['invested capital'].append(count)
+            self.y_values[name].append(count)
+        yield 1
+
+
+class AllPortfolioValueOverTime(PortfolioChartController):
+
+    def __init__(self, step):
+        self.step = step
+        self.birthday = min([pf.birthday for pf in pfctlr.getAllPortfolio()])
+
+    def calculate_values(self):
+        self._calc_days()
+        self.x_values = format_days(self.days, self.step)
+        self.y_values = {}
+        #FIXME do in parallel
+        for pf in pfctlr.getAllPortfolio():
+            self.portfolio = pf
+            for foo in self.calculate_valueovertime(pf.name):
+                yield foo
+        yield 1
+
+
+class AllPortfolioInvestmentsOverTime(PortfolioChartController):
+
+    def __init__(self, step):
+        self.step = step
+        self.birthday = min([pf.birthday for pf in pfctlr.getAllPortfolio()])
+
+    def calculate_values(self):
+        self._calc_days()
+        self.x_values = format_days(self.days, self.step)
+        self.y_values = {}
+        #FIXME do in parallel
+        for pf in pfctlr.getAllPortfolio():
+            self.items = pf.getTransactions() + pf.getDividends()
+            for foo in self.calculate_investmentsovertime(pf.name):
+                yield foo
         yield 1
 
 

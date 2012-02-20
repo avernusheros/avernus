@@ -37,10 +37,60 @@ class OverviewCharts(Gtk.ScrolledWindow):
         table = Gtk.Table()
         y = 0
 
+        #value over time chart
+        hbox = Gtk.HBox()
+        table.attach(hbox, 0, 2, y, y + 1)
+        label = Gtk.Label()
+        label.set_markup('<b>' + _('Portfolio value over time') + '</b>')
+        label.set_tooltip_text(_("This chart plots the portfolio value over the selected time period."))
+        hbox.pack_start(label, True, True, 0)
+
+        combobox = Gtk.ComboBoxText()
+        for st in ['daily', 'weekly', 'monthly', 'yearly']:
+            combobox.append_text(st)
+        combobox.set_active(2)
+
+        hbox.pack_start(combobox, False, False, 0)
+
+        y += 1
+
+        pfvalue_chart_controller = chartController.AllPortfolioValueOverTime('monthly')
+        pfvalue_chart = charts.SimpleLineChart(pfvalue_chart_controller, width)
+        table.attach(pfvalue_chart, 0, 2, y, y + 1)
+        combobox.connect('changed', self.on_zoom_change, pfvalue_chart_controller, pfvalue_chart)
+
+        y += 1
+        #investments over time chart
+        hbox = Gtk.HBox()
+        table.attach(hbox, 0, 2, y, y + 1)
+        label = Gtk.Label()
+        label.set_markup('<b>' + _('Investments over time') + '</b>')
+        label.set_tooltip_text(_("This chart plots the investments over time."))
+        hbox.pack_start(label, True, True, 0)
+
+        combobox = Gtk.ComboBoxText()
+        for st in ['daily', 'weekly', 'monthly', 'yearly']:
+            combobox.append_text(st)
+        combobox.set_active(2)
+
+        hbox.pack_start(combobox, False, False, 0)
+
+        y += 1
+
+        pfinvestments_chart_controller = chartController.AllPortfolioInvestmentsOverTime('monthly')
+        pfinvestments_chart = charts.SimpleLineChart(pfinvestments_chart_controller, width)
+        table.attach(pfinvestments_chart, 0, 2, y, y + 1)
+        combobox.connect('changed', self.on_zoom_change, pfinvestments_chart_controller, pfinvestments_chart)
+
+        y += 1
+
         label = Gtk.Label()
         label.set_markup('<b>' + _('Market value') + '</b>')
         #FIXME label.set_tooltip_text(_(""))
         table.attach(label, 0, 1, y, y + 1)
+
+        y += 1
+
         chart_controller = chartController.PortfolioAttributeChartController('name')
         chart = charts.Pie(chart_controller, width / 2)
         table.attach(chart, 0, 1, y, y + 1)
@@ -51,6 +101,11 @@ class OverviewCharts(Gtk.ScrolledWindow):
     def clear(self):
         for child in self.get_children():
             self.remove(child)
+
+    def on_zoom_change(self, combobox, controller, chart):
+        value = combobox.get_model()[combobox.get_active()][0]
+        controller.step = value
+        chart.update()
 
 
 class PortfolioOverviewTree(gui_utils.Tree):
