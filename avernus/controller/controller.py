@@ -282,10 +282,7 @@ def newDimension(name):
     dim.controller = controller
     return dim
 
-def newAssetDimensionValue(stock, dimensionValue, value):
-    adv = detectDuplicate(AssetDimensionValue, stock=stock.id, dimensionValue=dimensionValue.id,
-                          value=value)
-    return adv
+
 
 def newStock(insert=True, **kwargs):
     result = Stock(**kwargs)
@@ -362,12 +359,7 @@ def getAccountCategoryForName(name):
         if cat.name == name:
             return cat
 
-def getAssetDimensionValueForStock(stock, dim):
-    stockADVs = AssetDimensionValue.getAllFromOneColumn('stock', stock.id)
-    #for adv in stockADVs:
-    #    print adv, adv.dimensionValue
-    stockADVs = filter(lambda adv: adv.dimensionValue.dimension == dim, stockADVs)
-    return stockADVs
+
 
 def getAllStock():
     return Stock.getAll()

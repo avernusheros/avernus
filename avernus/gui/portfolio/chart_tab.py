@@ -47,7 +47,7 @@ class ChartTab(Gtk.ScrolledWindow, page.Page):
         self.pfvalue_chart_controller = chartController.PortfolioChartController(self.pf, 'monthly')
         self.pfvalue_chart = charts.SimpleLineChart(self.pfvalue_chart_controller, width)
         table.attach(self.pfvalue_chart, 0, 2, y, y + 1)
-
+       
         y += 1
 
         label = Gtk.Label()

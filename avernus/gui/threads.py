@@ -29,7 +29,6 @@ class GeneratorTask(object):
         self.generator = generator
         self.loop_callback = loop_callback
         self.complete_callback = complete_callback
-
         self.id = get_id()
         threadlist[self.id] = self
 

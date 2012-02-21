@@ -11,7 +11,6 @@ class ChartBase(Gtk.VBox):
         self.controller = controller
         self.width = width
         self.current_widget = None
-
         self.connect('realize', self.on_realize)
 
     def remove_widget(self):
@@ -19,6 +18,7 @@ class ChartBase(Gtk.VBox):
             self.remove(self.current_widget)
 
     def draw_widget(self):
+        print "entering stub widget drawing: should not happen"
         pass
 
     def draw_spinner(self):
@@ -32,7 +32,7 @@ class ChartBase(Gtk.VBox):
     def on_realize(self, widget):
         self.draw_spinner()
         threads.GeneratorTask(self.controller.calculate_values, complete_callback=self.draw_widget).start()
-
+      
     def update(self, *args, **kwargs):
         self.draw_spinner()
         self.controller.update(*args, **kwargs)

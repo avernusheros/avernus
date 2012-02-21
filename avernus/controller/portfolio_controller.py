@@ -138,6 +138,18 @@ def newWatchlist(name, wl_id=None, last_update=datetime.datetime.now(), comment=
     result.insert()
     return result
 
+def getAssetDimensionValueForStock(stock, dim):
+    stockADVs = AssetDimensionValue.getAllFromOneColumn('stock', stock.id)
+    #for adv in stockADVs:
+    #    print adv, adv.dimensionValue
+    stockADVs = filter(lambda adv: adv.dimensionValue.dimension == dim, stockADVs)
+    return stockADVs
+
+def newAssetDimensionValue(stock, dimensionValue, value):
+    adv = detectDuplicate(AssetDimensionValue, stock=stock.id, dimensionValue=dimensionValue.id,
+                          value=value)
+    return adv
+
 
 def getPriceFromStockAtDate(stock, date):
     args = {'stock': stock.id, 'date':date.date()}
