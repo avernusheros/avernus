@@ -3,10 +3,13 @@ from avernus.objects.stock import Stock
 from avernus.objects.container import Portfolio, Watchlist
 from avernus.objects.position import PortfolioPosition, WatchlistPosition
 from avernus.objects.dividend import Dividend
+from avernus.objects.source_info import SourceInfo
 from avernus.objects.transaction import Transaction
 from avernus.objects.quotation import Quotation
 from avernus.objects.dimension import Dimension, DimensionValue, \
     AssetDimensionValue
+from avernus.controller.shared import check_duplicate
+
 
 import datetime
 import sys
@@ -14,7 +17,7 @@ import sys
 datasource_manager = None
 initialLoadingClasses = [Transaction, Portfolio, Dividend, Watchlist, \
                         PortfolioPosition, WatchlistPosition, Dimension, \
-                        DimensionValue, AssetDimensionValue]
+                        DimensionValue, AssetDimensionValue, Stock]
 controller = sys.modules[__name__]
 
 
@@ -178,3 +181,55 @@ def getBuyTransaction(portfolio_position):
 def yieldSellTransactions(portfolio_position):
     for ta in Transaction.getByColumns({'position': portfolio_position.id, 'type':0}, create=True):
         yield ta
+
+
+def newStock(insert=True, **kwargs):
+    result = Stock(**kwargs)
+    result.controller = controller
+    if insert:
+        result.insert()
+    return result
+
+def newWatchlistPosition(price=0, \
+                         date=datetime.datetime.now(), \
+                         quantity=1, \
+                         watchlist=None, \
+                         stock=None, \
+                         comment=''\
+                         ):
+    result = WatchlistPosition(id=None, \
+                               price=price, \
+                               date=date, \
+                               watchlist=watchlist, \
+                               stock=stock, \
+                               comment=comment\
+                               )
+    result.insert()
+    return result
+
+def newPortfolioPosition(price=0, \
+                         date=datetime.datetime.now(), \
+                         quantity=1, \
+                         portfolio=None, \
+                         stock=None, \
+                         comment=''\
+                         ):
+    result = PortfolioPosition(id=None, \
+                               price=price, \
+                               date=date, \
+                               quantity=quantity, \
+                               portfolio=portfolio, \
+                               stock=stock, \
+                               comment=comment\
+                               )
+    result.controller = controller
+    result.insert()
+    return result
+
+
+def newSourceInfo(source='', stock=None, info=''):
+    if check_duplicate(SourceInfo, source=source, stock=stock.id, info=info) is not None:
+        return None
+    si = SourceInfo(source=source, stock=stock, info=info)
+    si.insert()
+    return si

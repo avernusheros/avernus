@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 from avernus.controller import controller
+from avernus.controller import portfolio_controller as pfctlr
 from avernus.objects.stock import Stock
 from avernus.data_sources import yahoo, onvista
 from avernus.gui import threads
@@ -69,9 +70,9 @@ class DatasourceManager(object):
         if not stock:
             new = True
             item['source'] = source.name
-            stock = controller.newStock(**item)
+            stock = pfctlr.newStock(**item)
         if source_info is not None:
-            controller.newSourceInfo(source=source.name, stock=stock, info=source_info)
+            pfctlr.newSourceInfo(source=source.name, stock=stock, info=source_info)
         if new and self.search_callback:
             self.search_callback(stock, source_icons[item['source']])
 

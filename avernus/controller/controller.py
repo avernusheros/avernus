@@ -19,6 +19,7 @@ import itertools
 import logging
 import sys
 from avernus.controller import portfolio_controller as pfctlr
+from avernus.controller.shared import check_duplicate
 
 
 
@@ -40,7 +41,7 @@ modelClasses = [Portfolio, Transaction, Watchlist, Dividend, SourceInfo,
 #these classes will be loaded with one single call and will also load composite
 #relations. therefore it is important that the list is complete in the sense
 #that there are no classes holding composite keys to classes outside the list
-initialLoadingClasses = [Account, Meta, Stock,
+initialLoadingClasses = [Account, Meta,
                          AccountTransaction, AccountCategory]
 
 VERSION = 2
@@ -96,14 +97,6 @@ def is_duplicate(tp, **kwargs):
         return True
     else: return False
 
-def check_duplicate(tp, **kwargs):
-    sqlArgs = {}
-    for req in tp.__comparisonPositives__:
-        sqlArgs[req] = kwargs[req]
-    present = tp.getByColumns(sqlArgs, operator=" AND ", create=True)
-    if present:
-        return present[0]
-    return None
 
 def detectDuplicate(tp, **kwargs):
     #print tp, kwargs
@@ -226,50 +219,6 @@ def newTransaction(date=datetime.datetime.now(), \
     return result
 
 
-def newPortfolioPosition(price=0, \
-                         date=datetime.datetime.now(), \
-                         quantity=1, \
-                         portfolio=None, \
-                         stock=None, \
-                         comment=''\
-                         ):
-    result = PortfolioPosition(id=None, \
-                               price=price, \
-                               date=date, \
-                               quantity=quantity, \
-                               portfolio=portfolio, \
-                               stock=stock, \
-                               comment=comment\
-                               )
-    result.controller = controller
-    result.insert()
-    return result
-
-
-def newWatchlistPosition(price=0, \
-                         date=datetime.datetime.now(), \
-                         quantity=1, \
-                         watchlist=None, \
-                         stock=None, \
-                         comment=''\
-                         ):
-    result = WatchlistPosition(id=None, \
-                               price=price, \
-                               date=date, \
-                               watchlist=watchlist, \
-                               stock=stock, \
-                               comment=comment\
-                               )
-    result.insert()
-    return result
-
-def newSourceInfo(source='', stock=None, info=''):
-    if check_duplicate(SourceInfo, source=source, stock=stock.id, info=info) is not None:
-        return None
-    si = SourceInfo(source=source, stock=stock, info=info)
-    si.insert()
-    return si
-
 def getSourceInfo(source='', stock=None):
     args = {'stock': stock.getPrimaryKey(), 'source':source}
     return SourceInfo.getByColumns(args, create=True)
@@ -283,13 +232,6 @@ def newDimension(name):
     return dim
 
 
-
-def newStock(insert=True, **kwargs):
-    result = Stock(**kwargs)
-    result.controller = controller
-    if insert:
-        result.insert()
-    return result
 
 def newQuotation(date=datetime.date.today(), \
                  stock=None, \

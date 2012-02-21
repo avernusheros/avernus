@@ -15,7 +15,7 @@ TYPES = {FUND: 'FUND',
 
 
 class Stock(SQLiteEntity):
-    
+
     __primaryKey__ = 'id'
     __tableName__ = "stock"
     __columns__ = {
@@ -51,15 +51,13 @@ class Stock(SQLiteEntity):
         return self
 
     def updateAssetDimensionValue(self, dimension, dimVals):
-        from avernus.controller import portfolio_controller
         for adv in self.getAssetDimensionValue(dimension):
             adv.delete()
         for dimVal, value in dimVals:
-            portfolio_controller.newAssetDimensionValue(self,dimVal,value)
+            self.controller.newAssetDimensionValue(self,dimVal,value)
 
     def getAssetDimensionValue(self, dim):
-        from avernus.controller import portfolio_controller
-        assDimVals = portfolio_controller.getAssetDimensionValueForStock(self, dim)
+        assDimVals = self.controller.getAssetDimensionValueForStock(self, dim)
         return assDimVals
 
     @property
@@ -79,9 +77,7 @@ class Stock(SQLiteEntity):
         return self.name +' | '+self.isin+' | '+self.exchange
 
     def update_price(self):
-        from avernus.controller import portfolio_controller
-        portfolio_controller.datasource_manager.update_stock(self)
+        self.controller.datasource_manager.update_stock(self)
 
     def get_price_at_date(self, date):
-        from avernus.controller import portfolio_controller
-        return portfolio_controller.getPriceFromStockAtDate(self, date)
+        return self.controller.getPriceFromStockAtDate(self, date)

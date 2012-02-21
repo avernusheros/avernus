@@ -152,7 +152,7 @@ class BuyDialog(Gtk.Dialog):
                 stock.update_price()
                 if shares == 0.0:
                     return
-                self.position = controller.newPortfolioPosition(price=price, date=date, quantity=shares, portfolio=self.pf, stock=stock)
+                self.position = pfctlr.newPortfolioPosition(price=price, date=date, quantity=shares, portfolio=self.pf, stock=stock)
                 ta = controller.newTransaction(type=1, date=date, quantity=shares, price=price, costs=ta_costs, position=self.position, portfolio=self.pf)
                 #FIXME trigger publish in container.py and transaction.py
                 pubsub.publish('container.position.added', self.pf, self.position)

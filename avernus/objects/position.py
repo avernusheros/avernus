@@ -78,8 +78,7 @@ class PortfolioPosition(SQLiteEntity, Position):
 
     @property
     def transactions(self):
-        from avernus.controller import portfolio_controller
-        return portfolio_controller.getTransactionsForPosition(self)
+        return self.controller.getTransactionsForPosition(self)
 
     @property
     def dividends(self):
