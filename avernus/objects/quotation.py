@@ -17,4 +17,4 @@ class Quotation(SQLiteEntity):
                    'volume': 'INTEGER',
                    
                   }
-    __comparisonPositives__ = ['stock','date', 'exchange']
+    __comparisonPositives__ = ['stock','date']

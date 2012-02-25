@@ -19,7 +19,7 @@ import itertools
 import logging
 import sys
 from avernus.controller import portfolio_controller as pfctlr
-from avernus.controller.shared import check_duplicate
+from avernus.controller.shared import check_duplicate, detect_duplicate
 
 
 
@@ -98,21 +98,6 @@ def is_duplicate(tp, **kwargs):
     else: return False
 
 
-def detectDuplicate(tp, **kwargs):
-    #print tp, kwargs
-    sqlArgs = {}
-    for req in tp.__comparisonPositives__:
-        sqlArgs[req] = kwargs[req]
-    present = tp.getByColumns(sqlArgs, operator=" AND ", create=True)
-    if present:
-        if len(present) == 1:
-            return present[0]
-        else:
-            raise Exception("Multiple results for duplicate detection")
-    #print "not Present!"
-    new = tp(**kwargs)
-    new.insert()
-    return new
 
 def createTables():
     for cl in modelClasses:
@@ -224,10 +209,10 @@ def getSourceInfo(source='', stock=None):
     return SourceInfo.getByColumns(args, create=True)
 
 def newDimensionValue(dimension=None, name=""):
-    return detectDuplicate(DimensionValue, dimension=dimension.id, name=name)
+    return detect_duplicate(DimensionValue, dimension=dimension.id, name=name)
 
 def newDimension(name):
-    dim = detectDuplicate(Dimension, name=name)
+    dim = detect_duplicate(Dimension, name=name)
     dim.controller = controller
     return dim
 
@@ -243,7 +228,7 @@ def newQuotation(date=datetime.date.today(), \
                  exchange='', \
                  detectDuplicates=True):
     if detectDuplicates:
-        return detectDuplicate(Quotation, \
+        return detect_duplicate(Quotation, \
                                date=date, \
                                open=open, \
                                high=high, \

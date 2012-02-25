@@ -20,7 +20,7 @@ source_icons = {
                 'yahoo':'yahoo'
                 }
 
-class DatasourceManager(object):
+class DatasourceManager():
 
     def __init__(self):
         self.current_searches = []
@@ -93,15 +93,17 @@ class DatasourceManager(object):
 
     def get_historical_prices(self, stock, start_date=None, end_date=None):
         if not self.b_online:
-            yield 1
+            return
         if end_date is None:
             end_date = datetime.date.today() - datetime.timedelta(days=1)
-        if start_date is None:
+        start_date = stock.get_date_of_newest_quotation()
+        if start_date is None:         
             start_date = datetime.date(end_date.year - 20, end_date.month, end_date.day)
-        if start_date <= end_date:
+        if start_date < end_date:
             for qt in sources[stock.source].update_historical_prices(stock, start_date, end_date):
                 #qt : (stock, exchange, date, open, high, low, close, vol)
-                yield controller.newQuotation(stock=qt[0], exchange=qt[1], \
+                if qt is not None:
+                    yield controller.newQuotation(stock=qt[0], exchange=qt[1], \
                             date=qt[2], open=qt[3], high=qt[4], \
                             low=qt[5], close=qt[6], vol=qt[7], \
                             detectDuplicates=True)
@@ -112,7 +114,7 @@ class DatasourceManager(object):
         if not self.b_online:
             yield 1
         end_date = datetime.date.today() - datetime.timedelta(days=1)
-        start_date = controller.getNewestQuotation(stock)
+        start_date = stock.get_date_of_newest_quotation()
         if start_date == None:
             start_date = datetime.date(end_date.year - 20, end_date.month, end_date.day)
         yield self.get_historical_prices(stock, start_date, end_date)

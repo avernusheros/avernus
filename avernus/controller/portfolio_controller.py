@@ -8,7 +8,7 @@ from avernus.objects.transaction import Transaction
 from avernus.objects.quotation import Quotation
 from avernus.objects.dimension import Dimension, DimensionValue, \
     AssetDimensionValue
-from avernus.controller.shared import check_duplicate
+from avernus.controller.shared import check_duplicate, detect_duplicate
 
 
 import datetime
@@ -52,8 +52,6 @@ def update_historical_prices():
 def get_all_used_stocks():
     query = """
     select distinct stock from portfolioposition
-    union
-    select distinct stock from watchlistposition
     """
     return [Stock.getByPrimaryKey(stockid[0]) for stockid in model.store.select(query)]
 
@@ -149,7 +147,7 @@ def getAssetDimensionValueForStock(stock, dim):
     return stockADVs
 
 def newAssetDimensionValue(stock, dimensionValue, value):
-    adv = detectDuplicate(AssetDimensionValue, stock=stock.id, dimensionValue=dimensionValue.id,
+    adv = detect_duplicate(AssetDimensionValue, stock=stock.id, dimensionValue=dimensionValue.id,
                           value=value)
     return adv
 
@@ -166,13 +164,6 @@ def getAllQuotationsFromStock(stock, start=None):
     erg = Quotation.getByColumns({'stock': stock.id}, create=True)
     return sorted(erg, key=lambda stock: stock.date)
 
-def getNewestQuotation(stock):
-    key = stock.getPrimaryKey()
-    erg = Quotation.getAllFromOneColumn("stock", key)
-    if len(erg) == 0:
-        return None
-    else:
-        return erg[0].date
 
 def getBuyTransaction(portfolio_position):
     for ta in Transaction.getByColumns({'position': portfolio_position.id, 'type':1}, create=True):

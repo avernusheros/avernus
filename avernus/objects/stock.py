@@ -45,11 +45,6 @@ class Stock(SQLiteEntity):
                          'ter':0.0
                          }
 
-    #needed for some treeviews, e.g. news_tab
-    @property
-    def stock(self):
-        return self
-
     def updateAssetDimensionValue(self, dimension, dimVals):
         for adv in self.getAssetDimensionValue(dimension):
             adv.delete()
@@ -74,10 +69,14 @@ class Stock(SQLiteEntity):
         return ''
 
     def __str__(self):
-        return self.name +' | '+self.isin+' | '+self.exchange
+        return self.name +' | '+self.isin
 
     def update_price(self):
         self.controller.datasource_manager.update_stock(self)
 
     def get_price_at_date(self, date):
         return self.controller.getPriceFromStockAtDate(self, date)
+    
+    def get_date_of_newest_quotation(self):
+        #FIXME make this faster by not getting all quotations from the db    
+        return max(self.controller.getAllQuotationsFromStock(self), key=lambda st:st.date).date

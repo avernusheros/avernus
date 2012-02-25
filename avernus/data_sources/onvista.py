@@ -330,8 +330,8 @@ class Onvista():
             url = 'http://anleihen.onvista.de/kurshistorie.html'
         else:
             logger.error("Uknown stock type in onvistaplugin.search_kurse")
-        file = opener.open(url,urllib.urlencode({'ISIN':st.isin, 'RANGE':'60M'}))
-        soup = BeautifulSoup(file)
+        fileobj = opener.open(url,urllib.urlencode({'ISIN':st.isin, 'RANGE':'60M'}))
+        soup = BeautifulSoup(fileobj)
         if st.type==stock.BOND:
             lines = soup.findAll('tr',{'class':'hr'})
         else:
@@ -339,6 +339,10 @@ class Onvista():
         for line in lines:
             tds = line.findAll('td', text=True)
             day = to_datetime(tds[0].replace('&nbsp;', '')).date()
+            
+            # terminate if the start date is reached
+            if day < start_date:
+                return
 
             if st.type == stock.BOND:
                 yield (st,'KAG',

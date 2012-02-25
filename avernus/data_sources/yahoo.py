@@ -112,7 +112,7 @@ class Yahoo():
         file = urlopen(url)
         if file.info().gettype() == 'text/html':
             logger.info("no historical data found for stock: "+stock.name)
-            return
+            yield None
         days = file.readlines()
         for row in [day[:-2].split(',') for day in days[1:]]:
             dt = datetime.strptime(row[0], '%Y-%m-%d').date()
