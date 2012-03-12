@@ -473,6 +473,8 @@ class PositionAttributeChartController():
     def calculate_values(self):
         data = {}
         for pos in self.portfolio:
+            if pos.quantity == 0.0:
+                continue
             item = str(getattr(pos.stock, self.attribute))
             try:
                 data[item] += pos.cvalue
