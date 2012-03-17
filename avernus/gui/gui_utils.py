@@ -20,10 +20,11 @@ class Tree(Gtk.TreeView):
     def get_selected_item(self):
         #Get the current selection in the Gtk.TreeView
         selection = self.get_selection()
-        # Get the selection iter
-        treestore, selection_iter = selection.get_selected()
-        if (selection_iter and treestore):
-            return treestore[selection_iter][0], selection_iter
+        if selection != None:
+            # Get the selection iter
+            treestore, selection_iter = selection.get_selected()
+            if (selection_iter and treestore):
+                return treestore[selection_iter][0], selection_iter
         return None, None
 
     def create_column(self, name, attribute, func=None, expand=False):
