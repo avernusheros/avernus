@@ -1,6 +1,9 @@
 from avernus.objects.filter import CategoryFilter
 from avernus.controller import controller
 from avernus.config import avernusConfig
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def create(rule, category, priority=10, active=False):
@@ -19,10 +22,12 @@ def get_all_active_by_priority():
     return sorted([f for f in get_all() if f.active], key=lambda f: f.priority)
 
 def match_transaction(rule, transaction):
+    #print rule.rule, transaction.description
     return rule.rule in transaction.description
 
 def get_category(transaction):
     for rule in rules:
+        #print "Probing rule ", rule, transaction.description
         if match_transaction(rule, transaction):
             return rule.category
     return None
@@ -32,15 +37,24 @@ def run_auto_assignments():
         b_include_categorized = True
     else:
         b_include_categorized = False
-    for transaction in controller.getAllAccountTransactions():
+    transactions = controller.getAllAccountTransactions()
+    #print "Size: ", len(transactions)
+    for transaction in transactions:
         if b_include_categorized or transaction.category is None:
             cat = get_category(transaction)
+            msg = "Category Auto Assignment" + str(transaction) + ": "
             if cat != transaction.category:
                 transaction.category = get_category(transaction)
+                msg += "Change to " + str(transaction.category)
+            else:
+                msg += "No Change."
+            #print msg
+            logger.debug(msg)
 
 config = avernusConfig()
 try:
     rules = get_all_active_by_priority()
 except:
+    logger.error("Category Auto Assignments: Error while retrieving rules")
     rules = []
 
