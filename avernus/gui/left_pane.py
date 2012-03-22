@@ -252,7 +252,7 @@ class MainTree(gui_utils.Tree):
         if objtype == 'Category' or objtype == "AllPortfolio" or objtype == 'AllAccount':
             return
         parent = self.get_toplevel()
-        if objtype == 'Account':
+        if obj.__name__ == 'Account':
             EditAccount(obj, parent)
         else:
             obj, selection_iter = self.selected_item

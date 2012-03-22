@@ -79,6 +79,7 @@ class PreviewTree(gui_utils.Tree):
         self.set_model(sorter)
         self.modelfilter.set_visible_func(self.visible_cb, None)
         self.create_column(_('Date'), self.DATE, func=gui_utils.date_to_string, expand=False)
+        sorter.set_sort_func(self.DATE, gui_utils.sort_by_time, self.DATE)
         col, cell = self.create_column(_('Description'), self.DESCRIPTION, func=gui_utils.transaction_desc_markup)
         cell.props.wrap_mode = Pango.WrapMode.WORD
         cell.props.wrap_width = 300
