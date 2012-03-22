@@ -180,7 +180,7 @@ class FilterTree(gui_utils.Tree):
         self.model[path][self.PRIORITY] = self.model[path][self.OBJECT].priority = new_val
 
     def on_cell_edited(self, cellrenderertext, path, new_text):
-        self.model[path][self.FILTER_STR] = self.model[path][self.OBJECT].rule = new_text
+        self.model[path][self.FILTER_STR] = self.model[path][self.OBJECT].rule = unicode(new_text)
 
     def on_toggled(self, cellrenderertoggle, path):
         active = not self.model[path][self.ACTIVE]
