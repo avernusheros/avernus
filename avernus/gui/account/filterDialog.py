@@ -10,7 +10,7 @@ class FilterDialog(Gtk.Dialog):
         Gtk.Dialog.__init__(self, _("Account Category Filters"), parent
                             , Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,
                      (Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT))
-        self.set_size_request(800, 500)
+        self.set_size_request(800, 600)
         self._init_widgets()
         self.show_all()
         self.run()
@@ -22,6 +22,7 @@ class FilterDialog(Gtk.Dialog):
         vbox = Gtk.VBox()
 
         sw = Gtk.ScrolledWindow()
+        sw.set_size_request(800, 300)
         sw.set_policy(Gtk.PolicyType.AUTOMATIC,Gtk.PolicyType.AUTOMATIC)
         self.filter_tree = FilterTree()
         sw.add(self.filter_tree)
@@ -73,6 +74,7 @@ class PreviewTree(gui_utils.Tree):
 
     def __init__(self):
         gui_utils.Tree.__init__(self)
+        self.set_size_request(800, 300)
         self.model = Gtk.ListStore(object, str, float, str, object, str)
         self.modelfilter = self.model.filter_new(None)
         sorter = Gtk.TreeModelSort(model = self.modelfilter)
@@ -126,6 +128,7 @@ class FilterTree(gui_utils.Tree):
 
     def __init__(self):
         gui_utils.Tree.__init__(self)
+        self.set_size_request(800, 300)
         self.model = Gtk.ListStore(object, bool, int, str, object, str)
         self.set_model(self.model)
 
