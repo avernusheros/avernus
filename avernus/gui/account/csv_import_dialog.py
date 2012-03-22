@@ -86,7 +86,7 @@ class CSVImportDialog(Gtk.Dialog):
 
     def process_result(self, widget=None, response = Gtk.ResponseType.ACCEPT):
         if response == Gtk.ResponseType.ACCEPT:
-            model = self.account_cb.get_model()
+            self.account_cb.get_model()
             self.importer.create_transactions(self.account)
         self.destroy()
 

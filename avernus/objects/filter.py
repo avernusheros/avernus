@@ -13,3 +13,6 @@ class CategoryFilter(SQLiteEntity):
                    'category': AccountCategory
                   }    
     __comparisonPositives__ = ['rule']
+    
+    def __repr__(self):
+        return self.rule
