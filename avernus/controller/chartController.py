@@ -90,16 +90,13 @@ class TransactionValueOverTimeChartController(TransactionChartController):
 
     def set_monthly(self, monthly):
         self.monthly = monthly
-        self.calculate_values()
         #print "Set monthly to ", monthly
 
     def set_rolling_average(self, avg):
         self.rolling_avg = avg
-        self.calculate_values()
 
     def set_total_average(self, avg):
         self.total_avg = avg
-        self.calculate_values()
 
     def update(self, transactions, date_range):
         self.transactions = sorted(transactions, key=lambda t: t.date)

@@ -32,12 +32,15 @@ class ChartBase(Gtk.VBox):
     def on_realize(self, widget):
         self.draw_spinner()
         threads.GeneratorTask(self.controller.calculate_values, complete_callback=self.draw_widget).start()
-      
+
     def update(self, *args, **kwargs):
         self.draw_spinner()
         self.controller.update(*args, **kwargs)
         threads.GeneratorTask(self.controller.calculate_values, complete_callback=self.draw_widget).start()
 
+    def redraw(self, *args, **kwargs):
+        self.draw_spinner()
+        threads.GeneratorTask(self.controller.calculate_values, complete_callback=self.draw_widget).start()
 
 class Pie(ChartBase):
 
@@ -130,7 +133,7 @@ class TransactionChart(SimpleLineChart):
     def on_combo_toggled(self, widget, setter):
         active = widget.get_active()
         setter(active)
-        self.draw_widget()
+        self.redraw()
 
     def draw_widget(self):
         SimpleLineChart.draw_widget(self)
