@@ -161,22 +161,31 @@ def newAccountTransaction(id=None, description='', amount=0.0, account=None, cat
                                category=category)
         if duplicates:
             return None
+    if type(category) == type(unicode()):
+        cat = getAccountCategoryForName(category)
+        if not cat:
+            cat = newAccountCategory(category)
+    else:
+        cat = category
+
     result = AccountTransaction(id=id, \
                                 description=description, \
                                 amount=amount, \
                                 date=date, \
                                 account=account, \
-                                category=category, transferid=transferid)
+                                category=cat,
+                                transferid=transferid)
     result.insert()
     account.amount += amount
     return result
+
 
 def newAccountCategory(name='', cid=None, parent=None):
     if parent is None:
         parentid = -1
     else:
         parentid = parent.id
-    result = AccountCategory(id=cid, name=name, parentid=parentid)
+    result = AccountCategory(id = cid, name=name, parentid=parentid)
     result.insert()
     return result
 
@@ -285,7 +294,7 @@ def getAccountCategoryForName(name):
     for cat in cats:
         if cat.name == name:
             return cat
-
+    return None
 
 
 def getAllStock():

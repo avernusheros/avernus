@@ -61,13 +61,16 @@ class CsvImporter:
 
         #columns
         profile['saldo indicator'] = None
+        profile['category'] = -1
         csvdata.seek(0)
-        first_line_skipped = False
+        checked_header = False
         for row in UnicodeReader(csvdata, profile['dialect'], profile['encoding']):
             if len(row) == profile['row length']:
                 profile['description column'] = []
-                if not first_line_skipped and profile['header']:
-                    first_line_skipped = True
+                if not checked_header and profile['header']:
+                    checked_header = True
+                    if "CATEGORY" in row:
+                        profile["category"] = row.index("CATEGORY")
                     continue
                 col_count = 0
                 for col in row:
@@ -87,6 +90,8 @@ class CsvImporter:
                                 break
                     elif re.match('[sShHdDcC]$', col) is not None:
                         profile['saldo indicator'] = col_count
+                    elif col_count == profile["category"]:
+                        pass
                     else:
                         profile['description column'].append(col_count)
                     col_count+=1
@@ -218,7 +223,10 @@ class CsvImporter:
 
                 tran.date = self._parse_date(row[profile['date column']].strip(' '), profile['date format'])
                 tran.description = ' - '.join([row[d] for d in profile['description column'] if len(row[d])>0])
-                tran.category = None
+                if profile['category'] == -1:
+                    tran.category = None
+                else:
+                    tran.category = row[profile['category']].strip()
                 tran.b_import = True
                 result.append(tran)
             #If we find a blank line, assume we've hit the end of the transactions.
@@ -236,10 +244,8 @@ class CsvImporter:
     def set_categories(self, do_check):
         if do_check:
             for trans in self.results:
-                trans.category = filterController.get_category(trans)
-        else:
-            for trans in self.results:
-                trans.category = None
+                if not trans.category:
+                    trans.category = filterController.get_category(trans)
 
     def create_transactions(self, account):
         for temp_trans in self.results:

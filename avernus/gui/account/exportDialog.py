@@ -10,11 +10,15 @@ import csv
 class ExportDialog(Gtk.Dialog):
 
     TITLE = _('Export Account Transactions')
+    WIDTH = 800
+    HEIGHT = 500
 
     def __init__(self, parent=None, account =None):
         Gtk.Dialog.__init__(self, self.TITLE, parent
                             , Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,
                      (Gtk.STOCK_CANCEL, Gtk.ResponseType.REJECT,))
+        self.set_size_request(self.WIDTH, self.HEIGHT)
+
         self.account = account
         self.config = config.avernusConfig()
         self.transactions = []
@@ -75,7 +79,6 @@ class ExportDialog(Gtk.Dialog):
         self.folder = button.get_current_folder()
         self.config.set_option('last_export_folder', self.folder)
 
-
     def _on_account_changed(self, *args):
         self.b_account = True
         self.account = self.account_cb.get_model()[self.account_cb.get_active()][0]
@@ -94,6 +97,7 @@ class ExportDialog(Gtk.Dialog):
             path = os.path.join(self.folder, name)
             with open(path, 'wb') as file:
                 writer = csv.writer(file)
+                writer.writerow(["DATE", "AMOUNT", "DESCRIPTION", "CATEGORY"])
                 for transaction in self.transactions:
                     writer.writerow([transaction.date, transaction.amount,
                                      transaction.description, transaction.category])

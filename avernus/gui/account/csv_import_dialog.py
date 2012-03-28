@@ -68,7 +68,7 @@ class CSVImportDialog(Gtk.Dialog):
         accBox.pack_start(self.account_cb, False, True, 0)
 
         self.b_assignments = self.config.get_option('category_assignments_on_import') == 'True'
-        category_assignment_button = Gtk.CheckButton(label=_('Do category assignments'))
+        category_assignment_button = Gtk.CheckButton(label=_('Do automatic category assignments'))
         category_assignment_button.set_active(self.b_assignments)
         accBox.pack_start(category_assignment_button, True, True, 0)
         category_assignment_button.connect('toggled', self.on_toggle_assignments)
@@ -171,7 +171,10 @@ class PreviewTree(gui_utils.Tree):
             else:
                 color = self.COLOR_DUPLICATES
             if trans.category:
-                cat = trans.category.name
+                if type(trans.category) == type(unicode()):
+                    cat = trans.category
+                else:
+                    cat = trans.category.name
             else:
                 cat = ''
             model.append([trans.date, trans.description, trans.amount, trans.b_import, cat, color])
