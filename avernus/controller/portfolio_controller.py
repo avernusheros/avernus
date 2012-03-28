@@ -50,17 +50,26 @@ def update_historical_prices():
 
 
 def get_all_used_stocks():
-    query = """
-    select distinct stock from portfolioposition
-    """
-    return [Stock.getByPrimaryKey(stockid[0]) for stockid in model.store.select(query)]
-
+    items = set()
+    for pf in getAllPortfolio():
+        for pos in pf:
+            if pos.quantity > 0:
+                items.add(pos.stock)
+    for wl in getAllWatchlist():
+        for pos in wl:
+            items.add(pos.stock)
+    return items
 
 def update_all():
-    for ret in datasource_manager.update_stocks(get_all_used_stocks()):
-        yield 0
+    items = get_all_used_stocks()
+    itemcount = len(items)
+    count = 0.0
+    for item in datasource_manager.update_stocks(items):
+        count += 1.0
+        yield count / itemcount
     for container in getAllPortfolio() + getAllWatchlist():
         container.last_update = datetime.datetime.now()
+    pubsub.publish("stocks.updated", self)
     yield 1
 
 

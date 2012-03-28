@@ -238,5 +238,4 @@ class MainWindow(Gtk.Window):
         def finished_cb():
             progress_manager.remove_monitor(11)
         m = progress_manager.add_monitor(11, _('updating stocks...'), Gtk.STOCK_REFRESH)
-        m.progress_update_auto()
-        threads.GeneratorTask(portfolio_controller.update_all, complete_callback=finished_cb).start()
+        threads.GeneratorTask(portfolio_controller.update_all, m.progress_update, complete_callback=finished_cb).start()
