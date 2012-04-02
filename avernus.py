@@ -35,16 +35,26 @@ if b_from_source:
 
 
 def init_logger(debug=False):
-    console_format = "%(levelname)-8s: %(message)s"
-    loggerlevel = logging.INFO
     if debug:
         loggerlevel = logging.DEBUG
-        console_format = "%(asctime)s,%(msecs)3d:" + console_format
-        console_format += " (%(name)s)" # add module name
-    datefmt = "%H:%M:%S"
+    else:
+        loggerlevel = logging.INFO
+        
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    
+    rootlogger = logging.getLogger()
+    rootlogger.setLevel(loggerlevel)
+
     # logging to terminal
-    logging.basicConfig(level=loggerlevel, format=console_format,
-            datefmt=datefmt)
+    consolehandler = logging.StreamHandler()
+    consolehandler.setFormatter(formatter)
+    rootlogger.addHandler(consolehandler)
+
+    # logging to file    
+    filehandler = logging.FileHandler(filename='avernus.log')
+    filehandler.setFormatter(formatter)
+    rootlogger.addHandler(filehandler)
+    
 
 def init_translations():
     import locale
