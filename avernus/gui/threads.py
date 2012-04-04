@@ -85,6 +85,7 @@ def terminate_all():
         val.stop()
         val.join()
         logger.debug("stop thread " + str(val))
+    logger.debug("all threads terminated")
 
 
 def get_id():

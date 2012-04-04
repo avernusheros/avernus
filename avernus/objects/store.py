@@ -61,6 +61,8 @@ class Store(threading.Thread):
 
     def close(self):
         self.stopthread.set()
+        # ensure another loop in the run method
+        self.execute("")
 
     def backup(self):
         backup_file = self.db+'.backup'+time.strftime(".%Y%m%d-%H%M")
