@@ -39,9 +39,9 @@ def init_logger(debug=False):
         loggerlevel = logging.DEBUG
     else:
         loggerlevel = logging.INFO
-        
+
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    
+
     rootlogger = logging.getLogger()
     rootlogger.setLevel(loggerlevel)
 
@@ -50,11 +50,11 @@ def init_logger(debug=False):
     consolehandler.setFormatter(formatter)
     rootlogger.addHandler(consolehandler)
 
-    # logging to file    
+    # logging to file
     filehandler = logging.FileHandler(filename='avernus.log')
     filehandler.setFormatter(formatter)
     rootlogger.addHandler(filehandler)
-    
+
 
 def init_translations():
     import locale

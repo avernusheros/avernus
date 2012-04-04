@@ -1,4 +1,4 @@
-from gi.repository import GObject
+from gi.repository import GObject, Gdk
 
 import logging
 import threading
@@ -23,24 +23,34 @@ class BackgroundTask():
             self.complete_callback()
 
 
-class GeneratorTask(object):
+class GeneratorTask(threading.Thread):
 
     def __init__(self, generator, loop_callback=None, complete_callback=None):
+        threading.Thread.__init__(self)
         self.generator = generator
         self.loop_callback = loop_callback
         self.complete_callback = complete_callback
         self.id = get_id()
         threadlist[self.id] = self
 
-    def _start(self, *args, **kwargs):
+        #Thread event, stops the thread if it is set.
+        self.stopthread = threading.Event()
+
+    def run(self, *args, **kwargs):
         logger.debug("start thread")
         try:
-            self._stopped = False
             for ret in self.generator(*args, **kwargs):
-                if self._stopped:
-                    self._terminate()
-                    break
-                GObject.idle_add(self._loop, ret)
+                logger.info(ret)
+                if self.stopthread.isSet():
+                    return
+
+                if self.loop_callback:
+                    if ret is None:
+                        ret = ()
+                    elif not isinstance(ret, tuple):
+                        ret = (ret,)
+                    GObject.idle_add( self.loop_callback, *ret)
+
             if self.complete_callback is not None:
                 GObject.idle_add(self.complete_callback)
             logger.debug("finished thread")
@@ -51,26 +61,18 @@ class GeneratorTask(object):
         self._terminate()
 
     def _terminate(self):
+        logger.debug("terminate thread "+str(self))
         global threadlist
         try:
             del threadlist[self.id]
+            logger.debug("deleted from threadlist")
         except:
-            return
-        thread.exit()
-
-    def _loop(self, ret):
-        if ret is None:
-            ret = ()
-        if not isinstance(ret, tuple):
-            ret = (ret,)
-        if self.loop_callback:
-            self.loop_callback(*ret)
-
-    def start(self, *args, **kwargs):
-        threading.Thread(target=self._start, args=args, kwargs=kwargs).start()
+            logger.debug("failed ...")
 
     def stop(self):
-        self._stopped = True
+        """Stop method, sets the event to terminate the thread's main loop"""
+        logger.debug("stopped thread")
+        self.stopthread.set()
 
     def __repr__(self):
         return str(self.generator)
@@ -80,8 +82,9 @@ def terminate_all():
     global threadlist
     logger.debug("there are %i threads running." % (len(threadlist),))
     for val in threadlist.itervalues():
-        logger.debug("stop thread ", val)
         val.stop()
+        val.join()
+        logger.debug("stop thread " + str(val))
 
 
 def get_id():

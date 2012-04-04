@@ -4,7 +4,11 @@ import sqlite3
 import os
 from Queue import Queue
 import threading
+import logging
 import shutil, time
+
+logger = logging.getLogger(__name__)
+
 
 class Store(threading.Thread):
 
@@ -23,6 +27,8 @@ class Store(threading.Thread):
         self.reqs=Queue()
         self.batch = False
 
+        #Thread event, stops the thread if it is set.
+        self.stopthread = threading.Event()
         self.start()
 
     def run(self):
@@ -30,9 +36,8 @@ class Store(threading.Thread):
         cnx.isolation_level = "DEFERRED"
         cnx.row_factory = sqlite3.Row
         cursor = cnx.cursor()
-        while True:
+        while not self.stopthread.isSet():
             req, arg, res = self.reqs.get()
-            if req=='--close--': break
             cursor.execute(req, arg)
             if res:
                 for rec in cursor:
@@ -41,6 +46,7 @@ class Store(threading.Thread):
             else:
                 cnx.commit()
         cnx.close()
+        logger.debug("closed store")
 
     def execute(self, req, arg=None, res=None):
         self.reqs.put((req, arg or tuple(), res))
@@ -48,13 +54,13 @@ class Store(threading.Thread):
     def select(self, req, arg=None):
         res=Queue()
         self.execute(req, arg, res)
-        while True:
+        while not self.stopthread.isSet():
             rec=res.get()
             if rec=='--no more--': break
             yield rec
 
     def close(self):
-        self.execute('--close--')
+        self.stopthread.set()
 
     def backup(self):
         backup_file = self.db+'.backup'+time.strftime(".%Y%m%d-%H%M")
