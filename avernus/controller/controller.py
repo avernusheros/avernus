@@ -11,6 +11,7 @@ from avernus.objects.filter import CategoryFilter
 from avernus.objects.model import Meta
 from avernus.objects.position import PortfolioPosition, WatchlistPosition
 from avernus.objects.quotation import Quotation
+from avernus.objects.benchmark import Benchmark
 from avernus.objects.source_info import SourceInfo
 from avernus.objects.stock import Stock
 from avernus.objects.transaction import Transaction
@@ -36,7 +37,8 @@ logger = logging.getLogger(__name__)
 modelClasses = [Portfolio, Transaction, Watchlist, Dividend, SourceInfo,
                 PortfolioPosition, WatchlistPosition, AccountCategory,
                 Quotation, Stock, Meta, Account, AccountTransaction,
-                Dimension, DimensionValue, AssetDimensionValue, CategoryFilter]
+                Dimension, DimensionValue, AssetDimensionValue, CategoryFilter,
+                Benchmark]
 
 #these classes will be loaded with one single call and will also load composite
 #relations. therefore it is important that the list is complete in the sense

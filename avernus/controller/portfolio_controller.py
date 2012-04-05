@@ -3,6 +3,7 @@ from avernus.objects.stock import Stock
 from avernus.objects.container import Portfolio, Watchlist
 from avernus.objects.position import PortfolioPosition, WatchlistPosition
 from avernus.objects.dividend import Dividend
+from avernus.objects.benchmark import Benchmark
 from avernus.objects.source_info import SourceInfo
 from avernus.objects.transaction import Transaction
 from avernus.objects.quotation import Quotation
@@ -36,6 +37,8 @@ def getAllPosition():
 def getPositionForPortfolio(portfolio):
     return PortfolioPosition.getAllFromOneColumn("portfolio", portfolio.getPrimaryKey())
 
+def getBenchmarksForPortfolio(portfolio):
+    return Benchmark.getAllFromOneColumn("portfolio", portfolio.getPrimaryKey())
 
 def update_historical_prices():
     stocks = get_all_used_stocks()
@@ -189,6 +192,11 @@ def newStock(insert=True, **kwargs):
     if insert:
         result.insert()
     return result
+
+def newBenchmark(portfolio, percentage):
+    bm = Benchmark(id=None,portfolio = portfolio.id, percentage = percentage)
+    bm.insert()
+    return bm
 
 def newWatchlistPosition(price=0, \
                          date=datetime.datetime.now(), \

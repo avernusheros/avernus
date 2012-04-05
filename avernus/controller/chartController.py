@@ -361,16 +361,14 @@ class PortfolioChartController(ChartController):
             yield foo
         for foo in self.calculate_investmentsovertime('invested capital'):
             yield foo
-        configParser = config.AvernusConfig()
-        option = configParser.get_option('benchmark_5', 'Chart')
-        if option == "True":
-            self.calculate_benchmark(0.05)
-        option = configParser.get_option('benchmark_10', 'Chart')
-        if option == "True":
-            self.calculate_benchmark(0.1)
+
+        for benchmark in pfctlr.getBenchmarksForPortfolio(self.portfolio):
+            self.calculate_benchmark(benchmark)
         yield 1
 
-    def calculate_benchmark(self, percent):
+    def calculate_benchmark(self, benchmark):
+        #FIXME why not per year?
+        percent = benchmark.percentage
         benchmark = [0.0] * len(self.days)
         daily = percent / len(self.days)
         benchmark[0] = self.y_values['invested capital'][0]

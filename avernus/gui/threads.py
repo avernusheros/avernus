@@ -40,7 +40,6 @@ class GeneratorTask(threading.Thread):
         logger.debug("start thread")
         try:
             for ret in self.generator(*args, **kwargs):
-                logger.info(ret)
                 if self.stopthread.isSet():
                     return
 

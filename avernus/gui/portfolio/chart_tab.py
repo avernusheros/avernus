@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 
 from avernus.controller import chartController
-from avernus.gui import charts, page
+from avernus.gui import charts, page, gui_utils
 from avernus.controller import controller
+from avernus.controller import portfolio_controller as pfctlr
 from gi.repository import Gtk
 
 
@@ -42,12 +43,16 @@ class ChartTab(Gtk.ScrolledWindow, page.Page):
         combobox.connect('changed', self.on_zoom_change)
         hbox.pack_start(combobox, False, False, 0)
 
+        benchmark_button = Gtk.Button(_("Benchmarks"))
+        benchmark_button.connect('button-press-event', self.on_button_press_event)
+        hbox.pack_start(benchmark_button, False, False, 0)
+
         y += 1
 
         self.pfvalue_chart_controller = chartController.PortfolioChartController(self.pf, 'monthly')
         self.pfvalue_chart = charts.SimpleLineChart(self.pfvalue_chart_controller, width)
         table.attach(self.pfvalue_chart, 0, 2, y, y + 1)
-       
+
         y += 1
 
         label = Gtk.Label()
@@ -118,3 +123,86 @@ class ChartTab(Gtk.ScrolledWindow, page.Page):
         value = combobox.get_model()[combobox.get_active()][0]
         self.pfvalue_chart_controller.step = value
         self.pfvalue_chart.update()
+
+    def on_button_press_event(self, widget, event):
+        BenchmarkDialog(self.pf)
+
+
+class BenchmarkDialog(Gtk.Dialog):
+    DEFAULT_WIDTH = 300
+    DEFAULT_HEIGHT = 300
+
+    def __init__(self, portfolio, parent=None):
+        Gtk.Dialog.__init__(self, _('New portfolio benchmakr'), parent
+                            , Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,
+                     (Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT))
+        self.set_default_size(self.DEFAULT_WIDTH, self.DEFAULT_HEIGHT)
+        self.portfolio = portfolio
+
+        vbox = self.get_content_area()
+
+        self.tree = gui_utils.Tree()
+        self.model = Gtk.ListStore(object, str, float)
+        self.tree.set_model(self.model)
+        vbox.pack_start(self.tree, True, True, 0)
+
+        self.tree.create_column('Name', 1)
+
+        cell = Gtk.CellRendererSpin()
+        adjustment = Gtk.Adjustment(0.00, 0, 100, 0.01, 10, 0)
+        cell.set_property("digits", 1)
+        cell.set_property("editable", True)
+        cell.set_property("adjustment", adjustment)
+        cell.connect("edited", self.on_percent_edited, 2)
+        self.percent_col = Gtk.TreeViewColumn(_('Percentage'), cell, text=2)
+        self.percent_col.set_cell_data_func(cell, gui_utils.float_format, 2)
+        self.tree.append_column(self.percent_col)
+
+        # load items
+        self.count = 0
+        for bm in pfctlr.getBenchmarksForPortfolio(self.portfolio):
+            self.model.append([bm, str(bm), bm.percentage * 100])
+            self.count += 1
+
+        actiongroup = Gtk.ActionGroup('benchmarks')
+        actiongroup.add_actions([
+                ('add', Gtk.STOCK_ADD, 'new dimension', None, _('Add new dimension'), self.on_add),
+                ('remove', Gtk.STOCK_DELETE, 'remove dimension', None, _('Remove selected dimension'), self.on_remove)
+                     ])
+        toolbar = Gtk.Toolbar()
+
+        for action in actiongroup.list_actions():
+            button = action.create_tool_item()
+            toolbar.insert(button, -1)
+        vbox.pack_start(toolbar, False, True, 0)
+
+        self.show_all()
+        self.run()
+
+        self.destroy()
+
+    def on_percent_edited(self, cellrenderertext, path, new_text, columnnumber):
+        try:
+            value = float(new_text.replace(",", ".")) / 100.0
+            self.model[path][columnnumber] = value * 100
+            self.model[path][0].percentage = value
+        except:
+            logger.debug("entered value is not a float", new_text)
+
+    def on_add(self, widget, user_data=None):
+        if self.count < 3:
+            bm = pfctlr.newBenchmark(self.portfolio, 0.05)
+            iterator = self.model.append([bm, str(bm), bm.percentage*100])
+            self.tree.set_cursor(self.model.get_path(iterator), self.tree.get_column(0), True)
+            self.count += 1
+        else:
+            pass
+            #FIXME show some error message
+
+    def on_remove(self, widget, user_data=None):
+        selection = self.tree.get_selection()
+        model, selection_iter = selection.get_selected()
+        if selection_iter:
+            model[selection_iter][0].delete()
+            self.model.remove(selection_iter)
+            self.count -= 1

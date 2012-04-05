@@ -74,9 +74,6 @@ class ChartPreferences(PreferencesVBox):
     def __init__(self):
         Gtk.VBox.__init__(self)
         self.configParser = avernusConfig()
-        section = self._add_section('Portfolio Benchmark')
-        self._add_option(section, _('Show 5% Benchmark'), 'benchmark_5')
-        self._add_option(section, _('Show 10% Benchmark'), 'benchmark_10')
 
         section = self._add_section('Axis')
         self._add_option(section, _('Normalize Y Axis'), 'normalize_y_axis')
