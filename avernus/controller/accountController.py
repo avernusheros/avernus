@@ -3,11 +3,13 @@ from avernus.objects import session
 from avernus.objects.account import Account
 
 def get_all_account():
-    return session.query(Account).all()
+    res = session.query(Account).all()
+    return res
 
 def new_account(name):
     account = Account(name)
     session.add(account)
+    session.commit()
     return account
 
 class AccountController:

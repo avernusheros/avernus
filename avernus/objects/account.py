@@ -2,11 +2,12 @@ from avernus.objects import Base
 from sqlalchemy import Column, Integer, String, Float, Date, Boolean, ForeignKey
 from sqlalchemy.orm import relationship, backref
 
-class Account(Base, object):
+class Account(Base):
     
     __tablename__ = 'account'
     
-    name = Column(String, primary_key=True)
+    id = Column(Integer, primary_key=True)
+    name = Column(String)
     type = Column(Integer)
     balance = Column(Float)
     transactions = relationship('AccountTransaction', backref='account')
@@ -41,7 +42,7 @@ class AccountTransaction(Base):
     description = Column(String, primary_key=True)
     amount = Column(Float, primary_key=True)
     date = Column(Date, primary_key=True)
-    account_name = Column(Integer, ForeignKey('account.name'))
+    account_id = Column(Integer, ForeignKey('account.id'))
     
     def __init__(self, description):
         self.description = description

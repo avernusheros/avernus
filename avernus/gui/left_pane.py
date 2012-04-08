@@ -139,15 +139,15 @@ class MainTree(gui_utils.Tree):
         for wl in pfctlr.getAllWatchlist():
             self.insert_watchlist(wl)
 
-       #accounts = controller.getAllAccount()
-       # if len(accounts) > 1:
-       #     all_account = AllAccount()
-       #     all_account.controller = controller
-       #     all_account.name = "<i>%s</i>" % (_('All'),)
-       #     self.insert_account(all_account)
-       # for account in accounts:
-       #     self.insert_account(account)
-       # self.expand_all()
+        accounts = accountController.get_all_account()
+        #if len(accounts) > 1:
+        #    all_account = AllAccount()
+        #    all_account.controller = controller
+        #    all_account.name = "<i>%s</i>" % (_('All'),)
+        #    self.insert_account(all_account)
+        for account in accounts:
+            self.insert_account(account)
+        self.expand_all()
 
     def _subscribe(self):
         self.connect('button-press-event', self.on_button_press_event)
@@ -194,7 +194,7 @@ class MainTree(gui_utils.Tree):
         self.get_model().append(self.wl_iter, [item, 'watchlist', item.name, ''])
 
     def insert_account(self, item):
-        self.get_model().append(self.accounts_iter, [item, 'account', item.name, gui_utils.get_currency_format_from_float(item.amount)])
+        self.get_model().append(self.accounts_iter, [item, 'account', item.name, gui_utils.get_currency_format_from_float(item.balance)])
 
     def insert_portfolio(self, item):
         self.get_model().append(self.pf_iter, [item, 'portfolio', item.name, gui_utils.get_currency_format_from_float(item.cvalue)])

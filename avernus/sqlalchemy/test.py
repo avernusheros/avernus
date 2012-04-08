@@ -133,7 +133,11 @@ Base.metadata.create_all(engine)
 Session = sessionmaker(bind=engine)
 session = Session()
 
+#acc = Account("hans")
+#session.add(acc)
+
 # query for the present objects
 accounts = session.query(Account).all()
+print accounts
 
 session.commit()
