@@ -33,6 +33,14 @@ def account_birthday(account):
 def get_root_categories():
     return session.query(AccountCategory).filter_by(parent=None).all()
 
+def get_parent_categories(category):
+    ret = []
+    current = category
+    while current.parent:
+        p = current.parent
+        ret.append(p)
+        current = p
+    return ret
 
 class AccountController:
 

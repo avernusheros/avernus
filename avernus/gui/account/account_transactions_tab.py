@@ -103,7 +103,6 @@ class AccountTransactionTab(Gtk.VBox, page.Page):
         frame.set_shadow_type(Gtk.ShadowType.IN)
         self.hpaned.pack2(frame, shrink=False, resize=True)
         pre = self.config.get_option('account hpaned position', 'Gui')
-        #print pre, type(pre)
         pos = pre or 600
         self.hpaned.set_position(int(pos))
 
@@ -334,13 +333,12 @@ class TransactionsTree(gui_utils.Tree):
                     # the chance that recursive is activated
                     config = avernusConfig()
                     pre = config.get_option('categoryChildren', 'Account')
-                    #print pre
                     pre = pre == "True"
-                    #print pre
                     if pre:
                         # recursive is activated
                         #print "second chance", transaction
-                        if not self.single_category in transaction.category.parents:
+                        parents = accountController.get_parent_categories(transaction.category)
+                        if not self.single_category in parents:
                             # the selected category is also not one of the parents
                             return False
                     else:
@@ -387,16 +385,16 @@ class TransactionsTree(gui_utils.Tree):
                 self.insert_transaction(transaction)
 
     def get_item_to_insert(self, ta):
-        #if ta.category:
-        #    cat = ta.category.name
-        #else:
-        #    cat = ''
+        if ta.category:
+            cat = ta.category.name
+        else:
+            cat = ''
         #if ta.is_transfer():
         #    icon = 'gtk-convert'
         #else:
         #    icon = ''
         #return [ta, ta.description, ta.amount, cat, ta.date, icon]
-        return [ta, ta.description, ta.amount, None, ta.date, '']
+        return [ta, ta.description, ta.amount, cat, ta.date, '']
 
     def get_filtered_transaction_value(self):
         sum = 0
@@ -421,7 +419,7 @@ class TransactionsTree(gui_utils.Tree):
     def on_add(self, widget=None, data=None):
         dlg = EditTransaction(self.account, parent=self.get_toplevel())
         b_change, transaction = dlg.start()
-        self.account.amount += transaction.amount
+        self.account.balance += transaction.amount
         self.insert_transaction(transaction)
 
     def on_edit(self, widget=None, data=None):
@@ -430,7 +428,7 @@ class TransactionsTree(gui_utils.Tree):
         dlg = EditTransaction(self.account, transaction, parent=self.get_toplevel())
         b_change, transaction = dlg.start()
         if b_change:
-            self.account.amount = self.account.amount - old_amount + transaction.amount
+            self.account.balance = self.account.balance - old_amount + transaction.amount
 
     def on_dividend(self, widget=None, data=None):
         trans, iterator = self._get_selected_transaction()
@@ -444,7 +442,7 @@ class TransactionsTree(gui_utils.Tree):
         response = dlg.run()
         dlg.destroy()
         if response == Gtk.ResponseType.OK:
-            trans.account.amount -= trans.amount
+            trans.account.balance -= trans.amount
             trans.delete()
             child_iter = self._get_child_iter(iterator)
             self.model.remove(child_iter)
@@ -456,7 +454,7 @@ class TransactionsTree(gui_utils.Tree):
     def on_set_transaction_category(self, category=None):
         trans, iterator = self._get_selected_transaction()
         trans.category = category
-        self.get_model().remove(iterator)
+        self.model.remove(iterator)
         self.insert_transaction(trans)
 
     def show_context_menu(self, event):
@@ -467,28 +465,28 @@ class TransactionsTree(gui_utils.Tree):
                 self.context_menu.add(action.create_menu_item())
             if trans.category:
                 self.context_menu.add_item('Remove category', lambda widget: self.on_set_transaction_category())
-            hierarchy = controller.getAllAccountCategoriesHierarchical()
 
             def insert_recursive(cat, menu):
                 item = Gtk.MenuItem(label=cat.name)
                 menu.append(item)
-                if cat in hierarchy:
+                if len(cat.children) > 0:
                     new_menu = Gtk.Menu()
                     item.set_submenu(new_menu)
                     item = Gtk.MenuItem(label=cat.name)
                     new_menu.append(item)
                     item.connect('activate', lambda widget: self.on_set_transaction_category(cat))
                     new_menu.append(Gtk.SeparatorMenuItem())
-                    for child_cat in sorted(hierarchy[cat]):
+                    for child_cat in cat.children:
                         insert_recursive(child_cat, new_menu)
                 else:
                     item.connect('activate', lambda widget: self.on_set_transaction_category(cat))
-            if len(hierarchy[None]) > 0:
+            root_categories = accountController.get_root_categories()
+            if len(root_categories) > 0:
                 item = Gtk.MenuItem(label="Move to category")
                 self.context_menu.add(item)
                 category_menu = Gtk.Menu()
                 item.set_submenu(category_menu)
-                for cat in sorted(hierarchy[None]):
+                for cat in root_categories:
                     insert_recursive(cat, category_menu)
         else:
             self.context_menu.add(self.actiongroup.get_action('add').create_menu_item())
@@ -728,13 +726,12 @@ class EditTransaction(Gtk.Dialog):
             new_iter = treestore.append(parent, [cat, cat.name])
             if cat == self.transaction.category:
                 self.combobox.set_active_iter(new_iter)
-            if cat in hierarchy:
-                for child_cat in hierarchy[cat]:
-                    insert_recursive(child_cat, new_iter)
+            for child_cat in cat.children:
+                insert_recursive(child_cat, new_iter)
         new_iter = treestore.append(None, [None, 'None'])
         self.combobox.set_active_iter(new_iter)
-        hierarchy = controller.getAllAccountCategoriesHierarchical()
-        for cat in hierarchy[None]: #start with root categories
+        root_categories = accountController.get_root_categories()
+        for cat in root_categories:
             insert_recursive(cat, None)
 
         hbox.pack_start(self.combobox, True, True, 0)
