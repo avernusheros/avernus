@@ -164,7 +164,7 @@ class PortfolioOverviewTree(gui_utils.Tree):
             items = pfctlr.getAllWatchlist()
         elif self.container.name == 'Portfolios':
             items = pfctlr.getAllPortfolio()
-        self.overall_value = sum([i.cvalue for i in items])
+        self.overall_value = sum([pfctlr.get_current_value(i) for i in items])
         if self.overall_value == 0.0:
             self.overall_value = 1
         for item in items:
@@ -183,7 +183,7 @@ class PortfolioOverviewTree(gui_utils.Tree):
     def insert_item(self, item):
         self.get_model().append([item,
                                item.name,
-                               item.cvalue,
+                               pfctlr.get_current_value(item),
                                item.change,
                                float(item.percent),
                                item.ter,

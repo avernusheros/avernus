@@ -490,7 +490,7 @@ class PortfolioPositionsTab(Gtk.VBox, page.Page):
         self.update_page()
 
     def get_info(self):
-        change, percent = self.portfolio.current_change
+        change, percent = pfctrl.get_current_change(self.portfolio)
         change_text = gui_utils.get_string_from_float(percent) + '%' + ' | ' + gui_utils.get_currency_format_from_float(change)
         o_change, o_percent = self.portfolio.overall_change
         o_change_text = gui_utils.get_string_from_float(o_percent) + '%' + ' | ' + gui_utils.get_currency_format_from_float(o_change)

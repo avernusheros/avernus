@@ -5,7 +5,6 @@ from avernus.objects.dimension import Dimension, DimensionValue, \
     AssetDimensionValue
 from avernus.objects.dividend import Dividend
 from avernus.objects.model import Meta
-from avernus.objects.position import PortfolioPosition, WatchlistPosition
 from avernus.objects.quotation import Quotation
 from avernus.objects.benchmark import Benchmark
 from avernus.objects.source_info import SourceInfo
@@ -30,17 +29,12 @@ def pairwise(iterable):
 logger = logging.getLogger(__name__)
 
 
-modelClasses = [Transaction, Dividend, SourceInfo,
-                #PortfolioPosition, WatchlistPosition, 
-                Quotation, Stock, Meta, 
-                Dimension, DimensionValue, AssetDimensionValue, 
-                #Benchmark
-                ]
+modelClasses = []
 
 #these classes will be loaded with one single call and will also load composite
 #relations. therefore it is important that the list is complete in the sense
 #that there are no classes holding composite keys to classes outside the list
-initialLoadingClasses = [Meta]
+initialLoadingClasses = []
 
 VERSION = 2
 
@@ -101,16 +95,16 @@ def createTables():
     for cl in modelClasses:
         print cl
         cl.createTable()
-    if not model.store.new:
-        db_version = Meta.getByPrimaryKey(1).version
-        if db_version < VERSION:
-            print "Need to upgrade the database..."
-            model.store.backup()
-            upgrade_db(db_version)
-    if model.store.new:
-        m = Meta(id=1, version=VERSION)
-        m.insert()
-        load_sample_data()
+    #if not model.store.new:
+    #    db_version = Meta.getByPrimaryKey(1).version
+    #    if db_version < VERSION:
+    #        print "Need to upgrade the database..."
+    #        model.store.backup()
+    #        upgrade_db(db_version)
+    #if model.store.new:
+    #    m = Meta(id=1, version=VERSION)
+    #    m.insert()
+    #    load_sample_data()
 
 def upgrade_db(db_version):
     if db_version == 1:
@@ -124,8 +118,9 @@ def upgrade_db(db_version):
         print "ERROR: unknown db version"
 
 def set_db_version(version):
-    m = Meta.getByPrimaryKey(1)
-    m.version = version
+    #m = Meta.getByPrimaryKey(1)
+    #m.version = version
+    pass
 
 def load_sample_data():
     for dim, vals in DIMENSIONS.iteritems():

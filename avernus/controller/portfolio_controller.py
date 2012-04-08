@@ -19,9 +19,7 @@ import datetime
 import sys
 
 datasource_manager = None
-initialLoadingClasses = [Transaction, Dividend, \
-                        PortfolioPosition, WatchlistPosition, Dimension, \
-                        DimensionValue, AssetDimensionValue, Stock]
+initialLoadingClasses = []
 controller = sys.modules[__name__]
 
 
@@ -31,6 +29,23 @@ def getAllPortfolio():
 
 def getAllWatchlist():
     return session.query(Watchlist).all()
+    
+def get_current_value(portfolio):
+    value = 0.0
+    for pos in portfolio:
+        value += pos.cvalue
+    return value
+    
+def get_current_change(portfolio):
+    return 0.1, 0.2
+    
+    
+    
+    
+    
+    
+# Mordor from here
+    
 
 
 def getAllPosition():
@@ -142,16 +157,14 @@ def getQuotationsFromStock(stock, start=None):
     return erg
 
 
-def newPortfolio(name, pf_id=None, last_update=datetime.datetime.now(), comment=""):
-    result = Portfolio(id=pf_id, name=name, last_update=last_update, comment=comment)
-    result.controller = controller
-    result.insert()
+def newPortfolio(name, pf_id=None, last_update=datetime.datetime.now()):
+    result = Portfolio(id=pf_id, name=name, last_update=last_update)
+    session.add(result)
     return result
 
-def newWatchlist(name, wl_id=None, last_update=datetime.datetime.now(), comment=""):
-    result = Watchlist(id=wl_id, name=name, last_update=last_update, comment=comment)
-    result.controller = controller
-    result.insert()
+def newWatchlist(name, wl_id=None, last_update=datetime.datetime.now()):
+    result = Watchlist(id=wl_id, name=name, last_update=last_update)
+    session.add(result)
     return result
 
 def getAssetDimensionValueForStock(stock, dim):

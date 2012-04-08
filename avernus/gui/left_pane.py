@@ -196,7 +196,7 @@ class MainTree(gui_utils.Tree):
         self.get_model().append(self.accounts_iter, [item, 'account', item.name, gui_utils.get_currency_format_from_float(item.balance)])
 
     def insert_portfolio(self, item):
-        self.get_model().append(self.pf_iter, [item, 'portfolio', item.name, gui_utils.get_currency_format_from_float(item.cvalue)])
+        self.get_model().append(self.pf_iter, [item, 'portfolio', item.name, gui_utils.get_currency_format_from_float(pfctlr.get_current_value(item))])
 
     def on_remove(self, widget=None, data=None):
         if self.selected_item is None:
