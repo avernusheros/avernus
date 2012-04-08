@@ -20,6 +20,7 @@ class AccountTransactionTab(Gtk.VBox, page.Page):
     BORDER_WIDTH = 5
 
     def __init__(self, account):
+
         Gtk.VBox.__init__(self)
         self.account = account
         self.config = config.avernusConfig()
@@ -707,19 +708,19 @@ class EditTransaction(Gtk.Dialog):
         #amount
         hbox = Gtk.HBox()
         label = Gtk.Label(label=_('Amount'))
-        hbox.pack_start(label, True, True, 0)
+        hbox.pack_start(label, False, False, 0)
         self.amount_entry = Gtk.SpinButton(adjustment=Gtk.Adjustment(lower= -999999999, upper=999999999, step_increment=10, value=self.transaction.amount), digits=2)
         hbox.pack_start(self.amount_entry, True, True, 0)
-        vbox.pack_start(hbox, True, True, 0)
+        vbox.pack_start(hbox, False, False, 0)
 
         #category
         hbox = Gtk.HBox()
         label = Gtk.Label(label=_('Category'))
-        hbox.pack_start(label, True, True, 0)
+        hbox.pack_start(label, False, False, 0)
         treestore = Gtk.TreeStore(object, str)
         self.combobox = Gtk.ComboBox(model=treestore)
         cell = Gtk.CellRendererText()
-        self.combobox.pack_start(cell, True)
+        self.combobox.pack_start(cell, False)
         self.combobox.add_attribute(cell, 'text', 1)
 
         def insert_recursive(cat, parent):
@@ -734,21 +735,21 @@ class EditTransaction(Gtk.Dialog):
         for cat in root_categories:
             insert_recursive(cat, None)
 
-        hbox.pack_start(self.combobox, True, True, 0)
-        vbox.pack_start(hbox, True, True, 0)
+        hbox.pack_start(self.combobox, False, False, 0)
+        vbox.pack_start(hbox, False, False, 0)
 
         #date
         self.calendar = Gtk.Calendar()
         self.calendar.select_month(self.transaction.date.month - 1, self.transaction.date.year)
         self.calendar.select_day(self.transaction.date.day)
-        vbox.pack_start(self.calendar, True, True, 0)
+        vbox.pack_start(self.calendar, False, False, 0)
 
         #transfer
         text = "Transfer: this transaction will not be shown in any of the graphs."
         self.transfer_button = Gtk.CheckButton(text)
         if self.transaction.transfer:
             self.transfer_button.set_active(True)
-        vbox.pack_start(self.transfer_button, True, True, 0)
+        vbox.pack_start(self.transfer_button, False, False, 0)
 
         self.matching_transactions_tree = gui_utils.Tree()
         model = Gtk.ListStore(object, str, str, object)
