@@ -8,6 +8,7 @@ from avernus.gui import gui_utils, progress_manager
 from avernus.gui.account.csv_import_dialog import CSVImportDialog
 from avernus.controller import controller
 from avernus.controller import accountController
+from avernus.controller import objectController
 from avernus.controller import portfolio_controller as pfctlr
 
 
@@ -211,7 +212,7 @@ class MainTree(gui_utils.Tree):
             response = dlg.run()
             dlg.destroy()
             if response == Gtk.ResponseType.OK:
-                obj.delete()
+                objectController.delete_object(obj)
                 self.get_model().remove(iterator)
                 self.selected_item = None
                 pubsub.publish('maintree.unselect')

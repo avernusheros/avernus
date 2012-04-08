@@ -183,6 +183,7 @@ class MainWindow(Gtk.Window):
 
     def on_destroy(self, widget=None, data=None):
         """on_destroy - called when the avernusWindow is closed. """
+        avernus.objects.session.commit()
         #save db on quit
         self.config.set_option('hpaned position', self.hpaned.get_position(), 'Gui')
         threads.terminate_all()
