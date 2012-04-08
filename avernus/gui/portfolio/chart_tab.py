@@ -6,6 +6,9 @@ from avernus.controller import controller
 from avernus.controller import portfolio_controller as pfctlr
 from gi.repository import Gtk
 
+import logging
+logger = logging.getLogger(__name__)
+
 
 class ChartTab(Gtk.ScrolledWindow, page.Page):
 
@@ -147,16 +150,7 @@ class BenchmarkDialog(Gtk.Dialog):
         vbox.pack_start(self.tree, True, True, 0)
 
         self.tree.create_column('Name', 1)
-
-        cell = Gtk.CellRendererSpin()
-        adjustment = Gtk.Adjustment(0.00, 0, 100, 0.01, 10, 0)
-        cell.set_property("digits", 1)
-        cell.set_property("editable", True)
-        cell.set_property("adjustment", adjustment)
-        cell.connect("edited", self.on_percent_edited, 2)
-        self.percent_col = Gtk.TreeViewColumn(_('Percentage'), cell, text=2)
-        self.percent_col.set_cell_data_func(cell, gui_utils.float_format, 2)
-        self.tree.append_column(self.percent_col)
+        self.tree.create_column(_('Percentage'), 2)
 
         # load items
         self.count = 0
@@ -181,20 +175,28 @@ class BenchmarkDialog(Gtk.Dialog):
 
         self.destroy()
 
-    def on_percent_edited(self, cellrenderertext, path, new_text, columnnumber):
-        try:
-            value = float(new_text.replace(",", ".")) / 100.0
-            self.model[path][columnnumber] = value * 100
-            self.model[path][0].percentage = value
-        except:
-            logger.debug("entered value is not a float", new_text)
-
     def on_add(self, widget, user_data=None):
         if self.count < 3:
-            bm = pfctlr.newBenchmark(self.portfolio, 0.05)
-            iterator = self.model.append([bm, str(bm), bm.percentage*100])
-            self.tree.set_cursor(self.model.get_path(iterator), self.tree.get_column(0), True)
-            self.count += 1
+            dlg = Gtk.Dialog(_("Add benchmark"), self
+                            , Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,
+                     (Gtk.STOCK_CANCEL, Gtk.ResponseType.REJECT,
+                      Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT))
+
+            vbox = dlg.get_content_area()
+            table = Gtk.Table()
+            vbox.pack_end(table, True, True, 0)
+            table.attach(Gtk.Label("Percentage:"), 0,1,0,1)
+            entry = Gtk.SpinButton()
+            entry.set_adjustment(Gtk.Adjustment(lower=0, upper=100, step_increment=1.0, value=1))
+            entry.set_digits(1)
+            table.attach(entry, 1, 2, 0, 1, xoptions=Gtk.AttachOptions.SHRINK, yoptions=Gtk.AttachOptions.SHRINK)
+            dlg.show_all()
+            response = dlg.run()
+            if response == Gtk.ResponseType.ACCEPT:
+                bm = pfctlr.newBenchmark(self.portfolio, entry.get_value() / 100.0)
+                self.model.append([bm, bm, bm.percentage*100.0])
+                self.count += 1
+            dlg.destroy()
         else:
             pass
             #FIXME show some error message

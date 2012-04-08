@@ -2,7 +2,6 @@ from gi.repository import GObject, Gdk
 
 import logging
 import threading
-import thread
 
 logger = logging.getLogger(__name__)
 

@@ -256,7 +256,7 @@ class MainTree(gui_utils.Tree):
             EditAccount(obj, parent)
         else:
             obj, selection_iter = self.selected_item
-            self.set_cursor(self.get_model().get_path(selection_iter), focus_column=self.get_column(0), start_editing=True)
+            self.set_cursor(self.get_model().get_path(selection_iter), start_editing=True)
 
     def on_cell_edited(self, cellrenderertext, path, new_text):
         m = self.get_model()

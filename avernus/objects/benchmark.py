@@ -13,4 +13,5 @@ class Benchmark(SQLiteEntity):
                   }
     __comparisonPositives__ = ['percentage', 'portfolio']
 
-
+    def __str__(self):
+        return "Benchmark "+str(self.percentage*100)+"%"

@@ -369,13 +369,13 @@ class PortfolioChartController(ChartController):
     def calculate_benchmark(self, benchmark):
         #FIXME why not per year?
         percent = benchmark.percentage
-        benchmark = [0.0] * len(self.days)
+        values = [0.0] * len(self.days)
         daily = percent / len(self.days)
-        benchmark[0] = self.y_values['invested capital'][0]
-        for i in range(1, len(benchmark)):
-            benchmark[i] = benchmark[i - 1] * (1 + daily) + self.y_values['invested capital'][i] - self.y_values['invested capital'][i - 1]
-        key = 'Benchmark ' + str(int(percent * 100)) + '%'
-        self.y_values[key] = benchmark
+        values[0] = self.y_values['invested capital'][0]
+        for i in range(1, len(values)):
+            values[i] = values[i - 1] * (1 + daily) + self.y_values['invested capital'][i] - self.y_values['invested capital'][i - 1]
+        key = str(benchmark)
+        self.y_values[key] = values
 
     def calculate_valueovertime(self, name):
         self.y_values[name] = [0.0] * len(self.days)
