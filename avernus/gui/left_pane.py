@@ -266,15 +266,15 @@ class MainTree(gui_utils.Tree):
         obj, row = self.selected_item
         model = self.get_model()
 
-        if obj.__name__ == 'Portfolio' or obj.name == 'Portfolios':
+        if obj.__class__.__name__ == 'Portfolio' or obj.name == 'Portfolios':
             parent_iter = self.pf_iter
             cat_type = "portfolio"
             item = pfctlr.newPortfolio(_('new portfolio'))
-        elif obj.__name__ == 'Watchlist' or obj.name == 'Watchlists':
+        elif obj.__class__.__name__ == 'Watchlist' or obj.name == 'Watchlists':
             parent_iter = self.wl_iter
             cat_type = "watchlist"
             item = pfctlr.newWatchlist(_('new watchlist'))
-        elif obj.__name__ == 'Account' or obj.name == 'Accounts':
+        elif obj.__class__.__name__ == 'Account' or obj.name == 'Accounts':
             parent_iter = self.accounts_iter
             cat_type = "account"
             item = accountController.new_account(_('new account'))

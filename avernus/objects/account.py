@@ -42,10 +42,13 @@ class AccountTransaction(Base):
     
     __tablename__ = 'account_transaction'
     
-    description = Column(String, primary_key=True)
-    amount = Column(Float, primary_key=True)
-    date = Column(Date, primary_key=True)
+    id = Column(Integer, primary_key=True)
+    description = Column(String)
+    amount = Column(Float)
+    date = Column(Date)
     account_id = Column(Integer, ForeignKey('account.id'))
+    transfer_id = Column(Integer, ForeignKey('account_transaction.id'))
+    transfer = relationship('AccountTransaction', remote_side=[id])
     
     def __init__(self, description):
         self.description = description

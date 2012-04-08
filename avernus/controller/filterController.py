@@ -1,16 +1,18 @@
-from avernus.objects.filter import CategoryFilter
+from avernus.objects.account import CategoryFilter
 from avernus.controller import controller
 from avernus.config import avernusConfig
 import logging
+
+from avernus.objects import session
 
 logger = logging.getLogger(__name__)
 
 
 def create(rule, category, priority=10, active=False):
     result = CategoryFilter(rule=rule, category=category, active=active, priority=priority)
-    result.insert()
+    session.add(result)
     #update rule list
-    rules = get_all_active_by_priority()
+    #rules = get_all_active_by_priority()
     return result
 
 

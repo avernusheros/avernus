@@ -21,7 +21,9 @@ def account_has_transaction(account, trans):
     return session.query(AccountTransaction).filter_by(account=account, description=trans['description'], amount=trans['amount'], date=trans['date']).count() > 0
     
 def account_birthday(account):
-    return session.query(AccountTransaction).filter_by(account=account).order_by(AccountTransaction.date).first().date
+    transactions = session.query(AccountTransaction).filter_by(account=account)
+    if transactions.count() > 0:
+        return transactions.order_by(AccountTransaction.date).first().date
     
 
 

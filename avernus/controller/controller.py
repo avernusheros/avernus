@@ -137,10 +137,10 @@ def load_sample_data():
         new_dim = newDimension(dim)
         for val in vals:
             newDimensionValue(new_dim, val)
-    for cat, subcats in CATEGORIES.iteritems():
-        parent = newAccountCategory(name=cat)
-        for subcat in subcats:
-            newAccountCategory(name=subcat, parent=parent)
+    #for cat, subcats in CATEGORIES.iteritems():
+    #    parent = newAccountCategory(name=cat)
+    #    for subcat in subcats:
+    #        newAccountCategory(name=subcat, parent=parent)
     acc = newAccount(_('sample account'))
     newAccountTransaction(account=acc, description='this is a sample transaction', amount=99.99, date=datetime.date.today())
     newAccountTransaction(account=acc, description='another sample transaction', amount= -33.90, date=datetime.date.today())
