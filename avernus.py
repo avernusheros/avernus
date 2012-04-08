@@ -127,7 +127,7 @@ try:
 
 
     #from avernus.objects import model, store
-    #from avernus.controller import controller, portfolio_controller
+    from avernus.controller import portfolio_controller
     #model.store = store.Store(db_file)
     #controller.createTables()
     #controller.initialLoading(controller)

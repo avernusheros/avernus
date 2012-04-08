@@ -43,6 +43,12 @@ def get_overall_change(portfolio):
     else:
         percent = round(100.0 / start * absolute, 2)
     return absolute, percent
+    
+def get_percent(portfolio):
+    return 50
+    
+def get_ter(portfolio):
+    return 1.0
 
 
 

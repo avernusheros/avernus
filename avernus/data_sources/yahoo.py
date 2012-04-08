@@ -7,11 +7,12 @@ import re
 import json
 from datetime import datetime
 from avernus.controller import controller
+from avernus.objects.asset import *
 
 import logging
 logger = logging.getLogger(__name__)
 
-TYPES = {'Fonds':stock.FUND, 'Aktien':stock.STOCK, 'Namensaktie':stock.STOCK, 'Vorzugsaktie':stock.STOCK}
+TYPES = {'Fonds':Fund, 'Aktien':Stock, 'Namensaktie':Stock, 'Vorzugsaktie':Stock}
 EXCHANGE_CURRENCY = [(['NYQ', 'PNK'], 'USD'),
                      (['GER', 'BER', 'FRA', 'MUN', 'STU', 'HAN' ,'HAM' ,'DUS', 'AMS'], 'EUR'),
                      (['LSE'], 'GBP')

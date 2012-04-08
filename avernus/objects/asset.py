@@ -31,6 +31,13 @@ class Dividend(Base):
     position_id = Column(Integer, ForeignKey('container.id'))
     position = relationship('Portfolio', backref='dividends')
     
+class Fund(Asset):
+    
+    __tablename__ = 'fund'
+    __mapper_args__ = {'polymorphic_identity': 'fund'}
+    id = Column(Integer, ForeignKey('asset.id'), primary_key=True)
+    ter = Column(Float)
+    
 class MetaPosition(object):
     pass
     

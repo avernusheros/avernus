@@ -16,7 +16,7 @@ if __name__ == "__main__":
     import sys
     sys.path.append("../../")
 
-from avernus.objects import stock
+#from avernus.objects import stock
 
 QUEUE_THRESHOLD = 3
 QUEUE_DIVIDEND = 10
@@ -245,7 +245,8 @@ class Onvista():
                     yield (item, self, None)
         logger.debug("Finished Searching " + searchstring)
 
-    def _parse_kurse_html(self, kursPage, tdInd=fondTDS, stockType = stock.FUND):
+    def _parse_kurse_html(self, kursPage, tdInd=fondTDS#, stockType = stock.FUND
+    ):
         base = BeautifulSoup(kursPage).find('div', 'INHALT')
         regex404 = re.compile("http://www\\.onvista\\.de/404\\.html")
         if regex404.search(str(base)):

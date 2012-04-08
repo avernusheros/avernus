@@ -185,8 +185,8 @@ class PortfolioOverviewTree(gui_utils.Tree):
                                item.name,
                                pfctlr.get_current_value(item),
                                pfctlr.get_current_change(item)[0],
-                               float(item.percent),
-                               item.ter,
+                               float(pfctlr.get_percent(item)),
+                               pfctlr.get_ter(item),
                                item.last_update,
                                len(item.positions),
-                               100 * item.cvalue / self.overall_value])
+                               100.0 * pfctlr.get_current_value(item) / self.overall_value])
