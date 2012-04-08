@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from gi.repository import Gtk
-from avernus.controller import controller
+from avernus.controller import accountController
 from avernus.gui import gui_utils
 
 
@@ -34,7 +34,7 @@ class AccountOverviewTree(gui_utils.Tree):
         self._load_accounts()
 
     def _load_accounts(self):
-        for acc in controller.getAllAccount():
+        for acc in accountController.get_all_account():
             self.model.append([acc,
                                acc.name,
                                acc.amount,

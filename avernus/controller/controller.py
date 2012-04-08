@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 
 from avernus.objects import model
-from avernus.objects.account import Account, AccountTransaction, \
-    AccountCategory
+#from avernus.objects.account import Account, AccountTransaction, \
+#    AccountCategory
 from avernus.objects.container import Portfolio, Watchlist
 from avernus.objects.dimension import Dimension, DimensionValue, \
     AssetDimensionValue
 from avernus.objects.dividend import Dividend
-from avernus.objects.filter import CategoryFilter
+#from avernus.objects.filter import CategoryFilter
 from avernus.objects.model import Meta
 from avernus.objects.position import PortfolioPosition, WatchlistPosition
 from avernus.objects.quotation import Quotation
@@ -35,16 +35,18 @@ logger = logging.getLogger(__name__)
 
 
 modelClasses = [Portfolio, Transaction, Watchlist, Dividend, SourceInfo,
-                PortfolioPosition, WatchlistPosition, AccountCategory,
-                Quotation, Stock, Meta, Account, AccountTransaction,
-                Dimension, DimensionValue, AssetDimensionValue, CategoryFilter,
+                PortfolioPosition, WatchlistPosition, 
+                Quotation, Stock, Meta, 
+                #Account, AccountTransaction, AccountCategory, CategoryFilter,
+                Dimension, DimensionValue, AssetDimensionValue, 
                 Benchmark]
 
 #these classes will be loaded with one single call and will also load composite
 #relations. therefore it is important that the list is complete in the sense
 #that there are no classes holding composite keys to classes outside the list
-initialLoadingClasses = [Account, Meta,
-                         AccountTransaction, AccountCategory]
+initialLoadingClasses = [Meta,
+                         # Account, AccountTransaction, AccountCategory
+                        ]
 
 VERSION = 2
 

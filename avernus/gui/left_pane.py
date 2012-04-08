@@ -7,11 +7,12 @@ from avernus import pubsub
 from avernus.gui import gui_utils, progress_manager
 from avernus.gui.account.csv_import_dialog import CSVImportDialog
 from avernus.controller import controller
+from avernus.controller import accountController
 from avernus.controller import portfolio_controller as pfctlr
 
 
 from avernus.objects.container import AllPortfolio
-from avernus.objects.account import AllAccount
+#from avernus.objects.account import AllAccount
 
 
 UI_INFO = """
@@ -138,15 +139,15 @@ class MainTree(gui_utils.Tree):
         for wl in pfctlr.getAllWatchlist():
             self.insert_watchlist(wl)
 
-        accounts = controller.getAllAccount()
-        if len(accounts) > 1:
-            all_account = AllAccount()
-            all_account.controller = controller
-            all_account.name = "<i>%s</i>" % (_('All'),)
-            self.insert_account(all_account)
-        for account in accounts:
-            self.insert_account(account)
-        self.expand_all()
+       #accounts = controller.getAllAccount()
+       # if len(accounts) > 1:
+       #     all_account = AllAccount()
+       #     all_account.controller = controller
+       #     all_account.name = "<i>%s</i>" % (_('All'),)
+       #     self.insert_account(all_account)
+       # for account in accounts:
+       #     self.insert_account(account)
+       # self.expand_all()
 
     def _subscribe(self):
         self.connect('button-press-event', self.on_button_press_event)
@@ -179,7 +180,7 @@ class MainTree(gui_utils.Tree):
                     popup = self.uimanager.get_widget("/Popup")
                 popup.popup(None, None, None, None, event.button, event.time)
                 return True
-            if self.get_selection().path_is_selected(target[0]) and obj.__name__ == 'Category' :
+            if self.get_selection().path_is_selected(target[0]) and obj.__class__.__name__ == 'AccountCategory' :
                 #disable editing of categories
                 return True
 
@@ -238,7 +239,7 @@ class MainTree(gui_utils.Tree):
             obj = treestore.get_value(selection_iter, 0)
             if self.selected_item is None or self.selected_item[0] != obj:
                 self.selected_item = obj, selection_iter
-                pubsub.publish('maintree.select', obj)
+                #pubsub.publish('maintree.select', obj)
             return
         self.selected_item = None
         pubsub.publish('maintree.unselect')
@@ -277,7 +278,7 @@ class MainTree(gui_utils.Tree):
         elif obj.__name__ == 'Account' or obj.name == 'Accounts':
             parent_iter = self.accounts_iter
             cat_type = "account"
-            item = controller.newAccount(_('new account'))
+            item = accountController.new_account(_('new account'))
         iterator = model.append(parent_iter, [item, cat_type, item.name, ''])
         self.expand_row(model.get_path(parent_iter), True)
         self.set_cursor(model.get_path(iterator), focus_column=self.get_column(0), start_editing=True)

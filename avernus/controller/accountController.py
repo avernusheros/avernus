@@ -1,5 +1,14 @@
 from avernus.config import avernusConfig
+from avernus.objects import session
+from avernus.objects.account import Account
 
+def get_all_account():
+    return session.query(Account).all()
+
+def new_account(name):
+    account = Account(name)
+    session.add(account)
+    return account
 
 class AccountController:
 
