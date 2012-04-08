@@ -11,21 +11,36 @@ def new_account(name):
     session.add(account)
     session.commit()
     return account
-    
+
+def new_account_category(name, parent=None):
+    cat = AccountCategory(name, parent)
+    session.add(cat)
+    return cat
+
 def new_account_transaction(desc):
     transaction = AccountTransaction(desc)
     session.add(transaction)
     return transaction
-    
+
 def account_has_transaction(account, trans):
     return session.query(AccountTransaction).filter_by(account=account, description=trans['description'], amount=trans['amount'], date=trans['date']).count() > 0
-    
+
 def account_birthday(account):
     transactions = session.query(AccountTransaction).filter_by(account=account)
     if transactions.count() > 0:
         return transactions.order_by(AccountTransaction.date).first().date
-    
 
+def get_root_categories():
+    return session.query(AccountCategory).filter_by(parent=None).all()
+
+def get_parent_categories(category):
+    ret = []
+    current = category
+    while current.parent:
+        p = current.parent
+        ret.append(p)
+        current = p
+    return ret
 
 class AccountController:
 

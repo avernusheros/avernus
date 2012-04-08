@@ -4,7 +4,7 @@ from avernus import config, pubsub
 from avernus.config import avernusConfig
 from avernus.gui import gui_utils, common_dialogs, page, charts
 from avernus.gui.portfolio import dialogs
-from avernus.controller import controller, chartController, accountController
+from avernus.controller import controller, chartController, accountController, objectController
 from gi.repository import Gtk
 from gi.repository import GObject
 from gi.repository import Gdk
@@ -20,6 +20,7 @@ class AccountTransactionTab(Gtk.VBox, page.Page):
     BORDER_WIDTH = 5
 
     def __init__(self, account):
+
         Gtk.VBox.__init__(self)
         self.account = account
         self.config = config.avernusConfig()
@@ -103,7 +104,6 @@ class AccountTransactionTab(Gtk.VBox, page.Page):
         frame.set_shadow_type(Gtk.ShadowType.IN)
         self.hpaned.pack2(frame, shrink=False, resize=True)
         pre = self.config.get_option('account hpaned position', 'Gui')
-        #print pre, type(pre)
         pos = pre or 600
         self.hpaned.set_position(int(pos))
 
@@ -334,13 +334,12 @@ class TransactionsTree(gui_utils.Tree):
                     # the chance that recursive is activated
                     config = avernusConfig()
                     pre = config.get_option('categoryChildren', 'Account')
-                    #print pre
                     pre = pre == "True"
-                    #print pre
                     if pre:
                         # recursive is activated
                         #print "second chance", transaction
-                        if not self.single_category in transaction.category.parents:
+                        parents = accountController.get_parent_categories(transaction.category)
+                        if not self.single_category in parents:
                             # the selected category is also not one of the parents
                             return False
                     else:
@@ -387,16 +386,16 @@ class TransactionsTree(gui_utils.Tree):
                 self.insert_transaction(transaction)
 
     def get_item_to_insert(self, ta):
-        #if ta.category:
-        #    cat = ta.category.name
-        #else:
-        #    cat = ''
+        if ta.category:
+            cat = ta.category.name
+        else:
+            cat = ''
         #if ta.is_transfer():
         #    icon = 'gtk-convert'
         #else:
         #    icon = ''
         #return [ta, ta.description, ta.amount, cat, ta.date, icon]
-        return [ta, ta.description, ta.amount, None, ta.date, '']
+        return [ta, ta.description, ta.amount, cat, ta.date, '']
 
     def get_filtered_transaction_value(self):
         sum = 0
@@ -421,7 +420,7 @@ class TransactionsTree(gui_utils.Tree):
     def on_add(self, widget=None, data=None):
         dlg = EditTransaction(self.account, parent=self.get_toplevel())
         b_change, transaction = dlg.start()
-        self.account.amount += transaction.amount
+        self.account.balance += transaction.amount
         self.insert_transaction(transaction)
 
     def on_edit(self, widget=None, data=None):
@@ -430,7 +429,7 @@ class TransactionsTree(gui_utils.Tree):
         dlg = EditTransaction(self.account, transaction, parent=self.get_toplevel())
         b_change, transaction = dlg.start()
         if b_change:
-            self.account.amount = self.account.amount - old_amount + transaction.amount
+            self.account.balance = self.account.balance - old_amount + transaction.amount
 
     def on_dividend(self, widget=None, data=None):
         trans, iterator = self._get_selected_transaction()
@@ -444,7 +443,7 @@ class TransactionsTree(gui_utils.Tree):
         response = dlg.run()
         dlg.destroy()
         if response == Gtk.ResponseType.OK:
-            trans.account.amount -= trans.amount
+            trans.account.balance -= trans.amount
             trans.delete()
             child_iter = self._get_child_iter(iterator)
             self.model.remove(child_iter)
@@ -456,7 +455,7 @@ class TransactionsTree(gui_utils.Tree):
     def on_set_transaction_category(self, category=None):
         trans, iterator = self._get_selected_transaction()
         trans.category = category
-        self.get_model().remove(iterator)
+        self.model.remove(iterator)
         self.insert_transaction(trans)
 
     def show_context_menu(self, event):
@@ -467,28 +466,28 @@ class TransactionsTree(gui_utils.Tree):
                 self.context_menu.add(action.create_menu_item())
             if trans.category:
                 self.context_menu.add_item('Remove category', lambda widget: self.on_set_transaction_category())
-            hierarchy = controller.getAllAccountCategoriesHierarchical()
 
             def insert_recursive(cat, menu):
                 item = Gtk.MenuItem(label=cat.name)
                 menu.append(item)
-                if cat in hierarchy:
+                if len(cat.children) > 0:
                     new_menu = Gtk.Menu()
                     item.set_submenu(new_menu)
                     item = Gtk.MenuItem(label=cat.name)
                     new_menu.append(item)
                     item.connect('activate', lambda widget: self.on_set_transaction_category(cat))
                     new_menu.append(Gtk.SeparatorMenuItem())
-                    for child_cat in sorted(hierarchy[cat]):
+                    for child_cat in cat.children:
                         insert_recursive(child_cat, new_menu)
                 else:
                     item.connect('activate', lambda widget: self.on_set_transaction_category(cat))
-            if len(hierarchy[None]) > 0:
+            root_categories = accountController.get_root_categories()
+            if len(root_categories) > 0:
                 item = Gtk.MenuItem(label="Move to category")
                 self.context_menu.add(item)
                 category_menu = Gtk.Menu()
                 item.set_submenu(category_menu)
-                for cat in sorted(hierarchy[None]):
+                for cat in root_categories:
                     insert_recursive(cat, category_menu)
         else:
             self.context_menu.add(self.actiongroup.get_action('add').create_menu_item())
@@ -563,13 +562,13 @@ class CategoriesTree(gui_utils.Tree):
     def load_categories(self):
         def insert_recursive(cat, parent):
             new_iter = model.append(parent, [cat, cat.name])
-            if cat in hierarchy:
-                for child_cat in hierarchy[cat]:
-                    insert_recursive(child_cat, new_iter)
+            for child_cat in cat.children:
+                insert_recursive(child_cat, new_iter)
         model = self.get_model()
-        #hierarchy = controller.getAllAccountCategoriesHierarchical()
-        #for cat in hierarchy[None]: #start with root categories
-        #    insert_recursive(cat, None)
+        root_categories = accountController.get_root_categories()
+        for cat in root_categories:
+            insert_recursive(cat, None)
+        self.expand_all()
 
     def insert_item(self, cat, parent=None):
         return self.get_model().append(parent, [cat, cat.name])
@@ -584,13 +583,13 @@ class CategoriesTree(gui_utils.Tree):
 
     def on_add(self, widget=None, data=None):
         parent, selection_iter = self.get_selected_item()
-        item = controller.newAccountCategory('new category', parent=parent)
+        item = accountController.new_account_category('new category', parent=parent)
         iterator = self.insert_item(item, parent=selection_iter)
         model = self.get_model()
         if selection_iter:
             self.expand_row(model.get_path(selection_iter), True)
         self.cell.set_property('editable', True)
-        self.set_cursor(model.get_path(iterator), focus_column=self.get_column(0), start_editing=True)
+        self.set_cursor(model.get_path(iterator), start_editing=True)
 
     def on_row_changed(self, model, path, iterator):
         if not self.dnd_active:
@@ -619,7 +618,7 @@ class CategoriesTree(gui_utils.Tree):
         msg = _("Permanently delete category <b>") + GObject.markup_escape_text(obj.name) + '</b>?'
         model = self.get_model()
         if model.iter_has_child(iterator):
-                msg += _("\nWill also delete subcategories")
+            msg += _("\nWill also delete subcategories")
         dlg.set_markup(_(msg))
         response = dlg.run()
         dlg.destroy()
@@ -630,7 +629,7 @@ class CategoriesTree(gui_utils.Tree):
             while len(queue) > 0:
                 currIter, currObj = queue.pop()
                 #print "deleting from model ", currObj
-                currObj.delete()
+                objectController.delete_object(currObj)
                 if model.iter_has_child(currIter):
                     for i in range(0, model.iter_n_children(currIter)):
                         newIter = model.iter_nth_child(currIter, i)
@@ -676,7 +675,7 @@ class CategoriesTree(gui_utils.Tree):
         self.updater(None)
         if selection != None:
             selection.unselect_all()
-        
+
 
     def on_select(self, obj):
         self.updater(obj)
@@ -709,49 +708,48 @@ class EditTransaction(Gtk.Dialog):
         #amount
         hbox = Gtk.HBox()
         label = Gtk.Label(label=_('Amount'))
-        hbox.pack_start(label, True, True, 0)
+        hbox.pack_start(label, False, False, 0)
         self.amount_entry = Gtk.SpinButton(adjustment=Gtk.Adjustment(lower= -999999999, upper=999999999, step_increment=10, value=self.transaction.amount), digits=2)
         hbox.pack_start(self.amount_entry, True, True, 0)
-        vbox.pack_start(hbox, True, True, 0)
+        vbox.pack_start(hbox, False, False, 0)
 
         #category
         hbox = Gtk.HBox()
         label = Gtk.Label(label=_('Category'))
-        hbox.pack_start(label, True, True, 0)
+        hbox.pack_start(label, False, False, 0)
         treestore = Gtk.TreeStore(object, str)
         self.combobox = Gtk.ComboBox(model=treestore)
         cell = Gtk.CellRendererText()
-        self.combobox.pack_start(cell, True)
+        self.combobox.pack_start(cell, False)
         self.combobox.add_attribute(cell, 'text', 1)
 
         def insert_recursive(cat, parent):
             new_iter = treestore.append(parent, [cat, cat.name])
             if cat == self.transaction.category:
                 self.combobox.set_active_iter(new_iter)
-            if cat in hierarchy:
-                for child_cat in hierarchy[cat]:
-                    insert_recursive(child_cat, new_iter)
+            for child_cat in cat.children:
+                insert_recursive(child_cat, new_iter)
         new_iter = treestore.append(None, [None, 'None'])
         self.combobox.set_active_iter(new_iter)
-        hierarchy = controller.getAllAccountCategoriesHierarchical()
-        for cat in hierarchy[None]: #start with root categories
+        root_categories = accountController.get_root_categories()
+        for cat in root_categories:
             insert_recursive(cat, None)
 
-        hbox.pack_start(self.combobox, True, True, 0)
-        vbox.pack_start(hbox, True, True, 0)
+        hbox.pack_start(self.combobox, False, False, 0)
+        vbox.pack_start(hbox, False, False, 0)
 
         #date
         self.calendar = Gtk.Calendar()
         self.calendar.select_month(self.transaction.date.month - 1, self.transaction.date.year)
         self.calendar.select_day(self.transaction.date.day)
-        vbox.pack_start(self.calendar, True, True, 0)
+        vbox.pack_start(self.calendar, False, False, 0)
 
         #transfer
         text = "Transfer: this transaction will not be shown in any of the graphs."
         self.transfer_button = Gtk.CheckButton(text)
         if self.transaction.transfer:
             self.transfer_button.set_active(True)
-        vbox.pack_start(self.transfer_button, True, True, 0)
+        vbox.pack_start(self.transfer_button, False, False, 0)
 
         self.matching_transactions_tree = gui_utils.Tree()
         model = Gtk.ListStore(object, str, str, object)

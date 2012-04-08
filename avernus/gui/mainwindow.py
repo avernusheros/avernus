@@ -190,7 +190,6 @@ class MainWindow(Gtk.Window):
         model.store.close()
         model.store.join()
         Gtk.main_quit()
-        sys.exit(0)
 
     def on_maintree_select(self, item):
         self.on_maintree_unselect()
