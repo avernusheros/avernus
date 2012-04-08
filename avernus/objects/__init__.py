@@ -6,6 +6,7 @@ from sqlalchemy.orm import sessionmaker
 Base = declarative_base()
 
 from account import *
+from container import *
 
 # connect to the database
 engine = create_engine('sqlite:///sqlite.db', echo=True)     

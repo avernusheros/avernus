@@ -11,23 +11,26 @@ from avernus.objects.dimension import Dimension, DimensionValue, \
     AssetDimensionValue
 from avernus.controller.shared import check_duplicate, detect_duplicate
 
+# sqlalchemy version
+from avernus.objects import session
+
 
 import datetime
 import sys
 
 datasource_manager = None
-initialLoadingClasses = [Transaction, Portfolio, Dividend, Watchlist, \
+initialLoadingClasses = [Transaction, Dividend, \
                         PortfolioPosition, WatchlistPosition, Dimension, \
                         DimensionValue, AssetDimensionValue, Stock]
 controller = sys.modules[__name__]
 
 
 def getAllPortfolio():
-    return Portfolio.getAll()
+    return session.query(Portfolio).all()
 
 
 def getAllWatchlist():
-    return Watchlist.getAll()
+    return session.query(Watchlist).all()
 
 
 def getAllPosition():

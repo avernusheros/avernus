@@ -12,7 +12,7 @@ from avernus.controller import objectController
 from avernus.controller import portfolio_controller as pfctlr
 
 
-from avernus.objects.container import AllPortfolio
+#from avernus.objects.container import AllPortfolio
 #from avernus.objects.account import AllAccount
 
 

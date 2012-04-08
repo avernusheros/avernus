@@ -1,13 +1,9 @@
 #!/usr/bin/env python
 
 from avernus.objects import model
-#from avernus.objects.account import Account, AccountTransaction, \
-#    AccountCategory
-from avernus.objects.container import Portfolio, Watchlist
 from avernus.objects.dimension import Dimension, DimensionValue, \
     AssetDimensionValue
 from avernus.objects.dividend import Dividend
-#from avernus.objects.filter import CategoryFilter
 from avernus.objects.model import Meta
 from avernus.objects.position import PortfolioPosition, WatchlistPosition
 from avernus.objects.quotation import Quotation
@@ -34,19 +30,17 @@ def pairwise(iterable):
 logger = logging.getLogger(__name__)
 
 
-modelClasses = [Portfolio, Transaction, Watchlist, Dividend, SourceInfo,
-                PortfolioPosition, WatchlistPosition, 
+modelClasses = [Transaction, Dividend, SourceInfo,
+                #PortfolioPosition, WatchlistPosition, 
                 Quotation, Stock, Meta, 
-                #Account, AccountTransaction, AccountCategory, CategoryFilter,
                 Dimension, DimensionValue, AssetDimensionValue, 
-                Benchmark]
+                #Benchmark
+                ]
 
 #these classes will be loaded with one single call and will also load composite
 #relations. therefore it is important that the list is complete in the sense
 #that there are no classes holding composite keys to classes outside the list
-initialLoadingClasses = [Meta,
-                         # Account, AccountTransaction, AccountCategory
-                        ]
+initialLoadingClasses = [Meta]
 
 VERSION = 2
 
@@ -105,6 +99,7 @@ def is_duplicate(tp, **kwargs):
 
 def createTables():
     for cl in modelClasses:
+        print cl
         cl.createTable()
     if not model.store.new:
         db_version = Meta.getByPrimaryKey(1).version
