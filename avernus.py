@@ -126,12 +126,12 @@ try:
     GObject.threads_init()
 
 
-    from avernus.objects import model, store
-    from avernus.controller import controller, portfolio_controller
-    model.store = store.Store(db_file)
-    controller.createTables()
-    controller.initialLoading(controller)
-    controller.initialLoading(portfolio_controller)
+    #from avernus.objects import model, store
+    #from avernus.controller import controller, portfolio_controller
+    #model.store = store.Store(db_file)
+    #controller.createTables()
+    #controller.initialLoading(controller)
+    #controller.initialLoading(portfolio_controller)
 
     from avernus.gui.mainwindow import MainWindow
     from avernus.datasource_manager import DatasourceManager
@@ -150,9 +150,6 @@ except Exception as e:
     avernus.objects.session.commit()
     avernus.objects.session.close()
     threads.terminate_all()
-    if model != None and model.store != None:
-        model.store.close()
-        model.store.join()
     print "wie gesagt ... abgekachelt..."
     exit(1)
 

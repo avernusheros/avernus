@@ -4,7 +4,7 @@ from avernus.objects import model
 from avernus.objects.dimension import Dimension, DimensionValue, \
     AssetDimensionValue
 from avernus.objects.model import Meta
-from avernus.objects.transaction import Transaction
+#from avernus.objects.transaction import Transaction
 import datetime
 import itertools
 import logging

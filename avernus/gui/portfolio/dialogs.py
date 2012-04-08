@@ -2,9 +2,7 @@ from gi.repository import Gtk
 
 from avernus import pubsub
 from avernus.gui import gui_utils
-from avernus.controller import controller
 from avernus.controller import portfolio_controller as pfctlr
-from avernus.objects import stock
 import locale
 import datetime
 

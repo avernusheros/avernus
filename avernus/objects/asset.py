@@ -31,6 +31,9 @@ class Dividend(Base):
     position_id = Column(Integer, ForeignKey('container.id'))
     position = relationship('Portfolio', backref='dividends')
     
+class MetaPosition(object):
+    pass
+    
 class Quotation(Base):
     
     __tablename__ = 'quotation'

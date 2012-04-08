@@ -6,7 +6,6 @@ import pytz
 import re
 import json
 from datetime import datetime
-from avernus.objects import stock
 from avernus.controller import controller
 
 import logging

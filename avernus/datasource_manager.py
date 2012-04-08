@@ -2,7 +2,6 @@
 
 from avernus.controller import controller
 from avernus.controller import portfolio_controller as pfctlr
-from avernus.objects.stock import Stock
 from avernus.data_sources import yahoo, onvista
 from avernus.gui import threads
 import datetime, re

@@ -4,7 +4,7 @@ from avernus.gui import gui_utils, threads, common_dialogs
 from avernus.gui.portfolio import dialogs
 from avernus.controller import controller
 from avernus.controller import portfolio_controller as pfctlr
-from avernus.objects.position import MetaPosition
+from avernus.objects.asset import MetaPosition
 import datetime
 import logging
 from gi.repository import Gtk
