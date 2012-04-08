@@ -1,6 +1,6 @@
 from avernus.config import avernusConfig
 from avernus.objects import session
-from avernus.objects.account import Account
+from avernus.objects.account import *
 
 def get_all_account():
     res = session.query(Account).all()
@@ -11,6 +11,19 @@ def new_account(name):
     session.add(account)
     session.commit()
     return account
+    
+def new_account_transaction(desc):
+    transaction = AccountTransaction(desc)
+    session.add(transaction)
+    return transaction
+    
+def account_has_transaction(account, trans):
+    return session.query(AccountTransaction).filter_by(account=account, description=trans['description'], amount=trans['amount'], date=trans['date']).count() > 0
+    
+def account_birthday(account):
+    return session.query(AccountTransaction).filter_by(account=account).order_by(AccountTransaction.date).first().date
+    
+
 
 class AccountController:
 

@@ -17,6 +17,9 @@ class Account(Base):
         self.balance = 0.0
         self.type = 1
         
+    def __iter__(self):
+        return self.transactions.__iter__()
+        
     def __repr__(self):
         return "Account<%s>" % self.name
         

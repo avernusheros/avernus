@@ -195,13 +195,13 @@ class MainWindow(Gtk.Window):
     def on_maintree_select(self, item):
         self.on_maintree_unselect()
         page = None
-        if item.__name__ == 'Category':
+        if item.__class__.__name__ == 'Category':
             if item.name == 'Portfolios':
                 page = "Category Portfolios"
             elif item.name == 'Accounts':
                 page = "Category Accounts"
         else:
-            page = item.__name__
+            page = item.__class__.__name__
         if page is not None:
             self.hpaned.pack2(self.pages[page](item))
 

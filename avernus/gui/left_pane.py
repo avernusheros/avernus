@@ -32,7 +32,6 @@ UI_INFO = """
 
 
 class Category(object):
-    __name__ = 'Category'
 
     def __init__(self, name):
         self.name = name
@@ -189,8 +188,7 @@ class MainTree(gui_utils.Tree):
         self.pf_iter = self.get_model().append(None, [Category('Portfolios'), 'portfolios', _("<b>Portfolios</b>"), ''])
         self.wl_iter = self.get_model().append(None, [Category('Watchlists'), 'watchlists', _("<b>Watchlists</b>"), ''])
         self.accounts_iter = self.get_model().append(None, [Category('Accounts'), 'accounts', _("<b>Accounts</b>"), ''])
-        #self.index_iter = self.get_model().append(None, [Category('Indices'),'indices', _("<b>Indices</b>"),''])
-
+        
     def insert_watchlist(self, item):
         self.get_model().append(self.wl_iter, [item, 'watchlist', item.name, ''])
 
@@ -240,7 +238,7 @@ class MainTree(gui_utils.Tree):
             obj = treestore.get_value(selection_iter, 0)
             if self.selected_item is None or self.selected_item[0] != obj:
                 self.selected_item = obj, selection_iter
-                #pubsub.publish('maintree.select', obj)
+                pubsub.publish('maintree.select', obj)
             return
         self.selected_item = None
         pubsub.publish('maintree.unselect')
@@ -254,7 +252,7 @@ class MainTree(gui_utils.Tree):
         if objtype == 'Category' or objtype == "AllPortfolio" or objtype == 'AllAccount':
             return
         parent = self.get_toplevel()
-        if obj.__name__ == 'Account':
+        if obj.__class__.__name__ == 'Account':
             EditAccount(obj, parent)
         else:
             obj, selection_iter = self.selected_item
@@ -306,7 +304,7 @@ class EditAccount(Gtk.Dialog):
         #cash entry
         label = Gtk.Label(label=_('Current balance:'))
         table.attach(label, 0, 1, 1, 2)
-        self.cash_entry = Gtk.SpinButton(adjustment=Gtk.Adjustment(lower= -999999999, upper=999999999, step_increment=10, value=acc.amount), digits=2)
+        self.cash_entry = Gtk.SpinButton(adjustment=Gtk.Adjustment(lower= -999999999, upper=999999999, step_increment=10, value=acc.balance), digits=2)
         table.attach(self.cash_entry, 1, 2, 1, 2)
 
         self.show_all()

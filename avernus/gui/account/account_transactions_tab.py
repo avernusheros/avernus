@@ -4,7 +4,7 @@ from avernus import config, pubsub
 from avernus.config import avernusConfig
 from avernus.gui import gui_utils, common_dialogs, page, charts
 from avernus.gui.portfolio import dialogs
-from avernus.controller import controller, chartController
+from avernus.controller import controller, chartController, accountController
 from gi.repository import Gtk
 from gi.repository import GObject
 from gi.repository import Gdk
@@ -286,7 +286,7 @@ class TransactionsTree(gui_utils.Tree):
         cfg = config.avernusConfig()
         self.b_show_transfer = cfg.get_option('show transfer', section='Gui') == 'True'
         self.b_show_uncategorized = cfg.get_option('show uncategorized', section='Gui') == 'True'
-        self.range_start = account.birthday
+        self.range_start = accountController.account_birthday(account)
         self.range_end = datetime.date.today()
         gui_utils.Tree.__init__(self)
 
@@ -387,15 +387,16 @@ class TransactionsTree(gui_utils.Tree):
                 self.insert_transaction(transaction)
 
     def get_item_to_insert(self, ta):
-        if ta.category:
-            cat = ta.category.name
-        else:
-            cat = ''
-        if ta.is_transfer():
-            icon = 'gtk-convert'
-        else:
-            icon = ''
-        return [ta, ta.description, ta.amount, cat, ta.date, icon]
+        #if ta.category:
+        #    cat = ta.category.name
+        #else:
+        #    cat = ''
+        #if ta.is_transfer():
+        #    icon = 'gtk-convert'
+        #else:
+        #    icon = ''
+        #return [ta, ta.description, ta.amount, cat, ta.date, icon]
+        return [ta, ta.description, ta.amount, None, ta.date, '']
 
     def get_filtered_transaction_value(self):
         sum = 0
@@ -566,9 +567,9 @@ class CategoriesTree(gui_utils.Tree):
                 for child_cat in hierarchy[cat]:
                     insert_recursive(child_cat, new_iter)
         model = self.get_model()
-        hierarchy = controller.getAllAccountCategoriesHierarchical()
-        for cat in hierarchy[None]: #start with root categories
-            insert_recursive(cat, None)
+        #hierarchy = controller.getAllAccountCategoriesHierarchical()
+        #for cat in hierarchy[None]: #start with root categories
+        #    insert_recursive(cat, None)
 
     def insert_item(self, cat, parent=None):
         return self.get_model().append(parent, [cat, cat.name])
