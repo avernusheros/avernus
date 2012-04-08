@@ -38,8 +38,9 @@ class AccountOverviewTree(gui_utils.Tree):
             self.model.append([acc,
                                acc.name,
                                acc.balance,
-                               acc.transaction_count,
-                               acc.birthday,
-                               acc.lastday])
+                               len(acc.transactions),
+                               accountController.account_birthday(acc),
+                               accountController.account_lastday(acc),
+                              ])
 
 

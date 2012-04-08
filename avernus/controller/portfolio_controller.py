@@ -8,6 +8,7 @@ from avernus.objects.quotation import Quotation
 from avernus.objects.dimension import Dimension, DimensionValue, \
     AssetDimensionValue
 from avernus.controller.shared import check_duplicate, detect_duplicate
+from avernus.controller import position_controller
 
 # sqlalchemy version
 from avernus.objects import session
@@ -27,23 +28,37 @@ def getAllPortfolio():
 
 def getAllWatchlist():
     return session.query(Watchlist).all()
-    
+
 def get_current_value(portfolio):
     value = 0.0
     for pos in portfolio:
         value += pos.cvalue
     return value
-    
+
+def get_buy_value(portfolio):
+    value = 0.0
+    for pos in portfolio:
+        value += position_controller.get_buy_value()
+    return value
+
 def get_current_change(portfolio):
     return 0.1, 0.2
-    
-    
-    
-    
-    
-    
+
+def get_overall_change(portfolio):
+    end = get_current_value(portfolio)
+    start = get_buy_value(portfolio)
+    absolute = end - start
+    if start == 0:
+        percent = 0
+    else:
+        percent = round(100.0 / start * absolute, 2)
+    return absolute, percent
+
+
+
+
 # Mordor from here
-    
+
 
 
 def getAllPosition():
