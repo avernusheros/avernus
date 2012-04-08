@@ -140,10 +140,13 @@ try:
     portfolio_controller.datasource_manager = dsm
     try:
         Gtk.main()
-    except:
+    except Exception as e:
         main_window.on_destroy()
-except:
-    print "crashed!"
+        raise
+except Exception as e:
+    print "crashed, DUH!!"
+    import traceback
+    traceback.print_exc()
     avernus.objects.session.commit()
     avernus.objects.session.close()
     threads.terminate_all()
