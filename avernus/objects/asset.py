@@ -28,8 +28,8 @@ class Dividend(Base):
     price = Column(Float)
     cost = Column(Float)
     shares = Column(Float)
-    position_id = Column(Integer, ForeignKey('portfolio.id'))
-    position = relationship('PortfolioPosition', backref='dividends')
+    position_id = Column(Integer, ForeignKey('container.id'))
+    position = relationship('Portfolio', backref='dividends')
     
 class Stock(Asset):
     

@@ -3,12 +3,9 @@
 from avernus.objects import model
 from avernus.objects.dimension import Dimension, DimensionValue, \
     AssetDimensionValue
-from avernus.objects.dividend import Dividend
 from avernus.objects.model import Meta
 from avernus.objects.quotation import Quotation
-from avernus.objects.benchmark import Benchmark
 from avernus.objects.source_info import SourceInfo
-from avernus.objects.stock import Stock
 from avernus.objects.transaction import Transaction
 import datetime
 import itertools

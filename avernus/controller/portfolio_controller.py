@@ -2,8 +2,6 @@ from avernus.objects import model
 from avernus.objects.stock import Stock
 from avernus.objects.container import Portfolio, Watchlist
 from avernus.objects.position import PortfolioPosition, WatchlistPosition
-from avernus.objects.dividend import Dividend
-from avernus.objects.benchmark import Benchmark
 from avernus.objects.source_info import SourceInfo
 from avernus.objects.transaction import Transaction
 from avernus.objects.quotation import Quotation

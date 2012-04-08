@@ -1,75 +1,29 @@
-from avernus.objects.model import SQLiteEntity
-from avernus.objects.stock import Stock
+from avernus.objects import Base
+from sqlalchemy import Column, Integer, String, Float, Date, Boolean, ForeignKey
+from sqlalchemy.orm import relationship, backref
 
-class Dimension(SQLiteEntity):
+class Dimension(Base):
+    
+    __tablename__ = 'dimension'
+    
+    id = Column(Integer, primary_key=True)
+    name = Column(String)
+    
+class DimensionValue(Base):
 
-    __primaryKey__ = 'id'
-    __tableName__ = "dimension"
-    __columns__ = {
-                   'id': 'INTEGER',
-                   'name': 'VARCHAR'
-                  }
-    __comparisonPositives__ = ['name']
-
-    def on_delete(self, **kwargs):
-        self.controller.deleteAllDimensionValue(self)
-
-    __callbacks__ = {
-                 'onDelete':on_delete
-                 }
-
-    def __cmp__(self, other):
-        return cmp(self.name, other.name)
-
-    def __str__(self):
-        return self.name
-
-    @property
-    def values(self):
-        return self.controller.getAllDimensionValueForDimension(self)
-
-
-class DimensionValue(SQLiteEntity):
-
-    __primaryKey__ = 'id'
-    __tableName__ = "dimensionValue"
-    __columns__ = {
-                   'id': 'INTEGER',
-                   'name': 'VARCHAR',
-                   'dimension': Dimension,
-                  }
-    __comparisonPositives__ = ['dimension','name']
-
-    def on_delete(self, **kwargs):
-        self.controller.deleteAllAssetDimensionValue(self)
-
-    def __cmp__(self, other):
-        return cmp(self.name, other.name)
-
-    __callbacks__ = {
-                 'onDelete':on_delete
-                 }
-
-    def __repr__(self):
-        return self.name
-
-
-class AssetDimensionValue(SQLiteEntity):
-
-    __primaryKey__ = 'id'
-    __tableName__ = "AssetDimensionValue"
-    __columns__ = {
-                   'id': 'INTEGER',
-                   'stock': Stock,
-                   'dimensionValue': DimensionValue,
-                   'value': 'FLOAT'
-                  }
-    __comparisonPositives__ = ['dimensionValue','stock']
-
-    def __repr__(self):
-        if self.dimensionValue:
-            erg = self.dimensionValue.name
-            if self.value != 100:
-                erg += ":"+str(self.value)
-            return erg
-        return SQLiteEntity.__repr__(self)
+    __tablename__ = 'dimension_value'
+    id = Column(Integer, primary_key=True)
+    name = Column(String)
+    dimension_id = Column(Integer, ForeignKey('dimension.id'))
+    dimension = relationship('Dimension', backref='values')
+    
+class AssetDimensionValue(Base):
+    
+    __tablename__ = 'asset_dimension_value'
+    
+    id = Column(Integer, primary_key=True)
+    value = Column(Float)
+    asset_id = Column(Integer, ForeignKey('asset.id'))
+    dimension_value_id = Column(Integer, ForeignKey('dimension_value.id'))
+    asset = relationship('Asset')
+    dimension_value = relationship('DimensionValue')

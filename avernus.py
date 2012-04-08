@@ -144,14 +144,16 @@ try:
         main_window.on_destroy()
         raise
 except Exception as e:
-    print "crashed, DUH!!"
+    print "crashed, abgekachelt ... !!"
     import traceback
     traceback.print_exc()
     avernus.objects.session.commit()
     avernus.objects.session.close()
     threads.terminate_all()
-    model.store.close()
-    model.store.join()
+    if model != None and model.store != None:
+        model.store.close()
+        model.store.join()
+    print "wie gesagt ... abgekachelt..."
     exit(1)
 
 

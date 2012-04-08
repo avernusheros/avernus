@@ -8,6 +8,7 @@ Base = declarative_base()
 from account import *
 from container import *
 from asset import *
+from dimension import *
 
 # connect to the database
 engine = create_engine('sqlite:///sqlite.db'#, echo=True
