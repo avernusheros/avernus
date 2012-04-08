@@ -4,7 +4,7 @@ from avernus import config, pubsub
 from avernus.config import avernusConfig
 from avernus.gui import gui_utils, common_dialogs, page, charts
 from avernus.gui.portfolio import dialogs
-from avernus.controller import controller, chartController, accountController
+from avernus.controller import controller, chartController, accountController, objectController
 from gi.repository import Gtk
 from gi.repository import GObject
 from gi.repository import Gdk
@@ -563,13 +563,13 @@ class CategoriesTree(gui_utils.Tree):
     def load_categories(self):
         def insert_recursive(cat, parent):
             new_iter = model.append(parent, [cat, cat.name])
-            if cat in hierarchy:
-                for child_cat in hierarchy[cat]:
-                    insert_recursive(child_cat, new_iter)
+            for child_cat in cat.children:
+                insert_recursive(child_cat, new_iter)
         model = self.get_model()
-        #hierarchy = controller.getAllAccountCategoriesHierarchical()
-        #for cat in hierarchy[None]: #start with root categories
-        #    insert_recursive(cat, None)
+        root_categories = accountController.get_root_categories()
+        for cat in root_categories:
+            insert_recursive(cat, None)
+        self.expand_all()
 
     def insert_item(self, cat, parent=None):
         return self.get_model().append(parent, [cat, cat.name])
@@ -584,13 +584,13 @@ class CategoriesTree(gui_utils.Tree):
 
     def on_add(self, widget=None, data=None):
         parent, selection_iter = self.get_selected_item()
-        item = controller.newAccountCategory('new category', parent=parent)
+        item = accountController.new_account_category('new category', parent=parent)
         iterator = self.insert_item(item, parent=selection_iter)
         model = self.get_model()
         if selection_iter:
             self.expand_row(model.get_path(selection_iter), True)
         self.cell.set_property('editable', True)
-        self.set_cursor(model.get_path(iterator), focus_column=self.get_column(0), start_editing=True)
+        self.set_cursor(model.get_path(iterator), start_editing=True)
 
     def on_row_changed(self, model, path, iterator):
         if not self.dnd_active:
@@ -619,7 +619,7 @@ class CategoriesTree(gui_utils.Tree):
         msg = _("Permanently delete category <b>") + GObject.markup_escape_text(obj.name) + '</b>?'
         model = self.get_model()
         if model.iter_has_child(iterator):
-                msg += _("\nWill also delete subcategories")
+            msg += _("\nWill also delete subcategories")
         dlg.set_markup(_(msg))
         response = dlg.run()
         dlg.destroy()
@@ -630,7 +630,7 @@ class CategoriesTree(gui_utils.Tree):
             while len(queue) > 0:
                 currIter, currObj = queue.pop()
                 #print "deleting from model ", currObj
-                currObj.delete()
+                objectController.delete_object(currObj)
                 if model.iter_has_child(currIter):
                     for i in range(0, model.iter_n_children(currIter)):
                         newIter = model.iter_nth_child(currIter, i)
@@ -676,7 +676,7 @@ class CategoriesTree(gui_utils.Tree):
         self.updater(None)
         if selection != None:
             selection.unselect_all()
-        
+
 
     def on_select(self, obj):
         self.updater(obj)

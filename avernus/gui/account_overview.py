@@ -37,7 +37,7 @@ class AccountOverviewTree(gui_utils.Tree):
         for acc in accountController.get_all_account():
             self.model.append([acc,
                                acc.name,
-                               acc.amount,
+                               acc.balance,
                                acc.transaction_count,
                                acc.birthday,
                                acc.lastday])
