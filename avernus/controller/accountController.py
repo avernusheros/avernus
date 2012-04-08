@@ -30,6 +30,11 @@ def account_birthday(account):
     if transactions.count() > 0:
         return transactions.order_by(AccountTransaction.date).first().date
 
+def account_lastday(account):
+    transactions = session.query(AccountTransaction).filter_by(account=account)
+    if transactions.count() > 0:
+        return transactions.order_by(AccountTransaction.date.desc()).first().date
+
 def get_root_categories():
     return session.query(AccountCategory).filter_by(parent=None).all()
 

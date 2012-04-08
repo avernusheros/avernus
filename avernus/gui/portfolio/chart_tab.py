@@ -18,7 +18,7 @@ class ChartTab(Gtk.ScrolledWindow, page.Page):
 
     def show(self):
         self.update_page()
-        if len(self.pf) == 0:
+        if len(self.pf.positions) == 0:
             self.add_with_viewport(Gtk.Label(label='\n%s\n%s\n\n' % (_('No data!'), _('Add positions to portfolio first.'))))
             self.show_all()
             return
