@@ -31,6 +31,31 @@ class Dividend(Base):
     position_id = Column(Integer, ForeignKey('container.id'))
     position = relationship('Portfolio', backref='dividends')
     
+class Quotation(Base):
+    
+    __tablename__ = 'quotation'
+    
+    id = Column(Integer, primary_key=True)
+    exchange = Column(String)
+    date = Column(Date)
+    open = Column(Float)
+    high = Column(Float)
+    low = Column(Float)
+    close = Column(Float)
+    volume = Column(Integer)
+    asset_id = Column(Integer, ForeignKey('asset.id'))
+    asset = relationship('Asset', backref='quotations')
+    
+class SourceInfo(Base):
+    
+    __tablename__ = 'source_info'
+    
+    id = Column(Integer, primary_key=True)
+    source = Column(String)
+    info = Column(String)
+    asset_id = Column(Integer, ForeignKey('asset.id'))
+    asset = relationship('Asset', backref='source_info')
+    
 class Stock(Asset):
     
     __tablename__ = 'stock'
