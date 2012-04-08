@@ -20,6 +20,17 @@ class Asset(Base):
     source = Column(String)
     change = Column(Float)
     
+class Dividend(Base):
+    
+    __tablename__ = 'dividend'
+    id = Column(Integer, primary_key=True)
+    isin = Column(String)
+    price = Column(Float)
+    cost = Column(Float)
+    shares = Column(Float)
+    position_id = Column(Integer, ForeignKey('portfolio.id'))
+    position = relationship('PortfolioPosition', backref='dividends')
+    
 class Stock(Asset):
     
     __tablename__ = 'stock'
