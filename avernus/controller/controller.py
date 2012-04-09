@@ -1,9 +1,5 @@
 #!/usr/bin/env python
 
-from avernus.objects import model
-from avernus.objects.dimension import Dimension, DimensionValue, \
-    AssetDimensionValue
-from avernus.objects.model import Meta
 import datetime
 import itertools
 import logging

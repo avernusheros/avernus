@@ -13,7 +13,6 @@ from avernus.gui.portfolio.positions_tab import WatchlistPositionsTab
 from avernus.gui.portfolio.overview_notebook import OverviewNotebook
 from avernus.gui.preferences import PrefDialog
 from avernus.gui.account.exportDialog import ExportDialog
-from avernus.objects import model
 from webbrowser import open as web
 import avernus
 from gi.repository import Gtk
