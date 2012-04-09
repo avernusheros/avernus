@@ -71,3 +71,15 @@ class Stock(Asset):
     __tablename__ = 'stock'
     __mapper_args__ = {'polymorphic_identity': 'stock'}
     id = Column(Integer, ForeignKey('asset.id'), primary_key=True)
+    
+class Transaction(Base):
+    
+    __tablename__ = 'transaction'
+    id = Column(Integer, primary_key=True)
+    date = Column(Date)
+    quantity = Column(Float)
+    price = Column(Float)
+    cost = Column(Float)
+    type = Column(Integer)
+    position_id = Column(Integer, ForeignKey('portfolio_position.id'))
+    position = relationship('PortfolioPosition', backref='transactions')
