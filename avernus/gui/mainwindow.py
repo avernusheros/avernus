@@ -187,8 +187,6 @@ class MainWindow(Gtk.Window):
         #save db on quit
         self.config.set_option('hpaned position', self.hpaned.get_position(), 'Gui')
         threads.terminate_all()
-        model.store.close()
-        model.store.join()
         Gtk.main_quit()
 
     def on_maintree_select(self, item):

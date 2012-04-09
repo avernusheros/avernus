@@ -32,7 +32,16 @@ def get_buy_value(portfolio):
     return value
 
 def get_current_change(portfolio):
-    return 0.1, 0.2
+    change = 0.0
+    for pos in portfolio:
+        stock, percent = position_controller.get_current_change(position)
+        change += stock * pos.quantity
+    start = get_current_value(portfolio) - change
+    if start == 0.0:
+        percent = 0.0
+    else:
+        percent = round(100.0 / start * change, 2)
+    return change, percent
 
 def get_overall_change(portfolio):
     end = get_current_value(portfolio)
@@ -43,16 +52,24 @@ def get_overall_change(portfolio):
     else:
         percent = round(100.0 / start * absolute, 2)
     return absolute, percent
-    
+
 def get_percent(portfolio):
-    return 50
-    
+    return get_current_change(portfolio)[1]
+
 def get_ter(portfolio):
-    return 1.0
+    ter = 0
+    val = 0
+    for pos in portfolio:
+        pos_val = position_controller.get_current_value(position)
+        ter += pos_val * pos.stock.ter
+        val += pos_val
+    if val == 0:
+        return 0.0
+    return ter / val
 
 
 
-
+#  =============================================
 # Mordor from here
 
 
