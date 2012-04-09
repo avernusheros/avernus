@@ -150,7 +150,7 @@ except Exception as e:
     avernus.objects.session.commit()
     avernus.objects.session.close()
     threads.terminate_all()
-    print "wie gesagt ... abgekachelt..."
+    print "wie gesagt ... abgekachelt ..."
     exit(1)
 
 
