@@ -30,7 +30,6 @@ if python_path:
 
 import avernus
 from avernus import config
-from avernus.objects import session
 from avernus.gui import threads
 
 if b_from_source:
@@ -125,13 +124,7 @@ try:
 
     GObject.threads_init()
 
-
-    #from avernus.objects import model, store
     from avernus.controller import portfolio_controller
-    #model.store = store.Store(db_file)
-    #controller.createTables()
-    #controller.initialLoading(controller)
-    #controller.initialLoading(portfolio_controller)
 
     from avernus.gui.mainwindow import MainWindow
     from avernus.datasource_manager import DatasourceManager

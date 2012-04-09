@@ -2,7 +2,7 @@ from gi.repository import Gtk
 
 from avernus import pubsub
 from avernus.gui import gui_utils
-from avernus.controller import portfolio_controller as pfctlr
+from avernus.controller import portfolio_controller, position_controller
 import locale
 import datetime
 
@@ -150,7 +150,7 @@ class BuyDialog(Gtk.Dialog):
                 stock.update_price()
                 if shares == 0.0:
                     return
-                self.position = pfctlr.newPortfolioPosition(price=price, date=date, quantity=shares, portfolio=self.pf, stock=stock)
+                self.position = position_controller.new_portfolio_position(price=price, date=date, quantity=shares, portfolio=self.pf, stock=stock)
                 ta = controller.newTransaction(type=1, date=date, quantity=shares, price=price, costs=ta_costs, position=self.position, portfolio=self.pf)
                 #FIXME trigger publish in container.py and transaction.py
                 pubsub.publish('container.position.added', self.pf, self.position)
@@ -224,7 +224,7 @@ class PosSelector(Gtk.ComboBox):
                         self.set_active(i)
                     i += 1
         else:
-            for pos in sorted(pfctlr.getAllPosition(), key=lambda pos: pos.stock.name):
+            for pos in sorted(portfolio_controller.getAllPosition(), key=lambda pos: pos.stock.name):
                 if pos.quantity > 0:
                     liststore.append([pos, pos.portfolio.name + ": " + str(pos.quantity) + ' ' + pos.name])
         self.set_model(liststore)
@@ -579,7 +579,7 @@ class StockSelector(Gtk.VBox):
                 icon = 'gtk-harddisk'
             self.insert_item(item, icon)
         self.search_source_count = pfctlr.datasource_manager.get_source_count()
-        pfctlr.datasource_manager.search(searchstring, self.insert_item, self.search_complete_callback)
+        portfolio_controller.datasource_manager.search(searchstring, self.insert_item, self.search_complete_callback)
 
     def search_complete_callback(self):
         self.search_source_count -= 1
@@ -588,7 +588,7 @@ class StockSelector(Gtk.VBox):
 
     def stop_search(self):
         self._hide_spinner()
-        pfctlr.datasource_manager.stop_search()
+        portfolio_controller.datasource_manager.stop_search()
 
     def insert_item(self, stock, icon):
         #FIXME bond icon

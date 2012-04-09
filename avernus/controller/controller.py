@@ -244,33 +244,6 @@ def newQuotation(date=datetime.date.today(), \
         return result
 
 
-def getAllTransaction():
-    return Transaction.getAll()
-
-
-def getAllAccount():
-    return Account.getAll()
-
-def getAllAccountTransactions():
-    return AccountTransaction.getAll()
-
-def getAllAccountCategories():
-    return AccountCategory.getAll()
-
-def getAllAccountCategoriesHierarchical():
-    hierarchy = {None:[]}
-    for cat in getAllAccountCategories():
-        if cat.parent is None:
-            hierarchy[None].append(cat)
-        elif cat.parent in hierarchy:
-            hierarchy[cat.parent].append(cat)
-        else:
-            hierarchy[cat.parent] = [cat]
-    return hierarchy
-
-def getAllDimension():
-    return Dimension.getAll()
-
 
 
 def getAccountCategoryForName(name):
@@ -280,14 +253,6 @@ def getAccountCategoryForName(name):
             return cat
     return None
 
-
-def getAllStock():
-    return Stock.getAll()
-
-
-def getTransactionsForAccount(account):
-    key = account.getPrimaryKey()
-    return AccountTransaction.getAllFromOneColumn("account", key)
 
 def yield_matching_transfer_tranactions(transaction):
     for account in getAllAccount():

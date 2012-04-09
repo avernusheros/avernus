@@ -3,7 +3,8 @@
 from avernus.gui import gui_utils, threads, common_dialogs
 from avernus.gui.portfolio import dialogs
 from avernus.controller import controller
-from avernus.controller import portfolio_controller as pfctlr
+from avernus.controller import portfolio_controller
+from avernus.controller import position_controller
 from avernus.objects.asset import MetaPosition
 import datetime
 import logging
@@ -93,18 +94,18 @@ class QuotationTable(Gtk.Table):
         self.update_labels()
 
     def on_delete_button_clicked(self, button):
-        pfctlr.deleteAllQuotationsFromStock(self.stock)
+        portfolio_controller.deleteAllQuotationsFromStock(self.stock)
         self.update_labels()
 
     def on_get_button_clicked(self, button):
-        threads.GeneratorTask(pfctlr.datasource_manager.get_historical_prices, self.new_quotation_callback, complete_callback=self.update_labels).start(self.stock)
+        threads.GeneratorTask(portfolio_controller.datasource_manager.get_historical_prices, self.new_quotation_callback, complete_callback=self.update_labels).start(self.stock)
 
     def new_quotation_callback(self, qt):
         self.count += 1
         self.count_label.set_text(str(self.count))
 
     def update_labels(self):
-        quotations = pfctlr.getAllQuotationsFromStock(self.stock)
+        quotations = portfolio_controller.getAllQuotationsFromStock(self.stock)
         self.count = len(quotations)
         self.count_label.set_text(str(self.count))
         if self.count == 0:
@@ -208,7 +209,7 @@ class TransactionsTab(Gtk.VBox):
 
     def on_add(self, button):
         last_transaction = self.position.buy_transaction
-        position = controller.newPortfolioPosition(
+        position = position_controller.new_portfolio_position(
                     price=self.position.price,
                     date=datetime.datetime.now(),
                     quantity=last_transaction.quantity,
@@ -329,7 +330,7 @@ class EditHistoricalQuotationsDialog(Gtk.Dialog):
             toolbar.insert(action.create_tool_item(), -1)
 
         #load values
-        for quotation in pfctlr.getAllQuotationsFromStock(self.stock):
+        for quotation in portfolio_controller.getAllQuotationsFromStock(self.stock):
             self.model.append([quotation, quotation.date, quotation.close])
 
         #show dialog

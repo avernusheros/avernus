@@ -2,10 +2,9 @@
 from avernus.config import avernusConfig
 from avernus.gui import gui_utils
 from avernus.controller import controller
-from avernus.controller import portfolio_controller as pfctlr
+from avernus.controller import dimensions_controller
 from gi.repository import Gtk
 import logging
-import sys
 logger = logging.getLogger(__name__)
 
 
@@ -137,9 +136,9 @@ class DimensionList(Gtk.VBox):
         sw.set_property('vscrollbar-policy', Gtk.PolicyType.AUTOMATIC)
         self.pack_start(sw, True, True, 0)
         sw.add(self.tree)
-        for dim in sorted(controller.getAllDimension()):
+        for dim in sorted(dimensions_controller.get_all_dimensions()):
             iterator = self.model.append(None, [dim, dim.name])
-            for val in sorted(pfctlr.getAllDimensionValueForDimension(dim)):
+            for val in sorted(dimensions_controller.getAllDimensionValueForDimension(dim)):
                 self.model.append(iterator, [val, val.name])
 
         actiongroup = Gtk.ActionGroup('dimensions')

@@ -82,7 +82,7 @@ class DividendsTree(Tree):
 
     def on_cursor_changed(self, widget):
         obj, iterator = self.get_selected_item()
-        if isinstance(obj, controller.Dividend):
+        if obj.__class__.__name__ == "Dividend":
             self.actiongroup.get_action('remove').set_sensitive(True)
             self.actiongroup.get_action('edit').set_sensitive(True)
             return

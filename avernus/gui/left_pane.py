@@ -6,10 +6,9 @@ from gi.repository import Pango
 from avernus import pubsub
 from avernus.gui import gui_utils, progress_manager
 from avernus.gui.account.csv_import_dialog import CSVImportDialog
-from avernus.controller import controller
 from avernus.controller import accountController
 from avernus.controller import objectController
-from avernus.controller import portfolio_controller as pfctlr
+from avernus.controller import portfolio_controller
 
 
 #from avernus.objects.container import AllPortfolio
@@ -128,15 +127,17 @@ class MainTree(gui_utils.Tree):
         self._load_items()
 
     def _load_items(self):
-        portfolios = pfctlr.getAllPortfolio()
+        portfolios = portfolio_controller.getAllPortfolio()
         if len(portfolios) > 1:
-            all_pf = AllPortfolio()
-            all_pf.controller = pfctlr
-            all_pf.name = "<i>%s</i>" % (_('All'),)
-            self.insert_portfolio(all_pf)
+            pass
+            # FIXME
+            #all_pf = AllPortfolio()
+            #all_pf.controller = portfolio_controller
+            #all_pf.name = "<i>%s</i>" % (_('All'),)
+            #self.insert_portfolio(all_pf)
         for pf in portfolios:
             self.insert_portfolio(pf)
-        for wl in pfctlr.getAllWatchlist():
+        for wl in portfolio_controller.getAllWatchlist():
             self.insert_watchlist(wl)
 
         accounts = accountController.get_all_account()
@@ -196,7 +197,7 @@ class MainTree(gui_utils.Tree):
         self.get_model().append(self.accounts_iter, [item, 'account', item.name, gui_utils.get_currency_format_from_float(item.balance)])
 
     def insert_portfolio(self, item):
-        self.get_model().append(self.pf_iter, [item, 'portfolio', item.name, gui_utils.get_currency_format_from_float(pfctlr.get_current_value(item))])
+        self.get_model().append(self.pf_iter, [item, 'portfolio', item.name, gui_utils.get_currency_format_from_float(portfolio_controller.get_current_value(item))])
 
     def on_remove(self, widget=None, data=None):
         if self.selected_item is None:
@@ -269,18 +270,18 @@ class MainTree(gui_utils.Tree):
         if obj.__class__.__name__ == 'Portfolio' or obj.name == 'Portfolios':
             parent_iter = self.pf_iter
             cat_type = "portfolio"
-            item = pfctlr.newPortfolio(_('new portfolio'))
+            item = portfolio_controller.new_portfolio(_('new portfolio'))
         elif obj.__class__.__name__ == 'Watchlist' or obj.name == 'Watchlists':
             parent_iter = self.wl_iter
             cat_type = "watchlist"
-            item = pfctlr.newWatchlist(_('new watchlist'))
+            item = portfolio_controller.new_watchlist(_('new watchlist'))
         elif obj.__class__.__name__ == 'Account' or obj.name == 'Accounts':
             parent_iter = self.accounts_iter
             cat_type = "account"
             item = accountController.new_account(_('new account'))
         iterator = model.append(parent_iter, [item, cat_type, item.name, ''])
         self.expand_row(model.get_path(parent_iter), True)
-        self.set_cursor(model.get_path(iterator), focus_column=self.get_column(0), start_editing=True)
+        self.set_cursor(model.get_path(iterator), start_editing=True)
 
 
 class EditAccount(Gtk.Dialog):

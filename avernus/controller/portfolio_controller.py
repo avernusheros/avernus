@@ -1,16 +1,26 @@
 from avernus.objects.container import Portfolio, Watchlist
-
-# sqlalchemy version
+from avernus.controller import position_controller
 from avernus.objects import session
 
-
 import datetime
-import sys
 
 datasource_manager = None
 initialLoadingClasses = []
-controller = sys.modules[__name__]
 
+
+def new_portfolio(name):
+    pf = Portfolio()
+    pf.name = name
+    session.add(pf)
+    session.commit()
+    return pf
+
+def new_watchlist(name):
+    wl = Watchlist()
+    wl.name = name
+    session.add(wl)
+    session.commit()
+    return wl
 
 def getAllPortfolio():
     return session.query(Portfolio).all()
@@ -34,7 +44,7 @@ def get_buy_value(portfolio):
 def get_current_change(portfolio):
     change = 0.0
     for pos in portfolio:
-        stock, percent = position_controller.get_current_change(position)
+        stock, percent = position_controller.get_current_change(pos)
         change += stock * pos.quantity
     start = get_current_value(portfolio) - change
     if start == 0.0:
@@ -60,7 +70,7 @@ def get_ter(portfolio):
     ter = 0
     val = 0
     for pos in portfolio:
-        pos_val = position_controller.get_current_value(position)
+        pos_val = position_controller.get_current_value(pos)
         ter += pos_val * pos.stock.ter
         val += pos_val
     if val == 0:
@@ -74,15 +84,6 @@ def get_ter(portfolio):
 
 
 
-def getAllPosition():
-    return PortfolioPosition.getAll()
-
-
-def getPositionForPortfolio(portfolio):
-    return PortfolioPosition.getAllFromOneColumn("portfolio", portfolio.getPrimaryKey())
-
-def getBenchmarksForPortfolio(portfolio):
-    return Benchmark.getAllFromOneColumn("portfolio", portfolio.getPrimaryKey())
 
 def update_historical_prices():
     stocks = get_all_used_stocks()
@@ -123,9 +124,6 @@ def update_all():
 def getDividendsForPosition(pos):
     return Dividend.getAllFromOneColumn("position", pos.getPrimaryKey())
 
-
-def getTransactionsForPosition(position):
-    return Transaction.getAllFromOneColumn("position", position.getPrimaryKey())
 
 
 def deleteAllPositionTransaction(position):
@@ -183,15 +181,6 @@ def getQuotationsFromStock(stock, start=None):
     return erg
 
 
-def newPortfolio(name, pf_id=None, last_update=datetime.datetime.now()):
-    result = Portfolio(id=pf_id, name=name, last_update=last_update)
-    session.add(result)
-    return result
-
-def newWatchlist(name, wl_id=None, last_update=datetime.datetime.now()):
-    result = Watchlist(id=wl_id, name=name, last_update=last_update)
-    session.add(result)
-    return result
 
 def getAssetDimensionValueForStock(stock, dim):
     stockADVs = AssetDimensionValue.getAllFromOneColumn('stock', stock.id)
@@ -199,11 +188,6 @@ def getAssetDimensionValueForStock(stock, dim):
     #    print adv, adv.dimensionValue
     stockADVs = filter(lambda adv: adv.dimensionValue.dimension == dim, stockADVs)
     return stockADVs
-
-def newAssetDimensionValue(stock, dimensionValue, value):
-    adv = detect_duplicate(AssetDimensionValue, stock=stock.id, dimensionValue=dimensionValue.id,
-                          value=value)
-    return adv
 
 
 def getPriceFromStockAtDate(stock, date):
