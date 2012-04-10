@@ -34,6 +34,14 @@ def get_current_value(portfolio):
     for pos in portfolio:
         value += pos.cvalue
     return value
+    
+def get_birthday(portfolio):
+    current = datetime.date.today()
+    for position in portfolio.positions:
+        for transaction in position.transactions:
+            if transaction.date < current:
+                current = transaction.date
+    return current
 
 def get_buy_value(portfolio):
     value = 0.0

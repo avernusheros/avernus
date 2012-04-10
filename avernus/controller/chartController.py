@@ -405,7 +405,7 @@ class AllPortfolioValueOverTime(PortfolioChartController):
 
     def __init__(self, step):
         self.step = step
-        self.birthday = min([pf.birthday for pf in pfctlr.getAllPortfolio()])
+        self.birthday = min([pfctlr.get_birthday(pf) for pf in pfctlr.getAllPortfolio()])
 
     def calculate_values(self):
         self._calc_days()
@@ -423,7 +423,7 @@ class AllPortfolioInvestmentsOverTime(PortfolioChartController):
 
     def __init__(self, step):
         self.step = step
-        self.birthday = min([pf.birthday for pf in pfctlr.getAllPortfolio()])
+        self.birthday = min([pfctlr.get_birthday(pf) for pf in pfctlr.getAllPortfolio()])
 
     def calculate_values(self):
         self._calc_days()
@@ -487,6 +487,7 @@ class PortfolioAttributeChartController():
 
     def __init__(self, attribute):
         self.attribute = attribute
+        self.values = {}
 
     def calculate_values(self):
         portfolios = pfctlr.getAllPortfolio()
