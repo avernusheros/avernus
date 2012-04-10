@@ -350,7 +350,7 @@ class TransactionsTree(gui_utils.Tree):
                 or self.searchstring in str(transaction.amount) \
                 or (transaction.category and self.searchstring in transaction.category.name.lower())
                 )\
-                and (self.b_show_transfer or not transaction.is_transfer())\
+                and (self.b_show_transfer or not accountController.is_transfer(transaction))\
                 and (self.b_show_uncategorized or transaction.has_category()):
 
                 if transaction.date >= self.range_start \

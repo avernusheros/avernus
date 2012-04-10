@@ -47,6 +47,11 @@ def get_parent_categories(category):
         current = p
     return ret
 
+def is_transfer(transaction):
+    return not transaction.transfer is None
+    
+# Mordor from here
+
 class AccountController:
 
     def __init__(self, account):

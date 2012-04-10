@@ -27,9 +27,10 @@ class AccountCategory(Base):
 
     __tablename__ = 'account_category'
 
-    name = Column(String, primary_key=True)
-    parent_name = Column(Integer, ForeignKey('account_category.name'))
-    parent = relationship('AccountCategory', remote_side=[name], backref='children')
+    id = Column(Integer, primary_key=True)
+    name = Column(String)
+    parent_id = Column(Integer, ForeignKey('account_category.id'))
+    parent = relationship('AccountCategory', remote_side=[id], backref='children')
     filters = relationship('CategoryFilter', backref='category')
 
     def __init__(self, name, parent):
