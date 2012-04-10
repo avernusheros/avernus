@@ -146,14 +146,15 @@ class PositionsTree(Tree):
     def on_cursor_changed(self, widget):
         #Get the current selection in the Gtk.TreeView
         selection = widget.get_selection()
-        # Get the selection iter
-        treestore, selection_iter = selection.get_selected()
-        if (selection_iter and treestore):
-            #Something is selected so get the object
-            obj = treestore.get_value(selection_iter, 0)
-            self.selected_item = obj, selection_iter
-            self.on_select(obj)
-            return
+        if selection:
+            # Get the selection iter
+            treestore, selection_iter = selection.get_selected()
+            if (selection_iter and treestore):
+                #Something is selected so get the object
+                obj = treestore.get_value(selection_iter, 0)
+                self.selected_item = obj, selection_iter
+                self.on_select(obj)
+                return
         self.on_unselect()
 
     def _move_position(self, position, parent=None):

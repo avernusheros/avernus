@@ -2,7 +2,7 @@
 
 from gi.repository import Gtk
 from avernus.gui.gui_utils import Tree, get_name_string
-from avernus.controller import controller
+from avernus.controller import controller, portfolio_controller
 from avernus.gui import gui_utils, page
 from avernus.gui.portfolio import dialogs
 
@@ -49,9 +49,9 @@ class DividendsTab(Gtk.VBox, page.Page):
         self.update_page()
 
     def get_info(self):
-        return [('# dividends', self.portfolio.dividends_count),
-                ('Sum', gui_utils.get_currency_format_from_float(self.portfolio.dividends_sum)),
-                ('Last dividend', gui_utils.get_date_string(self.portfolio.date_of_last_dividend))]
+        return [('# dividends', portfolio_controller.get_dividends_count(self.portfolio)),
+                ('Sum', gui_utils.get_currency_format_from_float(portfolio_controller.get_dividends_sum(self.portfolio))),
+                ('Last dividend', gui_utils.get_date_string(portfolio_controller.get_date_of_last_dividend(self.portfolio)))]
 
 
 class DividendsTree(Tree):

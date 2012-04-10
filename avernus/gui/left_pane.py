@@ -233,14 +233,15 @@ class MainTree(gui_utils.Tree):
         #Get the current selection in the Gtk.TreeView
         selection = widget.get_selection()
         # Get the selection iter
-        treestore, selection_iter = selection.get_selected()
-        if (selection_iter and treestore):
-            #Something is selected so get the object
-            obj = treestore.get_value(selection_iter, 0)
-            if self.selected_item is None or self.selected_item[0] != obj:
-                self.selected_item = obj, selection_iter
-                pubsub.publish('maintree.select', obj)
-            return
+        if selection:
+            treestore, selection_iter = selection.get_selected()
+            if (selection_iter and treestore):
+                #Something is selected so get the object
+                obj = treestore.get_value(selection_iter, 0)
+                if self.selected_item is None or self.selected_item[0] != obj:
+                    self.selected_item = obj, selection_iter
+                    pubsub.publish('maintree.select', obj)
+                return
         self.selected_item = None
         pubsub.publish('maintree.unselect')
 

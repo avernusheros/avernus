@@ -28,6 +28,7 @@ class Dividend(Base):
     price = Column(Float)
     cost = Column(Float)
     shares = Column(Float)
+    date = Column(Date)
     position_id = Column(Integer, ForeignKey('container.id'))
     position = relationship('Portfolio', backref='dividends')
     

@@ -40,6 +40,9 @@ def get_buy_value(portfolio):
     for pos in portfolio:
         value += position_controller.get_buy_value()
     return value
+    
+def get_closed_positions(portfolio):
+    return []
 
 def get_current_change(portfolio):
     change = 0.0
@@ -52,6 +55,22 @@ def get_current_change(portfolio):
     else:
         percent = round(100.0 / start * change, 2)
     return change, percent
+    
+def get_date_of_last_dividend(pf):
+    if get_dividends_count(pf) == 0:
+        return datetime.date.today()
+    current = None
+    # could not test it, probably won't work
+    for dividend in pf.dividends:
+        if not current or dividend.date > current:
+            current = dividend.date
+    return current
+    
+def get_dividends_count(portfolio):
+    return len(portfolio.dividends)
+    
+def get_dividends_sum(portfolio):
+    return sum([dividend.price for dividend in portfolio.dividends])
 
 def get_overall_change(portfolio):
     end = get_current_value(portfolio)
