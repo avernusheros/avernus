@@ -1,6 +1,6 @@
 from avernus.gui import gui_utils
-from avernus import date_utils, config
-from avernus.controller import portfolio_controller as pfctlr
+from avernus import date_utils
+from avernus.controller import portfolio_controller
 
 from dateutil.relativedelta import relativedelta
 from dateutil.rrule import *
@@ -362,7 +362,7 @@ class PortfolioChartController(ChartController):
         for foo in self.calculate_investmentsovertime('invested capital'):
             yield foo
 
-        for benchmark in pfctlr.getBenchmarksForPortfolio(self.portfolio):
+        for benchmark in self.portfolio.benchmarks:
             self.calculate_benchmark(benchmark)
         yield 1
 
@@ -405,14 +405,14 @@ class AllPortfolioValueOverTime(PortfolioChartController):
 
     def __init__(self, step):
         self.step = step
-        self.birthday = min([pfctlr.get_birthday(pf) for pf in pfctlr.getAllPortfolio()])
+        self.birthday = min([pf.birthday for pf in portfolio_controller.getAllPortfolio()])
 
     def calculate_values(self):
         self._calc_days()
         self.x_values = format_days(self.days, self.step)
         self.y_values = {}
         #FIXME do in parallel
-        for pf in pfctlr.getAllPortfolio():
+        for pf in portfolio_controller.getAllPortfolio():
             self.portfolio = pf
             for foo in self.calculate_valueovertime(pf.name):
                 yield foo
@@ -423,14 +423,14 @@ class AllPortfolioInvestmentsOverTime(PortfolioChartController):
 
     def __init__(self, step):
         self.step = step
-        self.birthday = min([pfctlr.get_birthday(pf) for pf in pfctlr.getAllPortfolio()])
+        self.birthday = min([pf.birthday for pf in portfolio_controller.getAllPortfolio()])
 
     def calculate_values(self):
         self._calc_days()
         self.x_values = format_days(self.days, self.step)
         self.y_values = {}
         #FIXME do in parallel
-        for pf in pfctlr.getAllPortfolio():
+        for pf in portfolio_controller.getAllPortfolio():
             self.items = pf.getTransactions() + pf.getDividends()
             for foo in self.calculate_investmentsovertime(pf.name):
                 yield foo
@@ -490,7 +490,7 @@ class PortfolioAttributeChartController():
         self.values = {}
 
     def calculate_values(self):
-        portfolios = pfctlr.getAllPortfolio()
+        portfolios = portfolio_controller.getAllPortfolio()
         data = {}
         for pf in portfolios:
             item = str(getattr(pf, self.attribute))

@@ -138,7 +138,7 @@ class DimensionList(Gtk.VBox):
         sw.add(self.tree)
         for dim in sorted(dimensions_controller.get_all_dimensions()):
             iterator = self.model.append(None, [dim, dim.name])
-            for val in sorted(dimensions_controller.getAllDimensionValueForDimension(dim)):
+            for val in sorted(dim.values):
                 self.model.append(iterator, [val, val.name])
 
         actiongroup = Gtk.ActionGroup('dimensions')

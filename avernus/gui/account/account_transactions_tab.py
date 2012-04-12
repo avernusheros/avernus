@@ -350,8 +350,8 @@ class TransactionsTree(gui_utils.Tree):
                 or self.searchstring in str(transaction.amount) \
                 or (transaction.category and self.searchstring in transaction.category.name.lower())
                 )\
-                and (self.b_show_transfer or not accountController.is_transfer(transaction))\
-                and (self.b_show_uncategorized or transaction.has_category()):
+                and (self.b_show_transfer or not transaction.transfer)\
+                and (self.b_show_uncategorized or transaction.category):
 
                 if transaction.date >= self.range_start \
                     and transaction.date <= self.range_end:
@@ -390,12 +390,11 @@ class TransactionsTree(gui_utils.Tree):
             cat = ta.category.name
         else:
             cat = ''
-        #if ta.is_transfer():
-        #    icon = 'gtk-convert'
-        #else:
-        #    icon = ''
-        #return [ta, ta.description, ta.amount, cat, ta.date, icon]
-        return [ta, ta.description, ta.amount, cat, ta.date, '']
+        if ta.transfer:
+            icon = 'gtk-convert'
+        else:
+            icon = ''
+        return [ta, ta.description, ta.amount, cat, ta.date, icon]
 
     def get_filtered_transaction_value(self):
         sum = 0
@@ -694,7 +693,7 @@ class EditTransaction(Gtk.Dialog):
         vbox = self.get_content_area()
 
         if self.transaction is None:
-            self.transaction = controller.newAccountTransaction(account=account)
+            self.transaction = accountController.new_account_transaction(account=account)
 
         #description
         frame = Gtk.Frame(label='Description')
@@ -776,7 +775,7 @@ class EditTransaction(Gtk.Dialog):
     def on_transfer_toggled(self, checkbutton):
         if checkbutton.get_active():
             found_one = False
-            for ta in controller.yield_matching_transfer_tranactions(self.transaction):
+            for ta in accountController.yield_matching_transfer_transactions(self.transaction):
                 if found_one == False:
                     self.matching_transactions_tree.clear()
                     self.matching_transactions_tree.show()

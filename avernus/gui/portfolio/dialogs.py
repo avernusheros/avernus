@@ -2,7 +2,10 @@ from gi.repository import Gtk
 
 from avernus import pubsub
 from avernus.gui import gui_utils
-from avernus.controller import portfolio_controller, position_controller
+from avernus.controller import portfolio_controller
+from avernus.controller import position_controller
+from avernus.controller import asset_controller
+from avernus.controller import dimensions_controller
 import locale
 import datetime
 
@@ -151,7 +154,7 @@ class BuyDialog(Gtk.Dialog):
                 if shares == 0.0:
                     return
                 self.position = position_controller.new_portfolio_position(price=price, date=date, quantity=shares, portfolio=self.pf, stock=stock)
-                ta = controller.newTransaction(type=1, date=date, quantity=shares, price=price, costs=ta_costs, position=self.position, portfolio=self.pf)
+                ta = asset_controller.new_transaction(type=1, date=date, quantity=shares, price=price, costs=ta_costs, position=self.position, portfolio=self.pf)
                 #FIXME trigger publish in container.py and transaction.py
                 pubsub.publish('container.position.added', self.pf, self.position)
                 pubsub.publish('transaction.added', ta)
@@ -197,9 +200,9 @@ class NewWatchlistPositionDialog(Gtk.Dialog):
     def process_result(self, response):
         self.stock_selector.stop_search()
         if response == Gtk.ResponseType.ACCEPT:
-            stock = self.stock_selector.get_stock()
-            stock.update_price()
-            self.position = controller.newWatchlistPosition(price=stock.price, date=stock.date, watchlist=self.wl, stock=stock)
+            asset = self.stock_selector.get_stock()
+            asset_controller.update_asset(asset)
+            self.position = position_controller.new_watchlist_position(price=asset.price, date=asset.date, watchlist=self.wl, asset=asset)
             pubsub.publish('container.position.added', self.wl, self.position)
 
 
@@ -333,7 +336,7 @@ class DividendDialog(Gtk.Dialog):
             value = self.value_entry.get_value()
             ta_costs = self.tacosts_entry.get_value()
             if self.dividend is None:
-                div = controller.newDividend(price=value, date=date, costs=ta_costs, position=self.selected_pos, shares=self.selected_pos.quantity)
+                div = asset_controller.new_dividend(price=value, date=date, costs=ta_costs, position=self.selected_pos, shares=self.selected_pos.quantity)
                 if self.tree is not None:
                     self.tree.insert_dividend(div)
             else:
@@ -451,7 +454,7 @@ class DimensionComboBox(Gtk.ComboBoxText):
         parse = self.parse()
         if parse:
             for name, value in parse:
-                erg.append((controller.newDimensionValue(self.dimension, name), value))
+                erg.append((dimensions_controller.new_dimension_value(self.dimension, name), value))
         return erg
 
 
@@ -488,7 +491,7 @@ class EditStockTable(Gtk.Table):
         self.attach(self.ter_entry, 1, 2, 3, 4, yoptions=Gtk.AttachOptions.SHRINK)
 
         currentRow = 4
-        for dim in controller.getAllDimension():
+        for dim in dimensions_controller.get_all_dimensions():
             #print dim
             self.attach(Gtk.Label(label=_(dim.name)), 0, 1, currentRow, currentRow + 1, yoptions=Gtk.AttachOptions.FILL)
             comboName = dim.name + "ValueComboBox"
@@ -511,7 +514,7 @@ class EditStockTable(Gtk.Table):
             active_iter = self.type_cb.get_active_iter()
             self.stock.type = self.type_cb.get_model()[active_iter][1]
             self.stock.ter = self.ter_entry.get_value()
-            for dim in controller.getAllDimension():
+            for dim in dimensions_controller.get_all_dimensions():
                 box = getattr(self, dim.name + "ValueComboBox")
                 active = box.get_active()
                 self.stock.updateAssetDimensionValue(dim, active)
@@ -570,7 +573,7 @@ class StockSelector(Gtk.VBox):
         self.result_tree.clear()
         searchstring = self.search_field.get_text().strip()
         self._show_spinner()
-        for item in controller.getStockForSearchstring(searchstring):
+        for item in asset_controller.get_asset_for_searchstring(searchstring):
             if item.source == "yahoo":
                 icon = 'yahoo'
             elif item.source == "onvista.de":
@@ -578,8 +581,8 @@ class StockSelector(Gtk.VBox):
             else:
                 icon = 'gtk-harddisk'
             self.insert_item(item, icon)
-        self.search_source_count = pfctlr.datasource_manager.get_source_count()
-        portfolio_controller.datasource_manager.search(searchstring, self.insert_item, self.search_complete_callback)
+        self.search_source_count = asset_controller.datasource_manager.get_source_count()
+        asset_controller.datasource_manager.search(searchstring, self.insert_item, self.search_complete_callback)
 
     def search_complete_callback(self):
         self.search_source_count -= 1
@@ -588,7 +591,7 @@ class StockSelector(Gtk.VBox):
 
     def stop_search(self):
         self._hide_spinner()
-        portfolio_controller.datasource_manager.stop_search()
+        asset_controller.datasource_manager.stop_search()
 
     def insert_item(self, stock, icon):
         #FIXME bond icon
@@ -599,7 +602,9 @@ class StockSelector(Gtk.VBox):
                                        stock.name,
                                        stock.isin,
                                        stock.currency,
-                                       icons[stock.type],
+                                       #FIXME icons
+                                       #icons[stock.type],
+                                       None
                                        ])
 
 
@@ -691,7 +696,7 @@ class SellDialog(Gtk.Dialog):
                 if shares == 0.0:
                     return
                 self.pos.quantity -= shares
-                ta = controller.newTransaction(portfolio=self.pos.portfolio, position=self.pos, type=0, date=date, quantity=shares, price=price, costs=ta_costs)
+                ta = asset_controller.new_transaction(portfolio=self.pos.portfolio, position=self.pos, type=0, date=date, quantity=shares, price=price, costs=ta_costs)
                 pubsub.publish('transaction.added', ta)
             else:
                 self.pos.price = self.transaction.price = price

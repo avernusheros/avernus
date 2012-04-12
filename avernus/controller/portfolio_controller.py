@@ -4,8 +4,6 @@ from avernus.objects import session
 
 import datetime
 
-datasource_manager = None
-initialLoadingClasses = []
 
 
 def new_portfolio(name):
@@ -103,6 +101,8 @@ def get_ter(portfolio):
     if val == 0:
         return 0.0
     return ter / val
+
+
 
 
 

@@ -1,10 +1,15 @@
 from avernus.config import avernusConfig
 from avernus.objects import session
 from avernus.objects.account import *
+from sqlalchemy import or_
+import datetime
+
 
 def get_all_account():
-    res = session.query(Account).all()
-    return res
+    return session.query(Account).all()
+
+def get_all_transactions():
+    return session.query(AccountTransaction).all()
 
 def new_account(name):
     account = Account(name)
@@ -17,8 +22,8 @@ def new_account_category(name, parent=None):
     session.add(cat)
     return cat
 
-def new_account_transaction(desc):
-    transaction = AccountTransaction(desc)
+def new_account_transaction(desc="", account=None, amount=0.0, date=datetime.date.today()):
+    transaction = AccountTransaction(description = desc, account = account, amount=amount, date=date)
     session.add(transaction)
     return transaction
 
@@ -29,11 +34,16 @@ def account_birthday(account):
     transactions = session.query(AccountTransaction).filter_by(account=account)
     if transactions.count() > 0:
         return transactions.order_by(AccountTransaction.date).first().date
+    else:
+        return datetime.date.today()
 
 def account_lastday(account):
     transactions = session.query(AccountTransaction).filter_by(account=account)
     if transactions.count() > 0:
         return transactions.order_by(AccountTransaction.date.desc()).first().date
+
+def get_all_categories():
+    return session.query(AccountCategory).all()
 
 def get_root_categories():
     return session.query(AccountCategory).filter_by(parent=None).all()
@@ -47,9 +57,18 @@ def get_parent_categories(category):
         current = p
     return ret
 
-def is_transfer(transaction):
-    return not transaction.transfer is None
-    
+def yield_matching_transfer_transactions(transaction):
+    res = session.query(AccountTransaction) \
+            .filter(AccountTransaction.account!=transaction.account,
+                    AccountTransaction.amount == -transaction.amount,
+                    or_(AccountTransaction.transfer == None, 
+                        AccountTransaction.transfer == transaction))
+    #FIXME maybe do this directly in sqlalchemy
+    fivedays = datetime.timedelta(5)
+    for trans in res:
+        if transaction.date-fivedays < trans.date and transaction.date+fivedays > trans.date:
+            yield trans
+
 # Mordor from here
 
 class AccountController:

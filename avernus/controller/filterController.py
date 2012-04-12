@@ -1,5 +1,6 @@
 from avernus.objects.account import CategoryFilter
 from avernus.controller import controller
+from avernus.objects import session
 from avernus.config import avernusConfig
 import logging
 
@@ -15,13 +16,11 @@ def create(rule, category, priority=10, active=False):
     #rules = get_all_active_by_priority()
     return result
 
-
-def get_all():
-    return CategoryFilter.getAll()
-
+def get_all_rules():
+    return session.query(CategoryFilter).all()
 
 def get_all_active_by_priority():
-    return sorted([f for f in get_all() if f.active], key=lambda f: f.priority)
+    return session.query(CategoryFilter).filter_by(active=True).order_by(CategoryFilter.priority).all()
 
 def match_transaction(rule, transaction):
     #print rule.rule, transaction.description

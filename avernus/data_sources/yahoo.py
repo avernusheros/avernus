@@ -7,7 +7,7 @@ import re
 import json
 from datetime import datetime
 from avernus.controller import controller
-from avernus.objects.asset import *
+from avernus.objects.asset import Fund, Stock
 
 import logging
 logger = logging.getLogger(__name__)
@@ -109,11 +109,11 @@ class Yahoo():
               'f=%s&' % str(end_date.year) + \
               'ignore=.csv'
         logger.debug(url)
-        file = urlopen(url)
-        if file.info().gettype() == 'text/html':
+        csvfile = urlopen(url)
+        if csvfile.info().gettype() == 'text/html':
             logger.info("no historical data found for stock: "+stock.name)
             yield None
-        days = file.readlines()
+        days = csvfile.readlines()
         for row in [day[:-2].split(',') for day in days[1:]]:
             dt = datetime.strptime(row[0], '%Y-%m-%d').date()
             #(stock, date, open, high, low, close, vol)
@@ -143,6 +143,7 @@ class Yahoo():
                     if len(item) == 6:
                         item = self.__to_dict(item)
                         if item is not None:
+                            logger.debug("yahoo found item", item)
                             yield (item, self, item['yahoo_id'])
 
     def __to_dict(self, item):

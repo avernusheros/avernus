@@ -11,7 +11,8 @@ from avernus.gui.gui_utils import Tree, get_name_string
 from avernus.gui import gui_utils, progress_manager, page, threads
 from avernus.objects.asset import MetaPosition
 from avernus.controller import controller
-from avernus.controller import portfolio_controller as pfctrl
+from avernus.controller import portfolio_controller
+from avernus.controller import position_controller
 
 
 gain_thresholds = {
@@ -92,7 +93,7 @@ class PositionsTree(Tree):
         for action in self.actiongroup.list_actions():
             self.context_menu.add(action.create_menu_item())
 
-        all_portfolios = pfctrl.getAllPortfolio()
+        all_portfolios = portfolio_controller.getAllPortfolio()
         if len(all_portfolios) > 1:
             self.context_menu.add_item('----')
 
@@ -361,15 +362,15 @@ class WatchlistPositionsTree(PositionsTree):
         self.model.append(None, self._get_row(position))
 
     def _get_row(self, position):
-        stock = position.stock
-        gain = position.gain
+        asset = position.asset
+        gain = position_controller.get_gain(position)
         gain_icon = get_arrow_icon(gain[1])
         c_change = position.current_change
         icons = ['fund', 'stock', 'etf', 'bond']
         ret = [position,
-               get_name_string(stock),
+               get_name_string(asset),
                position.price,
-               stock.price,
+               asset.price,
                c_change[0],
                gain[0],
                gui_utils.get_string_from_float(position.quantity),
@@ -379,7 +380,8 @@ class WatchlistPositionsTree(PositionsTree):
                float(gain[1]),
                gain_icon,
                float(c_change[1]),
-               icons[position.stock.type],
+               #FIXME icons
+               None,#icons[position.asset.type],
                0.0]
 
         return ret
@@ -453,7 +455,7 @@ class WatchlistPositionsTab(Gtk.VBox, page.Page):
         self.update_page()
 
     def get_info(self):
-        return [('# positions', len(self.watchlist)),
+        return [('# positions', len(watchlist.positions)),
                 ('Last update', gui_utils.datetime_format(self.watchlist.last_update, False))]
 
 
@@ -491,13 +493,13 @@ class PortfolioPositionsTab(Gtk.VBox, page.Page):
         self.update_page()
 
     def get_info(self):
-        change, percent = pfctrl.get_current_change(self.portfolio)
+        change, percent = portfolio_controller.get_current_change(self.portfolio)
         change_text = gui_utils.get_string_from_float(percent) + '%' + ' | ' + gui_utils.get_currency_format_from_float(change)
-        o_change, o_percent = pfctrl.get_overall_change(self.portfolio)
+        o_change, o_percent = portfolio_controller.get_overall_change(self.portfolio)
         o_change_text = gui_utils.get_string_from_float(o_percent) + '%' + ' | ' + gui_utils.get_currency_format_from_float(o_change)
         return [(_('Day\'s gain'), gui_utils.get_green_red_string(change, change_text)),
                 (_('Overall gain'), gui_utils.get_green_red_string(o_change, o_change_text)),
-                ('Investments', gui_utils.get_currency_format_from_float(pfctrl.get_current_value(self.portfolio))),
+                ('Investments', gui_utils.get_currency_format_from_float(portfolio_controller.get_current_value(self.portfolio))),
                 ('# positions', len(self.portfolio.positions)),
                 ('Last update', gui_utils.datetime_format(self.portfolio.last_update, False))
                 ]

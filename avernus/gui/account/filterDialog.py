@@ -1,4 +1,4 @@
-from avernus.controller import controller, filterController
+from avernus.controller import controller, filterController, accountController
 from avernus.gui import gui_utils
 from gi.repository import Gtk
 from gi.repository import Pango
@@ -95,14 +95,14 @@ class PreviewTree(gui_utils.Tree):
 
     def visible_cb(self, model, iterator, user_data):
         transaction = model[iterator][self.OBJECT]
-        if transaction and transaction.is_transfer():
+        if transaction and transaction.transfer:
             return False
         if self.active_filter:
             return filterController.match_transaction(self.active_filter, transaction)
         return True
 
     def load_all(self):
-        for trans in controller.getAllAccountTransactions():
+        for trans in accountController.get_all_transactions():
             if trans.category:
                 cat = trans.category.name
             else:
@@ -150,7 +150,7 @@ class FilterTree(gui_utils.Tree):
         cell = Gtk.CellRendererCombo()
         cell.connect('changed', self.on_category_changed)
         self.cb_model = Gtk.ListStore(object, str)
-        self.categories = sorted(controller.getAllAccountCategories())
+        self.categories = sorted(accountController.get_all_categories())
         for category in self.categories:
             self.cb_model.append([category, category.name])
         cell.set_property('model', self.cb_model)
@@ -166,7 +166,7 @@ class FilterTree(gui_utils.Tree):
         return item
 
     def load_rules(self):
-        for rule in filterController.get_all():
+        for rule in filterController.get_all_rules():
             self.insert_rule(rule)
 
     def on_category_changed(self, cellrenderertext, path, new_iter):
