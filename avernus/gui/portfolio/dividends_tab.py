@@ -2,7 +2,6 @@
 
 from gi.repository import Gtk
 from avernus.gui.gui_utils import Tree, get_name_string
-from avernus.controller import controller
 from avernus.gui import gui_utils, page
 from avernus.gui.portfolio import dialogs
 

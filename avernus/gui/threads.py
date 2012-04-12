@@ -2,7 +2,6 @@ from gi.repository import GObject, Gdk
 
 import logging
 import threading
-import thread
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +24,8 @@ class BackgroundTask():
 
 class GeneratorTask(threading.Thread):
 
-    def __init__(self, generator, loop_callback=None, complete_callback=None):
+    def __init__(self, generator, loop_callback=None, complete_callback=None, data=None):
+        self.data = data
         threading.Thread.__init__(self)
         self.generator = generator
         self.loop_callback = loop_callback
@@ -39,7 +39,7 @@ class GeneratorTask(threading.Thread):
     def run(self, *args, **kwargs):
         logger.debug("start thread")
         try:
-            for ret in self.generator(*args, **kwargs):
+            for ret in self.generator(self.data):
                 if self.stopthread.isSet():
                     return
 
@@ -81,9 +81,12 @@ def terminate_all():
     global threadlist
     logger.debug("there are %i threads running." % (len(threadlist),))
     for val in threadlist.itervalues():
-        val.stop()
-        val.join()
-        logger.debug("stop thread " + str(val))
+        try:
+            val.stop()
+            val.join()
+            logger.debug("stop thread " + str(val))
+        except:
+            logger.debug("unable to stop thread, started?")
     logger.debug("all threads terminated")
 
 

@@ -124,13 +124,13 @@ try:
 
     GObject.threads_init()
 
-    from avernus.controller import portfolio_controller
+    from avernus.controller import asset_controller
 
     from avernus.gui.mainwindow import MainWindow
     from avernus.datasource_manager import DatasourceManager
     dsm = DatasourceManager()
     main_window = MainWindow()
-    portfolio_controller.datasource_manager = dsm
+    asset_controller.datasource_manager = dsm
     try:
         Gtk.main()
     except Exception as e:

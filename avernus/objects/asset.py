@@ -38,6 +38,22 @@ class Fund(Asset):
     id = Column(Integer, ForeignKey('asset.id'), primary_key=True)
     ter = Column(Float)
     
+    
+class Etf(Asset):
+    
+    __tablename__ = 'etf'
+    __mapper_args__ = {'polymorphic_identity': 'etf'}
+    id = Column(Integer, ForeignKey('asset.id'), primary_key=True)
+    ter = Column(Float)
+    
+    
+class Bond(Asset):
+    
+    __tablename__ = 'bond'
+    __mapper_args__ = {'polymorphic_identity': 'bond'}
+    id = Column(Integer, ForeignKey('asset.id'), primary_key=True)
+
+    
 class MetaPosition(object):
     pass
     

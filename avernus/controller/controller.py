@@ -254,21 +254,9 @@ def getAccountCategoryForName(name):
     return None
 
 
-def yield_matching_transfer_tranactions(transaction):
-    for account in getAllAccount():
-        if account != transaction.account:
-            for ta in account.yield_matching_transfer_transactions(transaction):
-                yield ta
-
 def deleteAllAccountTransaction(account):
     for trans in getTransactionsForAccount(account):
         trans.delete()
-
-def getStockForSearchstring(searchstring):
-    sqlArgs = {}
-    for req in ['name', 'isin']:
-        sqlArgs[req] = '%' + searchstring + '%'
-    return Stock.getByColumns(sqlArgs, operator=" OR ", operator2=' LIKE ', create=True)
 
 
 

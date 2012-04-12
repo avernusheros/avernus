@@ -7,6 +7,8 @@ import re
 from Queue import Queue
 import urllib
 import urllib2
+from avernus.objects.asset import Fund, Bond, Etf
+
 
 import logging
 logger = logging.getLogger(__name__)
@@ -120,8 +122,8 @@ class FileDownloadParalyzer(Paralyzer):
         self.taskSize = len(files)
 
     def producer(self):
-        for file in self.files:
-            thread = URLGetter(file)
+        for f in self.files:
+            thread = URLGetter(f)
             thread.start()
             self.q.put(thread, True)
 
@@ -213,7 +215,7 @@ class Onvista():
             pages = filePara.perform()
             for kursPage in pages:
                 logger.debug("Parsing ETF result page")
-                for item in self._parse_kurse_html(kursPage, tdInd=etfTDS, stockType=stock.ETF):
+                for item in self._parse_kurse_html(kursPage, tdInd=etfTDS, stockType=Etf):
                     yield (item, self, None)
 
             bondlinks = [tag['href'] for tag in linkTagsBond]
@@ -222,7 +224,7 @@ class Onvista():
             pages = filePara.perform()
             for kursPage in pages:
                 logger.debug("Parsing bond result page")
-                for item in self._parse_kurse_html(kursPage, tdInd=bondTDS, stockType=stock.BOND):
+                for item in self._parse_kurse_html(kursPage, tdInd=bondTDS, stockType=Bond):
                     yield (item, self, None)
         else:
             logger.debug("Received a Single result page")
@@ -232,12 +234,12 @@ class Onvista():
             if "etf" in received_url:
                 # etf
                 #print "found ETF-onepage"
-                for item in self._parse_kurse_html(html, tdInd=etfTDS, stockType=stock.ETF):
+                for item in self._parse_kurse_html(html, tdInd=etfTDS, stockType=Etf):
                     #print "Yield ", item
                     yield (item, self, None)
             elif "anleihen" in received_url:
                 #bond
-                for item in self._parse_kurse_html(html, tdInd=bondTDS, stockType=stock.BOND):
+                for item in self._parse_kurse_html(html, tdInd=bondTDS, stockType=Bond):
                     yield (item, self, None)
             elif "fond" in received_url:
                 # aktive fonds
@@ -245,15 +247,14 @@ class Onvista():
                     yield (item, self, None)
         logger.debug("Finished Searching " + searchstring)
 
-    def _parse_kurse_html(self, kursPage, tdInd=fondTDS#, stockType = stock.FUND
-    ):
+    def _parse_kurse_html(self, kursPage, tdInd=fondTDS, stockType = Fund):
         base = BeautifulSoup(kursPage).find('div', 'INHALT')
         regex404 = re.compile("http://www\\.onvista\\.de/404\\.html")
         if regex404.search(str(base)):
             logger.info("Encountered 404 while Searching")
             return
         name = unicode(base.h1.contents[0])
-        if stockType == stock.BOND:
+        if stockType == Bond:
             temp = base.findAll('tr','hgrau2')[0].findAll('td', text=True)
             isin = temp[3]
             currency = temp[9]
@@ -280,7 +281,7 @@ class Onvista():
                 if not tds[0].contents[0] in self.exchangeBlacklist:
                     exchange = unicode(tds[0].find(text=True))
                     price = to_float(tds[tdInd['price']].contents[0])
-                    if stockType == stock.BOND:
+                    if stockType == Bond:
                         temp_date = to_datetime(tds[tdInd['temp_date']].contents[0],
                                             tds[tdInd['temp_date']+1].contents[0])
                     else:
@@ -300,15 +301,15 @@ class Onvista():
 
     def update_stocks(self, sts):
         for st in sts:
-            if st.type == stock.FUND:
+            if st.type == Fund:
                 file = opener.open("http://www.onvista.de/fonds/kurse.html", urllib.urlencode({"ISIN": st.isin}))
                 generator = self._parse_kurse_html(file)
-            elif st.type == stock.ETF:
+            elif st.type == Etf:
                 file = opener.open("http://www.onvista.de/etf/kurse.html", urllib.urlencode({"ISIN": st.isin}))
-                generator = self._parse_kurse_html(file, tdInd=etfTDS, stockType=stock.ETF)
-            elif st.type == stock.BOND:
+                generator = self._parse_kurse_html(file, tdInd=etfTDS, stockType=Etf)
+            elif st.type == Bond:
                 file = opener.open("http://www.onvista.de/anleihen/kurse.html", urllib.urlencode({"ISIN": st.isin}))
-                generator = self._parse_kurse_html(file, tdInd=bondTDS, stockType=stock.BOND)
+                generator = self._parse_kurse_html(file, tdInd=bondTDS, stockType=Bond)
             else:
                 print "Unknown stock type in onvistaplugin.update_stocks: ", st.type
                 generator = []
@@ -323,17 +324,17 @@ class Onvista():
 
     def update_historical_prices(self, st, start_date, end_date):
         url = ''
-        if st.type == stock.FUND:
+        if st.type == Fund:
             url = 'http://www.onvista.de/fonds/kurshistorie.html'
-        elif st.type == stock.ETF:
+        elif st.type == Etf:
             url = 'http://www.onvista.de/etf/kurshistorie.html'
-        elif st.type == stock.BOND:
+        elif st.type == Bond:
             url = 'http://anleihen.onvista.de/kurshistorie.html'
         else:
             logger.error("Uknown stock type in onvistaplugin.search_kurse")
         fileobj = opener.open(url,urllib.urlencode({'ISIN':st.isin, 'RANGE':'60M'}))
         soup = BeautifulSoup(fileobj)
-        if st.type==stock.BOND:
+        if st.type==Bond:
             lines = soup.findAll('tr',{'class':'hr'})
         else:
             lines = soup.findAll('tr',{'align':'right'})
@@ -345,7 +346,7 @@ class Onvista():
             if day < start_date:
                 return
 
-            if st.type == stock.BOND:
+            if st.type == Bond:
                 yield (st,'KAG',
                        day,
                        to_float(tds[1].replace('&nbsp;', '')),
@@ -388,17 +389,17 @@ if __name__ == "__main__":
 
     def test_parse_kurse():
         page = opener.open('http://fonds.onvista.de/kurse.html?ID_INSTRUMENT=83602')
-        for item in plugin._parse_kurse_html(page, tdInd=fondTDS, stockType = stock.FUND):
+        for item in plugin._parse_kurse_html(page, tdInd=fondTDS, stockType = Fund):
             print item
         print "---------------------------------"
         page = opener.open('http://www.onvista.de/etf/kurse.html?ISIN=LU0203243414')
-        for item in plugin._parse_kurse_html(page, tdInd=etfTDS, stockType = stock.ETF):
+        for item in plugin._parse_kurse_html(page, tdInd=etfTDS, stockType = Etf):
             print item
 
 
     plugin = Onvista()
-    s1 = Stock('DE000A0RFEE5', 'foo', stock.FUND)
-    s2 = Stock('LU0103598305', 'foo', stock.FUND)
+    s1 = Fund('DE000A0RFEE5', 'foo')
+    s2 = Fund('LU0103598305', 'foo')
     #test_search()
     #print plugin.search_kurse(s1)
     #print plugin.search_kurse(s3)

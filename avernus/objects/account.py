@@ -39,6 +39,7 @@ class AccountCategory(Base):
     def __repr__(self):
         return "AccountCategory<%s>" % self.name
 
+
 class AccountTransaction(Base):
 
     __tablename__ = 'account_transaction'
@@ -53,11 +54,9 @@ class AccountTransaction(Base):
     category_name = Column(String, ForeignKey('account_category.name'))
     category = relationship('AccountCategory', remote_side=[AccountCategory.name])
 
-    def __init__(self, description):
-        self.description = description
-
     def __repr__(self):
         return "AccountTransaction<"+str(self.date) +"|"+str(self.amount)+">"
+
 
 class CategoryFilter(Base):
 

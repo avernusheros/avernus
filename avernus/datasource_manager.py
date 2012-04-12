@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
-from avernus.controller import controller
-from avernus.controller import portfolio_controller as pfctlr
+from avernus.controller import portfolio_controller, asset_controller
 from avernus.data_sources import yahoo, onvista
 from avernus.gui import threads
 import datetime, re
@@ -45,10 +44,12 @@ class DatasourceManager():
             if func:
                 if threaded:
                     try:
-                        task = threads.GeneratorTask(func, self._item_found_callback, complete_cb)
+                        task = threads.GeneratorTask(func, self._item_found_callback, complete_cb, searchstring)
                         self.current_searches.append(task)
-                        task.start(searchstring)
+                        task.start()
                     except:
+                        import traceback
+                        traceback.print_exc()
                         logger.error("data source " + name + " not working")
                 else:
                     for res in func(searchstring):
@@ -65,15 +66,17 @@ class DatasourceManager():
         if not self.validate_isin(item['isin']):
             return
         new = False
-        stock = controller.check_duplicate(Stock, source=source.name, **item)
-        if not stock:
+        asset = asset_controller.check_asset_existance(source=source.name,
+                                                       isin = item['isin'],
+                                                       currency = item['currency'])
+        if not asset:
             new = True
             item['source'] = source.name
-            stock = pfctlr.newStock(**item)
+            asset = asset_controller.new_asset(**item)
         if source_info is not None:
-            pfctlr.newSourceInfo(source=source.name, stock=stock, info=source_info)
+            asset_controller.new_source_info(source=source.name, asset=asset, info=source_info)
         if new and self.search_callback:
-            self.search_callback(stock, source_icons[item['source']])
+            self.search_callback(asset, source_icons[item['source']])
 
     def validate_isin(self, isin):
         return re.match('^[A-Z]{2}[A-Z0-9]{9}[0-9]$', isin)
@@ -87,8 +90,8 @@ class DatasourceManager():
                 for ret in source.update_stocks(temp):
                     yield ret
 
-    def update_stock(self, stock):
-        self.update_stocks([stock])
+    def update_asset(self, asset):
+        self.update_stocks([asset])
 
     def get_historical_prices(self, stock, start_date=None, end_date=None):
         if not self.b_online:
@@ -96,16 +99,15 @@ class DatasourceManager():
         if end_date is None:
             end_date = datetime.date.today() - datetime.timedelta(days=1)
         start_date = stock.get_date_of_newest_quotation()
-        if start_date is None:         
+        if start_date is None:
             start_date = datetime.date(end_date.year - 20, end_date.month, end_date.day)
         if start_date < end_date:
             for qt in sources[stock.source].update_historical_prices(stock, start_date, end_date):
                 #qt : (stock, exchange, date, open, high, low, close, vol)
                 if qt is not None:
-                    yield controller.newQuotation(stock=qt[0], exchange=qt[1], \
+                    yield asset_controller.new_quotation(stock=qt[0], exchange=qt[1], \
                             date=qt[2], open=qt[3], high=qt[4], \
-                            low=qt[5], close=qt[6], vol=qt[7], \
-                            detectDuplicates=True)
+                            low=qt[5], close=qt[6], vol=qt[7])
         #needed to run as generator thread
         yield 1
 
