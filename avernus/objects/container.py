@@ -49,8 +49,8 @@ class Position(Base):
     comment = Column(String)
     quantity = Column(Float)
 
-    portfolio_id = Column(Integer, ForeignKey('portfolio.id'))
     asset_id = Column(Integer, ForeignKey('asset.id'))
+    asset = relationship('Asset', backref='positions')
 
     def __iter__(self):
         return self.positions.__iter__()
