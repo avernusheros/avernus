@@ -124,8 +124,13 @@ try:
 
     GObject.threads_init()
 
+    from avernus.controller import asset_controller
+
     from avernus.gui.mainwindow import MainWindow
+    from avernus.datasource_manager import DatasourceManager
+    dsm = DatasourceManager()
     main_window = MainWindow()
+    asset_controller.datasource_manager = dsm
     try:
         Gtk.main()
     except Exception as e:

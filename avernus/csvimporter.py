@@ -6,7 +6,7 @@ import codecs, csv, re
 from cStringIO import StringIO
 import chardet
 
-from avernus.controller import filterController, accountController
+from avernus.controller import filter_controller, account_controller
 from avernus import pubsub
 
 
@@ -18,7 +18,7 @@ class TempTransaction(object):
 
     def create(self, account):
         if self.b_import:
-            ta = accountController.new_account_transaction(self.description)
+            ta = account_controller.new_account_transaction(self.description)
             ta.amount = self.amount
             ta.date = self.date
             ta.account = account
@@ -240,7 +240,7 @@ class CsvImporter:
 
     def check_duplicates(self, account):
         for trans in self.results:
-            if accountController.account_has_transaction(account, {'date':trans.date,'amount':trans.amount,'description':trans.description}):
+            if account_controller.account_has_transaction(account, {'date':trans.date,'amount':trans.amount,'description':trans.description}):
                 trans.b_import = False
             else:
                 trans.b_import = True
@@ -249,7 +249,7 @@ class CsvImporter:
         if do_check:
             for trans in self.results:
                 if not trans.category:
-                    trans.category = filterController.get_category(trans)
+                    trans.category = filter_controller.get_category(trans)
 
     def create_transactions(self, account):
         for temp_trans in self.results:

@@ -3,7 +3,7 @@
 from gi.repository import Gtk
 from datetime import date
 from avernus.gui import threads, gui_utils, charts
-from avernus.controller import chartController
+from avernus.controller import chart_controller
 from avernus.controller import asset_controller
 
 
@@ -80,7 +80,7 @@ class ChartWindow(Gtk.Window):
                 self.vbox.pack_end(Gtk.Label(label='No historical data found!'), True, True, 0)
                 self.show_all()
             return
-        chart_controller = chartController.StockChartPlotController(data)
+        chart_controller = chart_controller.StockChartPlotController(data)
         self.current_chart = charts.SimpleLineChart(chart_controller, 600, dots=0)
         self.vbox.pack_end(self.current_chart, True, True, 0)
 

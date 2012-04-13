@@ -2,7 +2,7 @@ from gi.repository import Gtk
 from avernus.gui import gui_utils
 from avernus import pubsub
 from avernus.controller import portfolio_controller
-from avernus.controller import chartController
+from avernus.controller import chart_controller
 from avernus.gui import charts
 
 
@@ -54,7 +54,7 @@ class OverviewCharts(Gtk.ScrolledWindow):
 
         y += 1
 
-        pfvalue_chart_controller = chartController.AllPortfolioValueOverTime('monthly')
+        pfvalue_chart_controller = chart_controller.AllPortfolioValueOverTime('monthly')
         pfvalue_chart = charts.SimpleLineChart(pfvalue_chart_controller, width)
         table.attach(pfvalue_chart, 0, 2, y, y + 1)
         combobox.connect('changed', self.on_zoom_change, pfvalue_chart_controller, pfvalue_chart)
@@ -77,7 +77,7 @@ class OverviewCharts(Gtk.ScrolledWindow):
 
         y += 1
 
-        pfinvestments_chart_controller = chartController.AllPortfolioInvestmentsOverTime('monthly')
+        pfinvestments_chart_controller = chart_controller.AllPortfolioInvestmentsOverTime('monthly')
         pfinvestments_chart = charts.SimpleLineChart(pfinvestments_chart_controller, width)
         table.attach(pfinvestments_chart, 0, 2, y, y + 1)
         combobox.connect('changed', self.on_zoom_change, pfinvestments_chart_controller, pfinvestments_chart)
@@ -91,7 +91,7 @@ class OverviewCharts(Gtk.ScrolledWindow):
 
         y += 1
 
-        chart_controller = chartController.PortfolioAttributeChartController('name')
+        chart_controller = chart_controller.PortfolioAttributeChartController('name')
         chart = charts.Pie(chart_controller, width / 2)
         table.attach(chart, 0, 1, y, y + 1)
 

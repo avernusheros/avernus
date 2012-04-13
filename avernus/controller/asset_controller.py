@@ -4,11 +4,10 @@ from avernus.objects.asset import SourceInfo
 from avernus.objects.container import Position
 from avernus.objects import session
 from avernus import pubsub
-from avernus.datasource_manager import DatasourceManager
 from sqlalchemy import or_
 import datetime
 
-datasource_manager = DatasourceManager()
+datasource_manager = None
 
 
 def get_asset_for_searchstring(searchstring):
