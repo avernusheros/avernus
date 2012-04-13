@@ -5,9 +5,8 @@ from gi.repository import Gdk
 from gi.repository import Pango
 from avernus import pubsub
 from avernus.gui import gui_utils, progress_manager
-from avernus.gui.account.csv_import_dialog import CSVImportDialog
-from avernus.controller import accountController
-from avernus.controller import objectController
+from avernus.controller import account_controller
+from avernus.controller import object_controller
 from avernus.controller import portfolio_controller
 
 
@@ -127,7 +126,7 @@ class MainTree(gui_utils.Tree):
         self._load_items()
 
     def _load_items(self):
-        portfolios = portfolio_controller.getAllPortfolio()
+        portfolios = portfolio_controller.get_all_portfolio()
         if len(portfolios) > 1:
             pass
             # FIXME
@@ -137,10 +136,10 @@ class MainTree(gui_utils.Tree):
             #self.insert_portfolio(all_pf)
         for pf in portfolios:
             self.insert_portfolio(pf)
-        for wl in portfolio_controller.getAllWatchlist():
+        for wl in portfolio_controller.get_all_watchlist():
             self.insert_watchlist(wl)
 
-        accounts = accountController.get_all_account()
+        accounts = account_controller.get_all_account()
         #if len(accounts) > 1:
         #    all_account = AllAccount()
         #    all_account.controller = controller
@@ -211,7 +210,7 @@ class MainTree(gui_utils.Tree):
             response = dlg.run()
             dlg.destroy()
             if response == Gtk.ResponseType.OK:
-                objectController.delete_object(obj)
+                object_controller.delete_object(obj)
                 self.get_model().remove(iterator)
                 self.selected_item = None
                 pubsub.publish('maintree.unselect')
@@ -279,7 +278,7 @@ class MainTree(gui_utils.Tree):
         elif obj.__class__.__name__ == 'Account' or obj.name == 'Accounts':
             parent_iter = self.accounts_iter
             cat_type = "account"
-            item = accountController.new_account(_('new account'))
+            item = account_controller.new_account(_('new account'))
         iterator = model.append(parent_iter, [item, cat_type, item.name, ''])
         self.expand_row(model.get_path(parent_iter), True)
         self.set_cursor(model.get_path(iterator), start_editing=True)

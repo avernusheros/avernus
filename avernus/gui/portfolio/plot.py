@@ -4,7 +4,7 @@ from gi.repository import Gtk
 from datetime import date
 from avernus.gui import threads, gui_utils, charts
 from avernus.controller import chartController
-from avernus.controller import portfolio_controller as pfctlr
+from avernus.controller import asset_controller
 
 
 class ChartWindow(Gtk.Window):
@@ -37,7 +37,7 @@ class ChartWindow(Gtk.Window):
         self.vbox.pack_start(self.change_label, False, False, 0)
         self.vbox.pack_end(self.current_chart, True, True, 0)
         self.current_zoom = 'YTD'
-        threads.GeneratorTask(pfctlr.datasource_manager.get_historical_prices, complete_callback=self.add_chart).start(self.stock)
+        threads.GeneratorTask(asset_controller.datasource_manager.get_historical_prices, complete_callback=self.add_chart).start(self.stock)
         self.add(self.vbox)
         self.show_all()
 
@@ -73,7 +73,7 @@ class ChartWindow(Gtk.Window):
         date1 = date.today()
         date2 = self.get_date2(self.current_zoom, date1)
 
-        data = pfctlr.getQuotationsFromStock(self.stock, date2)
+        data = asset_controller.get_quotations_for_asset(self.stock, date2)
         if len(data) == 0:
             if not self.noDataLabelShown:
                 self.noDataLabelShown = True

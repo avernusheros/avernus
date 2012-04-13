@@ -1,7 +1,7 @@
 from gi.repository import Gtk
 from avernus.gui import gui_utils
 from avernus import pubsub
-from avernus.controller import portfolio_controller as pfctlr
+from avernus.controller import portfolio_controller
 from avernus.controller import chartController
 from avernus.gui import charts
 
@@ -161,10 +161,10 @@ class PortfolioOverviewTree(gui_utils.Tree):
     def load_items(self):
         items = []
         if self.container.name == 'Watchlists':
-            items = pfctlr.getAllWatchlist()
+            items = portfolio_controller.get_all_watchlist()
         elif self.container.name == 'Portfolios':
-            items = pfctlr.getAllPortfolio()
-        self.overall_value = sum([pfctlr.get_current_value(i) for i in items])
+            items = portfolio_controller.get_all_portfolio()
+        self.overall_value = sum([portfolio_controller.get_current_value(i) for i in items])
         if self.overall_value == 0.0:
             self.overall_value = 1
         for item in items:
@@ -183,10 +183,10 @@ class PortfolioOverviewTree(gui_utils.Tree):
     def insert_item(self, item):
         self.get_model().append([item,
                                item.name,
-                               pfctlr.get_current_value(item),
-                               pfctlr.get_current_change(item)[0],
-                               float(pfctlr.get_percent(item)),
-                               pfctlr.get_ter(item),
+                               portfolio_controller.get_current_value(item),
+                               portfolio_controller.get_current_change(item)[0],
+                               float(portfolio_controller.get_percent(item)),
+                               portfolio_controller.get_ter(item),
                                item.last_update,
                                len(item.positions),
-                               100.0 * pfctlr.get_current_value(item) / self.overall_value])
+                               100.0 * portfolio_controller.get_current_value(item) / self.overall_value])

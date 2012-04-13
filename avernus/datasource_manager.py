@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from avernus.controller import portfolio_controller, asset_controller
+from avernus.controller import asset_controller
 from avernus.data_sources import yahoo, onvista
 from avernus.gui import threads
 import datetime, re

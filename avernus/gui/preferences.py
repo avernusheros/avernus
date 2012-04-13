@@ -1,7 +1,6 @@
 # -*- Mode: Python; coding: utf-8; indent-tabs-mode: nil; tab-width: 4 -*-
 from avernus.config import avernusConfig
 from avernus.gui import gui_utils
-from avernus.controller import controller
 from avernus.controller import dimensions_controller
 from gi.repository import Gtk
 import logging
@@ -156,7 +155,7 @@ class DimensionList(Gtk.VBox):
         self.pack_start(toolbar, False, True, 0)
 
     def on_add(self, widget, user_data=None):
-        dimension = controller.newDimension(_('new dimension'))
+        dimension = dimensions_controller.new_dimension(_('new dimension'))
         iterator = self.model.append(None, [dimension, dimension.name])
         #self.expand_row( model.get_path(parent_iter), True)
         self.tree.set_cursor(self.model.get_path(iterator), self.tree.get_column(0), True)

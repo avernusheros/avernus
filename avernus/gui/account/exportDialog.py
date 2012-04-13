@@ -1,6 +1,6 @@
 from avernus import config
-from avernus.controller import controller
 from avernus.gui import gui_utils
+from avernus.controller import account_controller
 from gi.repository import Gtk
 import os
 from gi.repository import Pango
@@ -50,7 +50,7 @@ class ExportDialog(Gtk.Dialog):
         model = Gtk.ListStore(object, str)
         i = 0
         active = -1
-        for account in controller.getAllAccount():
+        for account in account_controller.get_all_account():
             model.append([account, account.name])
             if self.account == account:
                 active = i

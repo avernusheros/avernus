@@ -2,8 +2,8 @@
 
 from avernus.gui import gui_utils, threads, common_dialogs
 from avernus.gui.portfolio import dialogs
-from avernus.controller import controller
 from avernus.controller import portfolio_controller
+from avernus.controller import asset_controller
 from avernus.controller import position_controller
 from avernus.objects.asset import MetaPosition
 import datetime
@@ -98,7 +98,7 @@ class QuotationTable(Gtk.Table):
         self.update_labels()
 
     def on_get_button_clicked(self, button):
-        threads.GeneratorTask(portfolio_controller.datasource_manager.get_historical_prices, self.new_quotation_callback, complete_callback=self.update_labels).start(self.stock)
+        threads.GeneratorTask(asset_controller.datasource_manager.get_historical_prices, self.new_quotation_callback, complete_callback=self.update_labels).start(self.stock)
 
     def new_quotation_callback(self, qt):
         self.count += 1
@@ -215,7 +215,7 @@ class TransactionsTab(Gtk.VBox):
                     quantity=last_transaction.quantity,
                     portfolio=self.position.portfolio,
                     stock=self.position.stock)
-        transaction = controller.newTransaction(
+        transaction = asset_controller.new_transaction(
                     type=1,
                     date=position.date,
                     quantity=position.quantity,
@@ -346,7 +346,7 @@ class EditHistoricalQuotationsDialog(Gtk.Dialog):
                 quotation.date = self.model[path][1] = dlg.date
 
     def on_add(self, button):
-        quotation = controller.newQuotation(datetime.date.today(), self.stock, detectDuplicates=False)
+        quotation = asset_controller.new_quotation(datetime.date.today(), self.stock, detectDuplicates=False)
         iter = self.model.append([quotation, quotation.date, quotation.close])
         path = self.model.get_path(iter)
         self.tree.set_cursor(path, focus_column=self.price_column, start_editing=True)

@@ -7,25 +7,29 @@ import datetime
 
 
 def new_portfolio(name):
-    pf = Portfolio()
-    pf.name = name
+    pf = Portfolio(name=name)
     session.add(pf)
-    session.commit()
     return pf
 
 def new_watchlist(name):
-    wl = Watchlist()
-    wl.name = name
+    wl = Watchlist(name=name)
     session.add(wl)
-    session.commit()
     return wl
 
-def getAllPortfolio():
+def new_benchmark(portfolio, percentage):
+    bm = Benchmark(portfolio=portfolio, percentage=percentage)
+    session.add(bm)
+    return bm
+
+def get_all_portfolio():
     return session.query(Portfolio).all()
 
 
-def getAllWatchlist():
+def get_all_watchlist():
     return session.query(Watchlist).all()
+
+def get_all_portfolio_position():
+    return session.query(PortfolioPosition).all()
 
 def get_current_value(portfolio):
     value = 0.0

@@ -3,14 +3,21 @@ from avernus.objects.asset import Quotation
 from avernus.objects.asset import SourceInfo
 from avernus.objects.container import Position
 from avernus.objects import session
+from avernus import pubsub
+from avernus.datasource_manager import DatasourceManager
 from sqlalchemy import or_
+import datetime
 
-datasource_manager = None
+datasource_manager = DatasourceManager()
 
 
 def get_asset_for_searchstring(searchstring):
     searchstring = '%' + searchstring + '%'
     return session.query(Asset).filter(or_(Asset.name.like(searchstring), Asset.isin.like(searchstring))).all()
+
+def get_quotations_for_asset(asset, start_date):
+    print "TODO"
+    #TODO
 
 def new_asset(assettype = Asset, name = "", isin=0, source="",
                 currency="", exchange="", **kwargs):
@@ -33,7 +40,7 @@ def check_asset_existance(source, isin, currency):
                                      Asset.source == source,
                                      Asset.currency == currency).count()
 
-def update_price(asset):
+def update_asset(asset):
     datasource_manager.update_asset(asset)
 
 
@@ -49,7 +56,7 @@ def update_all(*args):
         yield count / itemcount
     for container in getAllPortfolio() + getAllWatchlist():
         container.last_update = datetime.datetime.now()
-    pubsub.publish("stocks.updated", self)
+    pubsub.publish("stocks.updated")
     yield 1
 
 

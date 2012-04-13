@@ -10,7 +10,6 @@ from avernus.gui.portfolio.position_dialog import PositionDialog
 from avernus.gui.gui_utils import Tree, get_name_string
 from avernus.gui import gui_utils, progress_manager, page, threads
 from avernus.objects.asset import MetaPosition
-from avernus.controller import controller
 from avernus.controller import portfolio_controller
 from avernus.controller import position_controller
 
@@ -93,7 +92,7 @@ class PositionsTree(Tree):
         for action in self.actiongroup.list_actions():
             self.context_menu.add(action.create_menu_item())
 
-        all_portfolios = portfolio_controller.getAllPortfolio()
+        all_portfolios = portfolio_controller.get_all_portfolio()
         if len(all_portfolios) > 1:
             self.context_menu.add_item('----')
 
@@ -228,7 +227,6 @@ class PortfolioPositionsTree(PositionsTree):
                 else:
                     p1 = self.stock_cache[position.stock.id]
                     mp = MetaPosition(p1)
-                    mp.controller = controller
                     tree_iter = self.model.append(None, self._get_row(mp))
                     self.stock_cache[position.stock.id] = mp
                     self._move_position(p1, tree_iter)
@@ -455,7 +453,7 @@ class WatchlistPositionsTab(Gtk.VBox, page.Page):
         self.update_page()
 
     def get_info(self):
-        return [('# positions', len(watchlist.positions)),
+        return [('# positions', len(self.watchlist.positions)),
                 ('Last update', gui_utils.datetime_format(self.watchlist.last_update, False))]
 
 

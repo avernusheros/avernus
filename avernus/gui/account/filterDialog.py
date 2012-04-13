@@ -1,4 +1,4 @@
-from avernus.controller import controller, filterController, accountController
+from avernus.controller import filter_controller, account_controller
 from avernus.gui import gui_utils
 from gi.repository import Gtk
 from gi.repository import Pango
@@ -98,11 +98,11 @@ class PreviewTree(gui_utils.Tree):
         if transaction and transaction.transfer:
             return False
         if self.active_filter:
-            return filterController.match_transaction(self.active_filter, transaction)
+            return filter_controller.match_transaction(self.active_filter, transaction)
         return True
 
     def load_all(self):
-        for trans in accountController.get_all_transactions():
+        for trans in account_controller.get_all_transactions():
             if trans.category:
                 cat = trans.category.name
             else:
@@ -150,7 +150,7 @@ class FilterTree(gui_utils.Tree):
         cell = Gtk.CellRendererCombo()
         cell.connect('changed', self.on_category_changed)
         self.cb_model = Gtk.ListStore(object, str)
-        self.categories = sorted(accountController.get_all_categories())
+        self.categories = sorted(account_controller.get_all_categories())
         for category in self.categories:
             self.cb_model.append([category, category.name])
         cell.set_property('model', self.cb_model)
@@ -166,7 +166,7 @@ class FilterTree(gui_utils.Tree):
         return item
 
     def load_rules(self):
-        for rule in filterController.get_all_rules():
+        for rule in filter_controller.get_all_rules():
             self.insert_rule(rule)
 
     def on_category_changed(self, cellrenderertext, path, new_iter):
@@ -191,7 +191,7 @@ class FilterTree(gui_utils.Tree):
         self.model[path][self.OBJECT].active = active
 
     def on_add(self, widget, user_data = None):
-        rule = filterController.create("new filter - click to edit", self.categories[0], False)
+        rule = filter_controller.create("new filter - click to edit", self.categories[0], False)
         iterator = self.insert_rule(rule)
         self.scroll_to_cell(self.model.get_path(iterator))
 

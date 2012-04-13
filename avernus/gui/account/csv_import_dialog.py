@@ -5,7 +5,7 @@ import os
 from gi.repository import Pango
 from avernus.gui import gui_utils
 from avernus import csvimporter, config
-from avernus.controller import controller, accountController
+from avernus.controller import account_controller
 
 
 class CSVImportDialog(Gtk.Dialog):
@@ -52,7 +52,7 @@ class CSVImportDialog(Gtk.Dialog):
         model = Gtk.ListStore(object, str)
         i = 0
         active = -1
-        for account in accountController.get_all_account():
+        for account in account_controller.get_all_account():
             model.append([account, account.name])
             if self.account == account:
                 active = i

@@ -4,7 +4,7 @@ from avernus import config, pubsub
 from avernus.config import avernusConfig
 from avernus.gui import gui_utils, common_dialogs, page, charts
 from avernus.gui.portfolio import dialogs
-from avernus.controller import controller, chartController, accountController, objectController
+from avernus.controller import chart_controller, account_controller, object_controller
 from gi.repository import Gtk
 from gi.repository import GObject
 from gi.repository import Gdk
@@ -215,7 +215,7 @@ class AccountChartsNotebook(Gtk.Notebook):
         self.init_charts()
 
     def init_charts(self):
-        over_time_controller = chartController.TransactionValueOverTimeChartController(self.account.transactions, self.date_range)
+        over_time_controller = chart_controller.TransactionValueOverTimeChartController(self.account.transactions, self.date_range)
         categoryChart = charts.TransactionChart(over_time_controller, 300)
         self.charts.append(categoryChart)
         label = Gtk.Label(label=_('Over Time'))
@@ -224,7 +224,7 @@ class AccountChartsNotebook(Gtk.Notebook):
         self.append_page(categoryChart, label)
 
 
-        step_controller = chartController.TransactionStepValueChartController(self.account.transactions, self.date_range)
+        step_controller = chart_controller.TransactionStepValueChartController(self.account.transactions, self.date_range)
         valueChart = charts.TransactionChart(step_controller, 300)
         self.charts.append(valueChart)
         label = Gtk.Label(label=_('Step Value'))
@@ -232,7 +232,7 @@ class AccountChartsNotebook(Gtk.Notebook):
         label.set_tooltip_text(_('step value.'))
         self.append_page(valueChart, label)
 
-        chart_controller = chartController.AccountBalanceOverTimeChartController(self.account, self.date_range)
+        chart_controller = chart_controller.AccountBalanceOverTimeChartController(self.account, self.date_range)
         chart = charts.SimpleLineChart(chart_controller, 300)
         self.charts.append(chart)
         label = Gtk.Label(label=_('Account balance'))
@@ -240,7 +240,7 @@ class AccountChartsNotebook(Gtk.Notebook):
         self.append_page(chart, label)
 
         table = Gtk.Table()
-        chart_controller = chartController.TransactionCategoryPieController(self.account.transactions, earnings=True)
+        chart_controller = chart_controller.TransactionCategoryPieController(self.account.transactions, earnings=True)
         chart = charts.Pie(chart_controller, 400)
         self.charts.append(chart)
         label = Gtk.Label()
@@ -249,7 +249,7 @@ class AccountChartsNotebook(Gtk.Notebook):
         table.attach(label, 0, 1, 0, 1, xoptions=Gtk.AttachOptions.FILL, yoptions=Gtk.AttachOptions.FILL)
         table.attach(chart, 0, 1, 1, 2)
 
-        chart_controller = chartController.TransactionCategoryPieController(self.account.transactions, earnings=False)
+        chart_controller = chart_controller.TransactionCategoryPieController(self.account.transactions, earnings=False)
         chart = charts.Pie(chart_controller, 400)
         self.charts.append(chart)
         label = Gtk.Label()
@@ -261,7 +261,7 @@ class AccountChartsNotebook(Gtk.Notebook):
         label.set_tooltip_text(_('Categorization of transactions.'))
         self.append_page(table, label)
 
-        chart_controller = chartController.EarningsVsSpendingsController(self.account.transactions, self.date_range)
+        chart_controller = chart_controller.EarningsVsSpendingsController(self.account.transactions, self.date_range)
         chart = charts.BarChart(chart_controller, 400)
         self.charts.append(chart)
         label = Gtk.Label(label=_('Earnings vs Spendings'))
@@ -286,7 +286,7 @@ class TransactionsTree(gui_utils.Tree):
         cfg = config.avernusConfig()
         self.b_show_transfer = cfg.get_option('show transfer', section='Gui') == 'True'
         self.b_show_uncategorized = cfg.get_option('show uncategorized', section='Gui') == 'True'
-        self.range_start = accountController.account_birthday(account)
+        self.range_start = account_controller.account_birthday(account)
         self.range_end = datetime.date.today()
         gui_utils.Tree.__init__(self)
 
@@ -338,7 +338,7 @@ class TransactionsTree(gui_utils.Tree):
                     if pre:
                         # recursive is activated
                         #print "second chance", transaction
-                        parents = accountController.get_parent_categories(transaction.category)
+                        parents = account_controller.get_parent_categories(transaction.category)
                         if not self.single_category in parents:
                             # the selected category is also not one of the parents
                             return False
@@ -480,7 +480,7 @@ class TransactionsTree(gui_utils.Tree):
                         insert_recursive(child_cat, new_menu)
                 else:
                     item.connect('activate', lambda widget: self.on_set_transaction_category(cat))
-            root_categories = accountController.get_root_categories()
+            root_categories = account_controller.get_root_categories()
             if len(root_categories) > 0:
                 item = Gtk.MenuItem(label="Move to category")
                 self.context_menu.add(item)
@@ -564,7 +564,7 @@ class CategoriesTree(gui_utils.Tree):
             for child_cat in cat.children:
                 insert_recursive(child_cat, new_iter)
         model = self.get_model()
-        root_categories = accountController.get_root_categories()
+        root_categories = account_controller.get_root_categories()
         for cat in root_categories:
             insert_recursive(cat, None)
         self.expand_all()
@@ -582,7 +582,7 @@ class CategoriesTree(gui_utils.Tree):
 
     def on_add(self, widget=None, data=None):
         parent, selection_iter = self.get_selected_item()
-        item = accountController.new_account_category('new category', parent=parent)
+        item = account_controller.new_account_category('new category', parent=parent)
         iterator = self.insert_item(item, parent=selection_iter)
         model = self.get_model()
         if selection_iter:
@@ -628,7 +628,7 @@ class CategoriesTree(gui_utils.Tree):
             while len(queue) > 0:
                 currIter, currObj = queue.pop()
                 #print "deleting from model ", currObj
-                objectController.delete_object(currObj)
+                object_controller.delete_object(currObj)
                 if model.iter_has_child(currIter):
                     for i in range(0, model.iter_n_children(currIter)):
                         newIter = model.iter_nth_child(currIter, i)
@@ -693,7 +693,7 @@ class EditTransaction(Gtk.Dialog):
         vbox = self.get_content_area()
 
         if self.transaction is None:
-            self.transaction = accountController.new_account_transaction(account=account)
+            self.transaction = account_controller.new_account_transaction(account=account)
 
         #description
         frame = Gtk.Frame(label='Description')
@@ -730,7 +730,7 @@ class EditTransaction(Gtk.Dialog):
                 insert_recursive(child_cat, new_iter)
         new_iter = treestore.append(None, [None, 'None'])
         self.combobox.set_active_iter(new_iter)
-        root_categories = accountController.get_root_categories()
+        root_categories = account_controller.get_root_categories()
         for cat in root_categories:
             insert_recursive(cat, None)
 
@@ -775,7 +775,7 @@ class EditTransaction(Gtk.Dialog):
     def on_transfer_toggled(self, checkbutton):
         if checkbutton.get_active():
             found_one = False
-            for ta in accountController.yield_matching_transfer_transactions(self.transaction):
+            for ta in account_controller.yield_matching_transfer_transactions(self.transaction):
                 if found_one == False:
                     self.matching_transactions_tree.clear()
                     self.matching_transactions_tree.show()

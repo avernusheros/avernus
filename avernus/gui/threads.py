@@ -1,4 +1,4 @@
-from gi.repository import GObject, Gdk
+from gi.repository import GObject
 
 import logging
 import threading

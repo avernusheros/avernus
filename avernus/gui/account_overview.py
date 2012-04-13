@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from gi.repository import Gtk
-from avernus.controller import accountController
+from avernus.controller import account_controller
 from avernus.gui import gui_utils
 
 
@@ -34,13 +34,13 @@ class AccountOverviewTree(gui_utils.Tree):
         self._load_accounts()
 
     def _load_accounts(self):
-        for acc in accountController.get_all_account():
+        for acc in account_controller.get_all_account():
             self.model.append([acc,
                                acc.name,
                                acc.balance,
                                len(acc.transactions),
-                               accountController.account_birthday(acc),
-                               accountController.account_lastday(acc),
+                               account_controller.account_birthday(acc),
+                               account_controller.account_lastday(acc),
                               ])
 
 

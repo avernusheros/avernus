@@ -2,9 +2,12 @@
 
 from avernus.controller import chartController
 from avernus.gui import charts, page, gui_utils
-from avernus.controller import controller
-from avernus.controller import portfolio_controller as pfctlr
+from avernus.controller import portfolio_controller
+from avernus.controller import dimensions_controller
 from gi.repository import Gtk
+
+import logging
+logger = logging.getLogger(__name__)
 
 
 class ChartTab(Gtk.ScrolledWindow, page.Page):
@@ -78,7 +81,7 @@ class ChartTab(Gtk.ScrolledWindow, page.Page):
 
         col = 0
         switch = True
-        for dim in controller.getAllDimension():
+        for dim in dimensions_controller.get_all_dimensions():
             label = Gtk.Label()
             label.set_markup('<b>' + dim.name + '</b>')
             label.set_tooltip_text(_('Percentual fraction by "') + dim.name + '".')
@@ -160,7 +163,7 @@ class BenchmarkDialog(Gtk.Dialog):
 
         # load items
         self.count = 0
-        for bm in pfctlr.getBenchmarksForPortfolio(self.portfolio):
+        for bm in self.portfolio.benchmarks:
             self.model.append([bm, str(bm), bm.percentage * 100])
             self.count += 1
 
@@ -191,7 +194,7 @@ class BenchmarkDialog(Gtk.Dialog):
 
     def on_add(self, widget, user_data=None):
         if self.count < 3:
-            bm = pfctlr.newBenchmark(self.portfolio, 0.05)
+            bm = portfolio_controller.new_benchmark(self.portfolio, 0.05)
             iterator = self.model.append([bm, str(bm), bm.percentage*100])
             self.tree.set_cursor(self.model.get_path(iterator), self.tree.get_column(0), True)
             self.count += 1

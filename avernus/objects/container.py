@@ -1,6 +1,6 @@
 from avernus.objects import Base
-from sqlalchemy import Column, Integer, String, Float, Date, Boolean, ForeignKey
-from sqlalchemy.orm import relationship, backref
+from sqlalchemy import Column, Integer, String, Float, Date, ForeignKey
+from sqlalchemy.orm import relationship
 
 class Benchmark(Base):
 

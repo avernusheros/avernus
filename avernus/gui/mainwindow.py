@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from avernus import pubsub, config
-from avernus.controller import filterController
+from avernus.controller import filter_controller
 from avernus.controller import portfolio_controller
 from avernus.controller import asset_controller
 from avernus.gui import progress_manager, threads
@@ -224,7 +224,7 @@ class MainWindow(Gtk.Window):
         ExportDialog(parent=self)
 
     def on_do_category_assignments(self, *args):
-        threads.GeneratorTask(filterController.run_auto_assignments).start()
+        threads.GeneratorTask(filter_controller.run_auto_assignments).start()
         #filterController.run_auto_assignments()
 
     def on_historical(self, *args):
