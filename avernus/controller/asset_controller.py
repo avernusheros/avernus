@@ -1,6 +1,7 @@
 from avernus.objects.asset import Asset
 from avernus.objects.asset import Quotation
 from avernus.objects.asset import SourceInfo
+from avernus.objects.container import Position
 from avernus.objects import session
 from sqlalchemy import or_
 
@@ -34,6 +35,22 @@ def check_asset_existance(source, isin, currency):
 
 def update_price(asset):
     datasource_manager.update_asset(asset)
+
+
+def get_all_used_assets():
+    return session.query(Asset).join(Position).distinct().all()
+
+def update_all(*args):
+    items = get_all_used_assets()
+    itemcount = len(items)
+    count = 0.0
+    for item in datasource_manager.update_assets(items):
+        count += 1.0
+        yield count / itemcount
+    for container in getAllPortfolio() + getAllWatchlist():
+        container.last_update = datetime.datetime.now()
+    pubsub.publish("stocks.updated", self)
+    yield 1
 
 
 def new_quotation(stock, exchange, date, open, high, low, close, vol):

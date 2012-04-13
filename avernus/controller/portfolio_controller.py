@@ -32,7 +32,7 @@ def get_current_value(portfolio):
     for pos in portfolio:
         value += pos.cvalue
     return value
-    
+
 def get_birthday(portfolio):
     current = datetime.date.today()
     for position in portfolio.positions:
@@ -46,7 +46,7 @@ def get_buy_value(portfolio):
     for pos in portfolio:
         value += position_controller.get_buy_value()
     return value
-    
+
 def get_closed_positions(portfolio):
     return []
 
@@ -61,7 +61,7 @@ def get_current_change(portfolio):
     else:
         percent = round(100.0 / start * change, 2)
     return change, percent
-    
+
 def get_date_of_last_dividend(pf):
     if get_dividends_count(pf) == 0:
         return datetime.date.today()
@@ -71,10 +71,10 @@ def get_date_of_last_dividend(pf):
         if not current or dividend.date > current:
             current = dividend.date
     return current
-    
+
 def get_dividends_count(portfolio):
     return len(portfolio.dividends)
-    
+
 def get_dividends_sum(portfolio):
     return sum([dividend.price for dividend in portfolio.dividends])
 
@@ -122,34 +122,6 @@ def update_historical_prices():
         i += 1.0
         yield i / l
     yield 1
-
-
-def get_all_used_stocks():
-    items = set()
-    for pf in getAllPortfolio():
-        for pos in pf:
-            if pos.quantity > 0:
-                items.add(pos.stock)
-    for wl in getAllWatchlist():
-        for pos in wl:
-            items.add(pos.stock)
-    return items
-
-def update_all():
-    items = get_all_used_stocks()
-    itemcount = len(items)
-    count = 0.0
-    for item in datasource_manager.update_stocks(items):
-        count += 1.0
-        yield count / itemcount
-    for container in getAllPortfolio() + getAllWatchlist():
-        container.last_update = datetime.datetime.now()
-    pubsub.publish("stocks.updated", self)
-    yield 1
-
-
-def getDividendsForPosition(pos):
-    return Dividend.getAllFromOneColumn("position", pos.getPrimaryKey())
 
 
 

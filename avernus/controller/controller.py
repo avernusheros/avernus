@@ -129,12 +129,6 @@ def load_sample_data():
 
 
 
-def newAccount(name, a_id=None, amount=0, accounttype=1):
-    result = Account(id=a_id, name=name, amount=amount, type=accounttype)
-    result.controller = controller
-    result.insert()
-    return result
-
 def newAccountTransaction(id=None, description='', amount=0.0, account=None, category=None, date=datetime.date.today(), transferid= -1, detect_duplicates=False):
     if detect_duplicates:
         duplicates = check_duplicate(AccountTransaction, \

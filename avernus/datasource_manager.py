@@ -44,7 +44,7 @@ class DatasourceManager():
             if func:
                 if threaded:
                     try:
-                        task = threads.GeneratorTask(func, self._item_found_callback, complete_cb, searchstring)
+                        task = threads.GeneratorTask(func, self._item_found_callback, complete_cb, args=searchstring)
                         self.current_searches.append(task)
                         task.start()
                     except:

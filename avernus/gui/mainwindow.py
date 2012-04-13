@@ -2,6 +2,7 @@
 from avernus import pubsub, config
 from avernus.controller import filterController
 from avernus.controller import portfolio_controller
+from avernus.controller import asset_controller
 from avernus.gui import progress_manager, threads
 from avernus.gui.account.account_transactions_tab import AccountTransactionTab
 from avernus.gui.account_overview import AccountOverview
@@ -236,4 +237,4 @@ class MainWindow(Gtk.Window):
         def finished_cb():
             progress_manager.remove_monitor(11)
         m = progress_manager.add_monitor(11, _('updating stocks...'), Gtk.STOCK_REFRESH)
-        threads.GeneratorTask(portfolio_controller.update_all, m.progress_update, complete_callback=finished_cb).start()
+        threads.GeneratorTask(asset_controller.update_all, m.progress_update, complete_callback=finished_cb).start()
