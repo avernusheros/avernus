@@ -1,6 +1,7 @@
 from avernus.objects.container import Portfolio, Watchlist
-from avernus.controller import position_controller
+from avernus.controller import position_controller, asset_controller
 from avernus.objects import session
+from . import dsm
 
 import datetime
 
@@ -107,13 +108,22 @@ def get_ter(portfolio):
     val = 0
     for pos in portfolio:
         pos_val = position_controller.get_current_value(pos)
-        ter += pos_val * pos.stock.ter
+        ter += pos_val * asset_controller.get_ter(pos)
         val += pos_val
     if val == 0:
         return 0.0
     return ter / val
 
-
+def update_positions(portfolio):
+    items = set(pos.asset for pos in portfolio if pos.quantity > 0)
+    itemcount = len(items)
+    count = 0.0
+    for item in dsm.update_stocks(items):
+        count += 1.0
+        yield count / itemcount
+    self.last_update = datetime.now()
+    pubsub.publish("stocks.updated", self)
+    yield 1
 
 
 

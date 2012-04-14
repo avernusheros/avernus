@@ -29,6 +29,9 @@ class Portfolio(Container):
     __tablename__ = 'portfolio'
     __mapper_args__ = {'polymorphic_identity': 'portfolio'}
     id = Column(Integer, ForeignKey('container.id'), primary_key=True)
+    
+    def __iter__(self):
+        return self.positions.__iter__()
 
 
 class Watchlist(Container):

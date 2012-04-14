@@ -1,5 +1,4 @@
 from avernus.objects.account import CategoryFilter
-from avernus.controller import controller
 from avernus.objects import session
 from avernus.config import avernusConfig
 import logging

@@ -6,7 +6,6 @@ import pytz
 import re
 import json
 from datetime import datetime
-from avernus.controller import controller
 from avernus.objects.asset import Fund, Stock
 
 import logging
