@@ -13,12 +13,13 @@ def new_watchlist_position(price=0.0, date=datetime.datetime.now(), watchlist=No
     session.add(position)
     return position
 
-def new_portfolio_position(price=0.0, date=datetime.datetime.now(), shares=1.0, portfolio=None, asset=None):
+def new_portfolio_position(price=0.0, date=datetime.datetime.now(), shares=1.0, portfolio=None, asset=None, comment=""):
     position = PortfolioPosition(price = price,
                                  date = date,
                                  quantity = shares,
                                  portfolio = portfolio,
-                                 asset = asset)
+                                 asset = asset,
+                                 comment="")
     session.add(position)
     return position
 

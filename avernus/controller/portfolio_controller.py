@@ -84,11 +84,20 @@ def get_date_of_last_dividend(pf):
             current = dividend.date
     return current
 
+def get_dividends(portfolio):
+    ret = []
+    for pos in portfolio:
+        ret += pos.dividends
+    return ret
+
 def get_dividends_count(portfolio):
-    return len(portfolio.dividends)
+    return sum([len(pos.dividends) for pos in portfolio])
 
 def get_dividends_sum(portfolio):
-    return sum([dividend.price for dividend in portfolio.dividends])
+    ret = 0.0
+    for pos in portfolio:
+        ret += sum([div.price for div in pos.dividends])
+    return ret
 
 def get_overall_change(portfolio):
     end = get_current_value(portfolio)
@@ -113,6 +122,12 @@ def get_ter(portfolio):
     if val == 0:
         return 0.0
     return ter / val
+
+def get_transactions(portfolio):
+    ret = []
+    for pos in portfolio:
+        ret += pos.transactions
+    return ret
 
 def update_positions(portfolio):
     items = set(pos.asset for pos in portfolio if pos.quantity > 0)
@@ -170,16 +185,6 @@ def deleteAllQuotationsFromStock(stock):
     model.store.execute(query, [stock.id])
 
 
-def getPositionForWatchlist(watchlist):
-    key = watchlist.getPrimaryKey()
-    return WatchlistPosition.getAllFromOneColumn("watchlist", key)
-
-
-def getAllDimensionValueForDimension(dim):
-    for value in DimensionValue.getAll():
-        if value.dimension == dim:
-            yield value
-
 
 def deleteAllDimensionValue(dimension):
     for val in getAllDimensionValueForDimension(dimension):
@@ -190,15 +195,6 @@ def deleteAllDimensionValue(dimension):
 def deleteAllWatchlistPosition(watchlist):
     for pos in getPositionForWatchlist(watchlist):
         pos.delete()
-
-
-def getQuotationsFromStock(stock, start=None):
-    args = {'stock': stock.getPrimaryKey()}
-    erg = Quotation.getByColumns(args, create=True)
-    if start:
-        erg = filter(lambda quote: quote.date > start, erg)
-    erg = sorted(erg, key=lambda stock: stock.date)
-    return erg
 
 
 
@@ -216,12 +212,6 @@ def getPriceFromStockAtDate(stock, date):
     for item in res:
         return item[5]
     return None
-
-def getAllQuotationsFromStock(stock, start=None):
-    """from all exchanges"""
-    erg = Quotation.getByColumns({'stock': stock.id}, create=True)
-    return sorted(erg, key=lambda stock: stock.date)
-
 
 def getBuyTransaction(portfolio_position):
     for ta in Transaction.getByColumns({'position': portfolio_position.id, 'type':1}, create=True):

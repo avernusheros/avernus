@@ -45,7 +45,12 @@ def new_asset(assettype = Asset, name = "", isin=0, source="",
     session.add(asset)
     return asset
 
-def new_dividend(*args, **kwargs):
+def new_dividend(price=0.0, cost=0.0, date=datetime.date.today(), position=None):
+    div = Dividend(price=price, cost=cost, date=date, position=position)
+    session.add(div)
+    return div
+
+def new_transaction(*args, **kwargs):
     print "TODO"
     #TODO
     

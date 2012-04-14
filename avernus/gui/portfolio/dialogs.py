@@ -219,20 +219,20 @@ class PosSelector(Gtk.ComboBox):
         liststore.append([-1, 'Select a position'])
         i = 1
         if pf is not None:
-            for pos in sorted(pf, key=lambda pos: pos.stock.name):
+            for pos in sorted(pf, key=lambda pos: pos.asset.name):
                 if pos.quantity > 0:
-                    liststore.append([pos, str(pos.quantity) + ' ' + pos.name])
+                    liststore.append([pos, str(pos.quantity) + ' ' + pos.asset.name])
                     if position and position == pos:
                         self.set_active(i)
                     i += 1
         else:
-            for pos in sorted(portfolio_controller.get_all_portfolio_position(), key=lambda pos: pos.stock.name):
+            for pos in sorted(portfolio_controller.get_all_portfolio_position(), key=lambda pos: pos.asset.name):
                 if pos.quantity > 0:
-                    liststore.append([pos, pos.portfolio.name + ": " + str(pos.quantity) + ' ' + pos.name])
+                    liststore.append([pos, pos.portfolio.name + ": " + str(pos.quantity) + ' ' + pos.asset.name])
         self.set_model(liststore)
 
 
-class EditStockDialog(Gtk.Dialog):
+class EditAssetDialog(Gtk.Dialog):
 
     def __init__(self, stock, parent=None):
         Gtk.Dialog.__init__(self, _("Edit stock"), parent
@@ -241,7 +241,7 @@ class EditStockDialog(Gtk.Dialog):
                       Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT))
 
         vbox = self.get_content_area()
-        self.table = EditStockTable(stock)
+        self.table = EditAssetTable(stock)
         vbox.pack_start(self.table, True, True, 0)
 
         self.show_all()
@@ -305,7 +305,7 @@ class DividendDialog(Gtk.Dialog):
             self.calendar.select_month(dividend.date.month - 1, dividend.date.year)
             self.calendar.select_day(dividend.date.day)
             self.value_entry.set_value(dividend.price)
-            self.tacosts_entry.set_value(dividend.costs)
+            self.tacosts_entry.set_value(dividend.cost)
             self.on_change()
 
         self.set_response_sensitive(Gtk.ResponseType.ACCEPT, self.selected_pos is not None)
@@ -335,16 +335,14 @@ class DividendDialog(Gtk.Dialog):
             value = self.value_entry.get_value()
             ta_costs = self.tacosts_entry.get_value()
             if self.dividend is None:
-                div = asset_controller.new_dividend(price=value, date=date, costs=ta_costs, position=self.selected_pos, shares=self.selected_pos.quantity)
+                div = asset_controller.new_dividend(price=value, date=date, cost=ta_costs, position=self.selected_pos)
                 if self.tree is not None:
                     self.tree.insert_dividend(div)
             else:
                 self.dividend.price = value
                 self.dividend.date = date
-                self.dividend.costs = ta_costs
+                self.dividend.cost = ta_costs
                 self.dividend.position = self.selected_pos
-                self.dividend.shares = self.selected_pos.quantity
-
 
 class DimensionComboBox(Gtk.ComboBoxText):
 
@@ -457,7 +455,7 @@ class DimensionComboBox(Gtk.ComboBoxText):
         return erg
 
 
-class EditStockTable(Gtk.Table):
+class EditAssetTable(Gtk.Table):
 
     def __init__(self, stock_to_edit, dialog):
         Gtk.Table.__init__(self)

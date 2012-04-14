@@ -100,11 +100,11 @@ class DividendsTree(Tree):
         parent_row = self.find_item(div.position)
         if parent_row is None:
             parent = model.append(None, [div.position,
-                            get_name_string(div.position.stock),
+                            get_name_string(div.position.asset),
                             None,
                             div.price,
-                            div.costs,
-                            div.total])
+                            div.cost,
+                            div.price-div.cost])
         else:
             parent_row[self.AMOUNT] += div.price
             parent_row[self.TA_COSTS] += div.costs
@@ -112,11 +112,11 @@ class DividendsTree(Tree):
             parent = parent_row.iter
         model.append(parent,
                 [div,
-                get_name_string(div.position.stock),
+                get_name_string(div.position.asset),
                 div.date,
                 div.price,
-                div.costs,
-                div.total])
+                div.cost,
+                div.price-div.cost])
 
     def on_edit(self, widget, data=None):
         obj, iterator = self.get_selected_item()

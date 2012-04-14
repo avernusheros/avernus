@@ -24,10 +24,8 @@ class Dividend(Base):
 
     __tablename__ = 'dividend'
     id = Column(Integer, primary_key=True)
-    isin = Column(String)
     price = Column(Float)
     cost = Column(Float)
-    shares = Column(Float)
     date = Column(Date)
     position_id = Column(Integer, ForeignKey('position.id'))
     position = relationship('Position', backref='dividends')

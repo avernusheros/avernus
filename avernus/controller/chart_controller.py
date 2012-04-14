@@ -338,8 +338,8 @@ class PortfolioChartController(ChartController):
 
     def __init__(self, portfolio, step):
         self.portfolio = portfolio
-        self.birthday = self.portfolio.birthday
-        self.items = portfolio.getTransactions() + portfolio.getDividends()
+        self.birthday = portfolio_controller.get_birthday(portfolio)
+        self.items = portfolio_controller.get_transactions(portfolio) + portfolio_controller.get_dividends(portfolio)
         self.step = step
 
     def _calc_days(self):

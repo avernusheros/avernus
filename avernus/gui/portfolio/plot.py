@@ -37,7 +37,7 @@ class ChartWindow(Gtk.Window):
         self.vbox.pack_start(self.change_label, False, False, 0)
         self.vbox.pack_end(self.current_chart, True, True, 0)
         self.current_zoom = 'YTD'
-        threads.GeneratorTask(asset_controller.datasource_manager.get_historical_prices, complete_callback=self.add_chart).start(self.stock)
+        threads.GeneratorTask(asset_controller.datasource_manager.get_historical_prices, complete_callback=self.add_chart, args=self.stock).start()
         self.add(self.vbox)
         self.show_all()
 
