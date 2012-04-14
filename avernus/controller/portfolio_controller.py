@@ -34,7 +34,7 @@ def get_all_portfolio_position():
 def get_current_value(portfolio):
     value = 0.0
     for pos in portfolio:
-        value += pos.cvalue
+        value += position_controller.get_current_value(pos)
     return value
 
 def get_birthday(portfolio):
@@ -48,8 +48,15 @@ def get_birthday(portfolio):
 def get_buy_value(portfolio):
     value = 0.0
     for pos in portfolio:
-        value += position_controller.get_buy_value()
+        value += position_controller.get_buy_value(pos)
     return value
+
+def get_fraction(portfolio, position):
+    cvalue = get_current_value(portfolio)
+    if cvalue == 0:
+        return 0.0
+    else:
+        return 100.0 * position_controller.get_current_value(position) / cvalue
 
 def get_closed_positions(portfolio):
     return []
@@ -213,55 +220,6 @@ def getBuyTransaction(portfolio_position):
 def yieldSellTransactions(portfolio_position):
     for ta in Transaction.getByColumns({'position': portfolio_position.id, 'type':0}, create=True):
         yield ta
-
-
-def newStock(insert=True, **kwargs):
-    result = Stock(**kwargs)
-    result.controller = controller
-    if insert:
-        result.insert()
-    return result
-
-def newBenchmark(portfolio, percentage):
-    bm = Benchmark(id=None,portfolio = portfolio.id, percentage = percentage)
-    bm.insert()
-    return bm
-
-def newWatchlistPosition(price=0, \
-                         date=datetime.datetime.now(), \
-                         quantity=1, \
-                         watchlist=None, \
-                         stock=None, \
-                         comment=''\
-                         ):
-    result = WatchlistPosition(id=None, \
-                               price=price, \
-                               date=date, \
-                               watchlist=watchlist, \
-                               stock=stock, \
-                               comment=comment\
-                               )
-    result.insert()
-    return result
-
-def newPortfolioPosition(price=0, \
-                         date=datetime.datetime.now(), \
-                         quantity=1, \
-                         portfolio=None, \
-                         stock=None, \
-                         comment=''\
-                         ):
-    result = PortfolioPosition(id=None, \
-                               price=price, \
-                               date=date, \
-                               quantity=quantity, \
-                               portfolio=portfolio, \
-                               stock=stock, \
-                               comment=comment\
-                               )
-    result.controller = controller
-    result.insert()
-    return result
 
 
 def newSourceInfo(source='', stock=None, info=''):

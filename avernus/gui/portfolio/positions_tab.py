@@ -31,15 +31,15 @@ def get_arrow_icon(perc):
 
 def start_price_markup(column, cell, model, iter, user_data):
     pos = model.get_value(iter, 0)
-    markup = gui_utils.get_currency_format_from_float(model.get_value(iter, user_data)) + '\n' + '<small>' + gui_utils.get_date_string(pos.date.date()) + '</small>'
+    markup = "%s\n<small>%s</small>" %  (gui_utils.get_currency_format_from_float(model.get_value(iter, user_data)), gui_utils.get_date_string(pos.date.date()))
     if isinstance(pos, MetaPosition):
         markup = unichr(8709) + " " + markup
     cell.set_property('markup', markup)
 
 
 def current_price_markup(column, cell, model, iter, user_data):
-    stock = model.get_value(iter, 0).stock
-    markup = gui_utils.get_currency_format_from_float(model.get_value(iter, user_data)) + '\n' + '<small>' + gui_utils.get_datetime_string(stock.date) + '</small>'
+    asset = model.get_value(iter, 0).asset
+    markup = "%s\n<small>%s</small>" %  (gui_utils.get_currency_format_from_float(model.get_value(iter, user_data)), gui_utils.get_datetime_string(asset.date))
     cell.set_property('markup', markup)
 
 
@@ -69,7 +69,7 @@ class PositionsTree(Tree):
 
         self._init_widgets()
         self.set_rules_hint(True)
-        self.stock_cache = {}
+        self.asset_cache = {}
         self.load_positions()
         self._connect_signals()
         self.selected_item = None
@@ -77,7 +77,7 @@ class PositionsTree(Tree):
     def _connect_signals(self):
         self.connect('button-press-event', self.on_button_press_event)
         self.connect('cursor_changed', self.on_cursor_changed)
-        pubsub.subscribe('stock.updated', self.on_stocks_updated)
+        pubsub.subscribe('asset.updated', self.on_assets_updated)
 
     def on_button_press_event(self, widget, event):
         if event.type == Gdk.EventType._2BUTTON_PRESS:
@@ -119,11 +119,11 @@ class PositionsTree(Tree):
     def on_update_positions(self, *args):
         def finished_cb():
             progress_manager.remove_monitor(555)
-        m = progress_manager.add_monitor(555, _('updating stocks...'), Gtk.STOCK_REFRESH)
+        m = progress_manager.add_monitor(555, _('updating assets...'), Gtk.STOCK_REFRESH)
         threads.GeneratorTask(self.container.update_positions, m.progress_update, complete_callback=finished_cb).start()
 
     def on_chart(self, widget, user_data=None):
-        ChartWindow(self.selected_item[0].stock)
+        ChartWindow(self.selected_item[0].asset)
 
     def on_edit(self, widget, user_data=None):
         position, iter = self.selected_item
@@ -137,8 +137,8 @@ class PositionsTree(Tree):
         for item in self._get_row(pos):
             self.model.set_value(iter, col, item)
             col += 1
-        if not isinstance(pos, MetaPosition) and pos.stock.id in self.stock_cache:
-            item = self.stock_cache[pos.stock.id]
+        if not isinstance(pos, MetaPosition) and pos.asset.id in self.asset_cache:
+            item = self.asset_cache[pos.asset.id]
             if isinstance(item, MetaPosition):
                 item.recalculate()
                 self.update_position_after_edit(item)
@@ -220,43 +220,43 @@ class PortfolioPositionsTree(PositionsTree):
     def insert_position(self, position):
         if position.quantity != 0:
             tree_iter = None
-            if position.stock.id in self.stock_cache:
-                if isinstance(self.stock_cache[position.stock.id], MetaPosition):
-                    mp = self.stock_cache[position.stock.id]
+            if position.asset.id in self.asset_cache:
+                if isinstance(self.asset_cache[position.asset.id], MetaPosition):
+                    mp = self.asset_cache[position.asset.id]
                     tree_iter = self.find_position(mp).iter
                 else:
-                    p1 = self.stock_cache[position.stock.id]
+                    p1 = self.asset_cache[position.asset.id]
                     mp = MetaPosition(p1)
                     tree_iter = self.model.append(None, self._get_row(mp))
-                    self.stock_cache[position.stock.id] = mp
+                    self.asset_cache[position.asset.id] = mp
                     self._move_position(p1, tree_iter)
                 mp.add_position(position)
                 self.update_position_after_edit(mp, tree_iter)
             else:
-                self.stock_cache[position.stock.id] = position
+                self.asset_cache[position.asset.id] = position
             self.model.append(tree_iter, self._get_row(position))
 
     def _get_row(self, position):
-        stock = position.stock
-        gain = position.gain
+        asset = position.asset
+        gain = position_controller.get_gain(position)
         gain_icon = get_arrow_icon(gain[1])
-        c_change = position.current_change
+        c_change = position_controller.get_current_change(position)
         icons = ['fund', 'stock', 'etf', 'bond']
         ret = [position,
-               get_name_string(stock),
+               get_name_string(asset),
                position.price,
-               stock.price,
+               asset.price,
                c_change[0],
                gain[0],
                gui_utils.get_string_from_float(position.quantity),
-               position.bvalue,
-               position.cvalue,
-               position.days_gain,
+               position_controller.get_buy_value(position),
+               position_controller.get_current_value(position),
+               position_controller.get_days_gain(position),
                float(gain[1]),
                gain_icon,
                float(c_change[1]),
-               icons[position.stock.type],
-               float(self.container.fraction(position))]
+               None,#FIXME icons[position.asset.type],
+               portfolio_controller.get_fraction(self.container, position)]
 
         if isinstance(position, MetaPosition):
             ret[self.COLS['shares']] = unichr(8721) + " " + ret[self.COLS['shares']]
@@ -287,15 +287,15 @@ class PortfolioPositionsTree(PositionsTree):
         else:
             dialogs.DividendDialog(pf=self.container, parent=self.get_toplevel())
 
-    def on_stocks_updated(self, container):
+    def on_assets_updated(self, container):
         if container.name == self.container.name:
             for row in self.model:
                 item = row[0]
                 if isinstance(item, MetaPosition):
                     item.recalculate()
                 gain, gain_percent = item.gain
-                row[self.COLS['name']] = get_name_string(item.stock)
-                row[self.COLS['last_price']] = item.stock.price
+                row[self.COLS['name']] = get_name_string(item.asset)
+                row[self.COLS['last_price']] = item.asset.price
                 row[self.COLS['change']] = item.current_change[0]
                 row[self.COLS['change_percent']] = float(item.current_change[1])
                 row[self.COLS['gain']] = gain
@@ -363,7 +363,7 @@ class WatchlistPositionsTree(PositionsTree):
         asset = position.asset
         gain = position_controller.get_gain(position)
         gain_icon = get_arrow_icon(gain[1])
-        c_change = position.current_change
+        c_change = position_controller.get_current_change(position)
         icons = ['fund', 'stock', 'etf', 'bond']
         ret = [position,
                get_name_string(asset),
@@ -372,9 +372,9 @@ class WatchlistPositionsTree(PositionsTree):
                c_change[0],
                gain[0],
                gui_utils.get_string_from_float(position.quantity),
-               position.bvalue,
-               position.cvalue,
-               position.days_gain,
+               position_controller.get_buy_value(position),
+               position_controller.get_current_value(position),
+               position_controller.get_days_gain(position),
                float(gain[1]),
                gain_icon,
                float(c_change[1]),
@@ -395,13 +395,13 @@ class WatchlistPositionsTree(PositionsTree):
             position.delete()
             self.model.remove(iter)
 
-    def on_stocks_updated(self, container):
+    def on_assets_updated(self, container):
         if container.name == self.container.name:
             for row in self.model:
                 item = row[0]
                 gain, gain_percent = item.gain
-                row[self.COLS['name']] = get_name_string(item.stock)
-                row[self.COLS['last_price']] = item.stock.price
+                row[self.COLS['name']] = get_name_string(item.asset)
+                row[self.COLS['last_price']] = item.asset.price
                 row[self.COLS['change']] = item.current_change[0]
                 row[self.COLS['change_percent']] = float(item.current_change[1])
                 row[self.COLS['gain']] = gain
@@ -444,7 +444,7 @@ class WatchlistPositionsTab(Gtk.VBox, page.Page):
         self.pack_start(sw, True, True, 0)
 
         pubsub.subscribe('position.created', self.update_page)
-        pubsub.subscribe('stocks.updated', self.update_page)
+        pubsub.subscribe('assets.updated', self.update_page)
         pubsub.subscribe('container.updated', self.update_page)
         pubsub.subscribe('container.position.added', self.update_page)
         self.show_all()
@@ -482,7 +482,7 @@ class PortfolioPositionsTab(Gtk.VBox, page.Page):
         self.pack_start(sw, True, True, 0)
 
         pubsub.subscribe('position.created', self.update_page)
-        pubsub.subscribe('stocks.updated', self.update_page)
+        pubsub.subscribe('assets.updated', self.update_page)
         pubsub.subscribe('container.updated', self.update_page)
         pubsub.subscribe('container.position.added', self.update_page)
         self.show_all()

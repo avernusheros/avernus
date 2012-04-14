@@ -1,5 +1,5 @@
 from avernus.objects import Base
-from sqlalchemy import Column, Integer, String, Float, Date, ForeignKey
+from sqlalchemy import Column, Integer, String, Float, Date, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
 
 class Benchmark(Base):
@@ -44,10 +44,9 @@ class Position(Base):
     __mapper_args__ = {'polymorphic_on': discriminator}
 
     id = Column(Integer, primary_key=True)
-    date = Column(Date)
+    date = Column(DateTime)
     price = Column(Float)
     comment = Column(String)
-    quantity = Column(Float)
 
     asset_id = Column(Integer, ForeignKey('asset.id'))
     asset = relationship('Asset', backref='positions')
@@ -60,6 +59,7 @@ class PortfolioPosition(Position):
     __tablename__ = 'portfolio_position'
     __mapper_args__ = {'polymorphic_identity': 'portfolioposition'}
     id = Column(Integer, ForeignKey('position.id'), primary_key=True)
+    quantity = Column(Float)
 
     portfolio_id = Column(Integer, ForeignKey('portfolio.id'))
     portfolio = relationship('Portfolio', backref='positions')
@@ -69,6 +69,7 @@ class WatchlistPosition(Position):
     __tablename__ = 'watchlist_position'
     __mapper_args__ = {'polymorphic_identity': 'watchlistposition'}
     id = Column(Integer, ForeignKey('position.id'), primary_key=True)
+    quantity = 1
 
     watchlist_id = Column(Integer, ForeignKey('watchlist.id'))
     watchlist = relationship('Watchlist', backref='positions')

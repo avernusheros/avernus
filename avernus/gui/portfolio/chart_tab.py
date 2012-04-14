@@ -52,7 +52,7 @@ class ChartTab(Gtk.ScrolledWindow, page.Page):
 
         y += 1
 
-        self.pfvalue_chart_controller = chart_controller.Portfoliochart_controller(self.pf, 'monthly')
+        self.pfvalue_chart_controller = chart_controller.PortfolioChartController(self.pf, 'monthly')
         self.pfvalue_chart = charts.SimpleLineChart(self.pfvalue_chart_controller, width)
         table.attach(self.pfvalue_chart, 0, 2, y, y + 1)
 

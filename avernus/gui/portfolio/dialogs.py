@@ -124,7 +124,7 @@ class BuyDialog(Gtk.Dialog):
     def on_stock_selection(self, *args):
         self.stock_ok = True
         st = self.stock_selector.get_stock()
-        st.update_price()
+        asset_controller.update_asset(st)
         self.price_entry.set_value(st.price)
         self.set_response_sensitivity()
 
@@ -150,10 +150,9 @@ class BuyDialog(Gtk.Dialog):
 
             if self.b_new:
                 stock = self.stock_selector.get_stock()
-                stock.update_price()
                 if shares == 0.0:
                     return
-                self.position = position_controller.new_portfolio_position(price=price, date=date, quantity=shares, portfolio=self.pf, stock=stock)
+                self.position = position_controller.new_portfolio_position(price=price, date=date, shares=shares, portfolio=self.pf, asset=stock)
                 ta = asset_controller.new_transaction(type=1, date=date, quantity=shares, price=price, costs=ta_costs, position=self.position, portfolio=self.pf)
                 #FIXME trigger publish in container.py and transaction.py
                 pubsub.publish('container.position.added', self.pf, self.position)

@@ -18,11 +18,18 @@ def get_quotations_for_asset(asset, start_date):
     print "TODO"
     #TODO
 
+def get_change_percent(asset):
+    return asset.change * 100.0 / (asset.price - asset.change)
+
 def new_asset(assettype = Asset, name = "", isin=0, source="",
-                currency="", exchange="", **kwargs):
+                currency="", exchange="", price=1.0,
+                change=0.0, date=datetime.datetime.now(), **kwargs):
     asset = assettype(name=name, isin=isin, source=source,
                         currency=currency,
-                        exchange=exchange)
+                        exchange=exchange,
+                        price=price,
+                        change=change,
+                        date=date)
     session.add(asset)
     return asset
 

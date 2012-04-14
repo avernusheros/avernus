@@ -1,7 +1,11 @@
 from avernus.objects.container import PortfolioPosition, WatchlistPosition
 from avernus.objects import session
+from avernus.controller import asset_controller
 
-def new_watchlist_position(price, date, watchlist, asset):
+import datetime
+
+
+def new_watchlist_position(price=0.0, date=datetime.datetime.now(), watchlist=None, asset=None):
     position = WatchlistPosition(price = price,
                                  date = date,
                                  watchlist = watchlist,
@@ -9,7 +13,7 @@ def new_watchlist_position(price, date, watchlist, asset):
     session.add(position)
     return position
 
-def new_portfolio_position(price, date, shares, portfolio, asset):
+def new_portfolio_position(price=0.0, date=datetime.datetime.now(), shares=1.0, portfolio=None, asset=None):
     position = PortfolioPosition(price = price,
                                  date = date,
                                  quantity = shares,
@@ -20,6 +24,9 @@ def new_portfolio_position(price, date, shares, portfolio, asset):
 
 def get_buy_value(position):
     return position.quantity * position.price
+
+def get_days_gain(position):
+    return position.asset.change * position.quantity
 
 def get_gain(position):
     if position.asset:
@@ -37,4 +44,4 @@ def get_current_value(position):
     return position.quantity * position.asset.price
 
 def get_current_change(position):
-    return position.asset.change, position.asset.percent
+    return position.asset.change, asset_controller.get_change_percent(position.asset)
