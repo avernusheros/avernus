@@ -5,7 +5,9 @@ from . import dsm
 
 import datetime
 
-
+def delete_position(position):
+    session.delete(position)
+    session.commit()
 
 def new_portfolio(name):
     pf = Portfolio(name=name)

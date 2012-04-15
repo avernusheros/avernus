@@ -49,7 +49,7 @@ class Position(Base):
     id = Column(Integer, primary_key=True)
     date = Column(DateTime)
     price = Column(Float)
-    comment = Column(String)
+    comment = Column(String, default='')
 
     asset_id = Column(Integer, ForeignKey('asset.id'))
     asset = relationship('Asset', backref='positions')

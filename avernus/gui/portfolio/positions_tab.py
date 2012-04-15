@@ -270,7 +270,7 @@ class PortfolioPositionsTree(PositionsTree):
         response = dlg.run()
         dlg.destroy()
         if response == Gtk.ResponseType.OK:
-            position.delete()
+            portfolio_controller.delete_position(position)
             self.model.remove(iterator)
 
     def on_sell(self, widget):
