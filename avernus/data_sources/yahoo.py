@@ -7,6 +7,7 @@ import re
 import json
 from datetime import datetime
 from avernus.objects.asset import Fund, Stock
+from avernus.controller import asset_controller
 
 import logging
 logger = logging.getLogger(__name__)
@@ -38,7 +39,7 @@ class Yahoo():
     def __get_all_yahoo_ids(self, stocks):
         ids = []
         for stock in stocks:
-            ids+= [source_info.info for source_info in controller.getSourceInfo(self.name, stock)]
+            ids += [source_info.info for source_info in asset_controller.get_source_info(self.name, stock)]
         return '+'.join(ids)
 
     def update_stocks(self, stocks):

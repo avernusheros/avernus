@@ -28,8 +28,11 @@ def get_quotations_for_asset(asset, start_date):
     print "TODO"
     #TODO
     
+def get_source_info(source, ass=None):
+    return session.query(SourceInfo).filter_by(asset=ass, source=source).all()
+    
 def get_ter(ass):
-    if isinstance(ass, asset.Fond):
+    if isinstance(ass, asset.Fund):
         return ass.ter
     return 0.0
 
