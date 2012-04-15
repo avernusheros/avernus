@@ -136,8 +136,8 @@ def update_positions(portfolio):
     for item in dsm.update_stocks(items):
         count += 1.0
         yield count / itemcount
-    self.last_update = datetime.now()
-    pubsub.publish("stocks.updated", self)
+    portfolio.last_update = datetime.datetime.now()
+    #pubsub.publish("stocks.updated", self)
     yield 1
 
 

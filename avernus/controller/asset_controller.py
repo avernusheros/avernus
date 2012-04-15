@@ -2,7 +2,8 @@ from avernus.objects.asset import Asset
 from avernus.objects.asset import Quotation
 from avernus.objects.asset import SourceInfo
 from avernus.objects.container import Position
-from avernus.objects import session, asset
+# Session is the class, session the normal instance
+from avernus.objects import Session, session, asset
 from avernus import pubsub
 from sqlalchemy import or_
 import datetime
@@ -29,7 +30,7 @@ def get_quotations_for_asset(asset, start_date):
     #TODO
     
 def get_source_info(source, ass=None):
-    return session.query(SourceInfo).filter_by(asset=ass, source=source).all()
+    return Session.query(SourceInfo).filter_by(asset=ass, source=source).all()
     
 def get_ter(ass):
     if isinstance(ass, asset.Fund):

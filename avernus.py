@@ -141,7 +141,7 @@ except Exception as e:
     import traceback
     traceback.print_exc()
     avernus.objects.session.commit()
-    avernus.objects.session.close()
+    avernus.objects.Session.close_all()
     threads.terminate_all()
     print "wie gesagt ... abgekachelt ..."
     exit(1)

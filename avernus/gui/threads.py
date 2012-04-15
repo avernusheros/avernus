@@ -5,8 +5,6 @@ import threading
 
 logger = logging.getLogger(__name__)
 
-
-
 class BackgroundTask():
     def __init__(self, function, complete_callback=None):
         self.function = function

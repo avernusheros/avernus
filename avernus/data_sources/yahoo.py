@@ -53,7 +53,7 @@ class Yahoo():
             while len_ids == 0 and current_stock < len(stocks)-1:
                 current_stock += 1
                 #print current_stock, stocks
-                len_ids = len(controller.getSourceInfo(self.name, stocks[current_stock]))
+                len_ids = len(asset_controller.get_source_info(self.name, stocks[current_stock]))
             len_ids -= 1
             if len(row) > 1:
                 if row[1] == 'N/A':
