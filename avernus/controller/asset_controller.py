@@ -1,5 +1,6 @@
 from avernus.objects.asset import Asset
 from avernus.objects.asset import Quotation
+from avernus.objects.asset import Dividend
 from avernus.objects.asset import SourceInfo
 from avernus.objects.container import Position
 # Session is the class, session the normal instance
@@ -28,10 +29,10 @@ def get_change_percent(asset):
 def get_quotations_for_asset(asset, start_date):
     print "TODO"
     #TODO
-    
+
 def get_source_info(source, ass=None):
     return Session.query(SourceInfo).filter_by(asset=ass, source=source).all()
-    
+
 def get_ter(ass):
     if isinstance(ass, asset.Fund):
         return ass.ter
@@ -57,7 +58,7 @@ def new_dividend(price=0.0, cost=0.0, date=datetime.date.today(), position=None)
 def new_transaction(*args, **kwargs):
     print "TODO"
     #TODO
-    
+
 def new_quotation(stock, exchange, date, open, high, low, close, vol):
     qu = Quotation(stock=stock,
                    exchange=exchange,
@@ -93,5 +94,5 @@ def update_all(*args):
 
 def update_asset(asset):
     datasource_manager.update_asset(asset)
-    
+
 

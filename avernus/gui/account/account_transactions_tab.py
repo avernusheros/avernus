@@ -232,16 +232,16 @@ class AccountChartsNotebook(Gtk.Notebook):
         label.set_tooltip_text(_('step value.'))
         self.append_page(valueChart, label)
 
-        chart_controller = chart_controller.AccountBalanceOverTimeChartController(self.account, self.date_range)
-        chart = charts.SimpleLineChart(chart_controller, 300)
+        controller = chart_controller.AccountBalanceOverTimeChartController(self.account, self.date_range)
+        chart = charts.SimpleLineChart(controller, 300)
         self.charts.append(chart)
         label = Gtk.Label(label=_('Account balance'))
         label.set_tooltip_text(_('Account balance over the given time period.'))
         self.append_page(chart, label)
 
         table = Gtk.Table()
-        chart_controller = chart_controller.TransactionCategoryPieController(self.account.transactions, earnings=True)
-        chart = charts.Pie(chart_controller, 400)
+        controller = chart_controller.TransactionCategoryPieController(self.account.transactions, earnings=True)
+        chart = charts.Pie(controller, 400)
         self.charts.append(chart)
         label = Gtk.Label()
         label.set_markup('<b>' + _('Earnings') + '</b>')
@@ -249,8 +249,8 @@ class AccountChartsNotebook(Gtk.Notebook):
         table.attach(label, 0, 1, 0, 1, xoptions=Gtk.AttachOptions.FILL, yoptions=Gtk.AttachOptions.FILL)
         table.attach(chart, 0, 1, 1, 2)
 
-        chart_controller = chart_controller.TransactionCategoryPieController(self.account.transactions, earnings=False)
-        chart = charts.Pie(chart_controller, 400)
+        controller = chart_controller.TransactionCategoryPieController(self.account.transactions, earnings=False)
+        chart = charts.Pie(controller, 400)
         self.charts.append(chart)
         label = Gtk.Label()
         label.set_markup('<b>' + _('Spendings') + '</b>')
@@ -261,8 +261,8 @@ class AccountChartsNotebook(Gtk.Notebook):
         label.set_tooltip_text(_('Categorization of transactions.'))
         self.append_page(table, label)
 
-        chart_controller = chart_controller.EarningsVsSpendingsController(self.account.transactions, self.date_range)
-        chart = charts.BarChart(chart_controller, 400)
+        controller = chart_controller.EarningsVsSpendingsController(self.account.transactions, self.date_range)
+        chart = charts.BarChart(controller, 400)
         self.charts.append(chart)
         label = Gtk.Label(label=_('Earnings vs Spendings'))
         label.set_tooltip_text(_('Earnings vs spendings in given time period.'))
@@ -443,7 +443,7 @@ class TransactionsTree(gui_utils.Tree):
         dlg.destroy()
         if response == Gtk.ResponseType.OK:
             trans.account.balance -= trans.amount
-            trans.delete()
+            object_controller.delete_object(trans)
             child_iter = self._get_child_iter(iterator)
             self.model.remove(child_iter)
 

@@ -80,10 +80,10 @@ def get_date_of_last_dividend(pf):
     if get_dividends_count(pf) == 0:
         return datetime.date.today()
     current = None
-    # could not test it, probably won't work
-    for dividend in pf.dividends:
-        if not current or dividend.date > current:
-            current = dividend.date
+    for pos in pf:
+        for dividend in pos.dividends:
+            if not current or dividend.date > current:
+                current = dividend.date
     return current
 
 def get_dividends(portfolio):
@@ -223,10 +223,3 @@ def yieldSellTransactions(portfolio_position):
     for ta in Transaction.getByColumns({'position': portfolio_position.id, 'type':0}, create=True):
         yield ta
 
-
-def newSourceInfo(source='', stock=None, info=''):
-    if check_duplicate(SourceInfo, source=source, stock=stock.id, info=info) is not None:
-        return None
-    si = SourceInfo(source=source, stock=stock, info=info)
-    si.insert()
-    return si

@@ -12,6 +12,7 @@ from avernus.gui import gui_utils, progress_manager, page, threads
 from avernus.objects.asset import MetaPosition
 from avernus.controller import portfolio_controller
 from avernus.controller import position_controller
+from avernus.controller import object_controller
 
 
 gain_thresholds = {
@@ -392,7 +393,7 @@ class WatchlistPositionsTree(PositionsTree):
         response = dlg.run()
         dlg.destroy()
         if response == Gtk.ResponseType.OK:
-            position.delete()
+            object_controller.delete_object(position)
             self.model.remove(iter)
 
     def on_assets_updated(self, container):

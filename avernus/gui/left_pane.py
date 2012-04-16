@@ -180,7 +180,7 @@ class MainTree(gui_utils.Tree):
                     popup = self.uimanager.get_widget("/Popup")
                 popup.popup(None, None, None, None, event.button, event.time)
                 return True
-            if self.get_selection().path_is_selected(target[0]) and obj.__class__.__name__ == 'AccountCategory' :
+            if self.get_selection().path_is_selected(target[0]) and obj.__class__.__name__ == 'Category' :
                 #disable editing of categories
                 return True
 
@@ -188,7 +188,7 @@ class MainTree(gui_utils.Tree):
         self.pf_iter = self.get_model().append(None, [Category('Portfolios'), 'portfolios', _("<b>Portfolios</b>"), ''])
         self.wl_iter = self.get_model().append(None, [Category('Watchlists'), 'watchlists', _("<b>Watchlists</b>"), ''])
         self.accounts_iter = self.get_model().append(None, [Category('Accounts'), 'accounts', _("<b>Accounts</b>"), ''])
-        
+
     def insert_watchlist(self, item):
         self.get_model().append(self.wl_iter, [item, 'watchlist', item.name, ''])
 

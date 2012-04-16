@@ -73,7 +73,7 @@ class ChartTab(Gtk.ScrolledWindow, page.Page):
         label.set_markup('<b>' + _('Investment types') + '</b>')
         label.set_tooltip_text(_("Percentual fraction by investment type."))
         table.attach(label, 1, 2, y - 1, y)
-        controller = chart_controller.PositionAttributechart_controller(self.pf, 'type_string')
+        controller = chart_controller.PositionAttributeChartController(self.pf, 'type_string')
         chart = charts.Pie(controller, width / 2)
         table.attach(chart, 1, 2, y, y + 1)
 
@@ -86,7 +86,7 @@ class ChartTab(Gtk.ScrolledWindow, page.Page):
             label.set_markup('<b>' + dim.name + '</b>')
             label.set_tooltip_text(_('Percentual fraction by "') + dim.name + '".')
             table.attach(label, col, col + 1, y, y + 1)
-            controller = chart_controller.Dimensionchart_controller(self.pf, dim)
+            controller = chart_controller.DimensionChartController(self.pf, dim)
             chart = charts.Pie(controller, width / 2)
             table.attach(chart, col, col + 1, y + 1, y + 2)
             if switch:
@@ -103,7 +103,7 @@ class ChartTab(Gtk.ScrolledWindow, page.Page):
         label.set_markup('<b>' + _('Dividends per Year') + '</b>')
         label.set_tooltip_text(_('Total dividend payment per year.'))
         table.attach(label, 0, 2, y, y + 1)
-        controller = chart_controller.DividendsPerYearchart_controller(self.pf)
+        controller = chart_controller.DividendsPerYearChartController(self.pf)
         chart = charts.BarChart(controller, width)
         table.attach(chart, 0, 2, y + 2, y + 3)
 
@@ -111,7 +111,7 @@ class ChartTab(Gtk.ScrolledWindow, page.Page):
         label.set_markup('<b>' + _('Dividends') + '</b>')
         label.set_tooltip_text(_('Total dividend payment for each position.'))
         table.attach(label, 0, 2, y + 3, y + 4)
-        controller = chart_controller.DividendsPerPositionchart_controller(self.pf)
+        controller = chart_controller.DividendsPerPositionChartController(self.pf)
         chart = charts.BarChart(controller, width)
         table.attach(chart, 0, 2, y + 4, y + 5)
 
