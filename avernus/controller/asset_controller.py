@@ -2,6 +2,7 @@ from avernus.objects.asset import Asset
 from avernus.objects.asset import Quotation
 from avernus.objects.asset import Dividend
 from avernus.objects.asset import SourceInfo
+from avernus.objects.asset import Transaction
 from avernus.objects.container import Position
 # Session is the class, session the normal instance
 from avernus.objects import Session, session, asset
@@ -38,6 +39,14 @@ def get_ter(ass):
         return ass.ter
     return 0.0
 
+def get_transaction_total(transaction):
+    #FIXME declare types somewhere
+    if transaction.type==1:
+        sign = -1.0
+    else:
+        sign = 1.0
+    return sign*transaction.price*transaction.quantity + transaction.cost
+
 def new_asset(assettype = Asset, name = "", isin=0, source="",
                 currency="", exchange="", price=1.0,
                 change=0.0, date=datetime.datetime.now(), **kwargs):
@@ -54,10 +63,6 @@ def new_dividend(price=0.0, cost=0.0, date=datetime.date.today(), position=None)
     div = Dividend(price=price, cost=cost, date=date, position=position)
     session.add(div)
     return div
-
-def new_transaction(*args, **kwargs):
-    print "TODO"
-    #TODO
 
 def new_quotation(stock, exchange, date, open, high, low, close, vol):
     qu = Quotation(stock=stock,
@@ -77,8 +82,9 @@ def new_source_info(source, asset, info):
     return si
 
 def new_transaction(*args, **kwargs):
-    print "TODO"
-    #TODO
+    ta = Transaction(**kwargs)
+    session.add(ta)
+    return ta
 
 def update_all(*args):
     items = get_all_used_assets()

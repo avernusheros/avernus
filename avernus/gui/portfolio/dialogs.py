@@ -31,15 +31,15 @@ class BuyDialog(Gtk.Dialog):
         table.set_col_spacings(4)
         vbox.pack_end(table, True, True, 0)
         if self.b_new:
-            #stock entry
-            self.stock_selector = StockSelector()
-            table.attach(self.stock_selector, 0, 3, 0, 1)
-            self.stock_selector.result_tree.connect('cursor-changed', self.on_stock_selection)
-            self.stock_selector.result_tree.get_model().connect('row-deleted', self.on_stock_deselection)
-            self.stock_ok = False
+            #asset entry
+            self.asset_selector = StockSelector()
+            table.attach(self.asset_selector, 0, 3, 0, 1)
+            self.asset_selector.result_tree.connect('cursor-changed', self.on_asset_selection)
+            self.asset_selector.result_tree.get_model().connect('row-deleted', self.on_asset_deselection)
+            self.asset_ok = False
         else:
             label = Gtk.Label()
-            label.set_markup(gui_utils.get_name_string(self.transaction.position.stock))
+            label.set_markup(gui_utils.get_name_string(self.transaction.position.asset))
             label.set_alignment(0.0, 0.5)
             table.attach(label, 0, 3, 0, 1, xoptions=Gtk.AttachOptions.FILL, yoptions=0)
 
@@ -83,10 +83,10 @@ class BuyDialog(Gtk.Dialog):
         self.infobar.set_message_type(Gtk.MessageType.WARNING)
 
         if not self.b_new:
-            self.stock_ok = True
+            self.asset_ok = True
             self.shares_entry.set_value(self.transaction.quantity)
             self.price_entry.set_value(self.transaction.price)
-            self.tacosts_entry.set_value(self.transaction.costs)
+            self.tacosts_entry.set_value(self.transaction.cost)
             self.calendar.select_month(self.transaction.date.month - 1, self.transaction.date.year)
             self.calendar.select_day(self.transaction.date.day)
             self.on_change()
@@ -121,46 +121,46 @@ class BuyDialog(Gtk.Dialog):
         total = self.shares_entry.get_value() * self.price_entry.get_value() + self.tacosts_entry.get_value()
         self.total.set_markup('<b>' + gui_utils.get_currency_format_from_float(total) + '</b>')
 
-    def on_stock_selection(self, *args):
-        self.stock_ok = True
-        st = self.stock_selector.get_stock()
+    def on_asset_selection(self, *args):
+        self.asset_ok = True
+        st = self.asset_selector.get_asset()
         asset_controller.update_asset(st)
         self.price_entry.set_value(st.price)
         self.set_response_sensitivity()
 
-    def on_stock_deselection(self, *args):
-        self.stock_ok = False
+    def on_asset_deselection(self, *args):
+        self.asset_ok = False
         self.set_response_sensitivity()
 
     def set_response_sensitivity(self):
-        if self.stock_ok and self.date_ok:
+        if self.asset_ok and self.date_ok:
             self.set_response_sensitive(Gtk.ResponseType.ACCEPT, True)
         else:
             self.set_response_sensitive(Gtk.ResponseType.ACCEPT, False)
 
     def process_result(self, response):
         if self.b_new:
-            self.stock_selector.stop_search()
+            self.asset_selector.stop_search()
         if response == Gtk.ResponseType.ACCEPT:
             price = self.price_entry.get_value()
             year, month, day = self.calendar.get_date()
-            date = datetime.datetime(year, month + 1, day)
+            date = datetime.date(year, month + 1, day)
             ta_costs = self.tacosts_entry.get_value()
             shares = self.shares_entry.get_value()
 
             if self.b_new:
-                stock = self.stock_selector.get_stock()
+                asset = self.asset_selector.get_asset()
                 if shares == 0.0:
                     return
-                self.position = position_controller.new_portfolio_position(price=price, date=date, shares=shares, portfolio=self.pf, asset=stock)
-                ta = asset_controller.new_transaction(type=1, date=date, quantity=shares, price=price, costs=ta_costs, position=self.position, portfolio=self.pf)
+                self.position = position_controller.new_portfolio_position(price=price, date=date, shares=shares, portfolio=self.pf, asset=asset)
+                ta = asset_controller.new_transaction(type=1, date=date, quantity=shares, price=price, cost=ta_costs, position=self.position)
                 #FIXME trigger publish in container.py and transaction.py
                 pubsub.publish('container.position.added', self.pf, self.position)
                 pubsub.publish('transaction.added', ta)
             else:
                 self.transaction.position.price = self.transaction.price = price
                 self.transaction.position.date = self.transaction.date = date
-                self.transaction.costs = ta_costs
+                self.transaction.cost = ta_costs
                 self.transaction.position.quantity = self.transaction.quantity = shares
 
 
@@ -178,10 +178,10 @@ class NewWatchlistPositionDialog(Gtk.Dialog):
         self.position = None
 
         vbox = self.get_content_area()
-        self.stock_selector = StockSelector()
-        vbox.pack_start(self.stock_selector, True, True, 0)
-        self.stock_selector.result_tree.connect('cursor-changed', self.on_stock_selection)
-        self.stock_selector.result_tree.get_model().connect('row-deleted', self.on_stock_deselection)
+        self.asset_selector = StockSelector()
+        vbox.pack_start(self.asset_selector, True, True, 0)
+        self.asset_selector.result_tree.connect('cursor-changed', self.on_asset_selection)
+        self.asset_selector.result_tree.get_model().connect('row-deleted', self.on_asset_deselection)
 
         self.set_size_request(self.WIDTH, self.HEIGHT)
         self.set_response_sensitive(Gtk.ResponseType.ACCEPT, False)
@@ -190,16 +190,16 @@ class NewWatchlistPositionDialog(Gtk.Dialog):
         self.process_result(response)
         self.destroy()
 
-    def on_stock_selection(self, *args):
+    def on_asset_selection(self, *args):
         self.set_response_sensitive(Gtk.ResponseType.ACCEPT, True)
 
-    def on_stock_deselection(self, *args):
+    def on_asset_deselection(self, *args):
         self.set_response_sensitive(Gtk.ResponseType.ACCEPT, False)
 
     def process_result(self, response):
-        self.stock_selector.stop_search()
+        self.asset_selector.stop_search()
         if response == Gtk.ResponseType.ACCEPT:
-            asset = self.stock_selector.get_stock()
+            asset = self.asset_selector.get_asset()
             asset_controller.update_asset(asset)
             self.position = position_controller.new_watchlist_position(price=asset.price, date=asset.date, watchlist=self.wl, asset=asset)
             pubsub.publish('container.position.added', self.wl, self.position)
@@ -234,14 +234,14 @@ class PosSelector(Gtk.ComboBox):
 
 class EditAssetDialog(Gtk.Dialog):
 
-    def __init__(self, stock, parent=None):
-        Gtk.Dialog.__init__(self, _("Edit stock"), parent
+    def __init__(self, asset, parent=None):
+        Gtk.Dialog.__init__(self, _("Edit asset"), parent
                             , Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,
                      (Gtk.STOCK_CANCEL, Gtk.ResponseType.REJECT,
                       Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT))
 
         vbox = self.get_content_area()
-        self.table = EditAssetTable(stock)
+        self.table = EditAssetTable(asset)
         vbox.pack_start(self.table, True, True, 0)
 
         self.show_all()
@@ -370,7 +370,7 @@ class DimensionComboBox(Gtk.ComboBoxText):
         self.connect('changed', self.on_entry_changed)
 
     def get_dimension_text(self, asset, dim):
-        advs = asset.getAssetDimensionValue(dim)
+        advs = dimensions_controller.get_asset_dimension_value(asset, dim)
         if len(advs) == 1:
             # we have 100% this value in its dimension
             return str(advs.pop(0))
@@ -384,7 +384,7 @@ class DimensionComboBox(Gtk.ComboBoxText):
         return erg
 
     def get_adv_text(self, adv):
-        erg = adv.dimensionValue.name
+        erg = adv.dimension_value.name
         if adv.value != 100:
             erg += ":" + locale.str(adv.value)
         return erg
@@ -457,34 +457,36 @@ class DimensionComboBox(Gtk.ComboBoxText):
 
 class EditAssetTable(Gtk.Table):
 
-    def __init__(self, stock_to_edit, dialog):
+    def __init__(self, asset_to_edit, dialog):
         Gtk.Table.__init__(self)
-        self.stock = stock_to_edit
+        self.asset = asset_to_edit
         self.b_change = False
 
         self.attach(Gtk.Label(label=_('Name')), 0, 1, 0, 1, yoptions=Gtk.AttachOptions.FILL)
         self.name_entry = Gtk.Entry()
-        self.name_entry.set_text(stock_to_edit.name)
+        self.name_entry.set_text(asset_to_edit.name)
         self.attach(self.name_entry, 1, 2, 0, 1, yoptions=Gtk.AttachOptions.FILL)
 
         self.attach(Gtk.Label(label=_('ISIN')), 0, 1, 1, 2, yoptions=Gtk.AttachOptions.FILL)
         self.isin_entry = Gtk.Entry()
-        self.isin_entry.set_text(stock_to_edit.isin)
+        self.isin_entry.set_text(asset_to_edit.isin)
         self.attach(self.isin_entry, 1, 2, 1, 2, yoptions=Gtk.AttachOptions.FILL)
 
         self.attach(Gtk.Label(label=_('Type')), 0, 1, 2, 3, yoptions=Gtk.AttachOptions.FILL)
         liststore = Gtk.ListStore(str, int)
-        for val, name in stock.TYPES.iteritems():
-            liststore.append([name, val])
+        #FIXME
+        #for val, name in stock.TYPES.iteritems():
+        #    liststore.append([name, val])
         self.type_cb = cb = Gtk.ComboBox(model=liststore)
         cell = Gtk.CellRendererText()
         cb.pack_start(cell, True)
         cb.add_attribute(cell, 'text', 0)
-        cb.set_active(self.stock.type)
+        #FIXME
+        #cb.set_active(self.asset.type)
         self.attach(cb, 1, 2, 2, 3, yoptions=Gtk.AttachOptions.FILL)
 
         self.attach(Gtk.Label(label=_('TER')), 0, 1, 3, 4, yoptions=Gtk.AttachOptions.SHRINK)
-        self.ter_entry = Gtk.SpinButton(adjustment=Gtk.Adjustment(lower=0, upper=100, step_increment=0.1, value=self.stock.ter), digits=2)
+        self.ter_entry = Gtk.SpinButton(adjustment=Gtk.Adjustment(lower=0, upper=100, step_increment=0.1, value=asset_controller.get_ter(self.asset)), digits=2)
         self.attach(self.ter_entry, 1, 2, 3, 4, yoptions=Gtk.AttachOptions.SHRINK)
 
         currentRow = 4
@@ -492,7 +494,7 @@ class EditAssetTable(Gtk.Table):
             #print dim
             self.attach(Gtk.Label(label=_(dim.name)), 0, 1, currentRow, currentRow + 1, yoptions=Gtk.AttachOptions.FILL)
             comboName = dim.name + "ValueComboBox"
-            setattr(self, comboName, DimensionComboBox(dim, stock_to_edit, dialog))
+            setattr(self, comboName, DimensionComboBox(dim, asset_to_edit, dialog))
             self.attach(getattr(self, comboName), 1, 2, currentRow, currentRow + 1, yoptions=Gtk.AttachOptions.FILL)
             getattr(self, comboName).connect("changed", self.on_change)
             currentRow += 1
@@ -506,16 +508,17 @@ class EditAssetTable(Gtk.Table):
 
     def process_result(self, widget=None, response=Gtk.ResponseType.ACCEPT):
         if response == Gtk.ResponseType.ACCEPT and self.b_change:
-            self.stock.name = self.name_entry.get_text()
-            self.stock.isin = self.isin_entry.get_text()
+            self.asset.name = self.name_entry.get_text()
+            self.asset.isin = self.isin_entry.get_text()
             active_iter = self.type_cb.get_active_iter()
-            self.stock.type = self.type_cb.get_model()[active_iter][1]
-            self.stock.ter = self.ter_entry.get_value()
+            #FIXME
+            #self.asset.type = self.type_cb.get_model()[active_iter][1]
+            self.asset.ter = self.ter_entry.get_value()
             for dim in dimensions_controller.get_all_dimensions():
                 box = getattr(self, dim.name + "ValueComboBox")
                 active = box.get_active()
-                self.stock.updateAssetDimensionValue(dim, active)
-                pubsub.publish("stock.edited", self.stock)
+                dimensions_controller.update_asset_dimension_values(self.asset, dim, active)
+            pubsub.publish("asset.edited", self.asset)
 
 
 class StockSelector(Gtk.VBox):
@@ -550,7 +553,7 @@ class StockSelector(Gtk.VBox):
         self.pack_end(sw, True , True, 0)
         self.spinner = None
 
-    def get_stock(self):
+    def get_asset(self):
         path, col = self.result_tree.get_cursor()
         return self.result_tree.get_model()[path][0]
 
@@ -590,17 +593,17 @@ class StockSelector(Gtk.VBox):
         self._hide_spinner()
         asset_controller.datasource_manager.stop_search()
 
-    def insert_item(self, stock, icon):
+    def insert_item(self, asset, icon):
         #FIXME bond icon
         icons = ['fund', 'stock', 'etf', 'stock']
         self.result_tree.get_model().append(None, [
-                                       stock,
+                                       asset,
                                        icon,
-                                       stock.name,
-                                       stock.isin,
-                                       stock.currency,
+                                       asset.name,
+                                       asset.isin,
+                                       asset.currency,
                                        #FIXME icons
-                                       #icons[stock.type],
+                                       #icons[asset.type],
                                        None
                                        ])
 
@@ -629,7 +632,7 @@ class SellDialog(Gtk.Dialog):
 
         #name
         label = Gtk.Label()
-        label.set_markup(gui_utils.get_name_string(pos.stock))
+        label.set_markup(gui_utils.get_name_string(pos.asset))
         label.set_alignment(0.0, 0.5)
         table.attach(label, 0, 2, 0, 1, Gtk.AttachOptions.FILL, 0)
 
@@ -670,7 +673,7 @@ class SellDialog(Gtk.Dialog):
         if self.transaction is not None:
             self.shares_entry.set_value(self.transaction.quantity)
             self.price_entry.set_value(self.transaction.price)
-            self.tacosts_entry.set_value(self.transaction.costs)
+            self.tacosts_entry.set_value(self.transaction.cost)
             self.calendar.select_month(self.transaction.date.month - 1, self.transaction.date.year)
             self.calendar.select_day(self.transaction.date.day)
             self.on_change()
@@ -686,19 +689,19 @@ class SellDialog(Gtk.Dialog):
             shares = self.shares_entry.get_value()
             price = self.price_entry.get_value()
             year, month, day = self.calendar.get_date()
-            date = datetime.datetime(year, month + 1, day)
+            date = datetime.date(year, month + 1, day)
             ta_costs = self.tacosts_entry.get_value()
 
             if self.transaction is None:
                 if shares == 0.0:
                     return
                 self.pos.quantity -= shares
-                ta = asset_controller.new_transaction(portfolio=self.pos.portfolio, position=self.pos, type=0, date=date, quantity=shares, price=price, costs=ta_costs)
+                ta = asset_controller.new_transaction(position=self.pos, type=0, date=date, quantity=shares, price=price, cost=ta_costs)
                 pubsub.publish('transaction.added', ta)
             else:
                 self.pos.price = self.transaction.price = price
                 self.pos.date = self.transaction.date = date
-                self.transaction.costs = ta_costs
+                self.transaction.cost = ta_costs
                 self.pos.quantity = self.transaction.quantity = shares
 
     def on_change(self, widget=None):

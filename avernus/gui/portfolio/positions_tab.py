@@ -32,7 +32,7 @@ def get_arrow_icon(perc):
 
 def start_price_markup(column, cell, model, iter, user_data):
     pos = model.get_value(iter, 0)
-    markup = "%s\n<small>%s</small>" %  (gui_utils.get_currency_format_from_float(model.get_value(iter, user_data)), gui_utils.get_date_string(pos.date.date()))
+    markup = "%s\n<small>%s</small>" %  (gui_utils.get_currency_format_from_float(model.get_value(iter, user_data)), gui_utils.get_date_string(pos.date))
     if isinstance(pos, MetaPosition):
         markup = unichr(8709) + " " + markup
     cell.set_property('markup', markup)

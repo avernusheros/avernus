@@ -194,7 +194,7 @@ class TransactionsTab(Gtk.VBox):
             self.insert_transaction(transaction)
 
     def insert_transaction(self, ta):
-        return self.model.append([ta, ta.type_string, ta.date.date(), float(ta.quantity), ta.price, ta.costs, ta.total])
+        return self.model.append([ta, str(ta.type), ta.date, ta.quantity, ta.price, ta.cost, asset_controller.get_transaction_total(ta)])
 
     def on_row_activated(self, treeview, path, view_column):
         if view_column == self.date_column:
@@ -220,7 +220,7 @@ class TransactionsTab(Gtk.VBox):
                     date=position.date,
                     quantity=position.quantity,
                     price=position.price,
-                    costs=last_transaction.costs,
+                    costs=last_transaction.cost,
                     position=position,
                     portfolio=position.portfolio)
         iterator = self.insert_transaction(transaction)
@@ -273,8 +273,8 @@ class TransactionsTab(Gtk.VBox):
         try:
             value = float(new_text.replace(",", "."))
             ta = self.model[path][0]
-            ta.costs = value
-            ta.position.costs = value
+            ta.cost = value
+            ta.position.cost = value
             #update gui
             self.model[path][columnnumber] = value
             self.model[path][self.COL_TOTAL] = ta.total
