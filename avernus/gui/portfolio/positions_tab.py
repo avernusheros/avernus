@@ -134,10 +134,7 @@ class PositionsTree(Tree):
     def update_position_after_edit(self, pos, iter=None):
         if iter is None:
             iter = self.find_position(pos).iter
-        col = 0
-        for item in self._get_row(pos):
-            self.model.set_value(iter, col, item)
-            col += 1
+        self.model[iter] = self._get_row(pos)
         if not isinstance(pos, MetaPosition) and pos.asset.id in self.asset_cache:
             item = self.asset_cache[pos.asset.id]
             if isinstance(item, MetaPosition):
@@ -304,14 +301,14 @@ class PortfolioPositionsTree(PositionsTree):
                 row[self.COLS['gain_icon']] = get_arrow_icon(gain_percent)
                 row[self.COLS['days_gain']] = item.days_gain
                 row[self.COLS['mkt_value']] = item.cvalue
-                row[self.COLS['pf_percent']] = self.container.fraction(item)
+                row[self.COLS['pf_percent']] = portfolio_controller.get_fraction(self.container, item)
 
     def on_position_added(self, item):
         self.insert_position(item)
         #update portfolio fractions
         for row in self.model:
             pos = row[self.COLS['obj']]
-            row[self.COLS['pf_percent']] = float(self.container.fraction(item))
+            row[self.COLS['pf_percent']] = portfolio_controller.get_fraction(self.container, item)
 
     def on_unselect(self):
         for action in ['edit', 'sell', 'remove', 'chart']:

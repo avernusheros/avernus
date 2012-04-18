@@ -12,16 +12,25 @@ def new_dimension(name):
     return d
 
 def new_dimension_value(*args, **kwargs):
-    print "TODO"
+    dv = DimensionValue(**kwargs)
+    session.add(dv)
+    return dv
 
 def new_asset_dimension_value(*args, **kwargs):
-    adv = AssetDimensionValue(kwargs)
+    adv = AssetDimensionValue(**kwargs)
     session.add(adv)
     return adv
 
 def get_all_dimensions():
     res = session.query(Dimension).all()
     return res
+
+def get_asset_dimension_value_text(asset_dimension_value):
+    res = asset_dimension_value.dimension_value.name
+    if asset_dimension_value.value != 100:
+        res += ":"+str(asset_dimension_value.value)
+    return res
+
 
 
 def get_asset_dimension_value(asset, dimension):

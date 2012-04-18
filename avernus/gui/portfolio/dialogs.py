@@ -373,7 +373,7 @@ class DimensionComboBox(Gtk.ComboBoxText):
         advs = dimensions_controller.get_asset_dimension_value(asset, dim)
         if len(advs) == 1:
             # we have 100% this value in its dimension
-            return str(advs.pop(0))
+            return dimensions_controller.get_asset_dimension_value_text(advs.pop(0))
         erg = ""
         i = 0
         for adv in advs:
@@ -451,7 +451,7 @@ class DimensionComboBox(Gtk.ComboBoxText):
         parse = self.parse()
         if parse:
             for name, value in parse:
-                erg.append((dimensions_controller.new_dimension_value(self.dimension, name), value))
+                erg.append((dimensions_controller.new_dimension_value(dimension = self.dimension, name = name), value))
         return erg
 
 

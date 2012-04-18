@@ -27,6 +27,11 @@ def get_asset_for_searchstring(searchstring):
 def get_change_percent(asset):
     return asset.change * 100.0 / (asset.price - asset.change)
 
+def get_date_of_newest_quotation(asset):
+    quotation = session.query(Quotation).filter_by(asset=asset)
+    if quotation.count() > 0:
+        return quotation.order_by(Quotation.date).desc().first().date
+
 def get_quotations_for_asset(asset, start_date):
     print "TODO"
     #TODO

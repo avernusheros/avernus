@@ -98,7 +98,7 @@ class QuotationTable(Gtk.Table):
         self.update_labels()
 
     def on_get_button_clicked(self, button):
-        threads.GeneratorTask(asset_controller.datasource_manager.get_historical_prices, self.new_quotation_callback, complete_callback=self.update_labels).start(self.asset)
+        threads.GeneratorTask(asset_controller.datasource_manager.get_historical_prices, self.new_quotation_callback, complete_callback=self.update_labels, args=self.asset).start()
 
     def new_quotation_callback(self, qt):
         self.count += 1
