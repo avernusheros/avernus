@@ -605,7 +605,7 @@ class CategoriesTree(gui_utils.Tree):
     def on_edit(self, widget=None, data=None):
         cat, selection_iter = self.get_selected_item()
         self.cell.set_property('editable', True)
-        self.set_cursor(self.get_model().get_path(selection_iter), focus_column=self.get_column(0), start_editing=True)
+        self.set_cursor(self.get_model().get_path(selection_iter), self.get_column(0), start_editing=True)
 
     def on_remove(self, widget=None, data=None):
         obj, iterator = self.get_selected_item()

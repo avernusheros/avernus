@@ -2,6 +2,7 @@
 from avernus.config import avernusConfig
 from avernus.gui import gui_utils
 from avernus.controller import dimensions_controller
+from avernus.controller import object_controller
 from gi.repository import Gtk
 import logging
 logger = logging.getLogger(__name__)
@@ -170,7 +171,7 @@ class DimensionList(Gtk.VBox):
         selection = self.tree.get_selection()
         model, selection_iter = selection.get_selected()
         if selection_iter:
-            model[selection_iter][self.OBJECT].delete()
+            object_controller.delete_object(model[selection_iter][self.OBJECT])
             self.model.remove(selection_iter)
 
     def on_cell_edited(self, cellrenderertext, path, new_text):
