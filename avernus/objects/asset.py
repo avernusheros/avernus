@@ -89,7 +89,7 @@ class Stock(Asset):
 
 class Transaction(Base):
 
-    __tablename__ = 'transaction'
+    __tablename__ = 'portfolio_transaction'
     id = Column(Integer, primary_key=True)
     date = Column(Date)
     quantity = Column(Float)

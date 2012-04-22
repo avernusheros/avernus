@@ -12,7 +12,7 @@ from dimension import *
 
 # connect to the database
 engine = create_engine('sqlite:///sqlite.db'#, echo=True
-)     
+)
 # create the tables, if not there already
 Base.metadata.create_all(engine)
 # get a session

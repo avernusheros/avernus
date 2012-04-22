@@ -31,7 +31,6 @@ class AccountCategory(Base):
     name = Column(String)
     parent_id = Column(Integer, ForeignKey('account_category.id'))
     parent = relationship('AccountCategory', remote_side=[id], backref='children')
-    filters = relationship('CategoryFilter', backref='category')
 
     def __init__(self, name, parent):
         self.name = name
@@ -52,8 +51,8 @@ class AccountTransaction(Base):
     account_id = Column(Integer, ForeignKey('account.id'))
     transfer_id = Column(Integer, ForeignKey('account_transaction.id'))
     transfer = relationship('AccountTransaction', remote_side=[id])
-    category_name = Column(String, ForeignKey('account_category.name'))
-    category = relationship('AccountCategory', remote_side=[AccountCategory.name])
+    category_id = Column(String, ForeignKey('account_category.id'))
+    category = relationship('AccountCategory', remote_side=[AccountCategory.id])
 
     def __repr__(self):
         return "AccountTransaction<"+str(self.date) +"|"+str(self.amount)+">"
@@ -63,10 +62,12 @@ class CategoryFilter(Base):
 
     __tablename__ = 'category_filter'
 
-    rule = Column(String, primary_key=True)
+    id = Column(Integer, primary_key=True)
+    rule = Column(String)
     active = Column(Boolean)
     priority = Column(Integer)
-    category_name = Column(String, ForeignKey('account_category.name'))
+    category_id = Column(String, ForeignKey('account_category.id'))
+    category = relationship('AccountCategory', remote_side=[AccountCategory.id])
 
     def __repr__(self):
         return self.rule
