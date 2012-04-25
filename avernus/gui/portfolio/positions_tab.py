@@ -9,7 +9,7 @@ from avernus.gui.portfolio import dialogs
 from avernus.gui.portfolio.position_dialog import PositionDialog
 from avernus.gui.gui_utils import Tree, get_name_string
 from avernus.gui import gui_utils, progress_manager, page, threads
-from avernus.objects.asset import MetaPosition
+from avernus.controller.position_controller import MetaPosition
 from avernus.controller import portfolio_controller
 from avernus.controller import position_controller
 from avernus.controller import object_controller

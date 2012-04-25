@@ -44,6 +44,9 @@ def get_ter(ass):
         return ass.ter
     return 0.0
 
+def get_total_for_dividend(dividend):
+    return dividend.price - dividend.cost
+
 def get_transaction_total(transaction):
     #FIXME declare types somewhere
     if transaction.type==1:

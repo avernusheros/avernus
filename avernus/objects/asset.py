@@ -53,9 +53,6 @@ class Bond(Asset):
     id = Column(Integer, ForeignKey('asset.id'), primary_key=True)
 
 
-class MetaPosition(object):
-    pass
-
 class Quotation(Base):
 
     __tablename__ = 'quotation'

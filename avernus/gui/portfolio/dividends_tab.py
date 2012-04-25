@@ -3,6 +3,7 @@
 from gi.repository import Gtk
 from avernus.gui.gui_utils import Tree, get_name_string
 from avernus.controller import portfolio_controller
+from avernus.controller import asset_controller
 from avernus.gui import gui_utils, page
 from avernus.gui.portfolio import dialogs
 
@@ -107,8 +108,8 @@ class DividendsTree(Tree):
                             div.price-div.cost])
         else:
             parent_row[self.AMOUNT] += div.price
-            parent_row[self.TA_COSTS] += div.costs
-            parent_row[self.TOTAL] += div.total
+            parent_row[self.TA_COSTS] += div.cost
+            parent_row[self.TOTAL] += asset_controller.get_total_for_dividend(div)
             parent = parent_row.iter
         model.append(parent,
                 [div,
@@ -116,7 +117,7 @@ class DividendsTree(Tree):
                 div.date,
                 div.price,
                 div.cost,
-                div.price-div.cost])
+                asset_controller.get_total_for_dividend(div)])
 
     def on_edit(self, widget, data=None):
         obj, iterator = self.get_selected_item()

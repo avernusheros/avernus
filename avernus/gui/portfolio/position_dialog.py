@@ -5,7 +5,7 @@ from avernus.gui.portfolio import dialogs
 from avernus.controller import portfolio_controller
 from avernus.controller import asset_controller
 from avernus.controller import position_controller
-from avernus.objects.asset import MetaPosition
+from avernus.controller.position_controller import MetaPosition
 import datetime
 import logging
 from gi.repository import Gtk
