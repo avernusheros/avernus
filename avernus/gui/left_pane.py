@@ -10,10 +10,6 @@ from avernus.controller import object_controller
 from avernus.controller import portfolio_controller
 
 
-#from avernus.objects.container import AllPortfolio
-#from avernus.objects.account import AllAccount
-
-
 UI_INFO = """
 <ui>
   <popup name='Popup'>
@@ -129,22 +125,19 @@ class MainTree(gui_utils.Tree):
         portfolios = portfolio_controller.get_all_portfolio()
         if len(portfolios) > 1:
             pass
-            # FIXME
-            #all_pf = AllPortfolio()
-            #all_pf.controller = portfolio_controller
-            #all_pf.name = "<i>%s</i>" % (_('All'),)
-            #self.insert_portfolio(all_pf)
+            all_pf = portfolio_controller.AllPortfolio()
+            all_pf.name = "<i>%s</i>" % (_('All'),)
+            self.insert_portfolio(all_pf)
         for pf in portfolios:
             self.insert_portfolio(pf)
         for wl in portfolio_controller.get_all_watchlist():
             self.insert_watchlist(wl)
 
         accounts = account_controller.get_all_account()
-        #if len(accounts) > 1:
-        #    all_account = AllAccount()
-        #    all_account.controller = controller
-        #    all_account.name = "<i>%s</i>" % (_('All'),)
-        #    self.insert_account(all_account)
+        if len(accounts) > 1:
+            all_account = account_controller.AllAccount()
+            all_account.name = "<i>%s</i>" % (_('All'),)
+            self.insert_account(all_account)
         for account in accounts:
             self.insert_account(account)
         self.expand_all()
@@ -180,7 +173,7 @@ class MainTree(gui_utils.Tree):
                     popup = self.uimanager.get_widget("/Popup")
                 popup.popup(None, None, None, None, event.button, event.time)
                 return True
-            if self.get_selection().path_is_selected(target[0]) and obj.__class__.__name__ == 'Category' :
+            if self.get_selection().path_is_selected(target[0]) and obj.__class__.__name__ in ['Category', 'AllAccount', 'AllPortfolio']:
                 #disable editing of categories
                 return True
 

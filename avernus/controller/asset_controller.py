@@ -32,10 +32,6 @@ def get_date_of_newest_quotation(asset):
     if quotation.count() > 0:
         return quotation.order_by(Quotation.date).desc().first().date
 
-def get_quotations_for_asset(asset, start_date):
-    print "TODO"
-    #TODO
-
 def get_source_info(source, ass=None):
     return Session.query(SourceInfo).filter_by(asset=ass, source=source).all()
 

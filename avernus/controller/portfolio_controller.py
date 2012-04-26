@@ -5,6 +5,27 @@ from . import dsm
 
 import datetime
 
+
+#FIXME find a good place to place this class
+class AllPortfolio():
+
+    def __iter__(self):
+        return self.positions.__iter__()
+
+    @property
+    def positions(self):
+        return position_controller.get_all_portfolio_position()
+
+    @property
+    def last_update(self):
+        return min([pf.last_update for pf in get_all_portfolio()])
+
+    @last_update.setter
+    def last_update(self, value):
+        for pf in get_all_portfolio():
+            pf.last_update = value
+
+
 def delete_position(position):
     session.delete(position)
     session.commit()
@@ -30,9 +51,6 @@ def get_all_portfolio():
 
 def get_all_watchlist():
     return session.query(Watchlist).all()
-
-def get_all_portfolio_position():
-    return session.query(PortfolioPosition).all()
 
 def get_current_value(portfolio):
     value = 0.0

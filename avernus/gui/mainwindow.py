@@ -113,10 +113,12 @@ class MainWindow(Gtk.Window):
 
         self.pages = {}
         self.pages['Portfolio'] = PortfolioNotebook
+        self.pages['AllPortfolio'] = PortfolioNotebook
         self.pages['Watchlist'] = WatchlistPositionsTab
         self.pages['Category Accounts'] = AccountOverview
         self.pages['Category Portfolios'] = OverviewNotebook
         self.pages['Account'] = AccountTransactionTab
+        self.pages['AllAccount'] = AccountTransactionTab
 
         #set min size
         screen = self.get_screen()

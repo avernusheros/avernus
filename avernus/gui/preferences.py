@@ -23,10 +23,10 @@ class PrefDialog(Gtk.Dialog):
         vbox = self.get_content_area()
         notebook = Gtk.Notebook()
         vbox.pack_start(notebook, True, True, 0)
-        notebook.append_page(DimensionList(), Gtk.Label(label='Dimensions'))
         notebook.append_page(AccountPreferences(), Gtk.Label(label='Account'))
         notebook.append_page(PortfolioPreferences(), Gtk.Label(label='Portfolio'))
         notebook.append_page(ChartPreferences(), Gtk.Label(label='Chart'))
+        notebook.append_page(DimensionList(), Gtk.Label(label='Dimensions'))
 
         self.show_all()
         self.run()

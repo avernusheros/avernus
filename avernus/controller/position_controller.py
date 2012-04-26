@@ -58,6 +58,10 @@ def new_portfolio_position(price=0.0, date=datetime.datetime.now(), shares=1.0, 
     session.add(position)
     return position
 
+
+def get_all_portfolio_position():
+    return session.query(PortfolioPosition).all()
+
 def get_buy_value(position):
     return position.quantity * position.price
 

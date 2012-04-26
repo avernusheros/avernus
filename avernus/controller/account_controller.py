@@ -5,6 +5,21 @@ from sqlalchemy import or_
 import datetime
 
 
+#FIXME decide where to put this object
+class AllAccount():
+
+    def __iter__(self):
+        return self.transactions.__iter__()
+
+    @property
+    def transactions(self):
+        return get_all_transactions()
+
+    @property
+    def balance(self):
+        return sum([acc.balance for acc in get_all_account()])
+
+
 def get_all_account():
     return session.query(Account).all()
 
@@ -31,16 +46,14 @@ def account_has_transaction(account, trans):
     return session.query(AccountTransaction).filter_by(account=account, description=trans['description'], amount=trans['amount'], date=trans['date']).count() > 0
 
 def account_birthday(account):
-    transactions = session.query(AccountTransaction).filter_by(account=account)
-    if transactions.count() > 0:
-        return transactions.order_by(AccountTransaction.date).first().date
+    if len(account.transactions) > 0:
+        return min([t.date for t in account])
     else:
         return datetime.date.today()
 
 def account_lastday(account):
-    transactions = session.query(AccountTransaction).filter_by(account=account)
-    if transactions.count() > 0:
-        return transactions.order_by(AccountTransaction.date.desc()).first().date
+    if len(account.transactions) > 0:
+        return max([t.date for t in account])
 
 def get_all_categories():
     return session.query(AccountCategory).all()
@@ -61,7 +74,7 @@ def yield_matching_transfer_transactions(transaction):
     res = session.query(AccountTransaction) \
             .filter(AccountTransaction.account!=transaction.account,
                     AccountTransaction.amount == -transaction.amount,
-                    or_(AccountTransaction.transfer == None, 
+                    or_(AccountTransaction.transfer == None,
                         AccountTransaction.transfer == transaction))
     #FIXME maybe do this directly in sqlalchemy
     fivedays = datetime.timedelta(5)

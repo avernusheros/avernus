@@ -54,7 +54,8 @@ class PositionDialog(Gtk.Dialog):
         self.previous_page = page_num
 
     def process_result(self, widget=None):
-        self.position_table.process_result()
+        if not self.is_meta:
+            self.position_table.process_result()
         self.asset_table.process_result()
         self.destroy()
 
