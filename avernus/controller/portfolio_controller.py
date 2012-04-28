@@ -26,6 +26,23 @@ class AllPortfolio():
             pf.last_update = value
 
 
+class ClosedPosition:
+
+    def __init__(self, buy_transaction, sell_transaction):
+        self.quantity = sell_transaction.quantity
+        self.asset = sell_transaction.position.asset
+        self.buy_date = buy_transaction.date
+        self.sell_date = sell_transaction.date
+        self.buy_price = buy_transaction.price
+        self.sell_price = sell_transaction.price
+        self.buy_cost = buy_transaction.cost / buy_transaction.quantity * sell_transaction.quantity
+        self.sell_cost = sell_transaction.cost
+        self.buy_total = self.buy_cost + self.quantity * self.buy_price
+        self.sell_total = self.sell_cost + self.quantity * self.sell_price
+        self.gain = self.sell_total - self.buy_total
+        self.gain_percent = self.gain * 100.0 / self.buy_total
+
+
 def delete_position(position):
     session.delete(position)
     session.commit()
@@ -80,7 +97,12 @@ def get_fraction(portfolio, position):
         return 100.0 * position_controller.get_current_value(position) / cvalue
 
 def get_closed_positions(portfolio):
-    return []
+    ret = []
+    for position in portfolio:
+        for sell_ta in asset_controller.get_sell_transactions(position):
+            buy_ta = asset_controller.get_buy_transaction(position)
+            ret.append(ClosedPosition(buy_ta, sell_ta))
+    return ret
 
 def get_current_change(portfolio):
     change = 0.0
@@ -217,27 +239,4 @@ def deleteAllWatchlistPosition(watchlist):
         pos.delete()
 
 
-
-def getAssetDimensionValueForStock(stock, dim):
-    stockADVs = AssetDimensionValue.getAllFromOneColumn('stock', stock.id)
-    #for adv in stockADVs:
-    #    print adv, adv.dimensionValue
-    stockADVs = filter(lambda adv: adv.dimensionValue.dimension == dim, stockADVs)
-    return stockADVs
-
-
-def getPriceFromStockAtDate(stock, date):
-    args = {'stock': stock.id, 'date':date.date()}
-    res = Quotation.getByColumns(args, create=False)
-    for item in res:
-        return item[5]
-    return None
-
-def getBuyTransaction(portfolio_position):
-    for ta in Transaction.getByColumns({'position': portfolio_position.id, 'type':1}, create=True):
-        return ta
-
-def yieldSellTransactions(portfolio_position):
-    for ta in Transaction.getByColumns({'position': portfolio_position.id, 'type':0}, create=True):
-        yield ta
 

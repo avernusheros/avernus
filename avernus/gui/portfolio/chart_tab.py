@@ -73,7 +73,7 @@ class ChartTab(Gtk.ScrolledWindow, page.Page):
         label.set_markup('<b>' + _('Investment types') + '</b>')
         label.set_tooltip_text(_("Percentual fraction by investment type."))
         table.attach(label, 1, 2, y - 1, y)
-        controller = chart_controller.PositionAttributeChartController(self.pf, 'type_string')
+        controller = chart_controller.PositionAttributeChartController(self.pf, 'type')
         chart = charts.Pie(controller, width / 2)
         table.attach(chart, 1, 2, y, y + 1)
 

@@ -4,6 +4,7 @@ from gi.repository import Gtk
 from avernus.gui import gui_utils, page
 from avernus.controller import portfolio_controller
 
+
 class ClosedPositionsTab(Gtk.ScrolledWindow, page.Page):
 
     def __init__(self, portfolio):
@@ -59,15 +60,16 @@ class ClosedPositionsTree(gui_utils.Tree):
 
     def insert_position(self, pos):
         self.model.append([pos,
-                           gui_utils.get_name_string(pos.stock),
-                           float(pos.quantity),
+                           gui_utils.get_name_string(pos.asset),
+                           pos.quantity,
                            pos.buy_date,
                            pos.buy_price,
-                           pos.buy_costs,
+                           pos.buy_cost,
                            pos.buy_total,
                            pos.sell_date,
                            pos.sell_price,
-                           pos.sell_costs,
+                           pos.sell_cost,
                            pos.sell_total,
                            pos.gain,
-                           pos.gain_percent])
+                           pos.gain_percent
+                           ])
