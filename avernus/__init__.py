@@ -5,7 +5,7 @@ __url__='https://launchpad.net/avernus'
 __authors__ = ['Wolfgang Steitz', 'Bastian Kennel']
 __mail__ = 'wsteitz(at)gmail.com'
 __copyright__ = '''\
-Copyright (c) 2008-2011
+Copyright (c) 2008-2012
 
 '''
 __license__='''\

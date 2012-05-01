@@ -84,10 +84,10 @@ setup(
     author_email='wsteitz@gmail.com',
     description=avernus.__description__,
     download_url='https://launchpad.net/avernus/+download',
-    long_description='portfolios, watchlists, tags... avernus utilizes online data sources for updating its quotations. You can view charts and other diagrams',
+    long_description='portfolios, watchlists... avernus utilizes online data sources for updating its quotations. You can view charts and other diagrams',
     url=avernus.__url__,
     packages=collect_packages(),
-    scripts=['bin/avernus'],
+    scripts=['avernus.py'],
     data_files=create_data_files(),
     cmdclass={'install_data': InstallData},
      )
