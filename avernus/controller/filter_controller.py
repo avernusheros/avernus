@@ -1,6 +1,7 @@
 from avernus.objects.account import CategoryFilter
 from avernus.objects import session
 from avernus.config import avernusConfig
+from avernus.controller import account_controller
 import logging
 
 from avernus.objects import session
@@ -32,12 +33,12 @@ def get_category(transaction):
             return rule.category
     return None
 
-def run_auto_assignments():
+def run_auto_assignments(*args):
     if config.get_option('assignments categorized transactions', 'Account') == 'True':
         b_include_categorized = True
     else:
         b_include_categorized = False
-    transactions = controller.getAllAccountTransactions()
+    transactions = account_controller.get_all_transactions()
     #print "Size: ", len(transactions)
     for transaction in transactions:
         if b_include_categorized or transaction.category is None:
@@ -48,8 +49,8 @@ def run_auto_assignments():
                 msg += "Change to " + str(transaction.category)
             else:
                 msg += "No Change."
-            #print msg
             logger.debug(msg)
+            yield transaction
 
 config = avernusConfig()
 try:

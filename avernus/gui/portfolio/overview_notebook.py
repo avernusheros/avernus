@@ -139,8 +139,7 @@ class PortfolioOverviewTree(gui_utils.Tree):
         self.connect("destroy", self.on_destroy)
         self.connect("row-activated", self.on_row_activated)
         self.subscriptions = (
-            ('stocks.updated', self.on_stocks_updated),
-            ('shortcut.update', self.on_update)
+            ('shortcut.update', self.on_update),
         )
         for topic, callback in self.subscriptions:
             pubsub.subscribe(topic, callback)
@@ -169,16 +168,6 @@ class PortfolioOverviewTree(gui_utils.Tree):
             self.overall_value = 1
         for item in items:
             self.insert_item(item)
-
-    def on_stocks_updated(self, container):
-        if container.id == self.container.id:
-            for row in self.get_model():
-                item = row[0]
-                row[self.VALUE] = item.cvalue
-                row[self.LAST_UPDATE] = item.last_update
-                row[self.CHANGE] = item.change
-                row[self.CHANGE_PERCENT] = item.percent
-                row[self.TER] = item.ter
 
     def insert_item(self, item):
         self.get_model().append([item,

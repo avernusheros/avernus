@@ -3,7 +3,7 @@ from avernus.objects.asset import Quotation
 from avernus.objects.asset import Dividend
 from avernus.objects.asset import SourceInfo
 from avernus.objects.asset import Transaction
-from avernus.objects.container import Position
+from avernus.objects.container import Position, Container
 # Session is the class, session the normal instance
 from avernus.objects import Session, session, asset
 from avernus import pubsub
@@ -18,7 +18,7 @@ def check_asset_existance(source, isin, currency):
                                      Asset.currency == currency).count()
 
 def get_all_used_assets():
-    return session.query(Asset).join(Position).distinct().all()
+    return Session().query(Asset).join(Position).distinct().all()
 
 def get_asset_for_searchstring(searchstring):
     searchstring = '%' + searchstring + '%'
@@ -115,9 +115,9 @@ def update_all(*args):
     for item in datasource_manager.update_assets(items):
         count += 1.0
         yield count / itemcount
-    for container in getAllPortfolio() + getAllWatchlist():
-        container.last_update = datetime.datetime.now()
-    pubsub.publish("stocks.updated")
+    for item in Session().query(Container).all():
+        item.last_update = datetime.datetime.now()
+    pubsub.publish("stocks.updated", item)
     yield 1
 
 def update_asset(asset):

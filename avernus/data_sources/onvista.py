@@ -301,17 +301,18 @@ class Onvista():
 
     def update_stocks(self, sts):
         for st in sts:
-            if st.type == Fund:
+            print type(st)
+            if isinstance(st, Fund):
                 file = opener.open("http://www.onvista.de/fonds/kurse.html", urllib.urlencode({"ISIN": st.isin}))
                 generator = self._parse_kurse_html(file)
-            elif st.type == Etf:
+            elif isinstance(st, Etf):
                 file = opener.open("http://www.onvista.de/etf/kurse.html", urllib.urlencode({"ISIN": st.isin}))
                 generator = self._parse_kurse_html(file, tdInd=etfTDS, stockType=Etf)
-            elif st.type == Bond:
+            elif isinstance(st, Bond):
                 file = opener.open("http://www.onvista.de/anleihen/kurse.html", urllib.urlencode({"ISIN": st.isin}))
                 generator = self._parse_kurse_html(file, tdInd=bondTDS, stockType=Bond)
             else:
-                print "Unknown stock type in onvistaplugin.update_stocks: ", st.type
+                print "Unknown stock type in onvistaplugin.update_stocks: ", type(st)
                 generator = []
             for item in generator:
                 if st.date < item['date']: #found newer price
@@ -324,7 +325,7 @@ class Onvista():
 
     def update_historical_prices(self, st, start_date, end_date):
         url = ''
-        if st.type == Fund:
+        if isinstance(st, Fund):
             url = 'http://www.onvista.de/fonds/kurshistorie.html'
         elif st.type == Etf:
             url = 'http://www.onvista.de/etf/kurshistorie.html'
@@ -341,7 +342,7 @@ class Onvista():
         for line in lines:
             tds = line.findAll('td', text=True)
             day = to_datetime(tds[0].replace('&nbsp;', '')).date()
-            
+
             # terminate if the start date is reached
             if day < start_date:
                 return

@@ -175,7 +175,7 @@ def update_positions(portfolio):
     items = set(pos.asset for pos in portfolio if pos.quantity > 0)
     itemcount = len(items)
     count = 0.0
-    for item in dsm.update_stocks(items):
+    for item in dsm.update_assets(items):
         count += 1.0
         yield count / itemcount
     portfolio.last_update = datetime.datetime.now()

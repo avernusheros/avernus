@@ -1,5 +1,5 @@
 from avernus.config import avernusConfig
-from avernus.objects import session
+from avernus.objects import session, Session
 from avernus.objects.account import *
 from sqlalchemy import or_
 import datetime
@@ -24,7 +24,7 @@ def get_all_account():
     return session.query(Account).all()
 
 def get_all_transactions():
-    return session.query(AccountTransaction).all()
+    return Session().query(AccountTransaction).all()
 
 def new_account(name):
     account = Account(name)

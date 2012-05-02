@@ -81,7 +81,7 @@ class DatasourceManager():
     def validate_isin(self, isin):
         return re.match('^[A-Z]{2}[A-Z0-9]{9}[0-9]$', isin)
 
-    def update_stocks(self, stocks):
+    def update_assets(self, stocks):
         if len(stocks) == 0 or not self.b_online:
             return
         for name, source in sources.iteritems():
@@ -91,7 +91,7 @@ class DatasourceManager():
                     yield ret
 
     def update_asset(self, asset):
-        self.update_stocks([asset])
+        self.update_assets([asset])
 
     def get_historical_prices(self, stock, start_date=None, end_date=None):
         if not self.b_online:
