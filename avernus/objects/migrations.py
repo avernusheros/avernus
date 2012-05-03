@@ -1,22 +1,12 @@
 import sqlite3
 
 
-def migrate(from_version, database):
-    if from_version<3:
-        two_to_three(database)
-        version = 3
 
-
-def two_to_three(database):
-    #FIXME
-    OLD_DB = "../../../.configs/avernus/avernus.db"
-    NEW_DB = "sqlite.db"
-
-    conn_old = sqlite3.connect(OLD_DB)
-    conn_new = sqlite3.connect(NEW_DB)
+def to_ten(database, old_db):
+    conn_old = sqlite3.connect(old_db)
+    conn_new = sqlite3.connect(database)
     c_old = conn_old.cursor()
     c_new = conn_new.cursor()
-
 
     # portfolios
     for row in c_old.execute('SELECT id, name from portfolio').fetchall():

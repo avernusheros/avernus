@@ -120,7 +120,9 @@ try:
         default_file = os.path.join(config.config_path, 'avernus.db')
         db_file = configs.get_option('database file', default=default_file)
 
-    #fixme check if dbfile exists
+    from avernus.objects import set_db, connect
+    set_db(db_file)
+    connect()
 
     GObject.threads_init()
 
