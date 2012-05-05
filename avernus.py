@@ -30,6 +30,8 @@ if python_path:
 
 import avernus
 from avernus import config
+from avernus.gui import threads
+
 if b_from_source:
     config.__avernus_data_directory__ = '../data/'
 
@@ -102,49 +104,54 @@ def init_icons():
 
 
 #MAIN
+try:
+    init_translations()
+    # Support for command line options.
+    parser = optparse.OptionParser(version='%prog ' + avernus.__version__)
+    parser.add_option("-d", "--debug", action="store_true", dest="debug", help=_("enable debug output"))
+    parser.add_option("-f", "--file", dest="datafile", help="set database file")
+    (options, args) = parser.parse_args()
 
-init_translations()
-# Support for command line options.
-parser = optparse.OptionParser(version='%prog ' + avernus.__version__)
-parser.add_option("-d", "--debug", action="store_true", dest="debug", help=_("enable debug output"))
-parser.add_option("-f", "--file", dest="datafile", help="set database file")
-(options, args) = parser.parse_args()
+    init_logger(options.debug)
+    init_icons()
+    db_file = options.datafile
+    if db_file == None:
+        configs = config.avernusConfig()
+        default_file = os.path.join(config.config_path, 'avernus.db')
+        db_file = configs.get_option('database file', default=default_file)
 
-init_logger(options.debug)
-init_icons()
-db_file = options.datafile
-if db_file == None:
-    configs = config.avernusConfig()
-    default_file = os.path.join(config.config_path, 'avernus.db')
-    db_file = configs.get_option('database file', default=default_file)
+    from avernus.objects import set_db, connect
+    set_db(db_file)
+    connect()
 
+    GObject.threads_init()
 
-#fixme check if dbfile exists
+    from avernus.controller import asset_controller
 
-GObject.threads_init()
+    from avernus.gui.mainwindow import MainWindow
+    from avernus.datasource_manager import DatasourceManager
+    dsm = DatasourceManager()
+    main_window = MainWindow()
+    asset_controller.datasource_manager = dsm
+    try:
+        Gtk.main()
+    except Exception as e:
+        main_window.on_destroy()
+        raise
+except Exception as e:
+    print "crashed, abgekachelt ... !!"
+    import traceback
+    traceback.print_exc()
+    avernus.objects.session.commit()
+    avernus.objects.Session.close_all()
+    threads.terminate_all()
+    print "wie gesagt ... abgekachelt ..."
+    exit(1)
 
-
-from avernus.objects import model, store
-from avernus.controller import controller, portfolio_controller
-model.store = store.Store(db_file)
-controller.createTables()
-controller.initialLoading(controller)
-controller.initialLoading(portfolio_controller)
-
-from avernus.gui.mainwindow import MainWindow
-from avernus.datasource_manager import DatasourceManager
-dsm = DatasourceManager()
-main_window = MainWindow()
-portfolio_controller.datasource_manager = dsm
 
 #FIXME fix or remove the network manager code
 #from avernus.network_manager import DBusNetwork
 #DBusNetwork()
-try:
-    Gtk.main()
-except KeyboardInterrupt:
-    #FIXME properly quit on a keyboard interrupt..
-    pass
 
-main_window.on_destroy()
+
 

@@ -1,6 +1,9 @@
 from avernus.gui import gui_utils
-from avernus import date_utils, config
-from avernus.controller import portfolio_controller as pfctlr
+from avernus import date_utils
+from avernus.controller import asset_controller
+from avernus.controller import portfolio_controller
+from avernus.controller import dimensions_controller
+from avernus.controller import position_controller
 
 from dateutil.relativedelta import relativedelta
 from dateutil.rrule import *
@@ -102,7 +105,7 @@ class TransactionValueOverTimeChartController(TransactionChartController):
         self.transactions = sorted(transactions, key=lambda t: t.date)
         self.start_date, self.end_date = date_range
 
-    def calculate_values(self):
+    def calculate_values(self, *args):
         self.step = self.get_step()
         self.days = calculate_x_values(self.step, self.start_date, self.end_date)
         self.x_values = format_days(self.days, 'daily')
@@ -198,7 +201,7 @@ class EarningsVsSpendingsController(ChartController):
         self.date_range = date_range
         self.transactions = transactions
 
-    def calculate_values(self):
+    def calculate_values(self, *args):
         start, end = self.date_range
         onemonth = relativedelta(months=1)
         data = {}
@@ -232,7 +235,7 @@ class TransactionCategoryPieController(ChartController):
     def update(self, transactions, *args):
         self.transactions = transactions
 
-    def calculate_values(self):
+    def calculate_values(self, *args):
         data = {}
         for trans in ifilter(lambda t: t.isEarning() == self.earnings, self.transactions):
             try:
@@ -252,7 +255,7 @@ class AccountBalanceOverTimeChartController(TransactionChartController):
     def update(self, transactions, date_range):
         self.start_date, self.end_date = date_range
 
-    def calculate_values(self):
+    def calculate_values(self, *args):
         self.step = self.get_step()
         self.days = calculate_x_values(self.get_step(), self.start_date, self.end_date)
         self.x_values = format_days(self.days, 'daily')
@@ -284,13 +287,13 @@ class DividendsPerYearChartController(ChartController):
     def __init__(self, portfolio):
         self.portfolio = portfolio
 
-    def calculate_values(self):
+    def calculate_values(self, *args):
         data = {}
-        for year in date_utils.get_years(self.portfolio.birthday):
+        for year in date_utils.get_years(portfolio_controller.get_birthday(self.portfolio)):
             data[str(year)] = 0.0
         for pos in self.portfolio:
             for div in pos.dividends:
-                data[str(div.date.year)] += div.total
+                data[str(div.date.year)] += asset_controller.get_total_for_dividend(div)
         self.x_values = sorted(data.keys())
         self.y_values = []
         for x_value in self.x_values:
@@ -303,14 +306,14 @@ class DividendsPerPositionChartController(ChartController):
     def __init__(self, portfolio):
         self.portfolio = portfolio
 
-    def calculate_values(self):
+    def calculate_values(self, *args):
         data = {}
         for pos in self.portfolio:
             for div in pos.dividends:
                 try:
-                    data[pos.name] += div.total
+                    data[pos.name] += asset_controller.get_total_for_dividend(div)
                 except:
-                    data[pos.name] = div.total
+                    data[pos.name] = asset_controller.get_total_for_dividend(div)
         self.x_values = sorted(data.keys())
         self.y_values = []
         for x_value in self.x_values:
@@ -328,7 +331,7 @@ class StockChartPlotController(ChartController):
         self.x_values.insert(0, str(quotations[0].date))
         self.x_values.insert(len(self.x_values), str(quotations[-1].date))
 
-    def calculate_values(self):
+    def calculate_values(self, *args):
         yield 1
 
 
@@ -338,8 +341,8 @@ class PortfolioChartController(ChartController):
 
     def __init__(self, portfolio, step):
         self.portfolio = portfolio
-        self.birthday = self.portfolio.birthday
-        self.items = portfolio.getTransactions() + portfolio.getDividends()
+        self.birthday = portfolio_controller.get_birthday(portfolio)
+        self.items = portfolio_controller.get_transactions(portfolio) + portfolio_controller.get_dividends(portfolio)
         self.step = step
 
     def _calc_days(self):
@@ -352,7 +355,7 @@ class PortfolioChartController(ChartController):
         elif self.step == 'yearly':
             self.days = list(rrule(YEARLY, dtstart=self.birthday, until=datetime.date.today(), bymonthday= -1, bymonth=12))[-self.MAX_VALUES:]
 
-    def calculate_values(self):
+    def calculate_values(self, *args):
         self._calc_days()
         self.x_values = format_days(self.days, self.step)
         self.y_values = {}
@@ -362,26 +365,26 @@ class PortfolioChartController(ChartController):
         for foo in self.calculate_investmentsovertime('invested capital'):
             yield foo
 
-        for benchmark in pfctlr.getBenchmarksForPortfolio(self.portfolio):
+        for benchmark in self.portfolio.benchmarks:
             self.calculate_benchmark(benchmark)
         yield 1
 
     def calculate_benchmark(self, benchmark):
         #FIXME why not per year?
         percent = benchmark.percentage
-        values = [0.0] * len(self.days)
+        benchmark = [0.0] * len(self.days)
         daily = percent / len(self.days)
-        values[0] = self.y_values['invested capital'][0]
-        for i in range(1, len(values)):
-            values[i] = values[i - 1] * (1 + daily) + self.y_values['invested capital'][i] - self.y_values['invested capital'][i - 1]
-        key = str(benchmark)
-        self.y_values[key] = values
+        benchmark[0] = self.y_values['invested capital'][0]
+        for i in range(1, len(benchmark)):
+            benchmark[i] = benchmark[i - 1] * (1 + daily) + self.y_values['invested capital'][i] - self.y_values['invested capital'][i - 1]
+        key = 'Benchmark ' + str(int(percent * 100)) + '%'
+        self.y_values[key] = benchmark
 
     def calculate_valueovertime(self, name):
         self.y_values[name] = [0.0] * len(self.days)
         for pos in self.portfolio:
             for i in range(len(self.days)):
-                self.y_values[name][i] += pos.get_value_at_date(self.days[i])
+                self.y_values[name][i] += position_controller.get_value_at_date(pos, self.days[i])
                 yield 0
         yield 1
 
@@ -405,14 +408,14 @@ class AllPortfolioValueOverTime(PortfolioChartController):
 
     def __init__(self, step):
         self.step = step
-        self.birthday = min([pf.birthday for pf in pfctlr.getAllPortfolio()])
+        self.birthday = min([pf.birthday for pf in portfolio_controller.getAllPortfolio()])
 
-    def calculate_values(self):
+    def calculate_values(self, *args):
         self._calc_days()
         self.x_values = format_days(self.days, self.step)
         self.y_values = {}
         #FIXME do in parallel
-        for pf in pfctlr.getAllPortfolio():
+        for pf in portfolio_controller.getAllPortfolio():
             self.portfolio = pf
             for foo in self.calculate_valueovertime(pf.name):
                 yield foo
@@ -423,14 +426,14 @@ class AllPortfolioInvestmentsOverTime(PortfolioChartController):
 
     def __init__(self, step):
         self.step = step
-        self.birthday = min([pf.birthday for pf in pfctlr.getAllPortfolio()])
+        self.birthday = min([pf.birthday for pf in portfolio_controller.getAllPortfolio()])
 
-    def calculate_values(self):
+    def calculate_values(self, *args):
         self._calc_days()
         self.x_values = format_days(self.days, self.step)
         self.y_values = {}
         #FIXME do in parallel
-        for pf in pfctlr.getAllPortfolio():
+        for pf in portfolio_controller.getAllPortfolio():
             self.items = pf.getTransactions() + pf.getDividends()
             for foo in self.calculate_investmentsovertime(pf.name):
                 yield foo
@@ -443,13 +446,13 @@ class DimensionChartController():
         self.portfolio = portfolio
         self.dimension = dimension
 
-    def calculate_values(self):
+    def calculate_values(self, *args):
         data = {}
         for val in self.dimension.values:
             data[val.name] = 0
         for pos in self.portfolio:
-            for adv in pos.stock.getAssetDimensionValue(self.dimension):
-                data[adv.dimensionValue.name] += adv.value * pos.cvalue
+            for adv in dimensions_controller.get_asset_dimension_value(pos.asset, self.dimension):
+                data[adv.dimensionValue.name] += adv.value * position_controller.get_current_value(pos)
         #remove unused dimvalues
         data = dict((k, v) for k, v in data.iteritems() if v != 0.0)
         if sum(data.values()) == 0:
@@ -465,16 +468,16 @@ class PositionAttributeChartController():
         self.portfolio = portfolio
         self.attribute = attribute
 
-    def calculate_values(self):
+    def calculate_values(self, *args):
         data = {}
         for pos in self.portfolio:
             if pos.quantity == 0.0:
                 continue
-            item = str(getattr(pos.stock, self.attribute))
+            item = str(getattr(pos.asset, self.attribute))
             try:
-                data[item] += pos.cvalue
+                data[item] += position_controller.get_current_value(pos)
             except:
-                data[item] = pos.cvalue
+                data[item] = position_controller.get_current_value(pos)
         if sum(data.values()) == 0:
             self.values = {' ':1}
         else:
@@ -487,16 +490,17 @@ class PortfolioAttributeChartController():
 
     def __init__(self, attribute):
         self.attribute = attribute
+        self.values = {}
 
-    def calculate_values(self):
-        portfolios = pfctlr.getAllPortfolio()
+    def calculate_values(self, *args):
+        portfolios = portfolio_controller.getAllPortfolio()
         data = {}
         for pf in portfolios:
             item = str(getattr(pf, self.attribute))
             try:
-                data[item] += pf.cvalue
+                data[item] += portfolio_controller.get_current_value(pf)
             except:
-                data[item] = pf.cvalue
+                data[item] = portfolio_controller.get_current_value(pf)
         if sum(data.values()) == 0:
             self.values = {' ':1}
         else:

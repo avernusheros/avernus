@@ -1,30 +1,9 @@
-#!/usr/bin/env python
-# -*- Mode: Python; coding: utf-8; indent-tabs-mode: nil; tab-width: 4 -*-
-
 from datetime import datetime
 import codecs, csv, re
 from cStringIO import StringIO
 import chardet
 
-from avernus.controller import filter_controller, account_controller
-from avernus import pubsub
-
-
-FORMATS = ['%Y-%m-%d',
-           '%d.%m.%Y']
-
-
-class TempTransaction(object):
-
-    def create(self, account):
-        if self.b_import:
-            ta = account_controller.new_account_transaction(self.description)
-            ta.amount = self.amount
-            ta.date = self.date
-            ta.account = account
-            #ta = controller.newAccountTransaction(date=self.date, description=self.description, amount=self.amount, account=account, category=self.category)
-            pubsub.publish('accountTransaction.created', ta)
-
+FORMATS = ['%Y-%m-%d', '%d.%m.%Y']
 
 class CsvImporter:
 
@@ -216,22 +195,22 @@ class CsvImporter:
                 if not first_line_skipped and profile['header']:
                     first_line_skipped = True
                     continue
-                tran = TempTransaction()
+                tran = {}
                 if profile['saldo indicator']:
-                    tran.amount = self._parse_amount(row[profile['amount column']],
+                    tran['amount'] = self._parse_amount(row[profile['amount column']],
                                            profile['decimal separator'],
                                            row[profile['saldo indicator']])
                 else:
-                    tran.amount = self._parse_amount(row[profile['amount column']],
+                    tran['amount'] = self._parse_amount(row[profile['amount column']],
                                            profile['decimal separator'])
 
-                tran.date = self._parse_date(row[profile['date column']].strip(' '), profile['date format'])
-                tran.description = ' - '.join([row[d] for d in profile['description column'] if len(row[d])>0])
+                tran['date'] = self._parse_date(row[profile['date column']].strip(' '), profile['date format'])
+                tran['description'] = ' - '.join([row[d] for d in profile['description column'] if len(row[d])>0])
                 if profile['category'] == -1:
-                    tran.category = None
+                    tran['category'] = None
                 else:
-                    tran.category = row[profile['category']].strip()
-                tran.b_import = True
+                    tran['category'] = row[profile['category']].strip()
+                tran['b_import'] = True
                 result.append(tran)
             #If we find a blank line, assume we've hit the end of the transactions.
             if not row and not len(result)==0:
@@ -240,20 +219,12 @@ class CsvImporter:
 
     def check_duplicates(self, account):
         for trans in self.results:
-            if account_controller.account_has_transaction(account, {'date':trans.date,'amount':trans.amount,'description':trans.description}):
+            if account.has_transaction({'date':trans.date,'amount':trans.amount,'description':trans.description}):
                 trans.b_import = False
             else:
                 trans.b_import = True
 
-    def set_categories(self, do_check):
-        if do_check:
-            for trans in self.results:
-                if not trans.category:
-                    trans.category = filter_controller.get_category(trans)
-
-    def create_transactions(self, account):
-        for temp_trans in self.results:
-            temp_trans.create(account)
+    
 
 
 class UnicodeReader:

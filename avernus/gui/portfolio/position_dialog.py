@@ -2,9 +2,10 @@
 
 from avernus.gui import gui_utils, threads, common_dialogs
 from avernus.gui.portfolio import dialogs
-from avernus.controller import controller
-from avernus.controller import portfolio_controller as pfctlr
-from avernus.objects.position import MetaPosition
+from avernus.controller import portfolio_controller
+from avernus.controller import asset_controller
+from avernus.controller import position_controller
+from avernus.controller.position_controller import MetaPosition
 import datetime
 import logging
 from gi.repository import Gtk
@@ -18,7 +19,7 @@ class PositionDialog(Gtk.Dialog):
     HEIGHT = 400
 
     def __init__(self, position, parent=None):
-        Gtk.Dialog.__init__(self, _("Edit position - ") + position.name, parent
+        Gtk.Dialog.__init__(self, _("Edit position - ") + position.asset.name, parent
                             , Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,
                      (Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT))
         vbox = self.get_content_area()
@@ -30,11 +31,11 @@ class PositionDialog(Gtk.Dialog):
         else:
             self.is_meta = False
             self.position_table = EditPositionTable(position)
-        self.quotation_table = QuotationTable(position.stock)
+        self.quotation_table = QuotationTable(position.asset)
         self.transactions_table = TransactionsTab(position)
-        self.stock_table = dialogs.EditStockTable(position.stock, self)
+        self.asset_table = dialogs.EditAssetTable(position.asset, self)
         notebook.append_page(self.position_table, Gtk.Label(label=_('Position')))
-        notebook.append_page(self.stock_table, Gtk.Label(label=_('Stock')))
+        notebook.append_page(self.asset_table, Gtk.Label(label=_('Asset')))
         notebook.append_page(self.transactions_table, Gtk.Label(label=_('Transactions')))
         notebook.append_page(self.quotation_table, Gtk.Label(label=_('Quotations')))
 
@@ -53,16 +54,17 @@ class PositionDialog(Gtk.Dialog):
         self.previous_page = page_num
 
     def process_result(self, widget=None):
-        self.position_table.process_result()
-        self.stock_table.process_result()
+        if not self.is_meta:
+            self.position_table.process_result()
+        self.asset_table.process_result()
         self.destroy()
 
 
 class QuotationTable(Gtk.Table):
 
-    def __init__(self, stock):
+    def __init__(self, asset):
         Gtk.Table.__init__(self)
-        self.stock = stock
+        self.asset = asset
 
         self.attach(Gtk.Label(label=_('First quotation')), 0, 1, 0, 1, yoptions=Gtk.AttachOptions.FILL)
         self.first_label = Gtk.Label()
@@ -89,22 +91,22 @@ class QuotationTable(Gtk.Table):
         self.update_labels()
 
     def on_edit_button_clicked(self, button):
-        EditHistoricalQuotationsDialog(self.stock, parent=self.get_toplevel())
+        EditHistoricalQuotationsDialog(self.asset, parent=self.get_toplevel())
         self.update_labels()
 
     def on_delete_button_clicked(self, button):
-        pfctlr.deleteAllQuotationsFromStock(self.stock)
+        portfolio_controller.deleteAllQuotationsFromStock(self.asset)
         self.update_labels()
 
     def on_get_button_clicked(self, button):
-        threads.GeneratorTask(pfctlr.datasource_manager.get_historical_prices, self.new_quotation_callback, complete_callback=self.update_labels).start(self.stock)
+        threads.GeneratorTask(asset_controller.datasource_manager.get_historical_prices, self.new_quotation_callback, complete_callback=self.update_labels, args=self.asset).start()
 
     def new_quotation_callback(self, qt):
         self.count += 1
         self.count_label.set_text(str(self.count))
 
     def update_labels(self):
-        quotations = pfctlr.getAllQuotationsFromStock(self.stock)
+        quotations = self.asset.quotations
         self.count = len(quotations)
         self.count_label.set_text(str(self.count))
         if self.count == 0:
@@ -193,7 +195,7 @@ class TransactionsTab(Gtk.VBox):
             self.insert_transaction(transaction)
 
     def insert_transaction(self, ta):
-        return self.model.append([ta, ta.type_string, ta.date.date(), float(ta.quantity), ta.price, ta.costs, ta.total])
+        return self.model.append([ta, str(ta.type), ta.date, ta.quantity, ta.price, ta.cost, asset_controller.get_transaction_total(ta)])
 
     def on_row_activated(self, treeview, path, view_column):
         if view_column == self.date_column:
@@ -208,18 +210,18 @@ class TransactionsTab(Gtk.VBox):
 
     def on_add(self, button):
         last_transaction = self.position.buy_transaction
-        position = controller.newPortfolioPosition(
+        position = position_controller.new_portfolio_position(
                     price=self.position.price,
                     date=datetime.datetime.now(),
                     quantity=last_transaction.quantity,
                     portfolio=self.position.portfolio,
-                    stock=self.position.stock)
-        transaction = controller.newTransaction(
+                    asset=self.position.asset)
+        transaction = asset_controller.new_transaction(
                     type=1,
                     date=position.date,
                     quantity=position.quantity,
                     price=position.price,
-                    costs=last_transaction.costs,
+                    costs=last_transaction.cost,
                     position=position,
                     portfolio=position.portfolio)
         iterator = self.insert_transaction(transaction)
@@ -272,8 +274,8 @@ class TransactionsTab(Gtk.VBox):
         try:
             value = float(new_text.replace(",", "."))
             ta = self.model[path][0]
-            ta.costs = value
-            ta.position.costs = value
+            ta.cost = value
+            ta.position.cost = value
             #update gui
             self.model[path][columnnumber] = value
             self.model[path][self.COL_TOTAL] = ta.total
@@ -284,10 +286,10 @@ class TransactionsTab(Gtk.VBox):
 
 class EditHistoricalQuotationsDialog(Gtk.Dialog):
 
-    def __init__(self, stock, parent=None):
-        self.stock = stock
+    def __init__(self, asset, parent=None):
+        self.asset = asset
 
-        Gtk.Dialog.__init__(self, _("Quotations") + " - " + stock.name, parent
+        Gtk.Dialog.__init__(self, _("Quotations") + " - " + asset.name, parent
                             , Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,
                      (Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT))
         self.set_default_size(300, 300)
@@ -329,7 +331,7 @@ class EditHistoricalQuotationsDialog(Gtk.Dialog):
             toolbar.insert(action.create_tool_item(), -1)
 
         #load values
-        for quotation in pfctlr.getAllQuotationsFromStock(self.stock):
+        for quotation in self.asset.quotations:
             self.model.append([quotation, quotation.date, quotation.close])
 
         #show dialog
@@ -345,7 +347,7 @@ class EditHistoricalQuotationsDialog(Gtk.Dialog):
                 quotation.date = self.model[path][1] = dlg.date
 
     def on_add(self, button):
-        quotation = controller.newQuotation(datetime.date.today(), self.stock, detectDuplicates=False)
+        quotation = asset_controller.new_quotation(datetime.date.today(), self.asset, detectDuplicates=False)
         iter = self.model.append([quotation, quotation.date, quotation.close])
         path = self.model.get_path(iter)
         self.tree.set_cursor(path, focus_column=self.price_column, start_editing=True)

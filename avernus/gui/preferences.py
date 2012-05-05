@@ -1,11 +1,10 @@
 # -*- Mode: Python; coding: utf-8; indent-tabs-mode: nil; tab-width: 4 -*-
 from avernus.config import avernusConfig
 from avernus.gui import gui_utils
-from avernus.controller import controller
-from avernus.controller import portfolio_controller as pfctlr
+from avernus.controller import dimensions_controller
+from avernus.controller import object_controller
 from gi.repository import Gtk
 import logging
-import sys
 logger = logging.getLogger(__name__)
 
 
@@ -24,10 +23,10 @@ class PrefDialog(Gtk.Dialog):
         vbox = self.get_content_area()
         notebook = Gtk.Notebook()
         vbox.pack_start(notebook, True, True, 0)
-        notebook.append_page(DimensionList(), Gtk.Label(label='Dimensions'))
         notebook.append_page(AccountPreferences(), Gtk.Label(label='Account'))
         notebook.append_page(PortfolioPreferences(), Gtk.Label(label='Portfolio'))
         notebook.append_page(ChartPreferences(), Gtk.Label(label='Chart'))
+        notebook.append_page(DimensionList(), Gtk.Label(label='Dimensions'))
 
         self.show_all()
         self.run()
@@ -137,9 +136,9 @@ class DimensionList(Gtk.VBox):
         sw.set_property('vscrollbar-policy', Gtk.PolicyType.AUTOMATIC)
         self.pack_start(sw, True, True, 0)
         sw.add(self.tree)
-        for dim in sorted(controller.getAllDimension()):
+        for dim in sorted(dimensions_controller.get_all_dimensions()):
             iterator = self.model.append(None, [dim, dim.name])
-            for val in sorted(pfctlr.getAllDimensionValueForDimension(dim)):
+            for val in sorted(dim.values):
                 self.model.append(iterator, [val, val.name])
 
         actiongroup = Gtk.ActionGroup('dimensions')
@@ -157,7 +156,7 @@ class DimensionList(Gtk.VBox):
         self.pack_start(toolbar, False, True, 0)
 
     def on_add(self, widget, user_data=None):
-        dimension = controller.newDimension(_('new dimension'))
+        dimension = dimensions_controller.new_dimension(_('new dimension'))
         iterator = self.model.append(None, [dimension, dimension.name])
         #self.expand_row( model.get_path(parent_iter), True)
         self.tree.set_cursor(self.model.get_path(iterator), self.tree.get_column(0), True)
@@ -172,7 +171,7 @@ class DimensionList(Gtk.VBox):
         selection = self.tree.get_selection()
         model, selection_iter = selection.get_selected()
         if selection_iter:
-            model[selection_iter][self.OBJECT].delete()
+            object_controller.delete_object(model[selection_iter][self.OBJECT])
             self.model.remove(selection_iter)
 
     def on_cell_edited(self, cellrenderertext, path, new_text):

@@ -1,87 +1,192 @@
-from avernus.objects import model
-from avernus.objects.stock import Stock
 from avernus.objects.container import Portfolio, Watchlist
-from avernus.objects.position import PortfolioPosition, WatchlistPosition
-from avernus.objects.dividend import Dividend
-from avernus.objects.benchmark import Benchmark
-from avernus.objects.source_info import SourceInfo
-from avernus.objects.transaction import Transaction
-from avernus.objects.quotation import Quotation
-from avernus.objects.dimension import Dimension, DimensionValue, \
-    AssetDimensionValue
-from avernus.controller.shared import check_duplicate, detect_duplicate
-
+from avernus.controller import position_controller, asset_controller
+from avernus.objects import session
+from . import dsm
 
 import datetime
-import sys
-
-datasource_manager = None
-initialLoadingClasses = [Transaction, Portfolio, Dividend, Watchlist, \
-                        PortfolioPosition, WatchlistPosition, Dimension, \
-                        DimensionValue, AssetDimensionValue, Stock]
-controller = sys.modules[__name__]
 
 
-def getAllPortfolio():
-    return Portfolio.getAll()
+#FIXME find a good place to place this class
+class AllPortfolio():
+
+    def __iter__(self):
+        return self.positions.__iter__()
+
+    @property
+    def positions(self):
+        return position_controller.get_all_portfolio_position()
+
+    @property
+    def last_update(self):
+        return min([pf.last_update for pf in get_all_portfolio()])
+
+    @last_update.setter
+    def last_update(self, value):
+        for pf in get_all_portfolio():
+            pf.last_update = value
 
 
-def getAllWatchlist():
-    return Watchlist.getAll()
+class ClosedPosition:
+
+    def __init__(self, buy_transaction, sell_transaction):
+        self.quantity = sell_transaction.quantity
+        self.asset = sell_transaction.position.asset
+        self.buy_date = buy_transaction.date
+        self.sell_date = sell_transaction.date
+        self.buy_price = buy_transaction.price
+        self.sell_price = sell_transaction.price
+        self.buy_cost = buy_transaction.cost / buy_transaction.quantity * sell_transaction.quantity
+        self.sell_cost = sell_transaction.cost
+        self.buy_total = self.buy_cost + self.quantity * self.buy_price
+        self.sell_total = self.sell_cost + self.quantity * self.sell_price
+        self.gain = self.sell_total - self.buy_total
+        self.gain_percent = self.gain * 100.0 / self.buy_total
 
 
-def getAllPosition():
-    return PortfolioPosition.getAll()
+def delete_position(position):
+    session.delete(position)
+    session.commit()
+
+def new_portfolio(name):
+    pf = Portfolio(name=name)
+    session.add(pf)
+    return pf
+
+def new_watchlist(name):
+    wl = Watchlist(name=name)
+    session.add(wl)
+    return wl
+
+def new_benchmark(portfolio, percentage):
+    bm = Benchmark(portfolio=portfolio, percentage=percentage)
+    session.add(bm)
+    return bm
+
+def get_all_portfolio():
+    return session.query(Portfolio).all()
 
 
-def getPositionForPortfolio(portfolio):
-    return PortfolioPosition.getAllFromOneColumn("portfolio", portfolio.getPrimaryKey())
+def get_all_watchlist():
+    return session.query(Watchlist).all()
 
-def getBenchmarksForPortfolio(portfolio):
-    return Benchmark.getAllFromOneColumn("portfolio", portfolio.getPrimaryKey())
+def get_current_value(portfolio):
+    value = 0.0
+    for pos in portfolio:
+        value += position_controller.get_current_value(pos)
+    return value
 
-def update_historical_prices():
-    stocks = get_all_used_stocks()
-    l = len(stocks)
-    i = 0.0
-    for st in stocks:
-        for qt in datasource_manager.get_historical_prices(st):
-            yield i / l
-        i += 1.0
-        yield i / l
-    yield 1
+def get_birthday(portfolio):
+    current = datetime.date.today()
+    for position in portfolio.positions:
+        for transaction in position.transactions:
+            if transaction.date < current:
+                current = transaction.date
+    return current
 
+def get_buy_value(portfolio):
+    value = 0.0
+    for pos in portfolio:
+        value += position_controller.get_buy_value(pos)
+    return value
 
-def get_all_used_stocks():
-    items = set()
-    for pf in getAllPortfolio():
-        for pos in pf:
-            if pos.quantity > 0:
-                items.add(pos.stock)
-    for wl in getAllWatchlist():
-        for pos in wl:
-            items.add(pos.stock)
-    return items
+def get_fraction(portfolio, position):
+    cvalue = get_current_value(portfolio)
+    if cvalue == 0:
+        return 0.0
+    else:
+        return 100.0 * position_controller.get_current_value(position) / cvalue
 
-def update_all():
-    items = get_all_used_stocks()
+def get_closed_positions(portfolio):
+    ret = []
+    for position in portfolio:
+        for sell_ta in asset_controller.get_sell_transactions(position):
+            buy_ta = asset_controller.get_buy_transaction(position)
+            ret.append(ClosedPosition(buy_ta, sell_ta))
+    return ret
+
+def get_current_change(portfolio):
+    change = 0.0
+    for pos in portfolio:
+        stock, percent = position_controller.get_current_change(pos)
+        change += stock * pos.quantity
+    start = get_current_value(portfolio) - change
+    if start == 0.0:
+        percent = 0.0
+    else:
+        percent = round(100.0 / start * change, 2)
+    return change, percent
+
+def get_date_of_last_dividend(pf):
+    if get_dividends_count(pf) == 0:
+        return datetime.date.today()
+    current = None
+    for pos in pf:
+        for dividend in pos.dividends:
+            if not current or dividend.date > current:
+                current = dividend.date
+    return current
+
+def get_dividends(portfolio):
+    ret = []
+    for pos in portfolio:
+        ret += pos.dividends
+    return ret
+
+def get_dividends_count(portfolio):
+    return sum([len(pos.dividends) for pos in portfolio])
+
+def get_dividends_sum(portfolio):
+    ret = 0.0
+    for pos in portfolio:
+        ret += sum([div.price for div in pos.dividends])
+    return ret
+
+def get_overall_change(portfolio):
+    end = get_current_value(portfolio)
+    start = get_buy_value(portfolio)
+    absolute = end - start
+    if start == 0:
+        percent = 0
+    else:
+        percent = round(100.0 / start * absolute, 2)
+    return absolute, percent
+
+def get_percent(portfolio):
+    return get_current_change(portfolio)[1]
+
+def get_ter(portfolio):
+    ter = 0
+    val = 0
+    for pos in portfolio:
+        pos_val = position_controller.get_current_value(pos)
+        ter += pos_val * asset_controller.get_ter(pos)
+        val += pos_val
+    if val == 0:
+        return 0.0
+    return ter / val
+
+def get_transactions(portfolio):
+    ret = []
+    for pos in portfolio:
+        ret += pos.transactions
+    return ret
+
+def update_positions(portfolio):
+    items = set(pos.asset for pos in portfolio if pos.quantity > 0)
     itemcount = len(items)
     count = 0.0
-    for item in datasource_manager.update_stocks(items):
+    for item in dsm.update_assets(items):
         count += 1.0
         yield count / itemcount
-    for container in getAllPortfolio() + getAllWatchlist():
-        container.last_update = datetime.datetime.now()
-    pubsub.publish("stocks.updated", self)
+    portfolio.last_update = datetime.datetime.now()
+    #pubsub.publish("stocks.updated", self)
     yield 1
 
 
-def getDividendsForPosition(pos):
-    return Dividend.getAllFromOneColumn("position", pos.getPrimaryKey())
 
+#  =============================================
+# Mordor from here
 
-def getTransactionsForPosition(position):
-    return Transaction.getAllFromOneColumn("position", position.getPrimaryKey())
 
 
 def deleteAllPositionTransaction(position):
@@ -108,16 +213,6 @@ def deleteAllQuotationsFromStock(stock):
     model.store.execute(query, [stock.id])
 
 
-def getPositionForWatchlist(watchlist):
-    key = watchlist.getPrimaryKey()
-    return WatchlistPosition.getAllFromOneColumn("watchlist", key)
-
-
-def getAllDimensionValueForDimension(dim):
-    for value in DimensionValue.getAll():
-        if value.dimension == dim:
-            yield value
-
 
 def deleteAllDimensionValue(dimension):
     for val in getAllDimensionValueForDimension(dimension):
@@ -130,114 +225,4 @@ def deleteAllWatchlistPosition(watchlist):
         pos.delete()
 
 
-def getQuotationsFromStock(stock, start=None):
-    args = {'stock': stock.getPrimaryKey()}
-    erg = Quotation.getByColumns(args, create=True)
-    if start:
-        erg = filter(lambda quote: quote.date > start, erg)
-    erg = sorted(erg, key=lambda stock: stock.date)
-    return erg
 
-
-def newPortfolio(name, pf_id=None, last_update=datetime.datetime.now(), comment=""):
-    result = Portfolio(id=pf_id, name=name, last_update=last_update, comment=comment)
-    result.controller = controller
-    result.insert()
-    return result
-
-def newWatchlist(name, wl_id=None, last_update=datetime.datetime.now(), comment=""):
-    result = Watchlist(id=wl_id, name=name, last_update=last_update, comment=comment)
-    result.controller = controller
-    result.insert()
-    return result
-
-def getAssetDimensionValueForStock(stock, dim):
-    stockADVs = AssetDimensionValue.getAllFromOneColumn('stock', stock.id)
-    #for adv in stockADVs:
-    #    print adv, adv.dimensionValue
-    stockADVs = filter(lambda adv: adv.dimensionValue.dimension == dim, stockADVs)
-    return stockADVs
-
-def newAssetDimensionValue(stock, dimensionValue, value):
-    adv = detect_duplicate(AssetDimensionValue, stock=stock.id, dimensionValue=dimensionValue.id,
-                          value=value)
-    return adv
-
-
-def getPriceFromStockAtDate(stock, date):
-    args = {'stock': stock.id, 'date':date.date()}
-    res = Quotation.getByColumns(args, create=False)
-    for item in res:
-        return item[5]
-    return None
-
-def getAllQuotationsFromStock(stock, start=None):
-    """from all exchanges"""
-    erg = Quotation.getByColumns({'stock': stock.id}, create=True)
-    return sorted(erg, key=lambda stock: stock.date)
-
-
-def getBuyTransaction(portfolio_position):
-    for ta in Transaction.getByColumns({'position': portfolio_position.id, 'type':1}, create=True):
-        return ta
-
-def yieldSellTransactions(portfolio_position):
-    for ta in Transaction.getByColumns({'position': portfolio_position.id, 'type':0}, create=True):
-        yield ta
-
-
-def newStock(insert=True, **kwargs):
-    result = Stock(**kwargs)
-    result.controller = controller
-    if insert:
-        result.insert()
-    return result
-
-def newBenchmark(portfolio, percentage):
-    bm = Benchmark(id=None,portfolio = portfolio.id, percentage = percentage)
-    bm.insert()
-    return bm
-
-def newWatchlistPosition(price=0, \
-                         date=datetime.datetime.now(), \
-                         quantity=1, \
-                         watchlist=None, \
-                         stock=None, \
-                         comment=''\
-                         ):
-    result = WatchlistPosition(id=None, \
-                               price=price, \
-                               date=date, \
-                               watchlist=watchlist, \
-                               stock=stock, \
-                               comment=comment\
-                               )
-    result.insert()
-    return result
-
-def newPortfolioPosition(price=0, \
-                         date=datetime.datetime.now(), \
-                         quantity=1, \
-                         portfolio=None, \
-                         stock=None, \
-                         comment=''\
-                         ):
-    result = PortfolioPosition(id=None, \
-                               price=price, \
-                               date=date, \
-                               quantity=quantity, \
-                               portfolio=portfolio, \
-                               stock=stock, \
-                               comment=comment\
-                               )
-    result.controller = controller
-    result.insert()
-    return result
-
-
-def newSourceInfo(source='', stock=None, info=''):
-    if check_duplicate(SourceInfo, source=source, stock=stock.id, info=info) is not None:
-        return None
-    si = SourceInfo(source=source, stock=stock, info=info)
-    si.insert()
-    return si

@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 
-from avernus.controller import chartController
+from avernus.controller import chart_controller
 from avernus.gui import charts, page, gui_utils
-from avernus.controller import controller
-from avernus.controller import portfolio_controller as pfctlr
+from avernus.controller import portfolio_controller
+from avernus.controller import dimensions_controller
 from gi.repository import Gtk
 
 import logging
@@ -21,7 +21,7 @@ class ChartTab(Gtk.ScrolledWindow, page.Page):
 
     def show(self):
         self.update_page()
-        if len(self.pf) == 0:
+        if len(self.pf.positions) == 0:
             self.add_with_viewport(Gtk.Label(label='\n%s\n%s\n\n' % (_('No data!'), _('Add positions to portfolio first.'))))
             self.show_all()
             return
@@ -52,7 +52,7 @@ class ChartTab(Gtk.ScrolledWindow, page.Page):
 
         y += 1
 
-        self.pfvalue_chart_controller = chartController.PortfolioChartController(self.pf, 'monthly')
+        self.pfvalue_chart_controller = chart_controller.PortfolioChartController(self.pf, 'monthly')
         self.pfvalue_chart = charts.SimpleLineChart(self.pfvalue_chart_controller, width)
         table.attach(self.pfvalue_chart, 0, 2, y, y + 1)
 
@@ -65,29 +65,29 @@ class ChartTab(Gtk.ScrolledWindow, page.Page):
 
         y += 1
 
-        chart_controller = chartController.PositionAttributeChartController(self.pf, 'name')
-        chart = charts.Pie(chart_controller, width / 2)
+        controller = chart_controller.PositionAttributeChartController(self.pf, 'name')
+        chart = charts.Pie(controller, width / 2)
         table.attach(chart, 0, 1, y, y + 1)
 
         label = Gtk.Label()
         label.set_markup('<b>' + _('Investment types') + '</b>')
         label.set_tooltip_text(_("Percentual fraction by investment type."))
         table.attach(label, 1, 2, y - 1, y)
-        chart_controller = chartController.PositionAttributeChartController(self.pf, 'type_string')
-        chart = charts.Pie(chart_controller, width / 2)
+        controller = chart_controller.PositionAttributeChartController(self.pf, 'type')
+        chart = charts.Pie(controller, width / 2)
         table.attach(chart, 1, 2, y, y + 1)
 
         y = y + 1
 
         col = 0
         switch = True
-        for dim in controller.getAllDimension():
+        for dim in dimensions_controller.get_all_dimensions():
             label = Gtk.Label()
             label.set_markup('<b>' + dim.name + '</b>')
             label.set_tooltip_text(_('Percentual fraction by "') + dim.name + '".')
             table.attach(label, col, col + 1, y, y + 1)
-            chart_controller = chartController.DimensionChartController(self.pf, dim)
-            chart = charts.Pie(chart_controller, width / 2)
+            controller = chart_controller.DimensionChartController(self.pf, dim)
+            chart = charts.Pie(controller, width / 2)
             table.attach(chart, col, col + 1, y + 1, y + 2)
             if switch:
                 col = 1
@@ -103,16 +103,16 @@ class ChartTab(Gtk.ScrolledWindow, page.Page):
         label.set_markup('<b>' + _('Dividends per Year') + '</b>')
         label.set_tooltip_text(_('Total dividend payment per year.'))
         table.attach(label, 0, 2, y, y + 1)
-        chart_controller = chartController.DividendsPerYearChartController(self.pf)
-        chart = charts.BarChart(chart_controller, width)
+        controller = chart_controller.DividendsPerYearChartController(self.pf)
+        chart = charts.BarChart(controller, width)
         table.attach(chart, 0, 2, y + 2, y + 3)
 
         label = Gtk.Label()
         label.set_markup('<b>' + _('Dividends') + '</b>')
         label.set_tooltip_text(_('Total dividend payment for each position.'))
         table.attach(label, 0, 2, y + 3, y + 4)
-        chart_controller = chartController.DividendsPerPositionChartController(self.pf)
-        chart = charts.BarChart(chart_controller, width)
+        controller = chart_controller.DividendsPerPositionChartController(self.pf)
+        chart = charts.BarChart(controller, width)
         table.attach(chart, 0, 2, y + 4, y + 5)
 
         self.add_with_viewport(table)
@@ -154,7 +154,7 @@ class BenchmarkDialog(Gtk.Dialog):
 
         # load items
         self.count = 0
-        for bm in pfctlr.getBenchmarksForPortfolio(self.portfolio):
+        for bm in self.portfolio.benchmarks:
             self.model.append([bm, str(bm), bm.percentage * 100])
             self.count += 1
 
@@ -177,6 +177,7 @@ class BenchmarkDialog(Gtk.Dialog):
 
     def on_add(self, widget, user_data=None):
         if self.count < 3:
+<<<<<<< TREE
             dlg = Gtk.Dialog(_("Add benchmark"), self
                             , Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,
                      (Gtk.STOCK_CANCEL, Gtk.ResponseType.REJECT,
@@ -197,6 +198,12 @@ class BenchmarkDialog(Gtk.Dialog):
                 self.model.append([bm, bm, bm.percentage*100.0])
                 self.count += 1
             dlg.destroy()
+=======
+            bm = portfolio_controller.new_benchmark(self.portfolio, 0.05)
+            iterator = self.model.append([bm, str(bm), bm.percentage*100])
+            self.tree.set_cursor(self.model.get_path(iterator), self.tree.get_column(0), True)
+            self.count += 1
+>>>>>>> MERGE-SOURCE
         else:
             pass
             #FIXME show some error message

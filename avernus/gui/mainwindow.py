@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 from avernus import pubsub, config
-from avernus.controller import filterController
+from avernus.controller import filter_controller
 from avernus.controller import portfolio_controller
+from avernus.controller import asset_controller
 from avernus.gui import progress_manager, threads
 from avernus.gui.account.account_transactions_tab import AccountTransactionTab
 from avernus.gui.account_overview import AccountOverview
@@ -13,7 +14,6 @@ from avernus.gui.portfolio.positions_tab import WatchlistPositionsTab
 from avernus.gui.portfolio.overview_notebook import OverviewNotebook
 from avernus.gui.preferences import PrefDialog
 from avernus.gui.account.exportDialog import ExportDialog
-from avernus.objects import model
 from webbrowser import open as web
 import avernus
 from gi.repository import Gtk
@@ -113,10 +113,12 @@ class MainWindow(Gtk.Window):
 
         self.pages = {}
         self.pages['Portfolio'] = PortfolioNotebook
+        self.pages['AllPortfolio'] = PortfolioNotebook
         self.pages['Watchlist'] = WatchlistPositionsTab
         self.pages['Category Accounts'] = AccountOverview
         self.pages['Category Portfolios'] = OverviewNotebook
         self.pages['Account'] = AccountTransactionTab
+        self.pages['AllAccount'] = AccountTransactionTab
 
         #set min size
         screen = self.get_screen()
@@ -183,24 +185,22 @@ class MainWindow(Gtk.Window):
 
     def on_destroy(self, widget=None, data=None):
         """on_destroy - called when the avernusWindow is closed. """
+        avernus.objects.session.commit()
         #save db on quit
         self.config.set_option('hpaned position', self.hpaned.get_position(), 'Gui')
         threads.terminate_all()
-        model.store.close()
-        model.store.join()
         Gtk.main_quit()
-        sys.exit(0)
 
     def on_maintree_select(self, item):
         self.on_maintree_unselect()
         page = None
-        if item.__name__ == 'Category':
+        if item.__class__.__name__ == 'Category':
             if item.name == 'Portfolios':
                 page = "Category Portfolios"
             elif item.name == 'Accounts':
                 page = "Category Accounts"
         else:
-            page = item.__name__
+            page = item.__class__.__name__
         if page is not None:
             self.hpaned.pack2(self.pages[page](item))
 
@@ -226,17 +226,17 @@ class MainWindow(Gtk.Window):
         ExportDialog(parent=self)
 
     def on_do_category_assignments(self, *args):
-        threads.GeneratorTask(filterController.run_auto_assignments).start()
+        threads.GeneratorTask(filter_controller.run_auto_assignments).start()
         #filterController.run_auto_assignments()
 
     def on_historical(self, *args):
         def finished_cb():
             progress_manager.remove_monitor(42)
         m = progress_manager.add_monitor(42, _('downloading quotations...'), Gtk.STOCK_REFRESH)
-        threads.GeneratorTask(portfolio_controller.update_historical_prices, m.progress_update, complete_callback=finished_cb).start()
+        threads.GeneratorTask(asset_controller.update_historical_prices, m.progress_update, complete_callback=finished_cb).start()
 
     def on_update_all(self, *args):
         def finished_cb():
             progress_manager.remove_monitor(11)
         m = progress_manager.add_monitor(11, _('updating stocks...'), Gtk.STOCK_REFRESH)
-        threads.GeneratorTask(portfolio_controller.update_all, m.progress_update, complete_callback=finished_cb).start()
+        threads.GeneratorTask(asset_controller.update_all, m.progress_update, complete_callback=finished_cb).start()

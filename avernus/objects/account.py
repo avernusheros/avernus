@@ -1,180 +1,73 @@
-from avernus import pubsub
-from avernus.objects.model import SQLiteEntity
-import datetime
+from avernus.objects import Base
+from sqlalchemy import Column, Integer, String, Float, Date, Boolean, ForeignKey
+from sqlalchemy.orm import relationship
 
+class Account(Base):
 
-class AccountBase():
-    __name__ = 'Account'
+    __tablename__ = 'account'
 
-    def __len__(self):
-        return self.transaction_count
+    id = Column(Integer, primary_key=True)
+    name = Column(String)
+    type = Column(Integer)
+    balance = Column(Float)
+    transactions = relationship('AccountTransaction', backref='account')
+
+    def __init__(self, name):
+        self.name = name
+        self.balance = 0.0
+        self.type = 1
 
     def __iter__(self):
         return self.transactions.__iter__()
 
-    def has_transaction(self, transaction):
-        return self.controller.check_duplicate(AccountTransaction, account=self.id, **transaction)
+    def __repr__(self):
+        return "Account<%s>" % self.name
 
-    @property
-    def transaction_count(self):
-        return len(self.transactions)
+class AccountCategory(Base):
 
-    def yield_matching_transfer_transactions(self, transaction):
-        for trans in self:
-            if transaction.amount == -trans.amount:
-                if trans.transfer is None or trans.transfer == transaction:
-                    fivedays = datetime.timedelta(5)
-                    if transaction.date-fivedays < trans.date and transaction.date+fivedays > trans.date:
-                        yield trans
+    __tablename__ = 'account_category'
 
-    @property
-    def birthday(self):
-        if self.transaction_count>0:
-            return min(t.date for t in self)
-        return datetime.date.today()
+    id = Column(Integer, primary_key=True)
+    name = Column(String)
+    parent_id = Column(Integer, ForeignKey('account_category.id'))
+    parent = relationship('AccountCategory', remote_side=[id], backref='children')
 
-    @property
-    def lastday(self):
-        if self.transaction_count>0:
-            return max(t.date for t in self)
-        return datetime.date.today()
-
-
-
-
-class Account(SQLiteEntity, AccountBase):
-
-    __primaryKey__ = 'id'
-    __tableName__ = "account"
-    __columns__ = {
-                   'id': 'INTEGER',
-                   'name': 'VARCHAR',
-                   'type': 'INTEGER',
-                   'amount': 'FLOAT',
-                  }
-
-    def on_delete(self, **kwargs):
-        self.controller.deleteAllAccountTransaction(self)
-
-    def on_update(self, **kwargs):
-        pubsub.publish('account.updated', self)
-
-    __callbacks__ = {
-                     'onDelete':on_delete,
-                     'onUpdate':on_update,
-                    }
-
-    @property
-    def transactions(self):
-        return self.controller.getTransactionsForAccount(self)
-
-
-
-class AllAccount(AccountBase):
-    __name__ = 'Account'
-    name = ''
-
-    @property
-    def transactions(self):
-        return self.controller.getAllAccountTransactions()
-
-    @property
-    def amount(self):
-        return sum([acc.amount for acc in self.controller.getAllAccount()])
-
-
-class AccountCategory(SQLiteEntity):
-    __primaryKey__ = 'id'
-    __tableName__ = "accountcategory"
-    __columns__ = {
-                   'id': 'INTEGER',
-                   'name': 'VARCHAR',
-                   'parentid': 'INTEGER'
-                  }
-
-    def __cmp__(self, other):
-        if other is None:
-            return 1
-        return cmp(self.name,other.name)
+    def __init__(self, name, parent):
+        self.name = name
+        self.parent = parent
 
     def __repr__(self):
-        return SQLiteEntity.__repr__(self) + self.name
-
-    def __str__(self):
-        return self.name
-
-    def get_parent(self):
-        if self.parentid != -1:
-            return self.getByPrimaryKey(self.parentid)
-        return None
-
-    def get_parents(self):
-        erg = []
-        current = self
-        while not current.parentid == -1:
-            p = current.get_parent()
-            erg.append(p)
-            current = p
-        return erg
-
-    parents = property(get_parents)
-
-    def set_parent(self, parent):
-        if parent:
-            self.parentid = parent.id
-        else:
-            self.parentid = -1
-
-    parent = property(get_parent, set_parent)
-
-    def is_parent(self, category):
-        if category == self:
-            return True
-        if self.parent == category:
-            return True
-        if self.parent is not None:
-            return self.parent.is_parent(category)
-        return False
+        return "AccountCategory<%s>" % self.name
 
 
-class AccountTransaction(SQLiteEntity):
-    __primaryKey__ = 'id'
-    __tableName__ = "accounttransaction"
-    __columns__ = {
-                   'id': 'INTEGER',
-                   'description': 'VARCHAR',
-                   'amount': 'FLOAT',
-                   'date' :'DATE',
-                   'account': Account,
-                   'category': AccountCategory,
-                   'transferid': 'INTEGER'
-                  }
-    __comparisonPositives__ = ['amount', 'date', 'account']
+class AccountTransaction(Base):
 
-    def isEarning(self):
-        return self.amount >= 0
+    __tablename__ = 'account_transaction'
 
-    def get_transfer(self):
-        if self.transferid != -1:
-            return self.getByPrimaryKey(self.transferid)
-        return None
+    id = Column(Integer, primary_key=True)
+    description = Column(String)
+    amount = Column(Float)
+    date = Column(Date)
+    account_id = Column(Integer, ForeignKey('account.id'))
+    transfer_id = Column(Integer, ForeignKey('account_transaction.id'))
+    transfer = relationship('AccountTransaction', remote_side=[id])
+    category_id = Column(String, ForeignKey('account_category.id'))
+    category = relationship('AccountCategory', remote_side=[AccountCategory.id])
 
-    def set_transfer(self, transaction):
-        if transaction:
-            self.transferid = transaction.id
-        else:
-            self.transferid = -1
+    def __repr__(self):
+        return "AccountTransaction<"+str(self.date) +"|"+str(self.amount)+">"
 
-    def is_transfer(self):
-        return (self.transfer is not None)
 
-    def has_category(self):
-        return (self.category is not None)
+class CategoryFilter(Base):
 
-    def on_update(self, **kwargs):
-        pubsub.publish('accountTransaction.updated', self)
+    __tablename__ = 'category_filter'
 
-    __callbacks__ = {
-                   'onUpdate':on_update,
-                    }
-    transfer = property(get_transfer, set_transfer)
+    id = Column(Integer, primary_key=True)
+    rule = Column(String)
+    active = Column(Boolean)
+    priority = Column(Integer)
+    category_id = Column(String, ForeignKey('account_category.id'))
+    category = relationship('AccountCategory', remote_side=[AccountCategory.id])
+
+    def __repr__(self):
+        return self.rule

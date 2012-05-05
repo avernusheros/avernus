@@ -1,14 +1,9 @@
-from gi.repository import GObject, Gdk
+from gi.repository import GObject
 
 import logging
 import threading
 
 logger = logging.getLogger(__name__)
-
-
-threadlist = {}
-current_id = 0
-
 
 class BackgroundTask():
     def __init__(self, function, complete_callback=None):
@@ -24,21 +19,21 @@ class BackgroundTask():
 
 class GeneratorTask(threading.Thread):
 
-    def __init__(self, generator, loop_callback=None, complete_callback=None):
-        threading.Thread.__init__(self)
+    def __init__(self, generator, loop_callback=None, complete_callback=None,  args=()):
+        threading.Thread.__init__(self, group=None)
         self.generator = generator
         self.loop_callback = loop_callback
         self.complete_callback = complete_callback
-        self.id = get_id()
-        threadlist[self.id] = self
+        self.args = args
 
         #Thread event, stops the thread if it is set.
         self.stopthread = threading.Event()
 
     def run(self, *args, **kwargs):
         logger.debug("start thread")
+        logger.debug(args)
         try:
-            for ret in self.generator(*args, **kwargs):
+            for ret in self.generator(self.args):
                 if self.stopthread.isSet():
                     return
 
@@ -54,18 +49,10 @@ class GeneratorTask(threading.Thread):
             logger.debug("finished thread")
         except:
             logger.debug("thread failed")
+            import traceback
+            traceback.print_exc()
             if self.complete_callback is not None:
                 GObject.idle_add(self.complete_callback)
-        self._terminate()
-
-    def _terminate(self):
-        logger.debug("terminate thread "+str(self))
-        global threadlist
-        try:
-            del threadlist[self.id]
-            logger.debug("deleted from threadlist")
-        except:
-            logger.debug("failed ...")
 
     def stop(self):
         """Stop method, sets the event to terminate the thread's main loop"""
@@ -77,16 +64,15 @@ class GeneratorTask(threading.Thread):
 
 
 def terminate_all():
-    global threadlist
+    threadlist = threading.enumerate()
     logger.debug("there are %i threads running." % (len(threadlist),))
-    for val in threadlist.itervalues():
-        val.stop()
-        val.join()
-        logger.debug("stop thread " + str(val))
+    for val in threadlist:
+        try:
+            val.stop()
+            val.join()
+            logger.debug("stop thread " + str(val))
+        except:
+            logger.debug("unable to stop thread, started?")
     logger.debug("all threads terminated")
 
 
-def get_id():
-    global current_id
-    current_id += 1
-    return current_id

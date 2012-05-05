@@ -2,7 +2,8 @@
 
 from gi.repository import Gtk
 from avernus.gui.gui_utils import Tree, get_name_string
-from avernus.controller import controller
+from avernus.controller import portfolio_controller
+from avernus.controller import asset_controller
 from avernus.gui import gui_utils, page
 from avernus.gui.portfolio import dialogs
 
@@ -49,9 +50,9 @@ class DividendsTab(Gtk.VBox, page.Page):
         self.update_page()
 
     def get_info(self):
-        return [('# dividends', self.portfolio.dividends_count),
-                ('Sum', gui_utils.get_currency_format_from_float(self.portfolio.dividends_sum)),
-                ('Last dividend', gui_utils.get_date_string(self.portfolio.date_of_last_dividend))]
+        return [('# dividends', portfolio_controller.get_dividends_count(self.portfolio)),
+                ('Sum', gui_utils.get_currency_format_from_float(portfolio_controller.get_dividends_sum(self.portfolio))),
+                ('Last dividend', gui_utils.get_date_string(portfolio_controller.get_date_of_last_dividend(self.portfolio)))]
 
 
 class DividendsTree(Tree):
@@ -82,7 +83,7 @@ class DividendsTree(Tree):
 
     def on_cursor_changed(self, widget):
         obj, iterator = self.get_selected_item()
-        if isinstance(obj, controller.Dividend):
+        if obj.__class__.__name__ == "Dividend":
             self.actiongroup.get_action('remove').set_sensitive(True)
             self.actiongroup.get_action('edit').set_sensitive(True)
             return
@@ -100,23 +101,23 @@ class DividendsTree(Tree):
         parent_row = self.find_item(div.position)
         if parent_row is None:
             parent = model.append(None, [div.position,
-                            get_name_string(div.position.stock),
+                            get_name_string(div.position.asset),
                             None,
                             div.price,
-                            div.costs,
-                            div.total])
+                            div.cost,
+                            div.price-div.cost])
         else:
             parent_row[self.AMOUNT] += div.price
-            parent_row[self.TA_COSTS] += div.costs
-            parent_row[self.TOTAL] += div.total
+            parent_row[self.TA_COSTS] += div.cost
+            parent_row[self.TOTAL] += asset_controller.get_total_for_dividend(div)
             parent = parent_row.iter
         model.append(parent,
                 [div,
-                get_name_string(div.position.stock),
+                get_name_string(div.position.asset),
                 div.date,
                 div.price,
-                div.costs,
-                div.total])
+                div.cost,
+                asset_controller.get_total_for_dividend(div)])
 
     def on_edit(self, widget, data=None):
         obj, iterator = self.get_selected_item()

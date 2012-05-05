@@ -1,8 +1,8 @@
 from gi.repository import Gtk
 from avernus.gui import gui_utils
 from avernus import pubsub
-from avernus.controller import portfolio_controller as pfctlr
-from avernus.controller import chartController
+from avernus.controller import portfolio_controller
+from avernus.controller import chart_controller
 from avernus.gui import charts
 
 
@@ -54,7 +54,7 @@ class OverviewCharts(Gtk.ScrolledWindow):
 
         y += 1
 
-        pfvalue_chart_controller = chartController.AllPortfolioValueOverTime('monthly')
+        pfvalue_chart_controller = chart_controller.AllPortfolioValueOverTime('monthly')
         pfvalue_chart = charts.SimpleLineChart(pfvalue_chart_controller, width)
         table.attach(pfvalue_chart, 0, 2, y, y + 1)
         combobox.connect('changed', self.on_zoom_change, pfvalue_chart_controller, pfvalue_chart)
@@ -77,7 +77,7 @@ class OverviewCharts(Gtk.ScrolledWindow):
 
         y += 1
 
-        pfinvestments_chart_controller = chartController.AllPortfolioInvestmentsOverTime('monthly')
+        pfinvestments_chart_controller = chart_controller.AllPortfolioInvestmentsOverTime('monthly')
         pfinvestments_chart = charts.SimpleLineChart(pfinvestments_chart_controller, width)
         table.attach(pfinvestments_chart, 0, 2, y, y + 1)
         combobox.connect('changed', self.on_zoom_change, pfinvestments_chart_controller, pfinvestments_chart)
@@ -91,7 +91,7 @@ class OverviewCharts(Gtk.ScrolledWindow):
 
         y += 1
 
-        chart_controller = chartController.PortfolioAttributeChartController('name')
+        chart_controller = chart_controller.PortfolioAttributeChartController('name')
         chart = charts.Pie(chart_controller, width / 2)
         table.attach(chart, 0, 1, y, y + 1)
 
@@ -139,8 +139,7 @@ class PortfolioOverviewTree(gui_utils.Tree):
         self.connect("destroy", self.on_destroy)
         self.connect("row-activated", self.on_row_activated)
         self.subscriptions = (
-            ('stocks.updated', self.on_stocks_updated),
-            ('shortcut.update', self.on_update)
+            ('shortcut.update', self.on_update),
         )
         for topic, callback in self.subscriptions:
             pubsub.subscribe(topic, callback)
@@ -161,32 +160,22 @@ class PortfolioOverviewTree(gui_utils.Tree):
     def load_items(self):
         items = []
         if self.container.name == 'Watchlists':
-            items = pfctlr.getAllWatchlist()
+            items = portfolio_controller.get_all_watchlist()
         elif self.container.name == 'Portfolios':
-            items = pfctlr.getAllPortfolio()
-        self.overall_value = sum([i.cvalue for i in items])
+            items = portfolio_controller.get_all_portfolio()
+        self.overall_value = sum([portfolio_controller.get_current_value(i) for i in items])
         if self.overall_value == 0.0:
             self.overall_value = 1
         for item in items:
             self.insert_item(item)
 
-    def on_stocks_updated(self, container):
-        if container.id == self.container.id:
-            for row in self.get_model():
-                item = row[0]
-                row[self.VALUE] = item.cvalue
-                row[self.LAST_UPDATE] = item.last_update
-                row[self.CHANGE] = item.change
-                row[self.CHANGE_PERCENT] = item.percent
-                row[self.TER] = item.ter
-
     def insert_item(self, item):
         self.get_model().append([item,
                                item.name,
-                               item.cvalue,
-                               item.change,
-                               float(item.percent),
-                               item.ter,
+                               portfolio_controller.get_current_value(item),
+                               portfolio_controller.get_current_change(item)[0],
+                               float(portfolio_controller.get_percent(item)),
+                               portfolio_controller.get_ter(item),
                                item.last_update,
-                               len(item),
-                               100 * item.cvalue / self.overall_value])
+                               len(item.positions),
+                               100.0 * portfolio_controller.get_current_value(item) / self.overall_value])

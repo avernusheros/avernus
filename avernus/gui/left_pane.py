@@ -5,13 +5,9 @@ from gi.repository import Gdk
 from gi.repository import Pango
 from avernus import pubsub
 from avernus.gui import gui_utils, progress_manager
-from avernus.gui.account.csv_import_dialog import CSVImportDialog
-from avernus.controller import controller
-from avernus.controller import portfolio_controller as pfctlr
-
-
-from avernus.objects.container import AllPortfolio
-from avernus.objects.account import AllAccount
+from avernus.controller import account_controller
+from avernus.controller import object_controller
+from avernus.controller import portfolio_controller
 
 
 UI_INFO = """
@@ -30,7 +26,6 @@ UI_INFO = """
 
 
 class Category(object):
-    __name__ = 'Category'
 
     def __init__(self, name):
         self.name = name
@@ -127,21 +122,20 @@ class MainTree(gui_utils.Tree):
         self._load_items()
 
     def _load_items(self):
-        portfolios = pfctlr.getAllPortfolio()
+        portfolios = portfolio_controller.get_all_portfolio()
         if len(portfolios) > 1:
-            all_pf = AllPortfolio()
-            all_pf.controller = pfctlr
+            pass
+            all_pf = portfolio_controller.AllPortfolio()
             all_pf.name = "<i>%s</i>" % (_('All'),)
             self.insert_portfolio(all_pf)
         for pf in portfolios:
             self.insert_portfolio(pf)
-        for wl in pfctlr.getAllWatchlist():
+        for wl in portfolio_controller.get_all_watchlist():
             self.insert_watchlist(wl)
 
-        accounts = controller.getAllAccount()
+        accounts = account_controller.get_all_account()
         if len(accounts) > 1:
-            all_account = AllAccount()
-            all_account.controller = controller
+            all_account = account_controller.AllAccount()
             all_account.name = "<i>%s</i>" % (_('All'),)
             self.insert_account(all_account)
         for account in accounts:
@@ -179,7 +173,7 @@ class MainTree(gui_utils.Tree):
                     popup = self.uimanager.get_widget("/Popup")
                 popup.popup(None, None, None, None, event.button, event.time)
                 return True
-            if self.get_selection().path_is_selected(target[0]) and obj.__name__ == 'Category' :
+            if self.get_selection().path_is_selected(target[0]) and obj.__class__.__name__ in ['Category', 'AllAccount', 'AllPortfolio']:
                 #disable editing of categories
                 return True
 
@@ -187,16 +181,15 @@ class MainTree(gui_utils.Tree):
         self.pf_iter = self.get_model().append(None, [Category('Portfolios'), 'portfolios', _("<b>Portfolios</b>"), ''])
         self.wl_iter = self.get_model().append(None, [Category('Watchlists'), 'watchlists', _("<b>Watchlists</b>"), ''])
         self.accounts_iter = self.get_model().append(None, [Category('Accounts'), 'accounts', _("<b>Accounts</b>"), ''])
-        #self.index_iter = self.get_model().append(None, [Category('Indices'),'indices', _("<b>Indices</b>"),''])
 
     def insert_watchlist(self, item):
         self.get_model().append(self.wl_iter, [item, 'watchlist', item.name, ''])
 
     def insert_account(self, item):
-        self.get_model().append(self.accounts_iter, [item, 'account', item.name, gui_utils.get_currency_format_from_float(item.amount)])
+        self.get_model().append(self.accounts_iter, [item, 'account', item.name, gui_utils.get_currency_format_from_float(item.balance)])
 
     def insert_portfolio(self, item):
-        self.get_model().append(self.pf_iter, [item, 'portfolio', item.name, gui_utils.get_currency_format_from_float(item.cvalue)])
+        self.get_model().append(self.pf_iter, [item, 'portfolio', item.name, gui_utils.get_currency_format_from_float(portfolio_controller.get_current_value(item))])
 
     def on_remove(self, widget=None, data=None):
         if self.selected_item is None:
@@ -210,7 +203,7 @@ class MainTree(gui_utils.Tree):
             response = dlg.run()
             dlg.destroy()
             if response == Gtk.ResponseType.OK:
-                obj.delete()
+                object_controller.delete_object(obj)
                 self.get_model().remove(iterator)
                 self.selected_item = None
                 pubsub.publish('maintree.unselect')
@@ -232,14 +225,15 @@ class MainTree(gui_utils.Tree):
         #Get the current selection in the Gtk.TreeView
         selection = widget.get_selection()
         # Get the selection iter
-        treestore, selection_iter = selection.get_selected()
-        if (selection_iter and treestore):
-            #Something is selected so get the object
-            obj = treestore.get_value(selection_iter, 0)
-            if self.selected_item is None or self.selected_item[0] != obj:
-                self.selected_item = obj, selection_iter
-                pubsub.publish('maintree.select', obj)
-            return
+        if selection:
+            treestore, selection_iter = selection.get_selected()
+            if (selection_iter and treestore):
+                #Something is selected so get the object
+                obj = treestore.get_value(selection_iter, 0)
+                if self.selected_item is None or self.selected_item[0] != obj:
+                    self.selected_item = obj, selection_iter
+                    pubsub.publish('maintree.select', obj)
+                return
         self.selected_item = None
         pubsub.publish('maintree.unselect')
 
@@ -252,7 +246,7 @@ class MainTree(gui_utils.Tree):
         if objtype == 'Category' or objtype == "AllPortfolio" or objtype == 'AllAccount':
             return
         parent = self.get_toplevel()
-        if obj.__name__ == 'Account':
+        if obj.__class__.__name__ == 'Account':
             EditAccount(obj, parent)
         else:
             obj, selection_iter = self.selected_item
@@ -266,21 +260,21 @@ class MainTree(gui_utils.Tree):
         obj, row = self.selected_item
         model = self.get_model()
 
-        if obj.__name__ == 'Portfolio' or obj.name == 'Portfolios':
+        if obj.__class__.__name__ == 'Portfolio' or obj.name == 'Portfolios':
             parent_iter = self.pf_iter
             cat_type = "portfolio"
-            item = pfctlr.newPortfolio(_('new portfolio'))
-        elif obj.__name__ == 'Watchlist' or obj.name == 'Watchlists':
+            item = portfolio_controller.new_portfolio(_('new portfolio'))
+        elif obj.__class__.__name__ == 'Watchlist' or obj.name == 'Watchlists':
             parent_iter = self.wl_iter
             cat_type = "watchlist"
-            item = pfctlr.newWatchlist(_('new watchlist'))
-        elif obj.__name__ == 'Account' or obj.name == 'Accounts':
+            item = portfolio_controller.new_watchlist(_('new watchlist'))
+        elif obj.__class__.__name__ == 'Account' or obj.name == 'Accounts':
             parent_iter = self.accounts_iter
             cat_type = "account"
-            item = controller.newAccount(_('new account'))
+            item = account_controller.new_account(_('new account'))
         iterator = model.append(parent_iter, [item, cat_type, item.name, ''])
         self.expand_row(model.get_path(parent_iter), True)
-        self.set_cursor(model.get_path(iterator), focus_column=self.get_column(0), start_editing=True)
+        self.set_cursor(model.get_path(iterator), start_editing=True)
 
 
 class EditAccount(Gtk.Dialog):
@@ -304,7 +298,7 @@ class EditAccount(Gtk.Dialog):
         #cash entry
         label = Gtk.Label(label=_('Current balance:'))
         table.attach(label, 0, 1, 1, 2)
-        self.cash_entry = Gtk.SpinButton(adjustment=Gtk.Adjustment(lower= -999999999, upper=999999999, step_increment=10, value=acc.amount), digits=2)
+        self.cash_entry = Gtk.SpinButton(adjustment=Gtk.Adjustment(lower= -999999999, upper=999999999, step_increment=10, value=acc.balance), digits=2)
         table.attach(self.cash_entry, 1, 2, 1, 2)
 
         self.show_all()
@@ -316,6 +310,6 @@ class EditAccount(Gtk.Dialog):
     def process_result(self, widget=None, response=Gtk.ResponseType.ACCEPT):
         if response == Gtk.ResponseType.ACCEPT:
             self.acc.name = self.name_entry.get_text()
-            self.acc.amount = self.cash_entry.get_value()
+            self.acc.balance = self.cash_entry.get_value()
         self.destroy()
 

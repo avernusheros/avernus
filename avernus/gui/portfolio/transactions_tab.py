@@ -6,6 +6,8 @@ from avernus.gui import gui_utils
 from avernus.gui.gui_utils import Tree
 from avernus.gui.portfolio import dialogs
 
+from avernus.controller import asset_controller
+
 
 class TransactionsTab(Gtk.ScrolledWindow):
 
@@ -79,7 +81,7 @@ class TransactionsTree(Tree):
         self.insert_transaction(transaction)
 
     def insert_transaction(self, ta):
-        self.model.append(None, [ta, ta.type_string, gui_utils.get_name_string(ta.position.stock), ta.date.date(), float(ta.quantity), ta.price, ta.costs, ta.total])
+        self.model.append(None, [ta, str(ta.type), gui_utils.get_name_string(ta.position.asset), ta.date, float(ta.position.quantity), ta.price, ta.cost, asset_controller.get_transaction_total(ta)])
 
     def show_context_menu(self, event):
         transaction, iter = self.get_selected_item()

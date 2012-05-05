@@ -2,6 +2,7 @@
 
 from gi.repository import Gtk
 from avernus.gui import gui_utils, page
+from avernus.controller import portfolio_controller
 
 
 class ClosedPositionsTab(Gtk.ScrolledWindow, page.Page):
@@ -23,7 +24,7 @@ class ClosedPositionsTab(Gtk.ScrolledWindow, page.Page):
     def get_info(self):
         count = 0
         total = 0.0
-        for pos in self.portfolio.closed_positions:
+        for pos in portfolio_controller.get_closed_positions(self.portfolio):
             count += 1
             total += pos.sell_total
         return [('# positions', count),
@@ -54,20 +55,21 @@ class ClosedPositionsTree(gui_utils.Tree):
         self.create_column('%', 12, func=gui_utils.float_to_red_green_string)
 
     def load_positions(self):
-        for pos in self.portfolio.closed_positions:
+        for pos in portfolio_controller.get_closed_positions(self.portfolio):
             self.insert_position(pos)
 
     def insert_position(self, pos):
         self.model.append([pos,
-                           gui_utils.get_name_string(pos.stock),
-                           float(pos.quantity),
+                           gui_utils.get_name_string(pos.asset),
+                           pos.quantity,
                            pos.buy_date,
                            pos.buy_price,
-                           pos.buy_costs,
+                           pos.buy_cost,
                            pos.buy_total,
                            pos.sell_date,
                            pos.sell_price,
-                           pos.sell_costs,
+                           pos.sell_cost,
                            pos.sell_total,
                            pos.gain,
-                           pos.gain_percent])
+                           pos.gain_percent
+                           ])
