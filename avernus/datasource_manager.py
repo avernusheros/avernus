@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from avernus.controller import asset_controller
-from avernus.data_sources import yahoo, onvista
+from avernus import data_sources
 from avernus.gui import threads
 import datetime, re
 import logging
@@ -9,14 +9,8 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+sources = data_sources.sources
 
-sources = {'onvista.de': onvista.Onvista(),
-           'yahoo': yahoo.Yahoo()
-            }
-source_icons = {
-                'onvista.de':'onvista',
-                'yahoo':'yahoo'
-                }
 
 class DatasourceManager():
 
@@ -76,7 +70,7 @@ class DatasourceManager():
         if source_info is not None:
             asset_controller.new_source_info(source=source.name, asset=asset, info=source_info)
         if new and self.search_callback:
-            self.search_callback(asset, source_icons[item['source']])
+            self.search_callback(asset, 'source')
 
     def validate_isin(self, isin):
         return re.match('^[A-Z]{2}[A-Z0-9]{9}[0-9]$', isin)

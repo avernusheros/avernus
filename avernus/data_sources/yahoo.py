@@ -18,7 +18,7 @@ EXCHANGE_CURRENCY = [(['NYQ', 'PNK'], 'USD'),
                      (['LSE'], 'GBP')
                      ]
 
-class Yahoo():
+class DataSource():
     name = "yahoo"
 
     def __request(self, searchstring):
