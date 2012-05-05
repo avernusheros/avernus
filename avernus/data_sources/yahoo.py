@@ -92,9 +92,9 @@ class Yahoo():
     def update_historical_prices(self, stock, start_date, end_date):
         #we should use a more intelligent way of choosing the exchange
         #e.g. the exchange with the highest volume for this stock
-        sourceInfo = controller.getSourceInfo(self.name, stock)
-        if sourceInfo == []:
-            print "crapballs... yahoo.update_historical_prices"
+        sourceInfo = asset_controller.get_source_info(self.name, stock)
+        if len(sourceInfo) == 0:
+            logger.debug("no source info for stock")
             return
         yid = sourceInfo[0].info
 
@@ -154,7 +154,7 @@ class Yahoo():
         res['yahoo_id'] = item[0]
         res['isin']     = item[2]
         res['exchange'] = item[5]
-        res['type']     = TYPES[item[4]]
+        res['assettype']     = TYPES[item[4]]
         for ex, cur in EXCHANGE_CURRENCY:
             if res['exchange'] in ex:
                 res['currency'] = cur

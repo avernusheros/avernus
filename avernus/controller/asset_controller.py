@@ -7,7 +7,7 @@ from avernus.objects.container import Position, Container
 # Session is the class, session the normal instance
 from avernus.objects import Session, session, asset
 from avernus import pubsub
-from sqlalchemy import or_
+from sqlalchemy import or_, desc
 import datetime
 
 datasource_manager = None
@@ -28,9 +28,9 @@ def get_change_percent(asset):
     return asset.change * 100.0 / (asset.price - asset.change)
 
 def get_date_of_newest_quotation(asset):
-    quotation = session.query(Quotation).filter_by(asset=asset)
+    quotation = Session().query(Quotation).filter_by(asset=asset)
     if quotation.count() > 0:
-        return quotation.order_by(Quotation.date).desc().first().date
+        return quotation.order_by(desc(Quotation.date)).first().date
 
 def get_price_at_date(asset, t):
     quotation = session.query(Quotation).filter_by(asset=asset, date=t).first()
@@ -87,7 +87,7 @@ def new_dividend(price=0.0, cost=0.0, date=datetime.date.today(), position=None)
     return div
 
 def new_quotation(stock, exchange, date, open, high, low, close, vol):
-    qu = Quotation(stock=stock,
+    qu = Quotation(asset=stock,
                    exchange=exchange,
                    date=date,
                    open=open,
@@ -95,7 +95,7 @@ def new_quotation(stock, exchange, date, open, high, low, close, vol):
                    low=low,
                    close=close,
                    volume=vol)
-    session.add(qu)
+    Session().add(qu)
     return qu
 
 def new_source_info(source, asset, info):
@@ -118,9 +118,21 @@ def update_all(*args):
     for item in Session().query(Container).all():
         item.last_update = datetime.datetime.now()
     pubsub.publish("stocks.updated", item)
+    Session().commit()
     yield 1
 
 def update_asset(asset):
     datasource_manager.update_asset(asset)
 
+def update_historical_prices(*args):
+    assets = get_all_used_assets()
+    l = len(assets)
+    i = 0.0
+    for asset in assets:
+        for qt in datasource_manager.get_historical_prices(asset):
+            yield i / l
+        i += 1.0
+        yield i / l
+    Session().commit()
+    yield 1
 

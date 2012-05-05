@@ -1,5 +1,5 @@
 import sqlite3
-
+import datetime
 
 
 def to_ten(database, old_db):
@@ -49,16 +49,21 @@ def to_ten(database, old_db):
             c_new.execute("INSERT INTO watchlist_position (id, watchlist_id) VALUES (?,?)", (new_pos, new_id))
 
     # stocks
+    stockdate = datetime.datetime.now() - datetime.timedelta(days=365)
     for row in c_old.execute('SELECT id, currency, name, source, isin, type, ter from stock').fetchall():
-        c_new.execute("INSERT INTO asset (id, name, isin, currency, source, price, change, exchange) VALUES (?,?,?,?,?,1.0, 0.0, '')", (row[0], row [2], row[4], row[1], row[3]))
         if row[5] == 0:
-            c_new.execute("INSERT INTO fund VALUES (?, ?)", (row[0], row[6]))
+            assettype = 'fund'
         elif row[5] == 1:
-            c_new.execute("INSERT INTO stock (id) VALUES (?)", (row[0],))
+            assettype = 'stock'
         elif row[5] == 2:
-            c_new.execute("INSERT INTO etf VALUES (?,?)", (row[0], row[6]))
+            assettype = 'etf'
         elif row[5] == 3:
-            c_new.execute("INSERT INTO bond VALUES (?)", (row[0],))
+            assettype = 'bond'
+        c_new.execute("INSERT INTO asset (id, name, isin, currency, source, price, change, exchange, type, date) VALUES (?,?,?,?,?,1.0, 0.0, '',?,?)", (row[0], row [2], row[4], row[1], row[3], assettype, stockdate))
+        if assettype == 'etf' or assettype == 'fund':
+            c_new.execute("INSERT INTO "+assettype+" VALUES (?, ?)", (row[0], row[6]))
+        else:
+            c_new.execute("INSERT INTO "+assettype+" (id) VALUES (?)", (row[0],))
 
     # quotations
     for row in c_old.execute('SELECT high, low, volume, exchange, date, close, open, stock from quotation').fetchall():

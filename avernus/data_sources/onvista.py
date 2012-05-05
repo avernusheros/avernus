@@ -295,7 +295,7 @@ class Onvista():
                     change = to_float(change.contents[0])
                     erg = {'name':name,'isin':isin,'exchange':exchange,'price':price,
                       'date':temp_date,'currency':currency,'volume':volume,
-                      'type':stockType,'change':change}
+                      'assettype':stockType,'change':change}
                     #print [(k,type(v)) for k,v in erg.items()]
                     yield erg
 
@@ -327,15 +327,15 @@ class Onvista():
         url = ''
         if isinstance(st, Fund):
             url = 'http://www.onvista.de/fonds/kurshistorie.html'
-        elif st.type == Etf:
+        elif isinstance(st, Etf):
             url = 'http://www.onvista.de/etf/kurshistorie.html'
-        elif st.type == Bond:
+        elif isinstance(st, Bond):
             url = 'http://anleihen.onvista.de/kurshistorie.html'
         else:
             logger.error("Uknown stock type in onvistaplugin.search_kurse")
         fileobj = opener.open(url,urllib.urlencode({'ISIN':st.isin, 'RANGE':'60M'}))
         soup = BeautifulSoup(fileobj)
-        if st.type==Bond:
+        if isinstance(st, Bond):
             lines = soup.findAll('tr',{'class':'hr'})
         else:
             lines = soup.findAll('tr',{'align':'right'})
@@ -347,7 +347,7 @@ class Onvista():
             if day < start_date:
                 return
 
-            if st.type == Bond:
+            if isinstance(st, Bond):
                 yield (st,'KAG',
                        day,
                        to_float(tds[1].replace('&nbsp;', '')),

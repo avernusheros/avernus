@@ -189,20 +189,6 @@ def update_positions(portfolio):
 
 
 
-
-def update_historical_prices():
-    stocks = get_all_used_stocks()
-    l = len(stocks)
-    i = 0.0
-    for st in stocks:
-        for qt in datasource_manager.get_historical_prices(st):
-            yield i / l
-        i += 1.0
-        yield i / l
-    yield 1
-
-
-
 def deleteAllPositionTransaction(position):
     for trans in getTransactionsForPosition(position):
         trans.delete()

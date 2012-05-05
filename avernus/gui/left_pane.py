@@ -310,6 +310,6 @@ class EditAccount(Gtk.Dialog):
     def process_result(self, widget=None, response=Gtk.ResponseType.ACCEPT):
         if response == Gtk.ResponseType.ACCEPT:
             self.acc.name = self.name_entry.get_text()
-            self.acc.amount = self.cash_entry.get_value()
+            self.acc.balance = self.cash_entry.get_value()
         self.destroy()
 
