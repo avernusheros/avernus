@@ -177,7 +177,6 @@ class BenchmarkDialog(Gtk.Dialog):
 
     def on_add(self, widget, user_data=None):
         if self.count < 3:
-<<<<<<< TREE
             dlg = Gtk.Dialog(_("Add benchmark"), self
                             , Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,
                      (Gtk.STOCK_CANCEL, Gtk.ResponseType.REJECT,
@@ -198,12 +197,10 @@ class BenchmarkDialog(Gtk.Dialog):
                 self.model.append([bm, bm, bm.percentage*100.0])
                 self.count += 1
             dlg.destroy()
-=======
             bm = portfolio_controller.new_benchmark(self.portfolio, 0.05)
             iterator = self.model.append([bm, str(bm), bm.percentage*100])
             self.tree.set_cursor(self.model.get_path(iterator), self.tree.get_column(0), True)
             self.count += 1
->>>>>>> MERGE-SOURCE
         else:
             pass
             #FIXME show some error message

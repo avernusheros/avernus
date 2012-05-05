@@ -12,6 +12,3 @@ for m in modules:
     exec("import " + m)
     exec("ds = "+m+".DataSource()")
     sources[ds.name] = ds
-
-
-print sources
