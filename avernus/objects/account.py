@@ -2,6 +2,7 @@ from avernus.objects import Base
 from sqlalchemy import Column, Integer, String, Float, Date, Boolean, ForeignKey
 from sqlalchemy.orm import relationship
 
+
 class Account(Base):
 
     __tablename__ = 'account'
@@ -10,7 +11,7 @@ class Account(Base):
     name = Column(String)
     type = Column(Integer)
     balance = Column(Float)
-    transactions = relationship('AccountTransaction', backref='account')
+    transactions = relationship('AccountTransaction', backref='account', cascade="all,delete")
 
     def __init__(self, name):
         self.name = name
@@ -22,6 +23,7 @@ class Account(Base):
 
     def __repr__(self):
         return "Account<%s>" % self.name
+
 
 class AccountCategory(Base):
 
