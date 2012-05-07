@@ -81,6 +81,7 @@ class DatasourceManager():
         for name, source in sources.iteritems():
             temp = filter(lambda s: s.source == name, stocks)
             if len(temp) > 0:
+                logger.debug("updating %s" % (temp,))
                 for ret in source.update_stocks(temp):
                     yield ret
 

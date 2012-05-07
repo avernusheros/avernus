@@ -6,9 +6,9 @@ from sqlalchemy.orm import relationship, backref
 class Asset(Base):
     __tablename__ = 'asset'
 
-    discriminator = Column('type', String(20))
+    type = Column('type', String(20))
 
-    __mapper_args__ = {'polymorphic_on': discriminator}
+    __mapper_args__ = {'polymorphic_on': type}
 
     id = Column(Integer, primary_key=True)
     name = Column(String)

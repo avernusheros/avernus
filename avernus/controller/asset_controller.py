@@ -33,7 +33,7 @@ def get_date_of_newest_quotation(asset):
         return quotation.order_by(desc(Quotation.date)).first().date
 
 def get_price_at_date(asset, t):
-    quotation = session.query(Quotation).filter_by(asset=asset, date=t).first()
+    quotation = Session().query(Quotation).filter_by(asset=asset, date=t).first()
     if quotation:
         return quotation.price
 
@@ -41,7 +41,7 @@ def get_buy_transaction(position):
     return session.query(Transaction).filter_by(position=position, type=1).first()
 
 def get_sell_transactions(position):
-    return session.query(Transaction).filter_by(position=position, type=0).all()
+    return Session().query(Transaction).filter_by(position=position, type=0).all()
 
 def get_source_info(source, ass=None):
     return Session.query(SourceInfo).filter_by(asset=ass, source=source).all()

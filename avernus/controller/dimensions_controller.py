@@ -34,7 +34,7 @@ def get_asset_dimension_value_text(asset_dimension_value):
 
 
 def get_asset_dimension_value(asset, dimension):
-    return session.query(AssetDimensionValue).join(DimensionValue).filter(AssetDimensionValue.asset==asset,
+    return Session().query(AssetDimensionValue).join(DimensionValue).filter(AssetDimensionValue.asset==asset,
                                                                 DimensionValue.dimension==dimension).all()
 
 def update_asset_dimension_values(asset, dimension, dimVals):

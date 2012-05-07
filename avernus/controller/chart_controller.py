@@ -215,7 +215,7 @@ class EarningsVsSpendingsController(ChartController):
             start += onemonth
 
         for trans in self.transactions:
-            if trans.isEarning():
+            if trans.amount >=0:
                 data[trans.date.year][trans.date.month][0] += trans.amount
             else:
                 data[trans.date.year][trans.date.month][1] += abs(trans.amount)
@@ -237,7 +237,7 @@ class TransactionCategoryPieController(ChartController):
 
     def calculate_values(self, *args):
         data = {}
-        for trans in ifilter(lambda t: t.isEarning() == self.earnings, self.transactions):
+        for trans in ifilter(lambda t: t.amount>=0 == self.earnings, self.transactions):
             try:
                 data[str(trans.category)] += abs(trans.amount)
             except:
@@ -262,10 +262,10 @@ class AccountBalanceOverTimeChartController(TransactionChartController):
         transactions = [t for t in self.account if t.date >= self.start_date]
         transactions.sort(key=lambda t: t.date, reverse=True)
         count = 1
-        amount = self.account.amount
+        balance = self.account.balance
         trans_count = len(transactions)
         if trans_count == 0:
-            self.y_values = {'Balance': [amount for x in self.x_values]}
+            self.y_values = {'Balance': [balance for x in self.x_values]}
             return
         iterator = transactions.__iter__()
         current_trans = iterator.next()
@@ -273,10 +273,10 @@ class AccountBalanceOverTimeChartController(TransactionChartController):
         y_values = []
         for current_date in reversed(self.days):
             while current_trans.date > current_date and count != trans_count:
-                amount -= current_trans.amount
+                balance -= current_trans.amount
                 current_trans = iterator.next()
                 count += 1
-            y_values.append(amount)
+            y_values.append(balance)
         y_values.reverse()
         self.y_values = {'Balance': y_values}
         yield 1
@@ -372,13 +372,13 @@ class PortfolioChartController(ChartController):
     def calculate_benchmark(self, benchmark):
         #FIXME why not per year?
         percent = benchmark.percentage
-        benchmark = [0.0] * len(self.days)
+        values = [0.0] * len(self.days)
         daily = percent / len(self.days)
         benchmark[0] = self.y_values['invested capital'][0]
-        for i in range(1, len(benchmark)):
-            benchmark[i] = benchmark[i - 1] * (1 + daily) + self.y_values['invested capital'][i] - self.y_values['invested capital'][i - 1]
+        for i in range(1, len(values)):
+            values[i] = values[i - 1] * (1 + daily) + self.y_values['invested capital'][i] - self.y_values['invested capital'][i - 1]
         key = 'Benchmark ' + str(int(percent * 100)) + '%'
-        self.y_values[key] = benchmark
+        self.y_values[key] = values
 
     def calculate_valueovertime(self, name):
         self.y_values[name] = [0.0] * len(self.days)
@@ -397,8 +397,14 @@ class PortfolioChartController(ChartController):
         count = 0
         i = 0
         for current in self.days:
+            #FIXME why is current a datetime?
+            current = current.date()
             while i < len(self.items) and self.items[i].date < current:
-                count -= self.items[i].total
+                #FIXME two different total functions. maybe we can avoid the ugly if
+                if self.items[i].__class__.__name__ == "Dividend":
+                    count -= asset_controller.get_total_for_dividend(self.items[i])
+                else:
+                    count -= asset_controller.get_total_for_transaction(self.items[i])
                 i += 1
             self.y_values[name].append(count)
         yield 1
@@ -426,14 +432,14 @@ class AllPortfolioInvestmentsOverTime(PortfolioChartController):
 
     def __init__(self, step):
         self.step = step
-        self.birthday = min([pf.birthday for pf in portfolio_controller.getAllPortfolio()])
+        self.birthday = min([pf.birthday for pf in portfolio_controller.get_all_portfolio()])
 
     def calculate_values(self, *args):
         self._calc_days()
         self.x_values = format_days(self.days, self.step)
         self.y_values = {}
         #FIXME do in parallel
-        for pf in portfolio_controller.getAllPortfolio():
+        for pf in portfolio_controller.get_all_portfolio():
             self.items = pf.getTransactions() + pf.getDividends()
             for foo in self.calculate_investmentsovertime(pf.name):
                 yield foo
