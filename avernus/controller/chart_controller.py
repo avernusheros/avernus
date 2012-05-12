@@ -1,4 +1,5 @@
 from avernus.gui import gui_utils
+from avernus.gui import gui_utils
 from avernus import date_utils
 from avernus.controller import asset_controller
 from avernus.controller import portfolio_controller
@@ -311,9 +312,9 @@ class DividendsPerPositionChartController(ChartController):
         for pos in self.portfolio:
             for div in pos.dividends:
                 try:
-                    data[pos.name] += asset_controller.get_total_for_dividend(div)
+                    data[pos.asset.name] += asset_controller.get_total_for_dividend(div)
                 except:
-                    data[pos.name] = asset_controller.get_total_for_dividend(div)
+                    data[pos.asset.name] = asset_controller.get_total_for_dividend(div)
         self.x_values = sorted(data.keys())
         self.y_values = []
         for x_value in self.x_values:
@@ -453,11 +454,11 @@ class DimensionChartController():
 
     def calculate_values(self, *args):
         data = {}
-        for val in self.dimension.values:
+        for val in dimensions_controller.get_values_for_dimension(self.dimension):
             data[val.name] = 0
         for pos in self.portfolio:
             for adv in dimensions_controller.get_asset_dimension_value(pos.asset, self.dimension):
-                data[adv.dimensionValue.name] += adv.value * position_controller.get_current_value(pos)
+                data[adv.dimension_value.name] += adv.value * position_controller.get_current_value(pos)
         #remove unused dimvalues
         data = dict((k, v) for k, v in data.iteritems() if v != 0.0)
         if sum(data.values()) == 0:

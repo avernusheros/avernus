@@ -1,9 +1,8 @@
-from avernus.objects import session
+from avernus.objects import session, Session
 from avernus.objects.dimension import Dimension
 from avernus.objects.dimension import DimensionValue
 from avernus.objects.dimension import AssetDimensionValue
 from avernus.controller.object_controller import delete_object
-
 
 
 def new_dimension(name):
@@ -31,6 +30,8 @@ def get_asset_dimension_value_text(asset_dimension_value):
         res += ":"+str(asset_dimension_value.value)
     return res
 
+def get_values_for_dimension(dimension):
+    return Session().query(DimensionValue).filter_by(dimension=dimension).all()
 
 
 def get_asset_dimension_value(asset, dimension):
