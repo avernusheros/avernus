@@ -9,7 +9,7 @@ class Benchmark(Base):
     id = Column(Integer, primary_key=True)
     percentage = Column(Float)
     portfolio_id = Column(Integer, ForeignKey('portfolio.id'))
-    portfolio = relationship('Portfolio', backref='benchmarks')
+    portfolio = relationship('Portfolio')
 
 
 class Container(Base):

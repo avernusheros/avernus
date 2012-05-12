@@ -5,3 +5,4 @@ def delete_object(obj):
         session.delete(obj)
     except:
         session.expunge(obj)
+    session.commit()

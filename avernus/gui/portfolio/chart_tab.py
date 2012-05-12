@@ -155,7 +155,7 @@ class BenchmarkDialog(Gtk.Dialog):
 
         # load items
         self.count = 0
-        for bm in self.portfolio.benchmarks:
+        for bm in portfolio_controller.get_benchmarks_for_portfolio(portfolio):
             self.model.append([bm, str(bm), bm.percentage * 100])
             self.count += 1
 
@@ -194,14 +194,11 @@ class BenchmarkDialog(Gtk.Dialog):
             dlg.show_all()
             response = dlg.run()
             if response == Gtk.ResponseType.ACCEPT:
-                bm = pfctlr.newBenchmark(self.portfolio, entry.get_value() / 100.0)
-                self.model.append([bm, bm, bm.percentage*100.0])
+                bm = portfolio_controller.new_benchmark(self.portfolio, entry.get_value() / 100.0)
+                self.model.append([bm, str(bm), bm.percentage*100.0])
                 self.count += 1
             dlg.destroy()
-            bm = portfolio_controller.new_benchmark(self.portfolio, 0.05)
-            iterator = self.model.append([bm, str(bm), bm.percentage*100])
-            self.tree.set_cursor(self.model.get_path(iterator), self.tree.get_column(0), True)
-            self.count += 1
+
         else:
             pass
             #FIXME show some error message
@@ -210,6 +207,6 @@ class BenchmarkDialog(Gtk.Dialog):
         selection = self.tree.get_selection()
         model, selection_iter = selection.get_selected()
         if selection_iter:
-            model[selection_iter][0].delete()
+            portfolio_controller.delete_object(model[selection_iter][0])
             self.model.remove(selection_iter)
             self.count -= 1

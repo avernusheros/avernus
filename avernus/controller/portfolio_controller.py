@@ -1,6 +1,7 @@
-from avernus.objects.container import Portfolio, Watchlist
+from avernus.objects.container import Portfolio, Watchlist, Benchmark
 from avernus.controller import position_controller, asset_controller
-from avernus.objects import session
+from avernus.objects import session, Session
+from avernus.controller.object_controller import delete_object
 from . import dsm
 
 import datetime
@@ -74,6 +75,9 @@ def get_current_value(portfolio):
     for pos in portfolio:
         value += position_controller.get_current_value(pos)
     return value
+
+def get_benchmarks_for_portfolio(portfolio):
+    return Session().query(Benchmark).filter_by(portfolio=portfolio).all()
 
 def get_birthday(portfolio):
     current = datetime.date.today()
@@ -181,48 +185,3 @@ def update_positions(portfolio):
     portfolio.last_update = datetime.datetime.now()
     #pubsub.publish("stocks.updated", self)
     yield 1
-
-
-
-#  =============================================
-# Mordor from here
-
-
-
-def deleteAllPositionTransaction(position):
-    for trans in getTransactionsForPosition(position):
-        trans.delete()
-
-
-def deleteAllPositionDividend(position):
-    for d in getDividendsForPosition(position):
-        d.delete()
-
-
-def deleteAllAssetDimensionValue(dimvalue):
-    for adm in AssetDimensionValue.getAll():
-        if adm.dimensionValue == dimvalue:
-            adm.delete()
-
-
-def deleteAllQuotationsFromStock(stock):
-    query = """
-    DELETE FROM quotation
-    WHERE stock = ?
-    """
-    model.store.execute(query, [stock.id])
-
-
-
-def deleteAllDimensionValue(dimension):
-    for val in getAllDimensionValueForDimension(dimension):
-        deleteAllAssetDimensionValue(val)
-        val.delete()
-
-
-def deleteAllWatchlistPosition(watchlist):
-    for pos in getPositionForWatchlist(watchlist):
-        pos.delete()
-
-
-

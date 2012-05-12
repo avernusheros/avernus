@@ -91,8 +91,8 @@ class OverviewCharts(Gtk.ScrolledWindow):
 
         y += 1
 
-        chart_controller = chart_controller.PortfolioAttributeChartController('name')
-        chart = charts.Pie(chart_controller, width / 2)
+        controller = chart_controller.PortfolioAttributeChartController('name')
+        chart = charts.Pie(controller, width / 2)
         table.attach(chart, 0, 1, y, y + 1)
 
         self.add_with_viewport(table)

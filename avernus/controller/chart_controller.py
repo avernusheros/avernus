@@ -366,7 +366,7 @@ class PortfolioChartController(ChartController):
         for foo in self.calculate_investmentsovertime('invested capital'):
             yield foo
 
-        for benchmark in self.portfolio.benchmarks:
+        for benchmark in portfolio_controller.get_benchmarks_for_portfolio(self.portfolio):
             self.calculate_benchmark(benchmark)
         yield 1
 
@@ -375,7 +375,7 @@ class PortfolioChartController(ChartController):
         percent = benchmark.percentage
         values = [0.0] * len(self.days)
         daily = percent / len(self.days)
-        benchmark[0] = self.y_values['invested capital'][0]
+        values[0] = self.y_values['invested capital'][0]
         for i in range(1, len(values)):
             values[i] = values[i - 1] * (1 + daily) + self.y_values['invested capital'][i] - self.y_values['invested capital'][i - 1]
         key = 'Benchmark ' + str(int(percent * 100)) + '%'
