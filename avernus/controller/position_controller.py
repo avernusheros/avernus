@@ -1,5 +1,5 @@
 from avernus.objects.container import PortfolioPosition, WatchlistPosition
-from avernus.objects import session
+from avernus.objects import session, Session
 from avernus.controller import asset_controller
 
 import datetime
@@ -62,7 +62,7 @@ def new_portfolio_position(price=0.0, date=datetime.datetime.now(), shares=1.0, 
 
 
 def get_all_portfolio_position():
-    return session.query(PortfolioPosition).all()
+    return Session().query(PortfolioPosition).all()
 
 def get_buy_value(position):
     return position.quantity * position.price

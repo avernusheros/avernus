@@ -1,5 +1,5 @@
 from avernus.objects.account import CategoryFilter
-from avernus.objects import session
+from avernus.objects import session, Session
 from avernus.config import avernusConfig
 from avernus.controller import account_controller
 import logging
@@ -20,7 +20,7 @@ def get_all_rules():
     return session.query(CategoryFilter).all()
 
 def get_all_active_by_priority():
-    return session.query(CategoryFilter).filter_by(active=True).order_by(CategoryFilter.priority).all()
+    return Session().query(CategoryFilter).filter_by(active=True).order_by(CategoryFilter.priority).all()
 
 def match_transaction(rule, transaction):
     #print rule.rule, transaction.description
@@ -38,6 +38,8 @@ def run_auto_assignments(*args):
         b_include_categorized = True
     else:
         b_include_categorized = False
+    global rules
+    rules = get_all_active_by_priority()
     transactions = account_controller.get_all_transactions()
     #print "Size: ", len(transactions)
     for transaction in transactions:
@@ -53,9 +55,5 @@ def run_auto_assignments(*args):
             yield transaction
 
 config = avernusConfig()
-try:
-    rules = get_all_active_by_priority()
-except:
-    logger.error("Category Auto Assignments: Error while retrieving rules")
-    rules = []
+
 
