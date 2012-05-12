@@ -10,104 +10,61 @@ import locale
 import datetime
 
 
-class BuyDialog(Gtk.Dialog):
+class BuyDialog:
 
-    def __init__(self, pf, transaction=None, parent=None):
-        Gtk.Dialog.__init__(self, _("Buy a position"), parent
-                            , Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,
-                     (Gtk.STOCK_CANCEL, Gtk.ResponseType.REJECT,
-                      Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT))
+    def __init__(self, pf, parent=None):
         self.pf = pf
-        self.transaction = transaction
-        self.position = None
-        if transaction is None:
-            self.b_new = True
-        else:
-            self.b_new = False
 
-        vbox = self.get_content_area()
-        table = Gtk.Table()
-        table.set_row_spacings(4)
-        table.set_col_spacings(4)
-        vbox.pack_end(table, True, True, 0)
-        if self.b_new:
-            #asset entry
-            self.asset_selector = StockSelector()
-            table.attach(self.asset_selector, 0, 3, 0, 1)
-            self.asset_selector.result_tree.connect('cursor-changed', self.on_asset_selection)
-            self.asset_selector.result_tree.get_model().connect('row-deleted', self.on_asset_deselection)
-            self.asset_ok = False
-        else:
-            label = Gtk.Label()
-            label.set_markup(gui_utils.get_name_string(self.transaction.position.asset))
-            label.set_alignment(0.0, 0.5)
-            table.attach(label, 0, 3, 0, 1, xoptions=Gtk.AttachOptions.FILL, yoptions=0)
+        builder = Gtk.Builder()
+        builder.add_from_file("ui/buy_dialog.glade")
 
-        #shares entry
-        table.attach(Gtk.Label(label=_('Shares')), 1, 2, 1, 2, xoptions=Gtk.AttachOptions.SHRINK, yoptions=Gtk.AttachOptions.SHRINK)
-        self.shares_entry = Gtk.SpinButton()
-        self.shares_entry.set_adjustment(Gtk.Adjustment(lower=0, upper=100000, step_increment=1.0, value=1))
-        self.shares_entry.set_digits(2)
-        self.shares_entry.connect("value-changed", self.on_change)
-        table.attach(self.shares_entry, 2, 3, 1, 2, xoptions=Gtk.AttachOptions.SHRINK, yoptions=Gtk.AttachOptions.SHRINK)
+        self.dlg = builder.get_object("dialog")
+        self.shares_entry = builder.get_object("shares_entry")
+        self.price_entry = builder.get_object("price_entry")
+        self.costs_entry = builder.get_object("costs_entry")
+        self.total_label = builder.get_object("total_label")
+        self.calendar = builder.get_object("calendar")
+        grid = builder.get_object("grid")
 
-        #price entry
-        table.attach(Gtk.Label(label=_('Price')), 1, 2, 2, 3, xoptions=Gtk.AttachOptions.SHRINK, yoptions=Gtk.AttachOptions.SHRINK)
-        self.price_entry = Gtk.SpinButton()
-        self.price_entry.set_adjustment(Gtk.Adjustment(lower=0, upper=100000, step_increment=0.1, value=1.0))
-        self.price_entry.set_digits(2)
-        self.price_entry.connect("value-changed", self.on_change)
-        table.attach(self.price_entry, 2, 3, 2, 3, xoptions=Gtk.AttachOptions.SHRINK, yoptions=Gtk.AttachOptions.SHRINK)
+        self.dlg.set_transient_for(parent)
+        self.dlg.add_buttons(Gtk.STOCK_CANCEL, Gtk.ResponseType.REJECT,
+                      Gtk.STOCK_APPLY, Gtk.ResponseType.ACCEPT)
+        self.dlg.set_response_sensitive(Gtk.ResponseType.ACCEPT, False)
+        self.on_change()
 
-        #ta_costs entry
-        table.attach(Gtk.Label(label=_('Transaction Costs')), 1, 2, 3, 4, xoptions=Gtk.AttachOptions.SHRINK, yoptions=Gtk.AttachOptions.SHRINK)
-        self.tacosts_entry = Gtk.SpinButton()
-        self.tacosts_entry.set_adjustment(Gtk.Adjustment(lower=0, upper=100000, step_increment=0.1, value=0.0))
-        self.tacosts_entry.set_digits(2)
-        self.tacosts_entry.connect("value-changed", self.on_change)
-        table.attach(self.tacosts_entry, 2, 3, 3, 4, xoptions=Gtk.AttachOptions.SHRINK, yoptions=Gtk.AttachOptions.SHRINK)
+        # asset entry
+        self.asset_selector = StockSelector()
+        grid.attach(self.asset_selector, 0, 1, 3, 1)
+        self.asset_selector.result_tree.connect('cursor-changed', self.on_asset_selection)
+        self.asset_selector.result_tree.get_model().connect('row-deleted', self.on_asset_deselection)
 
-        #total
-        table.attach(Gtk.Label(label=_('Total')), 1, 2, 4, 5, xoptions=Gtk.AttachOptions.SHRINK, yoptions=Gtk.AttachOptions.SHRINK)
-        self.total = Gtk.Label()
-        self.total.set_markup('<b>' + gui_utils.get_currency_format_from_float(0.0) + '</b>')
-        table.attach(self.total, 2, 3, 4, 5, xoptions=Gtk.AttachOptions.SHRINK, yoptions=Gtk.AttachOptions.SHRINK)
-
-        #date
-        self.calendar = Gtk.Calendar()
-        self.calendar.connect('day-selected', self.on_calendar_day_selected)
-        table.attach(self.calendar, 0, 1, 1, 5, yoptions=Gtk.AttachOptions.SHRINK)
-        self.date_ok = True
-
+        # info bar to show warnings
         self.infobar = Gtk.InfoBar()
         self.infobar.set_message_type(Gtk.MessageType.WARNING)
-
-        if not self.b_new:
-            self.asset_ok = True
-            self.shares_entry.set_value(self.transaction.quantity)
-            self.price_entry.set_value(self.transaction.price)
-            self.tacosts_entry.set_value(self.transaction.cost)
-            self.calendar.select_month(self.transaction.date.month - 1, self.transaction.date.year)
-            self.calendar.select_day(self.transaction.date.day)
-            self.on_change()
-
         content = self.infobar.get_content_area()
-        label = Gtk.Label(label='Buy dates of positions can not be in the future.')
+        label = Gtk.Label(label=_('Buy dates can not be in the future.'))
         image = Gtk.Image()
         image.set_from_stock(Gtk.STOCK_DIALOG_WARNING, Gtk.IconSize.DIALOG)
         content.pack_start(image, True, True, 0)
         content.pack_start(label, True, True, 0)
-        vbox.pack_start(self.infobar, True, True, 0)
+        self.dlg.get_content_area().pack_start(self.infobar, True, True, 0)
 
-        if self.b_new:
-            self.set_response_sensitive(Gtk.ResponseType.ACCEPT, False)
-        table.show_all()
-        response = self.run()
-        self.process_result(response)
-        self.destroy()
+        # connect signals
+        handlers = {
+            "on_change": self.on_change,
+            "day_selected": self.on_calendar_day_selected,
+            "response": self.on_response
+        }
+        builder.connect_signals(handlers)
+
+        self.date_ok = True
+        self.asset_ok = False
+        self.position = None
+
+        self.dlg.run()
 
     def on_calendar_day_selected(self, calendar):
-        year, month, day = self.calendar.get_date()
+        year, month, day = calendar.get_date()
         date = datetime.datetime(year, month + 1, day)
         if date > datetime.datetime.today():
             self.infobar.show_all()
@@ -118,14 +75,11 @@ class BuyDialog(Gtk.Dialog):
         self.set_response_sensitivity()
 
     def on_change(self, widget=None):
-        total = self.shares_entry.get_value() * self.price_entry.get_value() + self.tacosts_entry.get_value()
-        self.total.set_markup('<b>' + gui_utils.get_currency_format_from_float(total) + '</b>')
+        total = self.shares_entry.get_value() * self.price_entry.get_value() + self.costs_entry.get_value()
+        self.total_label.set_markup('<b>' + gui_utils.get_currency_format_from_float(total) + '</b>')
 
     def on_asset_selection(self, *args):
         self.asset_ok = True
-        st = self.asset_selector.get_asset()
-        asset_controller.update_asset(st)
-        self.price_entry.set_value(st.price)
         self.set_response_sensitivity()
 
     def on_asset_deselection(self, *args):
@@ -134,34 +88,27 @@ class BuyDialog(Gtk.Dialog):
 
     def set_response_sensitivity(self):
         if self.asset_ok and self.date_ok:
-            self.set_response_sensitive(Gtk.ResponseType.ACCEPT, True)
+            self.dlg.set_response_sensitive(Gtk.ResponseType.ACCEPT, True)
         else:
-            self.set_response_sensitive(Gtk.ResponseType.ACCEPT, False)
+            self.dlg.set_response_sensitive(Gtk.ResponseType.ACCEPT, False)
 
-    def process_result(self, response):
-        if self.b_new:
-            self.asset_selector.stop_search()
+    def on_response(self, widget, response):
+        self.asset_selector.stop_search()
         if response == Gtk.ResponseType.ACCEPT:
             price = self.price_entry.get_value()
             year, month, day = self.calendar.get_date()
             date = datetime.date(year, month + 1, day)
-            ta_costs = self.tacosts_entry.get_value()
+            ta_costs = self.costs_entry.get_value()
             shares = self.shares_entry.get_value()
-
-            if self.b_new:
-                asset = self.asset_selector.get_asset()
-                if shares == 0.0:
-                    return
-                self.position = position_controller.new_portfolio_position(price=price, date=date, shares=shares, portfolio=self.pf, asset=asset)
-                ta = asset_controller.new_transaction(type=1, date=date, quantity=shares, price=price, cost=ta_costs, position=self.position)
-                #FIXME trigger publish in container.py and transaction.py
-                pubsub.publish('container.position.added', self.pf, self.position)
-                pubsub.publish('transaction.added', ta)
-            else:
-                self.transaction.position.price = self.transaction.price = price
-                self.transaction.position.date = self.transaction.date = date
-                self.transaction.cost = ta_costs
-                self.transaction.position.quantity = self.transaction.quantity = shares
+            asset = self.asset_selector.get_asset()
+            if shares == 0.0:
+                return
+            self.position = position_controller.new_portfolio_position(price=price, date=date, shares=shares, portfolio=self.pf, asset=asset)
+            ta = asset_controller.new_transaction(type=1, date=date, quantity=shares, price=price, cost=ta_costs, position=self.position)
+            #FIXME avoid pubsub
+            pubsub.publish('container.position.added', self.pf, self.position)
+            pubsub.publish('transaction.added', ta)
+        self.dlg.destroy()
 
 
 class NewWatchlistPositionDialog(Gtk.Dialog):
@@ -548,9 +495,10 @@ class StockSelector(Gtk.VBox):
         self.result_tree.create_column('ISIN', 3)
         self.result_tree.create_column(_('Currency'), 4)
         self.result_tree.create_icon_column(_('Type'), 5, size=Gtk.IconSize.DND)
-        self.result_tree.set_size_request(self.WIDTH, self.HEIGHT)
+        self.set_size_request(self.WIDTH, self.HEIGHT)
         sw.add(self.result_tree)
         self.pack_end(sw, True , True, 0)
+        self.show_all()
         self.spinner = None
 
     def get_asset(self):
@@ -707,4 +655,3 @@ class SellDialog(Gtk.Dialog):
     def on_change(self, widget=None):
         total = self.shares_entry.get_value() * self.price_entry.get_value() + self.tacosts_entry.get_value()
         self.total.set_markup('<b>' + gui_utils.get_currency_format_from_float(total) + '</b>')
-

@@ -10,21 +10,6 @@ from avernus.controller import object_controller
 from avernus.controller import portfolio_controller
 
 
-UI_INFO = """
-<ui>
-  <popup name='Popup'>
-    <menuitem action='add' />
-    <separator />
-    <menuitem action='edit' />
-    <menuitem action='remove' />
-  </popup>
-  <popup name='CategoryPopup'>
-    <menuitem action='add' />
-  </popup>
-</ui>
-"""
-
-
 class Category(object):
 
     def __init__(self, name):
@@ -110,7 +95,7 @@ class MainTree(gui_utils.Tree):
 
         self.uimanager = Gtk.UIManager()
         self.uimanager.insert_action_group(actiongroup)
-        self.uimanager.add_ui_from_string(UI_INFO)
+        self.uimanager.add_ui_from_file("ui/left_pane_popup.ui")
         # Add the accelerator group to the toplevel window
         accelgroup = self.uimanager.get_accel_group()
         #FIXME add accelgroup to toplevel window for keyboard shortcuts
@@ -165,7 +150,9 @@ class MainTree(gui_utils.Tree):
     def on_button_press_event(self, widget, event):
         target = self.get_path_at_pos(int(event.x), int(event.y))
         if target and event.type == Gdk.EventType.BUTTON_PRESS:
+            self.set_cursor(target[0])
             obj = self.get_model()[target[0]][0]
+
             if event.button == 3:
                 if isinstance(obj, Category):
                     popup = self.uimanager.get_widget("/CategoryPopup")
@@ -219,7 +206,7 @@ class MainTree(gui_utils.Tree):
         if row:
             #row[1] = item
             row[2] = item.name
-            row[3] = gui_utils.get_currency_format_from_float(item.amount)
+            row[3] = gui_utils.get_currency_format_from_float(item.balance)
 
     def on_cursor_changed(self, widget):
         #Get the current selection in the Gtk.TreeView
@@ -245,12 +232,34 @@ class MainTree(gui_utils.Tree):
         objtype = type(obj)
         if objtype == 'Category' or objtype == "AllPortfolio" or objtype == 'AllAccount':
             return
-        parent = self.get_toplevel()
         if obj.__class__.__name__ == 'Account':
-            EditAccount(obj, parent)
+            self.edit_account(obj, row)
         else:
             obj, selection_iter = self.selected_item
             self.set_cursor(self.get_model().get_path(selection_iter), start_editing=True)
+
+    def edit_account(self, acc, row):
+        builder = Gtk.Builder()
+        builder.add_from_file("ui/edit_account_dialog.glade")
+        dlg = builder.get_object("dialog")
+        dlg.set_transient_for(self.get_toplevel())
+        name_entry = builder.get_object("name_entry")
+        name_entry.set_text(acc.name)
+        balance_entry = builder.get_object("balance_entry")
+        adjustment = builder.get_object("adjustment1")
+        adjustment.set_value(acc.balance)
+        dlg.add_buttons(Gtk.STOCK_CANCEL, Gtk.ResponseType.REJECT,
+                      Gtk.STOCK_APPLY, Gtk.ResponseType.ACCEPT)
+
+        def response_callback(widget, response):
+            if response == Gtk.ResponseType.ACCEPT:
+                acc.name = self.get_model()[row][2] = name_entry.get_text()
+                acc.balance = balance_entry.get_value()
+                self.get_model()[row][3] = gui_utils.get_currency_format_from_float(acc.balance)
+            dlg.destroy()
+
+        dlg.connect('response', response_callback)
+        dlg.show()
 
     def on_cell_edited(self, cellrenderertext, path, new_text):
         m = self.get_model()
@@ -275,41 +284,3 @@ class MainTree(gui_utils.Tree):
         iterator = model.append(parent_iter, [item, cat_type, item.name, ''])
         self.expand_row(model.get_path(parent_iter), True)
         self.set_cursor(model.get_path(iterator), start_editing=True)
-
-
-class EditAccount(Gtk.Dialog):
-
-    def __init__(self, acc, parent=None):
-        Gtk.Dialog.__init__(self, _("Edit watchlist - ") + acc.name, parent
-                            , Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,
-                     (Gtk.STOCK_CANCEL, Gtk.ResponseType.REJECT,
-                      Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT))
-        self.acc = acc
-        vbox = self.get_content_area()
-        table = Gtk.Table()
-        vbox.pack_start(table, True, True, 0)
-
-        label = Gtk.Label(label=_("Name:"))
-        table.attach(label, 0, 1, 0, 1)
-        self.name_entry = Gtk.Entry()
-        self.name_entry.set_text(acc.name)
-        table.attach(self.name_entry, 1, 2, 0, 1)
-
-        #cash entry
-        label = Gtk.Label(label=_('Current balance:'))
-        table.attach(label, 0, 1, 1, 2)
-        self.cash_entry = Gtk.SpinButton(adjustment=Gtk.Adjustment(lower= -999999999, upper=999999999, step_increment=10, value=acc.balance), digits=2)
-        table.attach(self.cash_entry, 1, 2, 1, 2)
-
-        self.show_all()
-
-        self.name_entry.connect("activate", self.process_result)
-        response = self.run()
-        self.process_result(response=response)
-
-    def process_result(self, widget=None, response=Gtk.ResponseType.ACCEPT):
-        if response == Gtk.ResponseType.ACCEPT:
-            self.acc.name = self.name_entry.get_text()
-            self.acc.balance = self.cash_entry.get_value()
-        self.destroy()
-

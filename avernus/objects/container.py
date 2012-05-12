@@ -46,7 +46,7 @@ class Position(Base):
     __mapper_args__ = {'polymorphic_on': discriminator}
 
     id = Column(Integer, primary_key=True)
-    date = Column(DateTime)
+    date = Column(Date)
     price = Column(Float)
     comment = Column(String, default='')
 

@@ -13,9 +13,9 @@ import datetime
 datasource_manager = None
 
 def check_asset_existance(source, isin, currency):
-    return 0 < session.query(Asset).filter(Asset.isin == isin,
-                                     Asset.source == source,
-                                     Asset.currency == currency).count()
+    return 0 < session.query(Asset).filter_by(isin = isin,
+                                            source = source,
+                                            currency = currency).count()
 
 def get_all_used_assets():
     return Session().query(Asset).join(Position).distinct().all()
@@ -35,7 +35,7 @@ def get_date_of_newest_quotation(asset):
 def get_price_at_date(asset, t):
     quotation = Session().query(Quotation).filter_by(asset=asset, date=t).first()
     if quotation:
-        return quotation.price
+        return quotation.close
 
 def get_buy_transaction(position):
     return session.query(Transaction).filter_by(position=position, type=1).first()

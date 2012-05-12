@@ -347,13 +347,14 @@ class PortfolioChartController(ChartController):
 
     def _calc_days(self):
         if self.step == 'daily':
-            self.days = list(rrule(DAILY, dtstart=self.birthday, until=datetime.date.today()))[-self.MAX_VALUES:]
+            days = list(rrule(DAILY, dtstart=self.birthday, until=datetime.date.today()))[-self.MAX_VALUES:]
         elif self.step == 'weekly':
-            self.days = list(rrule(WEEKLY, dtstart=self.birthday, until=datetime.date.today(), byweekday=FR))[-self.MAX_VALUES:]
+            days = list(rrule(WEEKLY, dtstart=self.birthday, until=datetime.date.today(), byweekday=FR))[-self.MAX_VALUES:]
         elif self.step == 'monthly':
-            self.days = list(rrule(MONTHLY, dtstart=self.birthday, until=datetime.date.today(), bymonthday= -1))[-self.MAX_VALUES:]
+            days = list(rrule(MONTHLY, dtstart=self.birthday, until=datetime.date.today(), bymonthday= -1))[-self.MAX_VALUES:]
         elif self.step == 'yearly':
-            self.days = list(rrule(YEARLY, dtstart=self.birthday, until=datetime.date.today(), bymonthday= -1, bymonth=12))[-self.MAX_VALUES:]
+            days = list(rrule(YEARLY, dtstart=self.birthday, until=datetime.date.today(), bymonthday= -1, bymonth=12))[-self.MAX_VALUES:]
+        self.days = [d.date() for d in days]
 
     def calculate_values(self, *args):
         self._calc_days()
@@ -397,8 +398,6 @@ class PortfolioChartController(ChartController):
         count = 0
         i = 0
         for current in self.days:
-            #FIXME why is current a datetime?
-            current = current.date()
             while i < len(self.items) and self.items[i].date < current:
                 #FIXME two different total functions. maybe we can avoid the ugly if
                 if self.items[i].__class__.__name__ == "Dividend":
