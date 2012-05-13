@@ -1,6 +1,7 @@
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, scoped_session
+from sqlalchemy.pool import QueuePool
 
 import time
 import shutil
@@ -73,7 +74,8 @@ def set_db(db_file):
 
 def connect():
     # connect to the database
-    engine = create_engine("sqlite:///"+database#, echo=True
+    engine = create_engine("sqlite:///"+database, poolclass=QueuePool,
+                            #, echo=True
     )
 
     # get a session

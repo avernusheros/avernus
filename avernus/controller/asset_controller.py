@@ -41,8 +41,11 @@ def get_start_date_for_historical_quotations(asset):
     # we usually want to start with the day of the first transaction
     # unless there are already quotations for that day
     present_quotations = Session().query(Quotation).filter_by(asset=asset).order_by(desc(Quotation.date))
-    buy_transactions = Session().query(Transaction).filter_by(position=asset.positions, type=1).order_by(desc(Transaction.date))
-    first_buy_transaction = buy_transactions.first()
+    Session().add(asset.positions)
+    print asset.positions
+    print Session().query(Transaction)
+    #buy_transactions = Session().query(Transaction).filter_by(position=asset.positions, type=1).order_by(desc(Transaction.date))
+    #first_buy_transaction = buy_transactions.first()
     #we aim to have one quotation per month
     if present_quotations.count() == 0:
         return first_buy_transaction.date
