@@ -16,6 +16,11 @@ def check_asset_existance(source, isin, currency):
     return 0 < session.query(Asset).filter_by(isin = isin,
                                             source = source,
                                             currency = currency).count()
+                                            
+def delete_quotations_from_asset(asset):
+    for quotation in asset.quotations:
+        Session().delete(quotation)
+    Session().commit()
 
 def get_all_used_assets():
     return Session().query(Asset).join(Position).distinct().all()
@@ -31,6 +36,16 @@ def get_date_of_newest_quotation(asset):
     quotation = Session().query(Quotation).filter_by(asset=asset)
     if quotation.count() > 0:
         return quotation.order_by(desc(Quotation.date)).first().date
+        
+def get_start_date_for_historical_quotations(asset):
+    # we usually want to start with the day of the first transaction
+    # unless there are already quotations for that day
+    present_quotations = Session().query(Quotation).filter_by(asset=asset).order_by(desc(Quotation.date))
+    buy_transactions = Session().query(Transaction).filter_by(position=asset.positions, type=1).order_by(desc(Transaction.date))
+    first_buy_transaction = buy_transactions.first()
+    #we aim to have one quotation per month
+    if present_quotations.count() == 0:
+        return first_buy_transaction.date
 
 def get_price_at_date(asset, t):
     quotation = Session().query(Quotation).filter_by(asset=asset, date=t).first()

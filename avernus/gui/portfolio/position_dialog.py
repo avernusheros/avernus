@@ -95,7 +95,7 @@ class QuotationTable(Gtk.Table):
         self.update_labels()
 
     def on_delete_button_clicked(self, button):
-        portfolio_controller.deleteAllQuotationsFromStock(self.asset)
+        asset_controller.delete_quotations_from_asset(self.asset)
         self.update_labels()
 
     def on_get_button_clicked(self, button):

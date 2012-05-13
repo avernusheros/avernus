@@ -93,7 +93,8 @@ class DatasourceManager():
             return
         if end_date is None:
             end_date = datetime.date.today() - datetime.timedelta(days=1)
-        start_date = asset_controller.get_date_of_newest_quotation(stock)
+        #start_date = asset_controller.get_date_of_newest_quotation(stock)
+        start_date = asset_controller.get_start_date_for_historical_quotations(stock)
         if start_date is None:
             start_date = datetime.date(end_date.year - 20, end_date.month, end_date.day)
         if start_date < end_date:

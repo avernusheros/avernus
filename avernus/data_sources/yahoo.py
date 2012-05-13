@@ -114,6 +114,7 @@ class DataSource():
             logger.info("no historical data found for stock: "+stock.name)
             yield None
         days = csvfile.readlines()
+        #print start_date, end_date
         for row in [day[:-2].split(',') for day in days[1:]]:
             #print row
             dt = datetime.strptime(row[0], '%Y-%m-%d').date()
