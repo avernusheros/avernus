@@ -95,7 +95,10 @@ def new_quotation(stock, exchange, date, open, high, low, close, vol):
                    low=low,
                    close=close,
                    volume=vol)
-    Session().add(qu)
+    #only add it to the session if it is not present in another session
+    currentSession = Session.object_session(qu)
+    if not currentSession:
+        Session().add(qu)
     return qu
 
 def new_source_info(source, asset, info):

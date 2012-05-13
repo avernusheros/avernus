@@ -115,6 +115,7 @@ class DataSource():
             yield None
         days = csvfile.readlines()
         for row in [day[:-2].split(',') for day in days[1:]]:
+            #print row
             dt = datetime.strptime(row[0], '%Y-%m-%d').date()
             #(stock, date, open, high, low, close, vol)
             yield (stock,stock.exchange,dt,float(row[1]),float(row[2]),\
