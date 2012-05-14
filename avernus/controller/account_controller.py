@@ -53,7 +53,7 @@ def account_birthday(account):
 
 def account_lastday(account):
     if len(account.transactions) > 0:
-        return max([t.date for t in account])    
+        return max([t.date for t in account])
 
 def get_all_categories():
     return session.query(AccountCategory).all()

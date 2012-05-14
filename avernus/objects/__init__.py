@@ -1,7 +1,6 @@
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, scoped_session
-from sqlalchemy.pool import QueuePool
 
 import time
 import shutil
@@ -72,10 +71,9 @@ def set_db(db_file):
     global database
     database = db_file
 
-def connect():
+def connect(create_sample_data=False):
     # connect to the database
-    engine = create_engine("sqlite:///"+database, poolclass=QueuePool,
-                            #, echo=True
+    engine = create_engine("sqlite:///"+database#, echo=True
     )
 
     # get a session
@@ -100,4 +98,8 @@ def connect():
         # store version
         m = Meta(version=version)
         session.add(m)
+        if create_sample_data:
+            logger.debug("loading sample data")
+            from avernus.objects import migrations
+            migrations.load_sample_data(session)
         session.commit()

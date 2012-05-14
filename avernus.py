@@ -122,7 +122,7 @@ try:
 
     from avernus.objects import set_db, connect
     set_db(db_file)
-    connect()
+    connect(True)
 
     GObject.threads_init()
 

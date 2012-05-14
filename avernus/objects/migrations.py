@@ -1,6 +1,11 @@
 import sqlite3
 import datetime
 
+from avernus.controller import account_controller
+from avernus.controller import dimensions_controller
+from avernus.controller import portfolio_controller
+
+
 
 def to_ten(database, old_db):
     conn_old = sqlite3.connect(old_db)
@@ -111,5 +116,41 @@ def to_ten(database, old_db):
     c_old.close()
 
 
-if __name__ == '__main__':
-    pass
+def load_sample_data(session):
+    DIMENSIONS = {_('Region'): [_('Emerging markets'), _('America'), _('Europe'), _('Pacific')],
+              _('Asset Class'): [_('Bond'), _('Stocks developed countries'), _('Commodities')],
+              _('Risk'): [_('high'), _('medium'), _('low')],
+              _('Currency'): [_('Euro'), _('Dollar'), _('Yen')],
+              _('Company Size'): [_('large'), _('medium'), _('small')],
+              _('Sector'): ['Basic Materials', 'Conglomerates', 'Consumer Goods', 'Energy', 'Financial', 'Healthcare', 'Industrial Goods', 'Services', 'Technology', 'Transportation', 'Utilities']
+              }
+    CATEGORIES = {
+        _('Utilities'): [_('Gas'), _('Phone'), _('Water'), _('Electricity')],
+        _('Entertainment'): [_('Books'), _('Movies'), _('Music'), _('Amusement')],
+        _('Fees'):[],
+        _('Gifts'):[],
+        _('Health care'): [_('Doctor'), _('Pharmacy'), _('Health insurance')],
+        _('Food'): [_('Groceries'), _('Restaurants'), _('Coffee')],
+        _('Transport'): [_('Car'), _('Train'), _('Fuel')],
+        _('Services'): [_('Shipping')],
+        _('Home'): [_('Rent'), _('Home improvements')],
+        _('Personal care'): [],
+        _('Taxes'): [],
+        _('Income'): [],
+        _('Shopping'): [_('Clothes'), _('Electronics'), _('Hobbies'), _('Sporting Goods')],
+        _('Travel'): [_('Lodging'), _('Transportation')]
+    }
+
+    for dim, vals in DIMENSIONS.iteritems():
+        new_dim = dimensions_controller.new_dimension(dim)
+        for val in vals:
+            dimensions_controller.new_dimension_value(dimension=new_dim, name=val)
+    for cat, subcats in CATEGORIES.iteritems():
+        parent = account_controller.new_account_category(name=cat)
+        for subcat in subcats:
+            account_controller.new_account_category(name=subcat, parent=parent)
+    acc = account_controller.new_account(_('sample account'))
+    account_controller.new_account_transaction(account=acc, desc='this is a sample transaction', amount=99.99, date=datetime.date.today())
+    account_controller.new_account_transaction(account=acc, desc='another sample transaction', amount= -33.90, date=datetime.date.today())
+    portfolio_controller.new_portfolio(_('sample portfolio'))
+    portfolio_controller.new_watchlist(_('sample watchlist'))
