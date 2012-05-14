@@ -100,7 +100,8 @@ def new_quotation(stock, exchange, date, open, high, low, close, vol):
                    low=low,
                    close=close,
                    volume=vol)
-    Session().add(qu)
+    # not needed, since already added to the session via cascade
+    #Session().add(qu)
     return qu
 
 def new_source_info(source, asset, info):
