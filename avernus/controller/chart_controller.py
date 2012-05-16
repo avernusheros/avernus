@@ -372,22 +372,31 @@ class PortfolioChartController(ChartController):
         yield 1
 
     def calculate_benchmark(self, benchmark):
-        #FIXME why not per year?
         percent = benchmark.percentage
         values = [0.0] * len(self.days)
-        daily = percent / len(self.days)
+        stepsize = (self.days[-1]-self.days[0]) / len(self.days)
+        stepsize = stepsize.total_seconds() / 60 / 60 / 24
+        per_step = percent / 365.0 * stepsize
         values[0] = self.y_values['invested capital'][0]
         for i in range(1, len(values)):
-            values[i] = values[i - 1] * (1 + daily) + self.y_values['invested capital'][i] - self.y_values['invested capital'][i - 1]
-        key = 'Benchmark ' + str(int(percent * 100)) + '%'
+            values[i] = values[i - 1] * (1.0 + per_step)\
+                            + self.y_values['invested capital'][i]\
+                            - self.y_values['invested capital'][i - 1]
+        key = str(benchmark)
         self.y_values[key] = values
 
     def calculate_valueovertime(self, name):
+        #import time
+        #t0 = time.clock()
         self.y_values[name] = [0.0] * len(self.days)
         for pos in self.portfolio:
+            #FIXME we could pass the daterange to the position controller. this would make the "get_quantity_at_date" faster, since we
+            #do not need to make the calculation over and over again
+            #FIXME this is slow for portfolios with many positions with the same asset.
             for i in range(len(self.days)):
                 self.y_values[name][i] += position_controller.get_value_at_date(pos, self.days[i])
                 yield 0
+        #print "!!!!", time.clock()-t0, "seconds"
         yield 1
 
     def update(self):

@@ -98,11 +98,13 @@ def get_value_at_date(position, t):
     quantity = get_quantity_at_date(position, t)
     if quantity == 0:
         return 0
-    price = asset_controller.get_price_at_date(position.asset, t)
-    while not price and i < 4:
-        t -= datetime.timedelta(days=i)
-        price = asset_controller.get_price_at_date(position.asset, t)
-        i += 1
+    t1 = t - datetime.timedelta(days=3)
+    price = asset_controller.get_price_at_date(position.asset, t, t1)
+
+    #while not price and i < 4:
+    #    t -= datetime.timedelta(days=i)
+    #    price = asset_controller.get_price_at_date(position.asset, t)
+    #    i += 1
     if price:
         return quantity * price
     return 0.0

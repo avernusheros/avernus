@@ -11,6 +11,9 @@ class Benchmark(Base):
     portfolio_id = Column(Integer, ForeignKey('portfolio.id'))
     portfolio = relationship('Portfolio')
 
+    def __str__(self):
+        return _('Benchmark ')+str(round(self.percentage*100,2))+"%"
+
 
 class Container(Base):
     __tablename__ = 'container'

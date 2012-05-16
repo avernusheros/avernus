@@ -42,6 +42,13 @@ def get_price_at_date(asset, t):
     if quotation:
         return quotation.close
 
+def get_price_at_date(asset, t, min_t):
+    close = Session().query(Quotation.close)\
+            .filter(Quotation.asset==asset, Quotation.date>=min_t, Quotation.date<=t)\
+            .order_by(desc(Quotation.date)).first()
+    if close:
+        return close[0]
+
 def get_buy_transaction(position):
     return session.query(Transaction).filter_by(position=position, type=1).first()
 
