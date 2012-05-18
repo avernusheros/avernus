@@ -69,19 +69,25 @@ class TransactionsTree(Tree):
 
     def on_edit(self, widget, data=None):
         transaction, iter = self.get_selected_item()
-        if transaction.type == 0: #SELL
+        if transaction.type == "portfolio_sell_transaction":
             dialogs.SellDialog(transaction.position, transaction, parent=self.get_toplevel())
-        elif transaction.type == 1: #Buy
+        elif transaction.type == "portfolio_buy_transaction":
             dialogs.BuyDialog(transaction.position.portfolio, transaction, parent=self.get_toplevel())
-        else:
-            print "TODO edit transaction"
 
         #update treeview by removing and re-adding the transaction
         self.model.remove(iter)
         self.insert_transaction(transaction)
 
     def insert_transaction(self, ta):
-        self.model.append(None, [ta, str(ta.type), gui_utils.get_name_string(ta.position.asset), ta.date, float(ta.position.quantity), ta.price, ta.cost, asset_controller.get_transaction_total(ta)])
+        self.model.append(None,
+                    [ta,
+                    str(ta),
+                    gui_utils.get_name_string(ta.position.asset),
+                    ta.date,
+                    float(ta.position.quantity),
+                    ta.price,
+                    ta.cost,
+                    asset_controller.get_transaction_total(ta)])
 
     def show_context_menu(self, event):
         transaction, iter = self.get_selected_item()

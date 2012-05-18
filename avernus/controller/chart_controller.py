@@ -1,5 +1,4 @@
 from avernus.gui import gui_utils
-from avernus.gui import gui_utils
 from avernus import date_utils
 from avernus.controller import asset_controller
 from avernus.controller import portfolio_controller

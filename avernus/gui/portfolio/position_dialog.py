@@ -195,7 +195,14 @@ class TransactionsTab(Gtk.VBox):
             self.insert_transaction(transaction)
 
     def insert_transaction(self, ta):
-        return self.model.append([ta, str(ta.type), ta.date, ta.quantity, ta.price, ta.cost, asset_controller.get_transaction_total(ta)])
+        return self.model.append(
+                [ta,
+                str(ta),
+                ta.date,
+                ta.quantity,
+                ta.price,
+                ta.cost,
+                asset_controller.get_transaction_total(ta)])
 
     def on_row_activated(self, treeview, path, view_column):
         if view_column == self.date_column:

@@ -104,7 +104,7 @@ class BuyDialog:
             if shares == 0.0:
                 return
             self.position = position_controller.new_portfolio_position(price=price, date=date, shares=shares, portfolio=self.pf, asset=asset)
-            ta = asset_controller.new_transaction(type=1, date=date, quantity=shares, price=price, cost=ta_costs, position=self.position)
+            ta = asset_controller.new_buy_transaction(date=date, quantity=shares, price=price, cost=ta_costs, position=self.position)
             #FIXME avoid pubsub
             pubsub.publish('container.position.added', self.pf, self.position)
             pubsub.publish('transaction.added', ta)
@@ -644,7 +644,7 @@ class SellDialog(Gtk.Dialog):
                 if shares == 0.0:
                     return
                 self.pos.quantity -= shares
-                ta = asset_controller.new_transaction(position=self.pos, type=0, date=date, quantity=shares, price=price, cost=ta_costs)
+                ta = asset_controller.new_sell_transaction(position=self.pos, date=date, quantity=shares, price=price, cost=ta_costs)
                 pubsub.publish('transaction.added', ta)
             else:
                 self.pos.price = self.transaction.price = price

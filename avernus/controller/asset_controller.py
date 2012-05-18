@@ -2,7 +2,7 @@ from avernus.objects.asset import Asset
 from avernus.objects.asset import Quotation
 from avernus.objects.asset import Dividend
 from avernus.objects.asset import SourceInfo
-from avernus.objects.asset import Transaction
+from avernus.objects.asset import BuyTransaction, SellTransaction
 from avernus.objects.container import Position, Container
 # Session is the class, session the normal instance
 from avernus.objects import Session, session, asset
@@ -50,10 +50,10 @@ def get_price_at_date(asset, t, min_t):
         return close[0]
 
 def get_buy_transaction(position):
-    return session.query(Transaction).filter_by(position=position, type=1).first()
+    return session.query(BuyTransaction).filter_by(position=position).first()
 
 def get_sell_transactions(position):
-    return Session().query(Transaction).filter_by(position=position, type=0).all()
+    return Session().query(SellTransaction).filter_by(position=position).all()
 
 def get_source_info(source, ass=None):
     return Session.query(SourceInfo).filter_by(asset=ass, source=source).all()
@@ -116,9 +116,12 @@ def new_source_info(source, asset, info):
     session.add(si)
     return si
 
-def new_transaction(*args, **kwargs):
-    ta = Transaction(**kwargs)
-    session.add(ta)
+def new_buy_transaction(*args, **kwargs):
+    ta = BuyTransaction(**kwargs)
+    return ta
+
+def new_sell_transaction(*args, **kwargs):
+    ta = SellTransaction(**kwargs)
     return ta
 
 def update_all(*args):

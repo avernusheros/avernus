@@ -6,6 +6,25 @@ from avernus.controller import dimensions_controller
 from avernus.controller import portfolio_controller
 
 
+def to_eleven(db):
+    conn = sqlite3.connect(db)
+    c = conn.cursor()
+    c.execute('CREATE TABLE IF NOT EXISTS portfolio_buy_transaction (id INTEGER NOT NULL, PRIMARY KEY(id), FOREIGN KEY(id) REFERENCES portfolio_transaction(id))')
+    c.execute('CREATE TABLE IF NOT EXISTS portfolio_sell_transaction (id INTEGER NOT NULL, PRIMARY KEY(id), FOREIGN KEY(id) REFERENCES portfolio_transaction(id))')
+
+    for row in c.execute('SELECT id, type from portfolio_transaction').fetchall():
+        print row
+        if row[1] == 1:
+            print "BUY"
+            c.execute('INSERT INTO portfolio_buy_transaction VALUES (?)', (row[0],))
+            c.execute('UPDATE portfolio_transaction SET type = "portfolio_buy_transaction" WHERE id = ?', (row[0],))
+        else:
+            c.execute('INSERT INTO portfolio_sell_transaction VALUES (?)', (row[0],))
+            c.execute('UPDATE portfolio_transaction SET type = "portfolio_sell_transaction" WHERE id = ?', (row[0],))
+
+    conn.commit()
+    c.close()
+
 
 def to_ten(database, old_db):
     conn_old = sqlite3.connect(old_db)
