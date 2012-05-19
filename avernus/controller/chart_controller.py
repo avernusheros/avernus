@@ -388,12 +388,11 @@ class PortfolioChartController(ChartController):
         #import time
         #t0 = time.clock()
         self.y_values[name] = [0.0] * len(self.days)
-        for pos in self.portfolio:
-            #FIXME we could pass the daterange to the position controller. this would make the "get_quantity_at_date" faster, since we
-            #do not need to make the calculation over and over again
-            #FIXME this is slow for portfolios with many positions with the same asset.
-            for i in range(len(self.days)):
-                self.y_values[name][i] += position_controller.get_value_at_date(pos, self.days[i])
+        for asset in asset_controller.get_all_used_assets_for_portfolio(self.portfolio):
+            i = 0
+            for val in position_controller.get_value_at_daterange(self.portfolio, asset, self.days):
+                self.y_values[name][i] += val
+                i+=1
                 yield 0
         #print "!!!!", time.clock()-t0, "seconds"
         yield 1

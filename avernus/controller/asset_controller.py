@@ -2,8 +2,8 @@ from avernus.objects.asset import Asset
 from avernus.objects.asset import Quotation
 from avernus.objects.asset import Dividend
 from avernus.objects.asset import SourceInfo
-from avernus.objects.asset import BuyTransaction, SellTransaction
-from avernus.objects.container import Position, Container
+from avernus.objects.asset import BuyTransaction, SellTransaction, Transaction
+from avernus.objects.container import Position, Container, PortfolioPosition
 # Session is the class, session the normal instance
 from avernus.objects import Session, session, asset
 from avernus import pubsub
@@ -24,6 +24,9 @@ def delete_quotations_from_asset(asset):
 
 def get_all_used_assets():
     return Session().query(Asset).join(Position).distinct().all()
+
+def get_all_used_assets_for_portfolio(portfolio):
+    return Session().query(Asset).join(PortfolioPosition).filter(PortfolioPosition.portfolio==portfolio).distinct().all()
 
 def get_asset_for_searchstring(searchstring):
     searchstring = '%' + searchstring + '%'
@@ -80,6 +83,9 @@ def get_transaction_total(transaction):
     else:
         sign = 1.0
     return sign*transaction.price*transaction.quantity + transaction.cost
+
+def get_transactions(portfolio, asset):
+    return Session().query(Transaction).join(PortfolioPosition).filter(PortfolioPosition.portfolio==portfolio, Position.asset==asset).order_by(Transaction.date).all()
 
 def new_asset(assettype = Asset, name = "", isin=0, source="",
                 currency="", exchange="", price=1.0,

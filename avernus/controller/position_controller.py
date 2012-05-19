@@ -84,30 +84,46 @@ def get_gain(position):
 
 
 def get_quantity_at_date(position, t):
-        if t < position.date:
-            return 0
-        q = position.quantity
-        for sell_ta in asset_controller.get_sell_transactions(position):
-            if t < sell_ta.date:
-                q += sell_ta.quantity
-        return q
+    if t < position.date:
+        return 0
+    q = position.quantity
+    for sell_ta in asset_controller.get_sell_transactions(position):
+        if t < sell_ta.date:
+            q += sell_ta.quantity
+    return q
 
 
 def get_value_at_date(position, t):
-    i = 1
     quantity = get_quantity_at_date(position, t)
     if quantity == 0:
         return 0
     t1 = t - datetime.timedelta(days=3)
     price = asset_controller.get_price_at_date(position.asset, t, t1)
-
-    #while not price and i < 4:
-    #    t -= datetime.timedelta(days=i)
-    #    price = asset_controller.get_price_at_date(position.asset, t)
-    #    i += 1
     if price:
         return quantity * price
     return 0.0
+
+def get_value_at_daterange(portfolio, asset, days):
+    quantity = 0
+    delta = datetime.timedelta(days=3)
+    transactions = asset_controller.get_transactions(portfolio, asset)
+    for day in days:
+        # adjust quantity
+        while len(transactions)>0 and transactions[0].date <= day:
+            ta = transactions.pop(0)
+            if ta.type == "portfolio_buy_transaction":
+                quantity += ta.quantity
+            else:
+                quantity -= ta.quantity
+        # get price
+        if quantity == 0.0:
+            yield 0
+        else:
+            price = asset_controller.get_price_at_date(asset, day, day-delta)
+            if price:
+                yield quantity * price
+            else:
+                yield 0
 
 
 def get_current_value(position):
