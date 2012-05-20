@@ -34,10 +34,6 @@ class AccountCategory(Base):
     parent_id = Column(Integer, ForeignKey('account_category.id'))
     parent = relationship('AccountCategory', remote_side=[id], backref='children')
 
-    def __init__(self, name, parent):
-        self.name = name
-        self.parent = parent
-
     def __repr__(self):
         return "AccountCategory<%s>" % self.name
 
@@ -52,7 +48,7 @@ class AccountTransaction(Base):
     date = Column(Date)
     account_id = Column(Integer, ForeignKey('account.id'))
     transfer_id = Column(Integer, ForeignKey('account_transaction.id'))
-    transfer = relationship('AccountTransaction', remote_side=[id])
+    transfer = relationship('AccountTransaction', remote_side=[id], uselist=False,post_update=True)
     category_id = Column(String, ForeignKey('account_category.id'))
     category = relationship('AccountCategory', remote_side=[AccountCategory.id])
 

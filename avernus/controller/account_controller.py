@@ -33,7 +33,7 @@ def new_account(name):
     return account
 
 def new_account_category(name, parent=None):
-    cat = AccountCategory(name, parent)
+    cat = AccountCategory(name=name, parent_id=parent.id)
     session.add(cat)
     return cat
 
