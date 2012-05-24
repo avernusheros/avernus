@@ -367,22 +367,17 @@ class TransactionsTree(gui_utils.Tree):
             self.insert_transaction(transaction)
 
     def find_transaction(self, transaction):
-        #search recursiv
-        def search(rows):
-            if not rows: return None
-            for row in rows:
-                if row[0] == transaction:
-                    return row
-                result = search(row.iterchildren())
-                if result: return result
-            return None
-        return search(self.model)
+        for row in self.model:
+            if row[0] == transaction:
+                return row
+        return None
 
     def on_transaction_updated(self, transaction):
         if transaction.account == self.account:
             row = self.find_transaction(transaction)
             if row:
-                self.model.remove(row.iter)
+                child_iter = self._get_child_iter(row.iter)
+                self.model.remove(child_iter)
                 self.insert_transaction(transaction)
 
     def get_item_to_insert(self, ta):
@@ -413,7 +408,7 @@ class TransactionsTree(gui_utils.Tree):
         selection = self.get_selection()
         model, paths = selection.get_selected_rows()
         if len(paths) != 0:
-            return model[paths[0]][self.OBJECT], model.get_iter(paths[0])
+            return self.get_model()[paths[0]][self.OBJECT], model.get_iter(paths[0])
         return None, None
 
     def on_add(self, widget=None, data=None):
@@ -454,8 +449,11 @@ class TransactionsTree(gui_utils.Tree):
     def on_set_transaction_category(self, category=None):
         trans, iterator = self._get_selected_transaction()
         trans.category = category
-        self.model.remove(iterator)
-        self.insert_transaction(trans)
+        if category:
+            name = category.name
+        else:
+            name = ""
+        self.model[self._get_child_iter(iterator)][self.CATEGORY] = name
 
     def show_context_menu(self, event):
         trans, iter = self._get_selected_transaction()

@@ -159,7 +159,7 @@ class PositionsTree(Tree):
         row = self.find_position(position)
         if row:
             self.model.remove(row.iter)
-            self.model.append(parent, self._get_row(position))
+            self.model.append(parent, self._get_row(position, parent!=None))
 
     def find_position(self, pos):
         #search recursiv
@@ -232,9 +232,9 @@ class PortfolioPositionsTree(PositionsTree):
                 self.update_position_after_edit(mp, tree_iter)
             else:
                 self.asset_cache[position.asset.id] = position
-            self.model.append(tree_iter, self._get_row(position))
+            self.model.append(tree_iter, self._get_row(position, tree_iter!=None))
 
-    def _get_row(self, position):
+    def _get_row(self, position, child=False):
         asset = position.asset
         gain = position_controller.get_gain(position)
         gain_icon = get_arrow_icon(gain[1])
@@ -255,6 +255,8 @@ class PortfolioPositionsTree(PositionsTree):
                float(c_change[1]),
                None,#FIXME icons[position.asset.type],
                portfolio_controller.get_fraction(self.container, position)]
+        if child:
+            ret[self.COLS['name']] = ""
 
         if isinstance(position, MetaPosition):
             ret[self.COLS['shares']] = unichr(8721) + " " + ret[self.COLS['shares']]

@@ -113,7 +113,7 @@ class DividendsTree(Tree):
             parent = parent_row.iter
         model.append(parent,
                 [div,
-                get_name_string(div.position.asset),
+                "",
                 div.date,
                 div.price,
                 div.cost,

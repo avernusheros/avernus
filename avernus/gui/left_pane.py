@@ -150,7 +150,6 @@ class MainTree(gui_utils.Tree):
     def on_button_press_event(self, widget, event):
         target = self.get_path_at_pos(int(event.x), int(event.y))
         if target and event.type == Gdk.EventType.BUTTON_PRESS:
-            self.set_cursor(target[0])
             obj = self.get_model()[target[0]][0]
 
             if event.button == 3:
@@ -236,7 +235,7 @@ class MainTree(gui_utils.Tree):
             self.edit_account(obj, row)
         else:
             obj, selection_iter = self.selected_item
-            self.set_cursor(self.get_model().get_path(selection_iter), start_editing=True)
+            self.set_cursor(path=self.get_model().get_path(selection_iter), column=self.get_column(0), start_editing=True)
 
     def edit_account(self, acc, row):
         builder = Gtk.Builder()

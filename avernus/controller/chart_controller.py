@@ -34,12 +34,14 @@ def format_days(days, step):
         formatstring = "%U"
     return map(lambda d: d.strftime(formatstring), days)
 
+
 def compute_start_date(dateItems):
     lowest = datetime.date.today()
     for item in dateItems:
         if item.date.date() < lowest:
             lowest = item.date.date()
     return lowest
+
 
 def calculate_x_values(step, start, end):
         result = []
@@ -71,7 +73,6 @@ class TransactionChartController(ChartController):
         return self.start_date
 
 
-
 class TransactionValueOverTimeChartController(TransactionChartController):
 
     def __init__(self, transactions, date_range):
@@ -93,7 +94,6 @@ class TransactionValueOverTimeChartController(TransactionChartController):
 
     def set_monthly(self, monthly):
         self.monthly = monthly
-        #print "Set monthly to ", monthly
 
     def set_rolling_average(self, avg):
         self.rolling_avg = avg

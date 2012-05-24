@@ -41,9 +41,9 @@ def get_date_of_newest_quotation(asset):
         return quotation.order_by(desc(Quotation.date)).first().date
 
 def get_price_at_date(asset, t):
-    quotation = Session().query(Quotation).filter_by(asset=asset, date=t).first()
-    if quotation:
-        return quotation.close
+    close = Session().query(Quotation.close).filter_by(asset=asset, date=t).first()
+    if close:
+        return close[0]
 
 def get_price_at_date(asset, t, min_t):
     close = Session().query(Quotation.close)\
