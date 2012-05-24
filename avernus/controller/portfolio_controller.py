@@ -66,7 +66,6 @@ def new_benchmark(portfolio, percentage):
 def get_all_portfolio():
     return session.query(Portfolio).all()
 
-
 def get_all_watchlist():
     return session.query(Watchlist).all()
 

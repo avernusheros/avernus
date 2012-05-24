@@ -173,7 +173,7 @@ class PosSelector(Gtk.ComboBox):
                         self.set_active(i)
                     i += 1
         else:
-            for pos in sorted(portfolio_controller.get_all_portfolio_position(), key=lambda pos: pos.asset.name):
+            for pos in sorted(position_controller.get_all_portfolio_position(), key=lambda pos: pos.asset.name):
                 if pos.quantity > 0:
                     liststore.append([pos, pos.portfolio.name + ": " + str(pos.quantity) + ' ' + pos.asset.name])
         self.set_model(liststore)

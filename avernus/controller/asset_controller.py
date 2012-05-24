@@ -70,7 +70,7 @@ def get_total_for_dividend(dividend):
     return dividend.price - dividend.cost
 
 def get_total_for_transaction(transaction):
-    if transaction.type==1:
+    if isinstance(transaction, BuyTransaction):
         sign = -1
     else:
         sign = 1
