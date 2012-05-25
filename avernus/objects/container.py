@@ -22,7 +22,7 @@ class Container(Base):
 
     id = Column(Integer, primary_key=True)
     name = Column(String)
-    last_update = Column(Date)
+    last_update = Column(DateTime)
 
     def __iter__(self):
         return self.positions.__iter__()

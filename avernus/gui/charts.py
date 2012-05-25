@@ -138,7 +138,7 @@ class TransactionChart(SimpleLineChart):
     def draw_widget(self):
         SimpleLineChart.draw_widget(self)
         if self.controller.total_avg:
-            self.totalAvgLabel.set_text(_('Average ') + str(self.controller.average_y))
+            self.totalAvgLabel.set_text(_('Average ') + gui_utils.get_currency_format_from_float(self.controller.average_y))
             self.totalAvgLabel.show()
 
     def remove_widget(self):

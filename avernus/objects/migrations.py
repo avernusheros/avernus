@@ -5,6 +5,16 @@ from avernus.controller import account_controller
 from avernus.controller import dimensions_controller
 from avernus.controller import portfolio_controller
 
+def to_twelve(db):
+    conn = sqlite3.connect(db)
+    c = conn.cursor()
+    for row in c.execute('SELECT id, last_update from container').fetchall():
+        temp = row[1].split("-")
+        temp = map(int, temp)
+        temp = datetime.date(temp[0], temp[1], temp[2])
+        c.execute('UPDATE container SET last_update = ? WHERE id = ?', (datetime.datetime.combine(temp, datetime.time()), row[0]))
+    conn.commit()
+    c.close()
 
 def to_eleven(db):
     conn = sqlite3.connect(db)
@@ -13,7 +23,6 @@ def to_eleven(db):
     c.execute('CREATE TABLE IF NOT EXISTS portfolio_sell_transaction (id INTEGER NOT NULL, PRIMARY KEY(id), FOREIGN KEY(id) REFERENCES portfolio_transaction(id))')
 
     for row in c.execute('SELECT id, type from portfolio_transaction').fetchall():
-        print row
         if row[1] == 1:
             print "BUY"
             c.execute('INSERT INTO portfolio_buy_transaction VALUES (?)', (row[0],))

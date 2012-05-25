@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 
 # current version of our model
-version = 11
+version = 12
 
 # base for the objects
 Base = declarative_base()
@@ -37,7 +37,9 @@ def backup(db):
 def migrate(from_version, database):
     from avernus.objects import migrations
     scripts = [(9, migrations.to_ten),
-                (11, migrations.to_eleven)]
+                (11, migrations.to_eleven),
+                (12, migrations.to_twelve)
+                ]
 
     # pre sqlalchemy area
     if from_version < 10:
@@ -55,7 +57,7 @@ def migrate(from_version, database):
             exit(1)
     else:
         for version, script in scripts:
-            if from_version <= version:
+            if from_version < version:
                 logger.info("migrate from version %i to %i" % (from_version, version))
                 try:
                     backup(database)
