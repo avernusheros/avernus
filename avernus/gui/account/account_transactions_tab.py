@@ -303,7 +303,18 @@ class TransactionsTree(gui_utils.Tree):
         cell.props.wrap_width = 400
         col.set_expand(True)
         self.create_column(_('Amount'), self.AMOUNT, func=gui_utils.currency_format)
-        self.create_column(_('Category'), self.CATEGORY)
+
+        cell = Gtk.CellRendererCombo()
+        cb_model = Gtk.ListStore(object, str)
+        cell.connect('changed', self.on_category_changed, cb_model)
+        self.categories = account_controller.get_all_categories()
+        for category in self.categories:
+            cb_model.append([category, category.name])
+        cell.set_property('model', cb_model)
+        cell.set_property('text-column', 1)
+        column = Gtk.TreeViewColumn(_('Category'), cell, text = self.CATEGORY)
+        self.append_column(column)
+
         self.set_rules_hint(True)
         sorter.set_sort_column_id(self.DATE, Gtk.SortType.DESCENDING)
         self.get_selection().set_mode(Gtk.SelectionMode.MULTIPLE)
@@ -314,6 +325,11 @@ class TransactionsTree(gui_utils.Tree):
         pubsub.subscribe('accountTransaction.updated', self.on_transaction_updated)
         self.single_category = None
         self.reset_filter_dates()
+        self.columns_autosize()
+
+    def on_category_changed(self, cellrendertext, path, new_iter, model):
+        category = model[new_iter][0]
+        self.on_set_transaction_category(category)
 
     def on_category_update(self, category):
         if category != self.single_category:
@@ -788,9 +804,10 @@ class EditTransaction(Gtk.Dialog):
 
     def on_transfer_transaction_selected(self, widget):
         selection = widget.get_selection()
-        treestore, selection_iter = selection.get_selected()
-        if (selection_iter and treestore):
-            self.transfer_transaction = treestore.get_value(selection_iter, 0)
+        if selection:
+            treestore, selection_iter = selection.get_selected()
+            if (selection_iter and treestore):
+                self.transfer_transaction = treestore.get_value(selection_iter, 0)
 
     def process_result(self, response):
         if response == Gtk.ResponseType.ACCEPT:

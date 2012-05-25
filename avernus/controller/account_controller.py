@@ -33,7 +33,7 @@ def new_account(name):
     return account
 
 def new_account_category(name, parent=None):
-    cat = AccountCategory(name=name, parent_id=parent.id)
+    cat = AccountCategory(name=name, parent=parent)
     session.add(cat)
     return cat
 
@@ -56,7 +56,7 @@ def account_lastday(account):
         return max([t.date for t in account])
 
 def get_all_categories():
-    return session.query(AccountCategory).all()
+    return session.query(AccountCategory).order_by(AccountCategory.name).all()
 
 def get_root_categories():
     return session.query(AccountCategory).filter_by(parent=None).all()
