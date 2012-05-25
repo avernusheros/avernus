@@ -38,8 +38,6 @@ def run_auto_assignments(*args):
         b_include_categorized = True
     else:
         b_include_categorized = False
-    global rules
-    rules = get_all_active_by_priority()
     transactions = account_controller.get_all_transactions()
     #print "Size: ", len(transactions)
     for transaction in transactions:
@@ -56,4 +54,4 @@ def run_auto_assignments(*args):
 
 config = avernusConfig()
 
-
+rules = get_all_active_by_priority()

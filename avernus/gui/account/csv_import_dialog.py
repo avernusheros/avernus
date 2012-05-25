@@ -20,8 +20,10 @@ class CSVImportDialog(Gtk.Dialog):
                      (Gtk.STOCK_CANCEL, Gtk.ResponseType.REJECT,))
         self.account = account
         self.config = config.avernusConfig()
-        self._init_widgets()
         self.importer = csvimporter.CsvImporter()
+        self.b_categories = self.config.get_option('category_assignments_on_import') == 'True'
+        self.importer.do_categories = self.b_categories
+        self._init_widgets()
         self.profile = {}
         self.b_file = False
         self.b_account = not account is None
@@ -67,9 +69,8 @@ class CSVImportDialog(Gtk.Dialog):
         self.account_cb.connect('changed', self._on_account_changed)
         accBox.pack_start(self.account_cb, False, True, 0)
 
-        self.b_assignments = self.config.get_option('category_assignments_on_import') == 'True'
         category_assignment_button = Gtk.CheckButton(label=_('Do automatic category assignments'))
-        category_assignment_button.set_active(self.b_assignments)
+        category_assignment_button.set_active(self.b_categories)
         accBox.pack_start(category_assignment_button, True, True, 0)
         category_assignment_button.connect('toggled', self.on_toggle_assignments)
 
@@ -91,10 +92,10 @@ class CSVImportDialog(Gtk.Dialog):
         self.destroy()
 
     def on_toggle_assignments(self, button):
-        self.b_assignments = button.get_active()
-        self.config.set_option('category_assignments_on_import', self.b_assignments)
+        self.importer.do_categories = self.b_categories = button.get_active()
+        self.config.set_option('category_assignments_on_import', self.b_categories)
         if self.b_file:
-            self.importer.set_categories(self.b_assignments)
+            self.importer.check_categories()
             self.tree.reload(self.importer.results)
 
     def _on_file_set(self, button):
@@ -111,7 +112,6 @@ class CSVImportDialog(Gtk.Dialog):
         if self.b_account:
             self.import_button.set_sensitive(True)
             self.importer.check_duplicates(self.account)
-            self.importer.set_categories(self.b_assignments)
         self.tree.reload(self.importer.results)
 
     def _on_account_changed(self, *args):
@@ -120,7 +120,6 @@ class CSVImportDialog(Gtk.Dialog):
         if self.b_file:
             self.import_button.set_sensitive(True)
             self.importer.check_duplicates(self.account)
-            self.importer.set_categories(self.b_assignments)
             self.tree.reload(self.importer.results)
 
     def show_import_error_dialog(self):

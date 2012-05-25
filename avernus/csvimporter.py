@@ -22,7 +22,6 @@ class TempTransaction(object):
             ta.amount = self.amount
             ta.date = self.date
             ta.account = account
-            #ta = controller.newAccountTransaction(date=self.date, description=self.description, amount=self.amount, account=account, category=self.category)
             pubsub.publish('accountTransaction.created', ta)
 
 
@@ -30,6 +29,7 @@ class CsvImporter:
 
     def __init__(self):
         self.results = []
+        self.do_categories = False
 
     def _sniff_csv(self, filename):
         profile = {}
@@ -237,6 +237,7 @@ class CsvImporter:
             if not row and not len(result)==0:
                 break
         self.results = result
+        self.check_categories()
 
     def check_duplicates(self, account):
         for trans in self.results:
@@ -245,11 +246,13 @@ class CsvImporter:
             else:
                 trans.b_import = True
 
-    def set_categories(self, do_check):
-        if do_check:
+    def check_categories(self):
+        if self.do_categories:
             for trans in self.results:
-                if not trans.category:
-                    trans.category = filter_controller.get_category(trans)
+                trans.category = filter_controller.get_category(trans)
+        else:
+            for trans in self.results:
+                trans.category = None
 
     def create_transactions(self, account):
         for temp_trans in self.results:

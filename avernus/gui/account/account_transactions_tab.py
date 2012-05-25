@@ -312,6 +312,7 @@ class TransactionsTree(gui_utils.Tree):
             cb_model.append([category, category.name])
         cell.set_property('model', cb_model)
         cell.set_property('text-column', 1)
+        cell.set_property('editable', True)
         column = Gtk.TreeViewColumn(_('Category'), cell, text = self.CATEGORY)
         self.append_column(column)
 
