@@ -69,20 +69,16 @@ def get_ter(ass):
 def get_total_for_dividend(dividend):
     return dividend.price - dividend.cost
 
+def get_dividend_yield(dividend):
+    # div total / position buy value
+    return (dividend.price - dividend.cost) / (dividend.position.quantity * dividend.position.price)
+
 def get_total_for_transaction(transaction):
     if isinstance(transaction, BuyTransaction):
         sign = -1
     else:
         sign = 1
     return sign * transaction.price * transaction.quantity + transaction.cost
-
-def get_transaction_total(transaction):
-    #FIXME declare types somewhere
-    if transaction.type==1:
-        sign = -1.0
-    else:
-        sign = 1.0
-    return sign*transaction.price*transaction.quantity + transaction.cost
 
 def get_transactions(portfolio, asset):
     return Session().query(Transaction).join(PortfolioPosition).filter(PortfolioPosition.portfolio==portfolio, Position.asset==asset).order_by(Transaction.date).all()

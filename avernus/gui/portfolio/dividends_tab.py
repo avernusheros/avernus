@@ -4,6 +4,7 @@ from gi.repository import Gtk
 from avernus.gui.gui_utils import Tree, get_name_string
 from avernus.controller import portfolio_controller
 from avernus.controller import asset_controller
+from avernus.controller import position_controller
 from avernus.gui import gui_utils, page
 from avernus.gui.portfolio import dialogs
 
@@ -62,6 +63,7 @@ class DividendsTree(Tree):
     AMOUNT = 3
     TA_COSTS = 4
     TOTAL = 5
+    DIVIDEND_YIELD = 6
 
     def __init__(self, portfolio, actiongroup):
         self.portfolio = portfolio
@@ -73,12 +75,13 @@ class DividendsTree(Tree):
         self.connect('cursor_changed', self.on_cursor_changed)
 
     def _init_widgets(self):
-        self.set_model(Gtk.TreeStore(object, str, object, float, float, float))
+        self.set_model(Gtk.TreeStore(object, str, object, float, float, float, float))
         self.create_column(_('Position'), self.POSITION)
         self.create_column(_('Date'), self.DATE, func=gui_utils.date_to_string)
         self.create_column(_('Amount'), self.AMOUNT, func=gui_utils.currency_format)
         self.create_column(_('Transaction costs'), self.TA_COSTS, func=gui_utils.currency_format)
         self.create_column(_('Total'), self.TOTAL, func=gui_utils.currency_format)
+        self.create_column(_('Dividend yield'), self.DIVIDEND_YIELD, func=gui_utils.percent_format)
         self.get_model().set_sort_func(self.DATE, gui_utils.sort_by_time, self.DATE)
 
     def on_cursor_changed(self, widget):
@@ -105,11 +108,14 @@ class DividendsTree(Tree):
                             None,
                             div.price,
                             div.cost,
-                            div.price-div.cost])
+                            div.price-div.cost,
+                            None
+                            ])
         else:
             parent_row[self.AMOUNT] += div.price
             parent_row[self.TA_COSTS] += div.cost
             parent_row[self.TOTAL] += asset_controller.get_total_for_dividend(div)
+            parent_row[self.DIVIDEND_YIELD] = 100 * parent_row[self.TOTAL] / position_controller.get_buy_value(div.position)
             parent = parent_row.iter
         model.append(parent,
                 [div,
@@ -117,7 +123,9 @@ class DividendsTree(Tree):
                 div.date,
                 div.price,
                 div.cost,
-                asset_controller.get_total_for_dividend(div)])
+                asset_controller.get_total_for_dividend(div),
+                100*asset_controller.get_dividend_yield(div)
+                ])
 
     def on_edit(self, widget, data=None):
         obj, iterator = self.get_selected_item()
