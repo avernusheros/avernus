@@ -202,7 +202,7 @@ class TransactionsTab(Gtk.VBox):
                 ta.quantity,
                 ta.price,
                 ta.cost,
-                asset_controller.get_transaction_total(ta)])
+                asset_controller.get_total_for_transaction(ta)])
 
     def on_row_activated(self, treeview, path, view_column):
         if view_column == self.date_column:

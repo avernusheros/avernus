@@ -87,7 +87,7 @@ class TransactionsTree(Tree):
                     float(ta.position.quantity),
                     ta.price,
                     ta.cost,
-                    asset_controller.get_transaction_total(ta)])
+                    asset_controller.get_total_for_transaction(ta)])
 
     def show_context_menu(self, event):
         transaction, iter = self.get_selected_item()
