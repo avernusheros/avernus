@@ -8,14 +8,14 @@ msgstr ""
 "Project-Id-Version: avernus\n"
 "Report-Msgid-Bugs-To: FULL NAME <EMAIL@ADDRESS>\n"
 "POT-Creation-Date: 2011-05-21 13:36+0200\n"
-"PO-Revision-Date: 2012-04-13 04:07+0000\n"
-"Last-Translator: Dennis Baudys <Unknown>\n"
+"PO-Revision-Date: 2012-06-12 15:34+0000\n"
+"Last-Translator: wolfer <Unknown>\n"
 "Language-Team: German <de@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Launchpad-Export-Date: 2012-04-14 05:08+0000\n"
-"X-Generator: Launchpad (build 15070)\n"
+"X-Launchpad-Export-Date: 2012-06-13 05:18+0000\n"
+"X-Generator: Launchpad (build 15389)\n"
 
 #: avernus/controller/controller.py:55
 msgid "Region"
@@ -23,7 +23,7 @@ msgstr "Region"
 
 #: avernus/controller/controller.py:55
 msgid "Emerging markets"
-msgstr ""
+msgstr "Schwellenländer"
 
 #: avernus/controller/controller.py:55
 msgid "America"
@@ -39,11 +39,11 @@ msgstr "Pazifik"
 
 #: avernus/controller/controller.py:56
 msgid "Asset Class"
-msgstr ""
+msgstr "Anlageklasse"
 
 #: avernus/controller/controller.py:56
 msgid "Bond"
-msgstr ""
+msgstr "Bond"
 
 #: avernus/controller/controller.py:56
 msgid "Stocks developed countries"
@@ -51,7 +51,7 @@ msgstr ""
 
 #: avernus/controller/controller.py:56
 msgid "Commodities"
-msgstr ""
+msgstr "Rohstoffe"
 
 #: avernus/controller/controller.py:57
 msgid "Risk"
@@ -151,11 +151,11 @@ msgstr "Geschenke"
 
 #: avernus/controller/controller.py:67
 msgid "Health care"
-msgstr ""
+msgstr "Gesundheit"
 
 #: avernus/controller/controller.py:67
 msgid "Doctor"
-msgstr ""
+msgstr "Ärzte"
 
 #: avernus/controller/controller.py:67
 msgid "Pharmacy"
@@ -207,7 +207,7 @@ msgstr "Porto"
 
 #: avernus/controller/controller.py:71
 msgid "Home"
-msgstr ""
+msgstr "Haus"
 
 #: avernus/controller/controller.py:71
 msgid "Rent"
@@ -215,11 +215,11 @@ msgstr "Miete"
 
 #: avernus/controller/controller.py:71
 msgid "Home improvements"
-msgstr ""
+msgstr "Heimwerken"
 
 #: avernus/controller/controller.py:72
 msgid "Personal care"
-msgstr ""
+msgstr "Kosmetik"
 
 #: avernus/controller/controller.py:73
 msgid "Taxes"
@@ -247,7 +247,7 @@ msgstr "Hobbys"
 
 #: avernus/controller/controller.py:75
 msgid "Sporting Goods"
-msgstr ""
+msgstr "Sportartikel"
 
 #: avernus/controller/controller.py:76
 msgid "Travel"
@@ -316,7 +316,7 @@ msgstr "Gesamt"
 
 #: avernus/gui/dividends_tab.py:133
 msgid "Permanently delete dividend?"
-msgstr ""
+msgstr "Dividende löschen?"
 
 #: avernus/gui/chart_tab.py:32
 msgid "<b>Value over time</b>"
@@ -373,11 +373,11 @@ msgstr "Lösche die ausgewählte Transaktion"
 
 #: avernus/gui/account_transactions_tab.py:75
 msgid "Create dividend from transaction"
-msgstr ""
+msgstr "Erzeuge Dividend aus Transaktion"
 
 #: avernus/gui/account_transactions_tab.py:80
 msgid "no transactions match your selection"
-msgstr ""
+msgstr "Keine Transaktionen entsprechen Ihrer Selektion"
 
 #: avernus/gui/account_transactions_tab.py:113
 msgid "Add new category"
@@ -420,7 +420,7 @@ msgstr "Kategorie"
 
 #: avernus/gui/account_transactions_tab.py:403
 msgid "Permanently delete transaction?"
-msgstr ""
+msgstr "Transaktion dauerhaft löschen?"
 
 #: avernus/gui/account_transactions_tab.py:525
 msgid "Categories"
@@ -435,6 +435,8 @@ msgid ""
 "\n"
 "Will also delete subcategories"
 msgstr ""
+"\n"
+"Subkategorien werden auch gelöscht"
 
 #: avernus/gui/account_transactions_tab.py:709
 msgid "Edit transaction"
@@ -454,15 +456,15 @@ msgstr "Bereits kategorisierte Transaktionen einschließen"
 
 #: avernus/gui/preferences.py:96
 msgid "Add new dimension"
-msgstr ""
+msgstr "Neue Dimension hinzufügen"
 
 #: avernus/gui/preferences.py:97
 msgid "Rename selected dimension"
-msgstr ""
+msgstr "Gewählte Dimension ändern"
 
 #: avernus/gui/preferences.py:98
 msgid "Remove selected dimension"
-msgstr ""
+msgstr "Lösche gewählte Dimension"
 
 #: avernus/gui/container_overview_tab.py:33
 #: avernus/gui/container_overview_tab.py:64 avernus/gui/dialogs.py:232
@@ -510,11 +512,11 @@ msgstr "Ausgewählten Transaktionsfilter entfernen"
 
 #: avernus/gui/filterDialog.py:34
 msgid "Reload preview tree"
-msgstr ""
+msgstr "Vorschau neu laden"
 
 #: avernus/gui/filterDialog.py:35
 msgid "Reset the preview tree"
-msgstr ""
+msgstr "Vorschau zurücksetzen"
 
 #: avernus/gui/filterDialog.py:131
 msgid "Active"
@@ -530,11 +532,11 @@ msgstr "Filter"
 
 #: avernus/gui/dialogs.py:16
 msgid "Edit position - "
-msgstr ""
+msgstr "Position editieren "
 
 #: avernus/gui/dialogs.py:32
 msgid "Stock"
-msgstr ""
+msgstr "Aktie"
 
 #: avernus/gui/dialogs.py:33
 msgid "Quotation"
@@ -596,11 +598,11 @@ msgstr "Kommentar"
 
 #: avernus/gui/dialogs.py:410
 msgid "Sell position"
-msgstr ""
+msgstr "Position verkaufen"
 
 #: avernus/gui/dialogs.py:413
 msgid "Edit position"
-msgstr ""
+msgstr "Position editieren"
 
 #: avernus/gui/dialogs.py:442
 msgid "Price:"
@@ -625,7 +627,7 @@ msgstr "Menge:"
 
 #: avernus/gui/dialogs.py:562
 msgid "Buy a position"
-msgstr ""
+msgstr "Position kaufen"
 
 #: avernus/gui/dialogs.py:598 avernus/gui/transactions_tab.py:37
 msgid "Price"
@@ -633,7 +635,7 @@ msgstr "Preis"
 
 #: avernus/gui/dialogs.py:712
 msgid "Add watchlist position"
-msgstr ""
+msgstr "Position zur Watchlist hinzufügen"
 
 #: avernus/gui/dialogs.py:775
 msgid "Chose a date"
@@ -645,7 +647,7 @@ msgstr ""
 
 #: avernus/gui/dialogs.py:809
 msgid "Split"
-msgstr ""
+msgstr "Split"
 
 #: avernus/gui/dialogs.py:844
 msgid "Add dividend"
@@ -657,7 +659,7 @@ msgstr ""
 
 #: avernus/gui/positions_tab.py:96
 msgid "Buy value"
-msgstr ""
+msgstr "Kaufwert"
 
 #: avernus/gui/positions_tab.py:97
 msgid "Last price"
@@ -678,11 +680,11 @@ msgstr "Heute"
 
 #: avernus/gui/positions_tab.py:119
 msgid "Add new position"
-msgstr ""
+msgstr "Neue Position hinzufügen"
 
 #: avernus/gui/positions_tab.py:120
 msgid "Edit selected position"
-msgstr ""
+msgstr "Gewählte Position editieren"
 
 #: avernus/gui/positions_tab.py:121
 msgid "Delete selected position"
@@ -690,7 +692,7 @@ msgstr ""
 
 #: avernus/gui/positions_tab.py:122
 msgid "Chart selected position"
-msgstr ""
+msgstr "Gewählte Position anzeigen"
 
 #: avernus/gui/positions_tab.py:123
 msgid "Add dividend payment"
@@ -698,7 +700,7 @@ msgstr "Dividendenzahlung hinzufügen"
 
 #: avernus/gui/positions_tab.py:125
 msgid "Update positions"
-msgstr ""
+msgstr "Positionen aktualisieren"
 
 #: avernus/gui/positions_tab.py:174 avernus/gui/mainwindow.py:206
 msgid "updating stocks..."
@@ -722,7 +724,7 @@ msgstr "Importiere CSV"
 
 #: avernus/gui/csv_import_dialog.py:68
 msgid "Do category assignments"
-msgstr ""
+msgstr "Kategorien zuweisen"
 
 #: avernus/gui/overview_tab.py:64
 msgid "Loss"
@@ -759,15 +761,15 @@ msgstr "Verkaufspreis"
 
 #: avernus/gui/left_pane.py:27
 msgid "Add new portfolio or watchlist"
-msgstr ""
+msgstr "Neues Portfolio oder Watchlist"
 
 #: avernus/gui/left_pane.py:28
 msgid "Edit selected portfolio or watchlist"
-msgstr ""
+msgstr "Editiere gewähltes Portfolio oder Watchlist"
 
 #: avernus/gui/left_pane.py:29
 msgid "Delete selected portfolio or watchlist"
-msgstr ""
+msgstr "Lösche gewähltes Portfolio oder Watchlist"
 
 #: avernus/gui/left_pane.py:156
 msgid "<b>Portfolios</b>"
