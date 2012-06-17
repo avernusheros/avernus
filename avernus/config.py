@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: latin-1 -*-
 
-from __future__ import with_statement
 import os, glib
 __avernus_data_directory__ = '/usr/share/avernus/'
 import ConfigParser
@@ -10,7 +9,7 @@ import ConfigParser
 class project_path_not_found(Exception):
     pass
 
-def getdatapath():
+def get_data_path():
     """Retrieve data path
 
     This path is by default <avernus_lib_path>/../data/ in trunk
@@ -22,7 +21,6 @@ def getdatapath():
     if os.path.exists(__avernus_data_directory__): #.startswith('/')
         pathname = __avernus_data_directory__
     else:
-        #pathname = os.path.dirname(__file__) + '/' + __avernus_data_directory__
         pathname = os.path.dirname(__file__) + '/../data'
 
     abs_data_path = os.path.abspath(pathname)
@@ -31,7 +29,6 @@ def getdatapath():
     else:
         raise project_path_not_found, abs_data_path
 
-data_path = glib.get_user_data_dir()
 config_path = os.path.join( glib.get_user_config_dir(), 'avernus')
 timezone = 'CET'
 

@@ -1,4 +1,6 @@
 from gi.repository import Gtk
+import locale
+import datetime
 
 from avernus import pubsub
 from avernus.gui import gui_utils
@@ -6,8 +8,6 @@ from avernus.controller import portfolio_controller
 from avernus.controller import position_controller
 from avernus.controller import asset_controller
 from avernus.controller import dimensions_controller
-import locale
-import datetime
 
 
 class BuyDialog:
@@ -188,7 +188,7 @@ class EditAssetDialog(Gtk.Dialog):
                       Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT))
 
         vbox = self.get_content_area()
-        self.table = EditAssetTable(asset)
+        self.table = EditAssetTable(asset, self)
         vbox.pack_start(self.table, True, True, 0)
 
         self.show_all()
@@ -199,7 +199,6 @@ class EditAssetDialog(Gtk.Dialog):
         if response == Gtk.ResponseType.ACCEPT:
             self.table.process_result(response)
         self.destroy()
-
 
 
 class DividendDialog(Gtk.Dialog):
@@ -465,7 +464,6 @@ class EditAssetTable(Gtk.Table):
                 box = getattr(self, dim.name + "ValueComboBox")
                 active = box.get_active()
                 dimensions_controller.update_asset_dimension_values(self.asset, dim, active)
-            pubsub.publish("asset.edited", self.asset)
 
 
 class StockSelector(Gtk.VBox):

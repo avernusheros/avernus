@@ -43,6 +43,7 @@ def collect_images():
 def create_data_files():
     data_files = collect_images()
     data_files.append(('share/applications', ['avernus.desktop']))
+    data_files.append(('ui', ['ui/*']))
     return data_files
 
 
@@ -84,7 +85,7 @@ setup(
     author_email='wsteitz@gmail.com',
     description=avernus.__description__,
     download_url='https://launchpad.net/avernus/+download',
-    long_description='portfolios, watchlists... avernus utilizes online data sources for updating its quotations. You can view charts and other diagrams',
+    long_description='A program to monitor and analyze your investment portfolio and your bank transactions.',
     url=avernus.__url__,
     packages=collect_packages(),
     scripts=['avernus.py'],

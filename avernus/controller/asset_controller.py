@@ -4,6 +4,7 @@ from avernus.objects.asset import Dividend
 from avernus.objects.asset import SourceInfo
 from avernus.objects.asset import BuyTransaction, SellTransaction, Transaction
 from avernus.objects.container import Position, Container, PortfolioPosition
+from avernus.controller.object_controller import delete_object
 # Session is the class, session the normal instance
 from avernus.objects import Session, session, asset
 from avernus import pubsub
@@ -22,8 +23,14 @@ def delete_quotations_from_asset(asset):
         Session().delete(quotation)
     Session().commit()
 
+def get_all_assets():
+    return session.query(Asset).all()
+
 def get_all_used_assets():
     return Session().query(Asset).join(Position).distinct().all()
+
+def is_asset_used(asset):
+    return len(asset.positions) != 0
 
 def get_all_used_assets_for_portfolio(portfolio):
     return Session().query(Asset).join(PortfolioPosition).filter(PortfolioPosition.portfolio==portfolio).distinct().all()

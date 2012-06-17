@@ -12,6 +12,7 @@ from avernus.gui.left_pane import MainTreeBox
 from avernus.gui.portfolio.portfolio_notebook import PortfolioNotebook
 from avernus.gui.portfolio.positions_tab import WatchlistPositionsTab
 from avernus.gui.portfolio.overview_notebook import OverviewNotebook
+from avernus.gui.portfolio.asset_manager import AssetManager
 from avernus.gui.preferences import PrefDialog
 from avernus.gui.account.exportDialog import ExportDialog
 from webbrowser import open as web
@@ -43,6 +44,7 @@ UI_INFO = """
       <menuitem action='historical'/>
       <menuitem action='filter'/>
       <menuitem action='do_assignments'/>
+      <menuitem action='asset_manager'/>
     </menu>
     <menu action='HelpMenu'>
       <menuitem action='help'/>
@@ -55,7 +57,6 @@ UI_INFO = """
   </menubar>
 </ui>
 """
-
 
 
 class AboutDialog(Gtk.AboutDialog):
@@ -158,8 +159,9 @@ class MainWindow(Gtk.Window):
             ('ToolsMenu', None, '_Tools'),
             ('update', Gtk.STOCK_REFRESH, '_Update all stocks', 'F5', None, self.on_update_all),
             ('historical', Gtk.STOCK_REFRESH, 'Get _historical data', None, None, self.on_historical),
-            ('filter', None, '_Category Filters', None, None, self.on_category_assignments),
-            ('do_assignments', None, '_Run auto-assignments', None, None, self.on_do_category_assignments),
+            ('filter', Gtk.STOCK_PROPERTIES, '_Category Filters', None, None, self.on_category_assignments),
+            ('do_assignments', Gtk.STOCK_EXECUTE, '_Run auto-assignments', None, None, self.on_do_category_assignments),
+            ('asset_manager', Gtk.STOCK_PROPERTIES, '_Asset manager', None, None, self.on_asset_manager),
 
 
             ('HelpMenu', None, '_Help'),
@@ -215,6 +217,9 @@ class MainWindow(Gtk.Window):
 
     def on_category_assignments(self, *args):
         FilterDialog(parent=self)
+
+    def on_asset_manager(self, *args):
+        AssetManager(parent=self)
 
     def on_csv_import(self, *args):
         CSVImportDialog(parent=self)

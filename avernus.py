@@ -91,7 +91,7 @@ def init_icons():
     from avernus.gui.icons import IconManager
     icons = IconManager()
 
-    path = os.path.join(config.getdatapath(), 'images')
+    path = os.path.join(config.get_data_path(), 'images')
     iconNames = [
     'avernus', 'tags', 'tag', 'watchlists', 'watchlist', 'portfolio',
     'portfolios', 'index', 'indices', 'arrow_down', 'arrow_med_down',
@@ -147,11 +147,3 @@ except Exception as e:
     threads.terminate_all()
     print "wie gesagt ... abgekachelt ..."
     exit(1)
-
-
-#FIXME fix or remove the network manager code
-#from avernus.network_manager import DBusNetwork
-#DBusNetwork()
-
-
-
