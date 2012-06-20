@@ -1,5 +1,6 @@
 from gi.repository import Gtk, GObject, Gdk
 
+from avernus import config
 from avernus.gui import gui_utils
 from avernus.controller import asset_controller
 from avernus.gui.portfolio.dialogs import EditAssetDialog
@@ -10,7 +11,7 @@ class AssetManager:
     def __init__(self, parent=None):
         self.parent = parent
         builder = Gtk.Builder()
-        builder.add_from_file("ui/asset_manager_dialog.glade")
+        builder.add_from_file(config.get_ui_file("asset_manager_dialog.glade"))
 
         self.tree = gui_utils.Tree()
         self.tree.set_headers_visible(True)

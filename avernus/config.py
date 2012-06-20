@@ -9,6 +9,8 @@ import ConfigParser
 class project_path_not_found(Exception):
     pass
 
+data_path = None
+
 def get_data_path():
     """Retrieve data path
 
@@ -16,8 +18,10 @@ def get_data_path():
     and /usr/share/avernus in an installed version but this path
     is specified at installation time.
     """
+    global data_path
+    if data_path:
+        return data_path
     # get pathname absolute or relative
-
     if os.path.exists(__avernus_data_directory__): #.startswith('/')
         pathname = __avernus_data_directory__
     else:
@@ -25,6 +29,7 @@ def get_data_path():
 
     abs_data_path = os.path.abspath(pathname)
     if os.path.exists(abs_data_path):
+        data_path = abs_data_path
         return abs_data_path
     else:
         raise project_path_not_found, abs_data_path
@@ -33,6 +38,12 @@ config_path = os.path.join( glib.get_user_config_dir(), 'avernus')
 timezone = 'CET'
 
 instance = None
+
+def get_ui_file(filename):
+    global data_path
+    if not data_path:
+        get_data_path()
+    return os.path.join(data_path, "ui", filename)
 
 def avernusConfig():
     global instance

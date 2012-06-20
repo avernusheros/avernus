@@ -3,6 +3,7 @@ import locale
 import datetime
 
 from avernus import pubsub
+from avernus import config
 from avernus.gui import gui_utils
 from avernus.controller import portfolio_controller
 from avernus.controller import position_controller
@@ -16,7 +17,7 @@ class BuyDialog:
         self.pf = pf
 
         builder = Gtk.Builder()
-        builder.add_from_file("ui/buy_dialog.glade")
+        builder.add_from_file(config.get_ui_file("buy_dialog.glade"))
 
         self.dlg = builder.get_object("dialog")
         self.shares_entry = builder.get_object("shares_entry")
