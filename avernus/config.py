@@ -2,7 +2,7 @@
 # -*- coding: latin-1 -*-
 
 import os, glib
-__avernus_data_directory__ = '/usr/share/avernus/'
+__avernus_data_directory__ = '/usr/local/share/avernus/'
 import ConfigParser
 
 

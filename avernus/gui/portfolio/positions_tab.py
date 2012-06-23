@@ -198,7 +198,7 @@ class PortfolioPositionsTree(PositionsTree):
 
         self.create_column('#', self.COLS['shares'])
         self.create_column(_('Name'), self.COLS['name'])
-        self.create_icon_column(_('Type'), self.COLS['type'], size=Gtk.IconSize.DND)
+        self.create_column(_('Type'), self.COLS['type'])
         self.create_column(_('Pf %'), self.COLS['pf_percent'], func=gui_utils.percent_format)
         self.create_column(_('Start'), self.COLS['start'], func=start_price_markup)
         self.create_column(_('Buy value'), self.COLS['buy_value'], func=gui_utils.currency_format)
@@ -253,7 +253,7 @@ class PortfolioPositionsTree(PositionsTree):
                float(gain[1]),
                gain_icon,
                float(c_change[1]),
-               None,#FIXME icons[position.asset.type],
+               position.asset.type,
                portfolio_controller.get_fraction(self.container, position)]
         if child:
             ret[self.COLS['name']] = ""
@@ -343,7 +343,7 @@ class WatchlistPositionsTree(PositionsTree):
         self.set_model(self.model)
 
         self.create_column(_('Name'), self.COLS['name'])
-        self.create_icon_column(_('Type'), self.COLS['type'], size=Gtk.IconSize.DND)
+        self.create_column(_('Type'), self.COLS['type'])
         self.create_column(_('Start'), self.COLS['start'], func=start_price_markup)
         self.create_column(_('Last price'), self.COLS['last_price'], func=current_price_markup)
         self.create_column(_('Change'), self.COLS['change'], func=gui_utils.float_to_red_green_string_currency)
@@ -378,10 +378,8 @@ class WatchlistPositionsTree(PositionsTree):
                float(gain[1]),
                gain_icon,
                float(c_change[1]),
-               #FIXME icons
-               None,#icons[position.asset.type],
+               position.asset.type,
                0.0]
-
         return ret
 
     def on_remove(self, widget, user_data=None):

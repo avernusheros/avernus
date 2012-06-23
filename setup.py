@@ -5,6 +5,7 @@
 
 from distutils.core import setup
 from distutils.command.install_data import install_data
+from setuptools import find_packages
 from subprocess import call
 import glob
 import os
@@ -17,14 +18,6 @@ PO_DIR = 'po'
 MO_DIR = os.path.join('build', 'po')
 
 
-def collect_packages():
-    packages = []
-    for dir, dirs, files in os.walk('avernus'):
-        if '__init__.py' in files:
-            package = '.'.join(dir.split(os.sep))
-            packages.append(package)
-    #print 'Pakages: ', packages
-    return packages
 
 def collect_images():
     fileList = []
@@ -40,10 +33,19 @@ def collect_images():
     return fileList
 
 
+def collect_ui_files():
+    file_list = []
+    rootdir  = "data/ui"
+    for f in os.listdir(rootdir):
+        file_list.append(os.path.join(rootdir, f))
+
+    return os.path.join(DATA_DIR, 'ui'), file_list
+
+
 def create_data_files():
     data_files = collect_images()
+    data_files.append(collect_ui_files())
     data_files.append(('share/applications', ['avernus.desktop']))
-    data_files.append(('ui', ['ui/*']))
     return data_files
 
 
@@ -77,6 +79,7 @@ class InstallData(install_data):
             data_files.append((dest, [mo]))
         return data_files
 
+
 setup(
     name=avernus.__appname__,
     version=avernus.__version__,
@@ -87,8 +90,8 @@ setup(
     download_url='https://launchpad.net/avernus/+download',
     long_description='A program to monitor and analyze your investment portfolio and your bank transactions.',
     url=avernus.__url__,
-    packages=collect_packages(),
-    scripts=['avernus.py'],
+    packages = find_packages(exclude=["scripts", "po", "build", "tests", "data", "debian"]),
+    scripts=['scripts/avernus'],
     data_files=create_data_files(),
     cmdclass={'install_data': InstallData},
      )

@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 from gi.repository import Gtk
-from avernus import pubsub
 from avernus.gui import gui_utils
 from avernus.gui.gui_utils import Tree
 from avernus.gui.portfolio import dialogs
@@ -47,7 +46,6 @@ class TransactionsTree(Tree):
         self.actiongroup.add_actions([
                 ('edit' , Gtk.STOCK_EDIT, 'edit transaction', None, _('Edit selected transaction'), self.on_edit),
                                 ])
-        pubsub.subscribe('transaction.added', self.on_transaction_created)
         self.connect('button_press_event', self.on_button_press)
         self.connect("row-activated", self.on_row_activated)
 

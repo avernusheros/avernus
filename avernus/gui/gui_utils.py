@@ -1,4 +1,4 @@
-from avernus import config, pubsub
+from avernus import config
 
 from gi.repository import Gtk
 from gi.repository import GObject
@@ -15,7 +15,6 @@ class Tree(Gtk.TreeView):
     def __init__(self):
         self.selected_item = None
         super(Gtk.TreeView, self).__init__()
-        pubsub.subscribe('clear!', self.clear)
 
     def get_selected_item(self):
         #Get the current selection in the Gtk.TreeView
