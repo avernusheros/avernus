@@ -41,7 +41,6 @@ class MetaPosition():
 
 
 
-
 def new_watchlist_position(price=0.0, date=datetime.datetime.now(), watchlist=None, asset=None):
     position = WatchlistPosition(price = price,
                                  date = date,

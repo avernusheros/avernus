@@ -123,7 +123,6 @@ class TransactionsTab(Gtk.VBox):
 
     def __init__(self, position):
         self.position = position
-
         Gtk.VBox.__init__(self)
 
         #init wigets
@@ -153,6 +152,7 @@ class TransactionsTab(Gtk.VBox):
         cell.connect("edited", self.on_shares_edited, 3)
         self.shares_column = Gtk.TreeViewColumn(_('Shares'), cell, text=3)
         self.shares_column.set_cell_data_func(cell, gui_utils.float_format, 3)
+        self.shares_column.set_resizable(True)
         self.tree.append_column(self.shares_column)
 
         cell = Gtk.CellRendererSpin()
@@ -162,6 +162,7 @@ class TransactionsTab(Gtk.VBox):
         cell.set_property("adjustment", adjustment)
         cell.connect("edited", self.on_price_edited, 4)
         self.price_column = Gtk.TreeViewColumn(_('Price'), cell, text=4)
+        self.price_column.set_resizable(True)
         self.price_column.set_cell_data_func(cell, gui_utils.currency_format, 4)
         self.tree.append_column(self.price_column)
 
@@ -172,6 +173,7 @@ class TransactionsTab(Gtk.VBox):
         cell.set_property("adjustment", adjustment)
         cell.connect("edited", self.on_costs_edited, 5)
         self.costs_column = Gtk.TreeViewColumn(_('Transaction Costs'), cell, text=5)
+        self.costs_column.set_resizable(True)
         self.costs_column.set_cell_data_func(cell, gui_utils.currency_format, 5)
         self.tree.append_column(self.costs_column)
 
@@ -216,24 +218,21 @@ class TransactionsTab(Gtk.VBox):
                 self.tree.scroll_to_cell(path)
 
     def on_add(self, button):
-        last_transaction = self.position.buy_transaction
+        last_transaction = list(self.position.transactions)[-1]
         position = position_controller.new_portfolio_position(
                     price=self.position.price,
                     date=datetime.datetime.now(),
-                    quantity=last_transaction.quantity,
+                    shares=last_transaction.quantity,
                     portfolio=self.position.portfolio,
                     asset=self.position.asset)
-        transaction = asset_controller.new_transaction(
-                    type=1,
+        transaction = asset_controller.new_buy_transaction(
                     date=position.date,
                     quantity=position.quantity,
                     price=position.price,
-                    costs=last_transaction.cost,
-                    position=position,
-                    portfolio=position.portfolio)
+                    cost=last_transaction.cost,
+                    position=position)
         iterator = self.insert_transaction(transaction)
         self.tree.scroll_to_cell(self.model.get_path(iterator))
-
 
     def on_remove(self, button):
         selection = self.tree.get_selection()

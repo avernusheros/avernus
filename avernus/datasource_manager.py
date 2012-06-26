@@ -16,12 +16,7 @@ class DatasourceManager():
 
     def __init__(self):
         self.current_searches = []
-        self.b_online = True
         self.search_callback = None
-        #pubsub.subscribe('network', self.on_network_change)
-
-    def on_network_change(self, state):
-        self.b_online = state
 
     def get_source_count(self):
         return len(sources.items())
@@ -29,9 +24,6 @@ class DatasourceManager():
     def search(self, searchstring, callback=None, complete_cb=None, threaded=True):
         self.stop_search()
         self.search_callback = callback
-        if not self.b_online:
-            print "OFFLINE"
-            return
         for name, source in sources.iteritems():
             #check whether search function exists
             func = getattr(source, "search", None)
@@ -76,12 +68,12 @@ class DatasourceManager():
         return re.match('^[A-Z]{2}[A-Z0-9]{9}[0-9]$', isin)
 
     def update_assets(self, stocks):
-        if len(stocks) == 0 or not self.b_online:
+        if len(stocks) == 0:
             return
         for name, source in sources.iteritems():
             temp = filter(lambda s: s.source == name, stocks)
             if len(temp) > 0:
-                logger.debug("updating %s" % (temp,))
+                logger.debug("updating %s using %s" % (temp, source.name))
                 for ret in source.update_stocks(temp):
                     yield ret
 
@@ -89,8 +81,6 @@ class DatasourceManager():
         self.update_assets([asset])
 
     def get_historical_prices(self, stock, start_date=None, end_date=None):
-        if not self.b_online:
-            return
         if end_date is None:
             end_date = datetime.date.today() - datetime.timedelta(days=1)
         start_date = asset_controller.get_date_of_newest_quotation(stock)
@@ -107,8 +97,6 @@ class DatasourceManager():
         yield 1
 
     def update_historical_prices(self, stock):
-        if not self.b_online:
-            yield 1
         end_date = datetime.date.today() - datetime.timedelta(days=1)
         start_date = asset_controller.get_date_of_newest_quotation(stock)
         if start_date == None:

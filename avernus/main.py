@@ -43,7 +43,10 @@ def init_logger(debug=False):
     rootlogger.addHandler(consolehandler)
 
     # logging to file
-    filehandler = logging.FileHandler(filename='avernus.log')
+    filename = os.path.join(config.config_path, 'avernus.log')
+    if not os.path.exists(config.config_path):
+        os.mkdir(config.config_path)
+    filehandler = logging.FileHandler(filename=filename)
     filehandler.setFormatter(formatter)
     rootlogger.addHandler(filehandler)
 

@@ -34,6 +34,7 @@ class DataSource():
             logger.debug(url)
             return urlopen(url)
         except:
+            logger.debug("exception in request_csv")
             return None
 
     def __get_all_yahoo_ids(self, stocks):
@@ -154,7 +155,7 @@ class DataSource():
         res['yahoo_id'] = item[0]
         res['isin']     = item[2]
         res['exchange'] = item[5]
-        res['assettype']     = TYPES[item[4]]
+        res['assettype']= TYPES[item[4]]
         for ex, cur in EXCHANGE_CURRENCY:
             if res['exchange'] in ex:
                 res['currency'] = cur
@@ -163,6 +164,6 @@ class DataSource():
 
 
 if __name__ == "__main__":
-    y = Yahoo()
+    y = DataSource()
     for item in y.search('DE0005229504'):
         print item

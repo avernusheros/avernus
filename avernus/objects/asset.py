@@ -20,6 +20,8 @@ class Asset(Base):
     source = Column(String)
     change = Column(Float)
 
+    def __repr__(self):
+        return self.name + " " + self.isin
 
 class Dividend(Base):
     __tablename__ = 'dividend'

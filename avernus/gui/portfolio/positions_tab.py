@@ -122,6 +122,8 @@ class PositionsTree(Tree):
             progress_manager.remove_monitor(555)
         m = progress_manager.add_monitor(555, _('updating assets...'), Gtk.STOCK_REFRESH)
         threads.GeneratorTask(portfolio_controller.update_positions, m.progress_update, complete_callback=finished_cb, args=(self.container)).start()
+        #for foo in portfolio_controller.update_positions(self.container):
+        #    print foo
 
     def on_chart(self, widget, user_data=None):
         ChartWindow(self.selected_item[0].asset)
