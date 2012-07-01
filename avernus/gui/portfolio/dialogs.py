@@ -278,7 +278,7 @@ class DividendDialog(Gtk.Dialog):
     def process_result(self, response):
         if response == Gtk.ResponseType.ACCEPT:
             year, month, day = self.calendar.get_date()
-            date = datetime.datetime(year, month + 1, day)
+            date = datetime.date(year, month + 1, day)
             value = self.value_entry.get_value()
             ta_costs = self.tacosts_entry.get_value()
             if self.dividend is None:

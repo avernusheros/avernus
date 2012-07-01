@@ -1,3 +1,4 @@
 #!/usr/bin/env python
-from avernus import main
+from avernus.main import main
+main()
 

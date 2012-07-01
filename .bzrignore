@@ -21,3 +21,5 @@ MANIFEST
 foo
 avernus.log
 avernus.geany
+dist
+avernus.egg-info

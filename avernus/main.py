@@ -1,4 +1,3 @@
-
 #!/usr/bin/python
 # -*- Mode: Python; coding: utf-8; indent-tabs-mode: nil; tab-width: 4 -*-
 
@@ -96,48 +95,48 @@ def init_icons():
     Gtk.Window.set_default_icon_name('avernus')
 
 
-#MAIN
-try:
-    init_translations()
-    # Support for command line options.
-    parser = optparse.OptionParser(version='%prog ' + avernus.__version__)
-    parser.add_option("-d", "--debug", action="store_true", dest="debug", help=_("enable debug output"))
-    parser.add_option("-f", "--file", dest="datafile", help="set database file")
-    (options, args) = parser.parse_args()
-
-    init_logger(options.debug)
-    init_icons()
-    db_file = options.datafile
-    if db_file == None:
-        configs = config.avernusConfig()
-        default_file = os.path.join(config.config_path, 'avernus.db')
-        db_file = configs.get_option('database file', default=default_file)
-
-    from avernus.objects import set_db, connect
-    set_db(db_file)
-    connect(True)
-
-    GObject.threads_init()
-
-    from avernus.controller import asset_controller
-
-    from avernus.gui.mainwindow import MainWindow
-    from avernus.datasource_manager import DatasourceManager
-    dsm = DatasourceManager()
-    main_window = MainWindow()
-    asset_controller.datasource_manager = dsm
+def main():
     try:
-        Gtk.main()
+        init_translations()
+        # Support for command line options.
+        parser = optparse.OptionParser(version='%prog ' + avernus.__version__)
+        parser.add_option("-d", "--debug", action="store_true", dest="debug", help=_("enable debug output"))
+        parser.add_option("-f", "--file", dest="datafile", help="set database file")
+        (options, args) = parser.parse_args()
+
+        init_logger(options.debug)
+        init_icons()
+        db_file = options.datafile
+        if db_file == None:
+            configs = config.avernusConfig()
+            default_file = os.path.join(config.config_path, 'avernus.db')
+            db_file = configs.get_option('database file', default=default_file)
+
+        from avernus.objects import set_db, connect
+        set_db(db_file)
+        connect(True)
+
+        GObject.threads_init()
+
+        from avernus.controller import asset_controller
+
+        from avernus.gui.mainwindow import MainWindow
+        from avernus.datasource_manager import DatasourceManager
+        dsm = DatasourceManager()
+        main_window = MainWindow()
+        asset_controller.datasource_manager = dsm
+        try:
+            Gtk.main()
+        except Exception as e:
+            main_window.on_destroy()
+            raise
     except Exception as e:
-        main_window.on_destroy()
-        raise
-except Exception as e:
-    print "crashed, abgekachelt ... !!"
-    import traceback
-    traceback.print_exc()
-    from avernus.objects import session
-    session.commit()
-    session.close_all()
-    threads.terminate_all()
-    print "wie gesagt ... abgekachelt ..."
-    exit(1)
+        print "crashed, abgekachelt ... !!"
+        import traceback
+        traceback.print_exc()
+        from avernus.objects import session
+        session.commit()
+        session.close_all()
+        threads.terminate_all()
+        print "wie gesagt ... abgekachelt ..."
+        exit(1)
