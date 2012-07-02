@@ -13,8 +13,9 @@ from avernus.controller import dimensions_controller
 
 class BuyDialog:
 
-    def __init__(self, pf, parent=None):
+    def __init__(self, pf, transaction=None, parent=None):
         self.pf = pf
+        self.transaction = transaction
 
         builder = Gtk.Builder()
         builder.add_from_file(config.get_ui_file("buy_dialog.glade"))
@@ -34,10 +35,18 @@ class BuyDialog:
         self.on_change()
 
         # asset entry
-        self.asset_selector = StockSelector()
-        grid.attach(self.asset_selector, 0, 1, 3, 1)
-        self.asset_selector.result_tree.connect('cursor-changed', self.on_asset_selection)
-        self.asset_selector.result_tree.get_model().connect('row-deleted', self.on_asset_deselection)
+        if not self.transaction:
+            self.asset_selector = StockSelector()
+            grid.attach(self.asset_selector, 0, 1, 3, 1)
+            self.asset_selector.result_tree.connect('cursor-changed', self.on_asset_selection)
+            self.asset_selector.result_tree.get_model().connect('row-deleted', self.on_asset_deselection)
+        else:
+            self.shares_entry.set_value(self.transaction.quantity)
+            self.price_entry.set_value(self.transaction.price)
+            self.costs_entry.set_value(self.transaction.cost)
+            self.calendar.select_month(self.transaction.date.month - 1, self.transaction.date.year)
+            self.calendar.select_day(self.transaction.date.day)
+
 
         # info bar to show warnings
         self.infobar = Gtk.InfoBar()
@@ -59,8 +68,14 @@ class BuyDialog:
         builder.connect_signals(handlers)
 
         self.date_ok = True
-        self.asset_ok = False
-        self.position = None
+        if self.transaction:
+            self.asset_ok = True
+            self.position = transaction.position
+            self.dlg.set_response_sensitive(Gtk.ResponseType.ACCEPT, True)
+        else:
+            self.asset_ok = False
+            self.position = None
+            self.dlg.set_response_sensitive(Gtk.ResponseType.ACCEPT, False)
 
         self.dlg.run()
 
@@ -94,21 +109,32 @@ class BuyDialog:
             self.dlg.set_response_sensitive(Gtk.ResponseType.ACCEPT, False)
 
     def on_response(self, widget, response):
-        self.asset_selector.stop_search()
+        if not self.transaction:
+            self.asset_selector.stop_search()
+            asset = self.asset_selector.get_asset()
+        else:
+            asset = self.transaction.position.asset
+
         if response == Gtk.ResponseType.ACCEPT:
             price = self.price_entry.get_value()
             year, month, day = self.calendar.get_date()
             date = datetime.date(year, month + 1, day)
             ta_costs = self.costs_entry.get_value()
             shares = self.shares_entry.get_value()
-            asset = self.asset_selector.get_asset()
+
             if shares == 0.0:
                 return
-            self.position = position_controller.new_portfolio_position(price=price, date=date, shares=shares, portfolio=self.pf, asset=asset)
-            ta = asset_controller.new_buy_transaction(date=date, quantity=shares, price=price, cost=ta_costs, position=self.position)
-            #FIXME avoid pubsub
-            pubsub.publish('container.position.added', self.pf, self.position)
-            pubsub.publish('transaction.added', ta)
+            if self.transaction:
+                self.position.price = self.transaction.price = price
+                self.position.date = self.transaction.date = date
+                self.position.shares = self.transaction.quantity = shares
+                self.transaction.cost = ta_costs
+            else:
+                self.position = position_controller.new_portfolio_position(price=price, date=date, shares=shares, portfolio=self.pf, asset=asset)
+                ta = asset_controller.new_buy_transaction(date=date, quantity=shares, price=price, cost=ta_costs, position=self.position)
+                #FIXME avoid pubsub
+                pubsub.publish('container.position.added', self.pf, self.position)
+                pubsub.publish('transaction.added', ta)
         self.dlg.destroy()
 
 
@@ -493,7 +519,7 @@ class StockSelector(Gtk.VBox):
         cell.props.wrap_mode = Gtk.WrapMode.WORD
         self.result_tree.create_column('ISIN', 3)
         self.result_tree.create_column(_('Currency'), 4)
-        self.result_tree.create_icon_column(_('Type'), 5, size=Gtk.IconSize.DND)
+        self.result_tree.create_column(_('Type'), 5)
         self.set_size_request(self.WIDTH, self.HEIGHT)
         sw.add(self.result_tree)
         self.pack_end(sw, True , True, 0)
@@ -541,17 +567,13 @@ class StockSelector(Gtk.VBox):
         asset_controller.datasource_manager.stop_search()
 
     def insert_item(self, asset, icon):
-        #FIXME bond icon
-        icons = ['fund', 'stock', 'etf', 'stock']
         self.result_tree.get_model().append(None, [
                                        asset,
                                        icon,
                                        asset.name,
                                        asset.isin,
                                        asset.currency,
-                                       #FIXME icons
-                                       #icons[asset.type],
-                                       None
+                                       asset.type,
                                        ])
 
 
