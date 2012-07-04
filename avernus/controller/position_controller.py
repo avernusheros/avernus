@@ -39,6 +39,12 @@ class MetaPosition():
             for ta in pos.transactions:
                 yield ta
 
+    @property
+    def dividends(self):
+        for pos in self.positions:
+            for div in pos.dividends:
+                yield div
+
 
 
 def new_watchlist_position(price=0.0, date=datetime.datetime.now(), watchlist=None, asset=None):
@@ -81,6 +87,11 @@ def get_gain(position):
         percent = absolute * 100 / (position.price * position.quantity)
     return absolute, percent
 
+def get_gain_with_dividends(position):
+    absolute = get_gain(position)[0]
+    absolute += sum([asset_controller.get_total_for_dividend(div) for div in position.dividends])
+    percent = absolute * 100 / (position.price * position.quantity)
+    return absolute, percent
 
 def get_quantity_at_date(position, t):
     if t < position.date:

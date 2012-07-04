@@ -110,7 +110,6 @@ class MainTree(gui_utils.Tree):
     def _load_items(self):
         portfolios = portfolio_controller.get_all_portfolio()
         if len(portfolios) > 1:
-            pass
             all_pf = portfolio_controller.AllPortfolio()
             all_pf.name = "<i>%s</i>" % (_('All'),)
             self.insert_portfolio(all_pf)

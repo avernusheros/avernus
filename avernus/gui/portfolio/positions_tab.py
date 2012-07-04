@@ -60,7 +60,9 @@ class PositionsTree(Tree):
          'gain_icon':11,
          'change_percent':12,
          'type': 13,
-         'pf_percent': 14
+         'pf_percent': 14,
+         'gain_div': 15,
+         'gain_div_percent': 16,
           }
 
     def __init__(self, container, actiongroup):
@@ -195,7 +197,7 @@ class PortfolioPositionsTree(PositionsTree):
             action.set_accel_group(accelgroup)
 
     def _init_widgets(self):
-        self.model = Gtk.TreeStore(object, str, float, float, float, float, str, float, float, float, float, str, float, str, float)
+        self.model = Gtk.TreeStore(object, str, float, float, float, float, str, float, float, float, float, str, float, str, float, float, float)
         self.set_model(self.model)
 
         self.create_column('#', self.COLS['shares'])
@@ -211,6 +213,8 @@ class PortfolioPositionsTree(PositionsTree):
         self.create_column(_('Gain'), self.COLS['gain'], gui_utils.float_to_red_green_string_currency)
         self.create_icon_text_column('%', self.COLS['gain_icon'], self.COLS['gain_percent'], func2=gui_utils.float_to_red_green_string_percent)
         self.create_column(_('Today'), self.COLS['days_gain'], gui_utils.float_to_red_green_string_currency)
+        self.create_column(_('Gain incl. dividends'), self.COLS['gain_div'], gui_utils.float_to_red_green_string_currency)
+        self.create_column('%', self.COLS['gain_div_percent'], func=gui_utils.float_to_red_green_string_percent)
 
     def on_add(self, widget):
         dl = dialogs.BuyDialog(self.container, parent=self.get_toplevel())
@@ -239,6 +243,7 @@ class PortfolioPositionsTree(PositionsTree):
     def _get_row(self, position, child=False):
         asset = position.asset
         gain = position_controller.get_gain(position)
+        gain_div = position_controller.get_gain_with_dividends(position)
         gain_icon = get_arrow_icon(gain[1])
         c_change = position_controller.get_current_change(position)
         icons = ['fund', 'stock', 'etf', 'bond']
@@ -256,7 +261,10 @@ class PortfolioPositionsTree(PositionsTree):
                gain_icon,
                float(c_change[1]),
                position.asset.type,
-               portfolio_controller.get_fraction(self.container, position)]
+               portfolio_controller.get_fraction(self.container, position),
+               gain_div[0],
+               float(gain_div[1]),
+               ]
         if child:
             ret[self.COLS['name']] = ""
 
