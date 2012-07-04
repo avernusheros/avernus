@@ -131,10 +131,10 @@ class MainTree(gui_utils.Tree):
     def _subscribe(self):
         self.connect('button-press-event', self.on_button_press_event)
         self.connect('cursor_changed', self.on_cursor_changed)
+        #FIXME
+        #listen(Account.balance, 'set', self.on_balance_changed, retval=True)
         self.subscriptions = (
                     ("container.edited", self.on_updated),
-                    ('account.updated', self.on_item_updated),
-                    ('container.updated', self.on_item_updated)
                 )
         for topic, callback in self.subscriptions:
             pubsub.subscribe(topic, callback)
@@ -172,8 +172,10 @@ class MainTree(gui_utils.Tree):
     def insert_watchlist(self, item):
         self.get_model().append(self.wl_iter, [item, 'watchlist', item.name, ''])
 
-    def insert_account(self, item):
-        self.get_model().append(self.accounts_iter, [item, 'account', item.name, gui_utils.get_currency_format_from_float(item.balance)])
+    def insert_account(self, account):
+        new_iter = self.get_model().append(self.accounts_iter, [account, 'account', account.name, gui_utils.get_currency_format_from_float(account.balance)])
+        #FIXME
+        #account.connect("balance_changed", new_iter)
 
     def insert_portfolio(self, item):
         self.get_model().append(self.pf_iter, [item, 'portfolio', item.name, gui_utils.get_currency_format_from_float(portfolio_controller.get_current_value(item))])
@@ -195,10 +197,8 @@ class MainTree(gui_utils.Tree):
                 self.selected_item = None
                 pubsub.publish('maintree.unselect')
 
-    def on_item_updated(self, item):
-        row = self.find_item(item)
-        if row:
-            row[3] = gui_utils.get_currency_format_from_float(item.amount)
+    def on_balance_changed(self, item, iterator):
+        self.get_model()[iterator][3] = gui_utils.get_currency_format_from_float(item.balance)
 
     def on_updated(self, item):
         obj, iter = self.selected_item
@@ -270,17 +270,16 @@ class MainTree(gui_utils.Tree):
         model = self.get_model()
 
         if obj.__class__.__name__ == 'Portfolio' or obj.name == 'Portfolios':
-            parent_iter = self.pf_iter
+            inserter = self.insert_portfolio
             cat_type = "portfolio"
             item = portfolio_controller.new_portfolio(_('new portfolio'))
         elif obj.__class__.__name__ == 'Watchlist' or obj.name == 'Watchlists':
-            parent_iter = self.wl_iter
+            inserter = self.insert_watchlist
             cat_type = "watchlist"
             item = portfolio_controller.new_watchlist(_('new watchlist'))
         elif obj.__class__.__name__ == 'Account' or obj.name == 'Accounts':
-            parent_iter = self.accounts_iter
+            inserter = self.insert_account
             cat_type = "account"
             item = account_controller.new_account(_('new account'))
-        iterator = model.append(parent_iter, [item, cat_type, item.name, ''])
-        self.expand_row(model.get_path(parent_iter), True)
+        iterator = inserter(item)
         self.set_cursor(model.get_path(iterator), start_editing=True)

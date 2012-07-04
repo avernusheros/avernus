@@ -37,9 +37,11 @@ def new_account_category(name, parent=None):
     session.add(cat)
     return cat
 
-def new_account_transaction(desc="", account=None, amount=0.0, date=datetime.date.today()):
-    transaction = AccountTransaction(description = desc, account = account, amount=amount, date=date)
+def new_account_transaction(desc="", account=None, amount=0.0, date=datetime.date.today(), category=None):
+    transaction = AccountTransaction(description = desc, account = account, amount=amount, date=date, category=category)
     session.add(transaction)
+    #adjust balance of account
+    account.balance += amount
     return transaction
 
 def account_has_transaction(account, trans):

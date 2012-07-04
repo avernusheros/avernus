@@ -1,6 +1,7 @@
-from avernus.objects import Base
 from sqlalchemy import Column, Integer, String, Float, Date, Boolean, ForeignKey
 from sqlalchemy.orm import relationship
+
+from avernus.objects import Base
 
 
 class Account(Base):

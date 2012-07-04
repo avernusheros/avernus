@@ -1,6 +1,12 @@
 #!/usr/bin/env python
 # -*- Mode: Python; coding: utf-8; indent-tabs-mode: nil; tab-width: 4 -*-
 
+if __name__ == '__main__':
+    import sys, os
+    path = os.path.abspath(os.path.join(os.path.dirname(__file__),".."))
+    sys.path.append(path)
+
+
 from datetime import datetime
 import codecs, csv, re
 from cStringIO import StringIO
@@ -18,11 +24,15 @@ class TempTransaction(object):
 
     def create(self, account):
         if self.b_import:
-            ta = account_controller.new_account_transaction(self.description)
-            ta.amount = self.amount
-            ta.date = self.date
-            ta.account = account
-            pubsub.publish('accountTransaction.created', ta)
+            ta = account_controller.new_account_transaction(
+                        desc=self.description,
+                        amount=self.amount,
+                        date=self.date,
+                        account=account,
+                        category=self.category)
+
+    def __repr__(self):
+        return "%s %.2f" % (self.date, self.amount)
 
 
 class CsvImporter:
@@ -35,29 +45,21 @@ class CsvImporter:
         profile = {}
         #csv dialect
         csvdata = StringIO(open(filename, 'rb').read())
-        profile['dialect'] = csv.Sniffer().sniff(csvdata.read(2048), delimiters=';,')
-        #profile['dialect'].quoting = csv.QUOTE_NONE
+        delimiter = self._guess_delimiter(csvdata)
+        profile['dialect'] = csv.Sniffer().sniff(csvdata.read(2048), delimiters=delimiter)
         csvdata.seek(0)
         #encoding
         profile['encoding'] = chardet.detect(csvdata.read(2048))['encoding']
         csvdata.seek(0)
 
         #row length
-        t = [-1,-1,-1,-1]
         maxlength = 0
-        # determine the maximum row length
         for row in UnicodeReader(csvdata, profile['dialect'], profile['encoding']):
-            maxlength = max(maxlength, len(row))
+            current = len(row)
+            if current > maxlength:
+                maxlength = current
+        profile['row length'] = maxlength
         csvdata.seek(0)
-        for row in UnicodeReader(csvdata, profile['dialect'], profile['encoding']):
-            # only rows with the maximum row length are transactions
-            len_row = len(row)
-            if len_row != maxlength:
-                continue
-            t.append(len_row)
-            if t[-1] == t[-2] == t[-3] == t[-4]:
-                profile['row length'] = t[-1]
-                break
 
         #detect header
         csvdata.seek(0)
@@ -83,7 +85,7 @@ class CsvImporter:
                     if re.match('^[0-9]+[\.\-]+[0-9]*[\.\-][0-9]+$', col ) is not None:
                         profile['date column'] = col_count
                         profile['date format'] = self._detect_date_format(col)
-                    elif re.match('^-?[0-9]+[\.\,]+[0-9]*[\.\,]?[0-9]*$', col) is not None:
+                    elif re.match('^[-+]?[0-9]+[\.\,]+[0-9]*[\.\,]?[0-9]*$', col) is not None:
                         profile['amount column'] = col_count
                         for s in reversed(col):
                             if s == '.':
@@ -109,6 +111,22 @@ class CsvImporter:
                 if complete:
                     break
         return profile
+
+    def _guess_delimiter(self, csvdata, candidates=[',',';','\t']):
+        last = None
+        count = 0
+        for row in csvdata:
+            for can in candidates:
+                temp = row.count(can)
+                if temp>count:
+                    count = temp
+                    last = can
+                elif temp==count:
+                    if last==can:
+                        return can
+                    else:
+                        last = None
+        return None
 
     def _has_header(self, csvdata, profile):
         """
@@ -304,3 +322,11 @@ class UTF8Recoder:
 
     def next(self):
         return self.reader.next().encode('utf-8')
+
+
+if __name__ == '__main__':
+    csvi = CsvImporter()
+    filename = sys.argv[1]
+    csvi.load_transactions_from_csv(filename)
+    for res in csvi.results:
+        print res

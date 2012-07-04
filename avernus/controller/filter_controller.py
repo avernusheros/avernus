@@ -13,21 +13,26 @@ def create(rule, category, priority=10, active=False):
     result = CategoryFilter(rule=rule, category=category, active=active, priority=priority)
     session.add(result)
     #update rule list
-    #rules = get_all_active_by_priority()
+    if result.active:
+        global rules
+        rules.append(result)
     return result
 
 def get_all_rules():
     return session.query(CategoryFilter).all()
 
 def get_all_active_by_priority():
-    return Session().query(CategoryFilter).filter_by(active=True).order_by(CategoryFilter.priority).all()
+    global rules
+    if not rules:
+        rules = Session().query(CategoryFilter).filter_by(active=True).order_by(CategoryFilter.priority).all()
+    return rules
 
 def match_transaction(rule, transaction):
     #print rule.rule, transaction.description
     return rule.rule in transaction.description
 
 def get_category(transaction):
-    for rule in rules:
+    for rule in get_all_active_by_priority():
         #print "Probing rule ", rule, transaction.description
         if match_transaction(rule, transaction):
             return rule.category
@@ -54,4 +59,4 @@ def run_auto_assignments(*args):
 
 config = avernusConfig()
 
-rules = get_all_active_by_priority()
+rules = None
