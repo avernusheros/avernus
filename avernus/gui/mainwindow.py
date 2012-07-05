@@ -231,8 +231,10 @@ class MainWindow(Gtk.Window):
         ExportDialog(parent=self)
 
     def on_do_category_assignments(self, *args):
-        threads.GeneratorTask(filter_controller.run_auto_assignments).start()
-        #filterController.run_auto_assignments()
+        #FIXME the threaded version does not work
+        #threads.GeneratorTask(filter_controller.run_auto_assignments).start()
+        for foo in filter_controller.run_auto_assignments():
+            pass
 
     def on_historical(self, *args):
         def finished_cb():

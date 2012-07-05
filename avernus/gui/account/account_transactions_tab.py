@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from avernus import config, pubsub
+from avernus import config
 from avernus.config import avernusConfig
 from avernus.gui import gui_utils, common_dialogs, page, charts
 from avernus.gui.portfolio import dialogs
@@ -323,7 +323,6 @@ class TransactionsTree(gui_utils.Tree):
         self.connect('button_press_event', self.on_button_press)
         self.connect('key_press_event', self.on_key_press)
         search_entry.connect('changed', self.on_search_entry_changed)
-        pubsub.subscribe('accountTransaction.updated', self.on_transaction_updated)
         self.single_category = None
         self.reset_filter_dates()
         self.columns_autosize()
@@ -389,14 +388,6 @@ class TransactionsTree(gui_utils.Tree):
                 return row
         return None
 
-    def on_transaction_updated(self, transaction):
-        if transaction.account == self.account:
-            row = self.find_transaction(transaction)
-            if row:
-                child_iter = self._get_child_iter(row.iter)
-                self.model.remove(child_iter)
-                self.insert_transaction(transaction)
-
     def get_item_to_insert(self, ta):
         if ta.category:
             cat = ta.category.name
@@ -441,6 +432,10 @@ class TransactionsTree(gui_utils.Tree):
         b_change, transaction = dlg.start()
         if b_change:
             self.account.balance = self.account.balance - old_amount + transaction.amount
+            child_iter = self._get_child_iter(iterator)
+            self.model.remove(child_iter)
+            self.insert_transaction(transaction)
+
 
     def on_dividend(self, widget=None, data=None):
         trans, iterator = self._get_selected_transaction()

@@ -22,17 +22,14 @@ def get_all_rules():
     return session.query(CategoryFilter).all()
 
 def get_all_active_by_priority():
-    global rules
-    if not rules:
-        rules = Session().query(CategoryFilter).filter_by(active=True).order_by(CategoryFilter.priority).all()
-    return rules
+    return Session().query(CategoryFilter).filter_by(active=True).order_by(CategoryFilter.priority).all()
 
 def match_transaction(rule, transaction):
     #print rule.rule, transaction.description
     return rule.rule in transaction.description
 
 def get_category(transaction):
-    for rule in get_all_active_by_priority():
+    for rule in rules:
         #print "Probing rule ", rule, transaction.description
         if match_transaction(rule, transaction):
             return rule.category
@@ -43,20 +40,18 @@ def run_auto_assignments(*args):
         b_include_categorized = True
     else:
         b_include_categorized = False
+    global rules
+    rules = get_all_active_by_priority()
     transactions = account_controller.get_all_transactions()
     #print "Size: ", len(transactions)
     for transaction in transactions:
         if b_include_categorized or transaction.category is None:
             cat = get_category(transaction)
-            msg = "Category Auto Assignment" + str(transaction) + ": "
             if cat != transaction.category:
                 transaction.category = get_category(transaction)
-                msg += "Change to " + str(transaction.category)
-            else:
-                msg += "No Change."
-            logger.debug(msg)
+                logger.debug("Category assignment %s -> %s" % (transaction, cat))
             yield transaction
 
 config = avernusConfig()
 
-rules = None
+rules = get_all_active_by_priority()

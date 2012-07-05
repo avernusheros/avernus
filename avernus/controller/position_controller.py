@@ -135,7 +135,6 @@ def get_value_at_daterange(portfolio, asset, days):
             else:
                 yield 0
 
-
 def get_current_value(position):
     return position.quantity * position.asset.price
 
