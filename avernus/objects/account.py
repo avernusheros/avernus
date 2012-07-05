@@ -4,20 +4,22 @@ from sqlalchemy.orm import relationship
 from avernus.objects import Base
 
 
+TYPES = {
+        0: _('Savings'),
+        1: _('Checking'),
+        2: _('Trading'),
+        }
+
+
 class Account(Base):
 
     __tablename__ = 'account'
 
     id = Column(Integer, primary_key=True)
     name = Column(String)
-    type = Column(Integer)
-    balance = Column(Float)
+    type = Column(Integer, default=1)
+    balance = Column(Float, default=0.0)
     transactions = relationship('AccountTransaction', backref='account', cascade="all,delete")
-
-    def __init__(self, name):
-        self.name = name
-        self.balance = 0.0
-        self.type = 1
 
     def __iter__(self):
         return self.transactions.__iter__()

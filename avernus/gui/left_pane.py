@@ -247,6 +247,16 @@ class MainTree(gui_utils.Tree):
         balance_entry = builder.get_object("balance_entry")
         adjustment = builder.get_object("adjustment1")
         adjustment.set_value(acc.balance)
+        self.combobox = builder.get_object("type_combobox")
+        liststore = Gtk.ListStore(int, str)
+        self.combobox.set_model(liststore)
+        cell = Gtk.CellRendererText()
+        self.combobox.pack_start(cell, True)
+        self.combobox.add_attribute(cell, 'text', 1)
+        for account_type, name in account_controller.yield_account_types():
+            liststore.append([account_type, name])
+        self.combobox.set_active(acc.type)
+
         dlg.add_buttons(Gtk.STOCK_CANCEL, Gtk.ResponseType.REJECT,
                       Gtk.STOCK_APPLY, Gtk.ResponseType.ACCEPT)
 
@@ -255,6 +265,7 @@ class MainTree(gui_utils.Tree):
                 acc.name = self.get_model()[row][2] = name_entry.get_text()
                 acc.balance = balance_entry.get_value()
                 self.get_model()[row][3] = gui_utils.get_currency_format_from_float(acc.balance)
+                acc.type = self.combobox.get_model()[self.combobox.get_active_iter()][0]
             dlg.destroy()
 
         dlg.connect('response', response_callback)

@@ -27,7 +27,7 @@ def get_all_transactions():
     return Session().query(AccountTransaction).all()
 
 def new_account(name):
-    account = Account(name)
+    account = Account(name=name)
     session.add(account)
     session.commit()
     return account
@@ -57,11 +57,15 @@ def account_lastday(account):
     if len(account.transactions) > 0:
         return max([t.date for t in account])
 
+def yield_account_types():
+    for type_id in sorted(TYPES.keys()):
+        yield type_id, TYPES[type_id]
+
 def get_all_categories():
     return session.query(AccountCategory).order_by(AccountCategory.name).all()
 
 def get_root_categories():
-    return session.query(AccountCategory).filter_by(parent=None).all()
+    return session.query(AccountCategory).filter_by(parent=None).order_by(AccountCategory.name).all()
 
 def get_parent_categories(category):
     ret = []
