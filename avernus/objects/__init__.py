@@ -1,11 +1,15 @@
 from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.ext.declarative import declarative_base, DeclarativeMeta
 from sqlalchemy.orm import sessionmaker, scoped_session
 
 import time
 import shutil
 import logging
 import os
+from gi.repository import GObject
+from gi.repository.GObject import GObjectMeta
+
+
 
 logger = logging.getLogger(__name__)
 
@@ -13,8 +17,20 @@ logger = logging.getLogger(__name__)
 # current version of our model
 version = 12
 
+class DeclarativeGObjectMeta(DeclarativeMeta, GObjectMeta):
+    """Metaclass for Declarative and GObject subclasses."""
+    pass
+
+class SQLBase(object):
+    """Base class for all SQLAlchemy classes."""
+    pass
+    #id = Column(Integer, primary_key=True)
+
 # base for the objects
-Base = declarative_base()
+#Base = declarative_base(cls=GObjectMeta)
+Base = declarative_base(cls=SQLBase, metaclass=DeclarativeGObjectMeta)
+
+
 
 
 from account import *

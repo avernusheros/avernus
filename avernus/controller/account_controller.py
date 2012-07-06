@@ -2,11 +2,21 @@ from avernus.config import avernusConfig
 from avernus.objects import session, Session
 from avernus.objects.account import *
 from sqlalchemy import or_
+
+from gi.repository import GObject
 import datetime
 
 
 #FIXME decide where to put this object
-class AllAccount():
+class AllAccount(GObject.GObject):
+
+    __gsignals__ = {
+        'balance_changed': (GObject.SIGNAL_RUN_LAST, None,
+                      (float,))
+    }
+
+    def __init__(self):
+        GObject.GObject.__init__(self)
 
     def __iter__(self):
         return self.transactions.__iter__()

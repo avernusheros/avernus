@@ -3,6 +3,7 @@
 from gi.repository import Gtk
 from gi.repository import Gdk
 from gi.repository import Pango
+from gi.repository import GObject
 from avernus import pubsub
 from avernus import config
 from avernus.gui import gui_utils, progress_manager
@@ -130,8 +131,6 @@ class MainTree(gui_utils.Tree):
     def _subscribe(self):
         self.connect('button-press-event', self.on_button_press_event)
         self.connect('cursor_changed', self.on_cursor_changed)
-        #FIXME
-        #listen(Account.balance, 'set', self.on_balance_changed, retval=True)
         self.subscriptions = (
                     ("container.edited", self.on_updated),
                 )
@@ -173,8 +172,7 @@ class MainTree(gui_utils.Tree):
 
     def insert_account(self, account):
         new_iter = self.get_model().append(self.accounts_iter, [account, 'account', account.name, gui_utils.get_currency_format_from_float(account.balance)])
-        #FIXME
-        #account.connect("balance_changed", new_iter)
+        account.connect("balance_changed", self.on_balance_changed, new_iter)
 
     def insert_portfolio(self, item):
         self.get_model().append(self.pf_iter, [item, 'portfolio', item.name, gui_utils.get_currency_format_from_float(portfolio_controller.get_current_value(item))])
@@ -196,8 +194,8 @@ class MainTree(gui_utils.Tree):
                 self.selected_item = None
                 pubsub.publish('maintree.unselect')
 
-    def on_balance_changed(self, item, iterator):
-        self.get_model()[iterator][3] = gui_utils.get_currency_format_from_float(item.balance)
+    def on_balance_changed(self, item, balance, iterator):
+        self.get_model()[iterator][3] = gui_utils.get_currency_format_from_float(balance)
 
     def on_updated(self, item):
         obj, iter = self.selected_item
