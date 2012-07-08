@@ -75,7 +75,8 @@ class DatasourceManager():
             if len(temp) > 0:
                 logger.debug("updating %s using %s" % (temp, source.name))
                 for ret in source.update_stocks(temp):
-                    yield ret
+                    ret.emit("updated")
+                    yield 1
 
     def update_asset(self, asset):
         self.update_assets([asset])

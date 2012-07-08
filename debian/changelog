@@ -1,0 +1,29 @@
+avernus (0.9) unstable; urgency=low
+
+  * port database to sqlalchemy
+  * database migrations
+  * started to use glade 
+  * remove pubsub
+  * added asset manager to edit the avernus asset db
+  * some bug fixes and ui improvements
+
+ -- Wolfgang Steitz <wsteitz@gmail.com>  Tue, 18 May 2011 22:06:47 +0200
+
+avernus (0.8) maverick; urgency=low
+
+  * switch to gobject introspection
+  * switch to gtk3
+  * manual input of quotations
+  * invested capital over time chart
+  * collapse accout charts
+  * resolved (some) threading issues
+  * lots of fixes and gui improvements
+
+ -- Wolfgang Steitz <wolfgang@latitude>  Tue, 01 May 2012 18:09:34 +0200
+
+avernus (0.7) maverick; urgency=low
+
+  * new version.
+
+ -- Wolfgang Steitz <wsteitz@gmail.com>  Tue, 18 May 2011 22:06:47 +0200
+

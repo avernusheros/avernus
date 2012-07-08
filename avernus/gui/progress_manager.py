@@ -1,6 +1,5 @@
 from gi.repository import Gtk
 from gi.repository import GObject
-from avernus import pubsub
 
 
 class ProgressMonitor(Gtk.Frame):
@@ -25,7 +24,6 @@ class ProgressMonitor(Gtk.Frame):
         GObject.timeout_add(100, self.progress_update_pulse)
 
     def stop(self, *e):
-        pubsub.publish("progress.cancel", self.id)
         remove_monitor(self.id)
 
     def _setup_widgets(self):

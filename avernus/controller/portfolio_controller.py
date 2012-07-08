@@ -2,13 +2,18 @@ from avernus.objects.container import Portfolio, Watchlist, Benchmark
 from avernus.controller import position_controller, asset_controller
 from avernus.objects import session, Session
 from avernus.controller.object_controller import delete_object
+from gi.repository import GObject
 from . import dsm
 
 import datetime
 
 
-#FIXME find a good place to place this class
-class AllPortfolio():
+class AllPortfolio(GObject.GObject):
+
+    __gsignals__ = {
+        'position_added': (GObject.SIGNAL_RUN_LAST, None,
+                      (object,))
+    }
 
     def __iter__(self):
         return self.positions.__iter__()

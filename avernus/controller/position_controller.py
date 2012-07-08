@@ -5,7 +5,6 @@ from avernus.controller import asset_controller
 import datetime
 
 
-#FIXME find a good place for this type of objects that do not exist in our db
 class MetaPosition():
 
     def __init__(self, position):
@@ -53,6 +52,7 @@ def new_watchlist_position(price=0.0, date=datetime.datetime.now(), watchlist=No
                                  watchlist = watchlist,
                                  asset = asset)
     session.add(position)
+    watchlist.emit("position_added", position)
     return position
 
 def new_portfolio_position(price=0.0, date=datetime.datetime.now(), shares=1.0, portfolio=None, asset=None, comment=""):
@@ -63,6 +63,7 @@ def new_portfolio_position(price=0.0, date=datetime.datetime.now(), shares=1.0, 
                                  asset = asset,
                                  comment="")
     session.add(position)
+    portfolio.emit("position_added", position)
     return position
 
 

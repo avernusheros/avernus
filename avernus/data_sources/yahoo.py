@@ -77,7 +77,7 @@ class DataSource():
                     stocks[current_stock].date = new_date
                     stocks[current_stock].change = float(row[3])
                     stocks[current_stock].exchange = row[4]
-            yield 1
+            yield stocks[current_stock]
 
     def get_info(self, symbol):
         #name, isin, exchange, currency

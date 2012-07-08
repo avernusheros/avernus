@@ -13,7 +13,6 @@ from cStringIO import StringIO
 import chardet
 
 from avernus.controller import filter_controller, account_controller
-from avernus import pubsub
 
 
 FORMATS = ['%Y-%m-%d',
@@ -24,7 +23,7 @@ class TempTransaction(object):
 
     def create(self, account):
         if self.b_import:
-            ta = account_controller.new_account_transaction(
+            account_controller.new_account_transaction(
                         desc=self.description,
                         amount=self.amount,
                         date=self.date,

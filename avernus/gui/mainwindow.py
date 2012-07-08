@@ -1,7 +1,6 @@
 #!/usr/bin/env python
-from avernus import pubsub, config
+from avernus import config
 from avernus.controller import filter_controller
-from avernus.controller import portfolio_controller
 from avernus.controller import asset_controller
 from avernus.gui import progress_manager, threads
 from avernus.gui.account.account_transactions_tab import AccountTransactionTab
@@ -21,7 +20,6 @@ from gi.repository import Gtk
 from gi.repository import Gdk
 import sys
 
-#FIXME remove this hack
 reload(sys)
 sys.setdefaultencoding("utf-8")
 
@@ -104,13 +102,14 @@ class MainWindow(Gtk.Window):
         self.hpaned = Gtk.HPaned()
         vbox.pack_start(self.hpaned, True, True, 0)
 
-        self.hpaned.pack1(MainTreeBox())
+        sidebar = MainTreeBox()
+        sidebar.main_tree.connect("unselect", self.on_maintree_unselect)
+        sidebar.main_tree.connect("select", self.on_maintree_select)
+        self.hpaned.pack1(sidebar)
 
         self.connect("destroy", self.on_destroy)
         self.connect('size_allocate', self.on_size_allocate)
         self.connect('window-state-event', self.on_window_state_event)
-        pubsub.subscribe('maintree.select', self.on_maintree_select)
-        pubsub.subscribe('maintree.unselect', self.on_maintree_unselect)
 
         self.pages = {}
         self.pages['Portfolio'] = PortfolioNotebook
@@ -193,7 +192,7 @@ class MainWindow(Gtk.Window):
         threads.terminate_all()
         Gtk.main_quit()
 
-    def on_maintree_select(self, item):
+    def on_maintree_select(self, caller=None, item=None):
         self.on_maintree_unselect()
         page = None
         if item.__class__.__name__ == 'Category':
@@ -206,7 +205,7 @@ class MainWindow(Gtk.Window):
         if page is not None:
             self.hpaned.pack2(self.pages[page](item))
 
-    def on_maintree_unselect(self):
+    def on_maintree_unselect(self, caller=None):
         page = self.hpaned.get_child2()
         if page:
             self.hpaned.remove(page)

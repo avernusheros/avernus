@@ -5,15 +5,17 @@ from avernus.gui import gui_utils, page
 from avernus.controller import portfolio_controller
 
 
-class ClosedPositionsTab(Gtk.ScrolledWindow, page.Page):
+class ClosedPositionsTab(page.Page):
 
     def __init__(self, portfolio):
-        Gtk.ScrolledWindow.__init__(self)
+        page.Page.__init__(self)
+        sw = Gtk.ScrolledWindow()
+        self.add(sw)
         self.portfolio = portfolio
         self.closed_positions_tree = ClosedPositionsTree(portfolio)
-        self.set_property('hscrollbar-policy', Gtk.PolicyType.AUTOMATIC)
-        self.set_property('vscrollbar-policy', Gtk.PolicyType.AUTOMATIC)
-        self.add(self.closed_positions_tree)
+        sw.set_property('hscrollbar-policy', Gtk.PolicyType.AUTOMATIC)
+        sw.set_property('vscrollbar-policy', Gtk.PolicyType.AUTOMATIC)
+        sw.add(self.closed_positions_tree)
         self.show_all()
 
     def show(self):

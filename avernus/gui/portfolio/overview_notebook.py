@@ -1,6 +1,5 @@
 from gi.repository import Gtk
 from avernus.gui import gui_utils
-from avernus import pubsub
 from avernus.controller import portfolio_controller
 from avernus.controller import chart_controller
 from avernus.gui import charts
@@ -130,32 +129,18 @@ class PortfolioOverviewTree(gui_utils.Tree):
         self.create_column(_('%'), self.PERCENT, func=gui_utils.percent_format)
         self.create_column(_('Last update'), self.LAST_UPDATE, func=gui_utils.date_to_string)
         self.create_column(_('# positions'), self.COUNT)
-        col, cell = self.create_column(_('Change'), self.CHANGE, func=gui_utils.float_to_red_green_string)
-        col, cell = self.create_column(_('Change %'), self.CHANGE_PERCENT, func=gui_utils.float_to_red_green_string)
-        col, cell = self.create_column(unichr(8709) + ' TER', self.TER, func=gui_utils.float_format)
+        self.create_column(_('Change'), self.CHANGE, func=gui_utils.float_to_red_green_string)
+        self.create_column(_('Change %'), self.CHANGE_PERCENT, func=gui_utils.float_to_red_green_string)
+        self.create_column(unichr(8709) + ' TER', self.TER, func=gui_utils.float_format)
 
         self.set_rules_hint(True)
         self.load_items()
-        self.connect("destroy", self.on_destroy)
-        self.connect("row-activated", self.on_row_activated)
-        self.subscriptions = (
-            ('shortcut.update', self.on_update),
-        )
-        for topic, callback in self.subscriptions:
-            pubsub.subscribe(topic, callback)
+
 
         self.selected_item = None
 
     def on_update(self):
         self.container.update_positions()
-
-    def on_row_activated(self, treeview, path, view_column):
-        item = self.get_model()[path][0]
-        pubsub.publish('overview.item.selected', item)
-
-    def on_destroy(self, x):
-        for topic, callback in self.subscriptions:
-            pubsub.unsubscribe(topic, callback)
 
     def load_items(self):
         items = []

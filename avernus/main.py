@@ -127,10 +127,10 @@ def main():
         asset_controller.datasource_manager = dsm
         try:
             Gtk.main()
-        except Exception as e:
+        except:
             main_window.on_destroy()
             raise
-    except Exception as e:
+    except:
         print "crashed, abgekachelt ... !!"
         import traceback
         traceback.print_exc()

@@ -3,7 +3,6 @@
 from gi.repository import Gtk
 from gi.repository import Gdk
 import sys
-from avernus import pubsub
 from avernus.gui.portfolio.plot import ChartWindow
 from avernus.gui.portfolio import dialogs
 from avernus.gui.portfolio.position_dialog import PositionDialog
@@ -65,7 +64,8 @@ class PositionsTree(Tree):
          'gain_div_percent': 16,
           }
 
-    def __init__(self, container, actiongroup):
+    def __init__(self, container, actiongroup, parent):
+        self.parent_widget = parent
         self.container = container
         self.actiongroup = actiongroup
         Tree.__init__(self)
@@ -80,7 +80,6 @@ class PositionsTree(Tree):
     def _connect_signals(self):
         self.connect('button-press-event', self.on_button_press_event)
         self.connect('cursor_changed', self.on_cursor_changed)
-        pubsub.subscribe('asset.updated', self.on_assets_updated)
 
     def on_button_press_event(self, widget, event):
         if event.type == Gdk.EventType._2BUTTON_PRESS:
@@ -122,6 +121,8 @@ class PositionsTree(Tree):
     def on_update_positions(self, *args):
         def finished_cb():
             progress_manager.remove_monitor(555)
+            self.recalculate_portfolio_fractions()
+            self.parent_widget.update_page()
         m = progress_manager.add_monitor(555, _('updating assets...'), Gtk.STOCK_REFRESH)
         threads.GeneratorTask(portfolio_controller.update_positions, m.progress_update, complete_callback=finished_cb, args=(self.container)).start()
         #for foo in portfolio_controller.update_positions(self.container):
@@ -180,8 +181,8 @@ class PositionsTree(Tree):
 
 class PortfolioPositionsTree(PositionsTree):
 
-    def __init__(self, portfolio, actiongroup):
-        PositionsTree.__init__(self, portfolio, actiongroup)
+    def __init__(self, portfolio, actiongroup, parent):
+        PositionsTree.__init__(self, portfolio, actiongroup, parent)
         self.actiongroup.add_actions([
                 ('add', Gtk.STOCK_ADD, 'add', None, _('Add new position'), self.on_add),
                 ('edit' , Gtk.STOCK_EDIT, 'edit', None, _('Edit selected position'), self.on_edit),
@@ -195,6 +196,7 @@ class PortfolioPositionsTree(PositionsTree):
         accelgroup = Gtk.AccelGroup()
         for action in self.actiongroup.list_actions():
             action.set_accel_group(accelgroup)
+        portfolio.connect('position_added', self.on_position_added)
 
     def _init_widgets(self):
         self.model = Gtk.TreeStore(object, str, float, float, float, float, str, float, float, float, float, str, float, str, float, float, float)
@@ -217,9 +219,7 @@ class PortfolioPositionsTree(PositionsTree):
         self.create_column('%', self.COLS['gain_div_percent'], func=gui_utils.float_to_red_green_string_percent)
 
     def on_add(self, widget):
-        dl = dialogs.BuyDialog(self.container, parent=self.get_toplevel())
-        if dl.position is not None:
-            self.on_position_added(dl.position)
+        dialogs.BuyDialog(self.container, parent=self.get_toplevel())
 
     def insert_position(self, position):
         if position.quantity != 0:
@@ -238,6 +238,7 @@ class PortfolioPositionsTree(PositionsTree):
                 self.update_position_after_edit(mp, tree_iter)
             else:
                 self.asset_cache[position.asset.id] = position
+                position.asset.connect("updated", self.on_asset_updated)
             self.model.append(tree_iter, self._get_row(position, tree_iter!=None))
 
     def _get_row(self, position, child=False):
@@ -246,7 +247,6 @@ class PortfolioPositionsTree(PositionsTree):
         gain_div = position_controller.get_gain_with_dividends(position)
         gain_icon = get_arrow_icon(gain[1])
         c_change = position_controller.get_current_change(position)
-        icons = ['fund', 'stock', 'etf', 'bond']
         ret = [position,
                get_name_string(asset),
                position.price,
@@ -297,30 +297,30 @@ class PortfolioPositionsTree(PositionsTree):
         else:
             dialogs.DividendDialog(pf=self.container, parent=self.get_toplevel())
 
-    def on_assets_updated(self, container):
-        if container.name == self.container.name:
-            for row in self.model:
-                item = row[0]
-                if isinstance(item, MetaPosition):
-                    item.recalculate()
-                gain, gain_percent = item.gain
-                row[self.COLS['name']] = get_name_string(item.asset)
-                row[self.COLS['last_price']] = item.asset.price
-                row[self.COLS['change']] = item.current_change[0]
-                row[self.COLS['change_percent']] = float(item.current_change[1])
-                row[self.COLS['gain']] = gain
-                row[self.COLS['gain_percent']] = gain_percent
-                row[self.COLS['gain_icon']] = get_arrow_icon(gain_percent)
-                row[self.COLS['days_gain']] = item.days_gain
-                row[self.COLS['mkt_value']] = item.cvalue
-                row[self.COLS['pf_percent']] = portfolio_controller.get_fraction(self.container, item)
+    def recalculate_portfolio_fractions(self):
+        for row in self.model:
+            item = row[0]
+            row[self.COLS['pf_percent']] = portfolio_controller.get_fraction(self.container, item)
 
-    def on_position_added(self, item):
+    def on_asset_updated(self, asset):
+        position = self.asset_cache[asset.id]
+        tree_iter = self.find_position(position).iter
+        if isinstance(position, MetaPosition):
+            position.recalculate()
+            self.model[tree_iter] = self._get_row(self.model[tree_iter][0])
+            child_iter = self.model.iter_children(tree_iter)
+            self.model[child_iter] = self._get_row(self.model[child_iter][0], True)
+            while self.model.iter_next(child_iter) != None:
+                child_iter = self.model.iter_next(child_iter)
+                self.model[child_iter] = self._get_row(self.model[child_iter][0], True)
+        else:
+            self.model[tree_iter] = self._get_row(position)
+
+    def on_position_added(self, portfolio, item):
         self.insert_position(item)
         #update portfolio fractions
         for row in self.model:
-            pos = row[self.COLS['obj']]
-            row[self.COLS['pf_percent']] = portfolio_controller.get_fraction(self.container, item)
+            row[self.COLS['pf_percent']] = portfolio_controller.get_fraction(portfolio, item)
 
     def on_unselect(self):
         for action in ['edit', 'sell', 'remove', 'chart']:
@@ -329,7 +329,6 @@ class PortfolioPositionsTree(PositionsTree):
     def on_select(self, obj):
         for action in ['edit', 'sell', 'remove', 'chart']:
             self.actiongroup.get_action(action).set_sensitive(True)
-
 
 
 class WatchlistPositionsTree(PositionsTree):
@@ -365,6 +364,7 @@ class WatchlistPositionsTree(PositionsTree):
         dl = dialogs.NewWatchlistPositionDialog(self.container, parent=self.get_toplevel())
         if dl.position is not None:
             self.insert_position(dl.position)
+            self.update_page()
 
     def insert_position(self, position):
         self.model.append(None, self._get_row(position))
@@ -374,7 +374,6 @@ class WatchlistPositionsTree(PositionsTree):
         gain = position_controller.get_gain(position)
         gain_icon = get_arrow_icon(gain[1])
         c_change = position_controller.get_current_change(position)
-        icons = ['fund', 'stock', 'etf', 'bond']
         ret = [position,
                get_name_string(asset),
                position.price,
@@ -427,10 +426,10 @@ class WatchlistPositionsTree(PositionsTree):
             self.actiongroup.get_action(action).set_sensitive(True)
 
 
-class WatchlistPositionsTab(Gtk.VBox, page.Page):
+class WatchlistPositionsTab(page.Page):
 
     def __init__(self, watchlist):
-        Gtk.VBox.__init__(self)
+        page.Page.__init__(self)
         self.watchlist = watchlist
         actiongroup = Gtk.ActionGroup('watchlist positions tab')
         positions_tree = WatchlistPositionsTree(watchlist, actiongroup)
@@ -451,10 +450,7 @@ class WatchlistPositionsTab(Gtk.VBox, page.Page):
         sw.add(positions_tree)
         self.pack_start(sw, True, True, 0)
 
-        pubsub.subscribe('position.created', self.update_page)
-        pubsub.subscribe('assets.updated', self.update_page)
-        pubsub.subscribe('container.updated', self.update_page)
-        pubsub.subscribe('container.position.added', self.update_page)
+        self.watchlist.connect('position_added', self.update_page)
         self.show_all()
 
     def show(self):
@@ -465,13 +461,14 @@ class WatchlistPositionsTab(Gtk.VBox, page.Page):
                 ('Last update', gui_utils.datetime_format(self.watchlist.last_update, False))]
 
 
-class PortfolioPositionsTab(Gtk.VBox, page.Page):
+class PortfolioPositionsTab(page.Page):
 
     def __init__(self, portfolio):
         Gtk.VBox.__init__(self)
+        page.Page.__init__(self)
         self.portfolio = portfolio
         actiongroup = Gtk.ActionGroup('portfolio positions tab')
-        positions_tree = PortfolioPositionsTree(portfolio, actiongroup)
+        positions_tree = PortfolioPositionsTree(portfolio, actiongroup, self)
         tb = Gtk.Toolbar()
 
         for action in ['add', 'sell', 'remove', 'edit', 'chart', '---', 'update']:
@@ -489,10 +486,7 @@ class PortfolioPositionsTab(Gtk.VBox, page.Page):
         sw.add(positions_tree)
         self.pack_start(sw, True, True, 0)
 
-        pubsub.subscribe('position.created', self.update_page)
-        pubsub.subscribe('assets.updated', self.update_page)
-        pubsub.subscribe('container.updated', self.update_page)
-        pubsub.subscribe('container.position.added', self.update_page)
+        portfolio.connect('position_added', self.update_page)
         self.show_all()
 
     def show(self):

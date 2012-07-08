@@ -7,11 +7,11 @@ from avernus.objects.container import Position, Container, PortfolioPosition
 from avernus.controller.object_controller import delete_object
 # Session is the class, session the normal instance
 from avernus.objects import Session, session, asset
-from avernus import pubsub
 from sqlalchemy import or_, desc
 import datetime
 
 datasource_manager = None
+
 
 def check_asset_existance(source, isin, currency):
     return 0 < session.query(Asset).filter_by(isin = isin,
@@ -46,11 +46,6 @@ def get_date_of_newest_quotation(asset):
     quotation = Session().query(Quotation).filter_by(asset=asset)
     if quotation.count() > 0:
         return quotation.order_by(desc(Quotation.date)).first().date
-
-def get_price_at_date(asset, t):
-    close = Session().query(Quotation.close).filter_by(asset=asset, date=t).first()
-    if close:
-        return close[0]
 
 def get_price_at_date(asset, t, min_t):
     close = Session().query(Quotation.close)\
@@ -142,7 +137,8 @@ def update_all(*args):
         yield count / itemcount
     for item in Session().query(Container).all():
         item.last_update = datetime.datetime.now()
-    pubsub.publish("stocks.updated", item)
+    #FIXME
+    #pubsub.publish("stocks.updated", item)
     Session().commit()
     yield 1
 

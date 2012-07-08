@@ -15,13 +15,13 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-class AccountTransactionTab(Gtk.VBox, page.Page):
+class AccountTransactionTab(page.Page):
 
     BORDER_WIDTH = 5
 
     def __init__(self, account):
 
-        Gtk.VBox.__init__(self)
+        page.Page.__init__(self)
         self.account = account
         self.config = config.avernusConfig()
         self.vpaned = Gtk.VPaned()

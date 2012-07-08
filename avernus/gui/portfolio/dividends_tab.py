@@ -9,10 +9,10 @@ from avernus.gui import gui_utils, page
 from avernus.gui.portfolio import dialogs
 
 
-class DividendsTab(Gtk.VBox, page.Page):
+class DividendsTab(page.Page):
 
     def __init__(self, portfolio):
-        Gtk.VBox.__init__(self)
+        page.Page.__init__(self)
         self.portfolio = portfolio
         self._init_widgets()
         self.show_all()

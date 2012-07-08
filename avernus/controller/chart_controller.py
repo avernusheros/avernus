@@ -421,14 +421,14 @@ class AllPortfolioValueOverTime(PortfolioChartController):
 
     def __init__(self, step):
         self.step = step
-        self.birthday = min([pf.birthday for pf in portfolio_controller.getAllPortfolio()])
+        self.birthday = min([pf.birthday for pf in portfolio_controller.get_all_portfolio()])
 
     def calculate_values(self, *args):
         self._calc_days()
         self.x_values = format_days(self.days, self.step)
         self.y_values = {}
         #FIXME do in parallel
-        for pf in portfolio_controller.getAllPortfolio():
+        for pf in portfolio_controller.get_all_portfolio():
             self.portfolio = pf
             for foo in self.calculate_valueovertime(pf.name):
                 yield foo
@@ -506,7 +506,7 @@ class PortfolioAttributeChartController():
         self.values = {}
 
     def calculate_values(self, *args):
-        portfolios = portfolio_controller.getAllPortfolio()
+        portfolios = portfolio_controller.get_all_portfolio()
         data = {}
         for pf in portfolios:
             item = str(getattr(pf, self.attribute))

@@ -10,7 +10,6 @@ from gi.repository import GObject
 from gi.repository.GObject import GObjectMeta
 
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -24,12 +23,10 @@ class DeclarativeGObjectMeta(DeclarativeMeta, GObjectMeta):
 class SQLBase(object):
     """Base class for all SQLAlchemy classes."""
     pass
-    #id = Column(Integer, primary_key=True)
 
 # base for the objects
 #Base = declarative_base(cls=GObjectMeta)
 Base = declarative_base(cls=SQLBase, metaclass=DeclarativeGObjectMeta)
-
 
 
 
@@ -100,7 +97,6 @@ def set_version(version):
     m.version = version
     session.commit()
 
-
 def connect(create_sample_data=False):
     # connect to the database
     engine = create_engine("sqlite:///"+database#, echo=True
@@ -109,7 +105,7 @@ def connect(create_sample_data=False):
     # get a session
     global session
     global Session
-    Session = scoped_session(sessionmaker(bind=engine))
+    Session = scoped_session(sessionmaker(bind=engine, autoflush=True, autocommit=False))
     session = Session()
 
     # check if already existing

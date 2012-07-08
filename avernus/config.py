@@ -34,7 +34,7 @@ def get_data_path():
     else:
         raise project_path_not_found, abs_data_path
 
-config_path = os.path.join( glib.get_user_config_dir(), 'avernus')
+config_path = os.path.join(glib.get_user_config_dir(), 'avernus')
 timezone = 'CET'
 
 instance = None

@@ -4,9 +4,9 @@ from gi.repository import Gtk
 from gi.repository import Gdk
 from gi.repository import Pango
 from gi.repository import GObject
-from avernus import pubsub
 from avernus import config
 from avernus.gui import gui_utils, progress_manager
+from avernus.gui.page import Page
 from avernus.controller import account_controller
 from avernus.controller import object_controller
 from avernus.controller import portfolio_controller
@@ -23,14 +23,16 @@ class MainTreeBox(Gtk.VBox):
     def __init__(self):
         super(Gtk.VBox, self).__init__()
 
-        main_tree = MainTree()
-        self.pack_start(main_tree, True, True, 0)
+        self.main_tree = MainTree()
+        self.pack_start(self.main_tree, True, True, 0)
 
         vbox = Gtk.VBox()
         self.pack_start(vbox, False, False, 0)
         progress_manager.box = vbox
 
-        self.pack_start(InfoBox(), False, False, 0)
+        info_box = InfoBox()
+        self.main_tree.connect('select', info_box.on_maintree_select)
+        self.pack_start(info_box, False, False, 0)
 
 
 class InfoBox(Gtk.Table):
@@ -42,9 +44,7 @@ class InfoBox(Gtk.Table):
         self.set_col_spacings(6)
         self.set_homogeneous(False)
         self.set_border_width(6)
-
-        pubsub.subscribe('update_page', self.on_update_page)
-        pubsub.subscribe('maintree.select', self.on_maintree_select)
+        GObject.add_emission_hook(Page, "update", self.on_update_page)
 
     def add_line(self, label_text, info_text):
         if not isinstance(info_text, str):
@@ -72,17 +72,25 @@ class InfoBox(Gtk.Table):
             self.remove(child)
         self.line_count = 0
 
-    def on_update_page(self, page):
+    def on_update_page(self, page, initiator):
         self.clear()
         for label, info in page.get_info():
             self.add_line(label, info)
         self.show_all()
+        # returning False removes the hook
+        return True
 
-    def on_maintree_select(self, obj):
+    def on_maintree_select(self, *args):
         self.clear()
 
 
-class MainTree(gui_utils.Tree):
+class MainTree(gui_utils.Tree, GObject.GObject):
+
+    __gsignals__ = {
+        'select': (GObject.SIGNAL_RUN_FIRST, None,
+                      (object,)),
+        'unselect': (GObject.SIGNAL_RUN_FIRST, None, ())
+    }
 
     def __init__(self):
         super(gui_utils.Tree, self).__init__()
@@ -131,11 +139,6 @@ class MainTree(gui_utils.Tree):
     def _subscribe(self):
         self.connect('button-press-event', self.on_button_press_event)
         self.connect('cursor_changed', self.on_cursor_changed)
-        self.subscriptions = (
-                    ("container.edited", self.on_updated),
-                )
-        for topic, callback in self.subscriptions:
-            pubsub.subscribe(topic, callback)
 
     def _init_widgets(self):
         #object, icon, name
@@ -175,7 +178,8 @@ class MainTree(gui_utils.Tree):
         account.connect("balance_changed", self.on_balance_changed, new_iter)
 
     def insert_portfolio(self, item):
-        self.get_model().append(self.pf_iter, [item, 'portfolio', item.name, gui_utils.get_currency_format_from_float(portfolio_controller.get_current_value(item))])
+        new_iter = self.get_model().append(self.pf_iter, [item, 'portfolio', item.name, gui_utils.get_currency_format_from_float(portfolio_controller.get_current_value(item))])
+        item.connect("position_added", self.on_container_value_changed, new_iter)
 
     def on_remove(self, widget=None, data=None):
         if self.selected_item is None:
@@ -192,10 +196,13 @@ class MainTree(gui_utils.Tree):
                 object_controller.delete_object(obj)
                 self.get_model().remove(iterator)
                 self.selected_item = None
-                pubsub.publish('maintree.unselect')
+                self.emit("unselect")
 
     def on_balance_changed(self, item, balance, iterator):
         self.get_model()[iterator][3] = gui_utils.get_currency_format_from_float(balance)
+
+    def on_container_value_changed(self, item, new_position, iterator):
+        self.get_model()[iterator][3] = gui_utils.get_currency_format_from_float(portfolio_controller.get_current_value(item))
 
     def on_updated(self, item):
         obj, iter = self.selected_item
@@ -216,10 +223,10 @@ class MainTree(gui_utils.Tree):
                 obj = treestore.get_value(selection_iter, 0)
                 if self.selected_item is None or self.selected_item[0] != obj:
                     self.selected_item = obj, selection_iter
-                    pubsub.publish('maintree.select', obj)
+                    self.emit("select", obj)
                 return
         self.selected_item = None
-        pubsub.publish('maintree.unselect')
+        self.emit("unselect")
 
     def on_edit(self, treeview=None, iter=None, path=None):
         if self.selected_item is None:

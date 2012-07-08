@@ -4,7 +4,6 @@ from avernus.config import avernusConfig
 from avernus.controller import account_controller
 import logging
 
-from avernus.objects import session
 
 logger = logging.getLogger(__name__)
 

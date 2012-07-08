@@ -1,9 +1,12 @@
 from avernus.objects import Base
 from sqlalchemy import Column, Integer, String, Float, Date, ForeignKey, DateTime
 from sqlalchemy.orm import relationship, backref
+from sqlalchemy import event
+from sqlalchemy.orm import reconstructor
+from gi.repository import GObject
 
 
-class Asset(Base):
+class Asset(Base, GObject.GObject):
     __tablename__ = 'asset'
 
     type = Column('type', String(20))
@@ -20,8 +23,23 @@ class Asset(Base):
     source = Column(String)
     change = Column(Float)
 
+    __gsignals__ = {
+        'updated': (GObject.SIGNAL_RUN_LAST, None, ())
+    }
+
+    def __init__(self, *args, **kwargs):
+        GObject.GObject.__init__(self)
+        Base.__init__(self, *args, **kwargs)
+
+    @reconstructor
+    def _init(self):
+        GObject.GObject.__init__(self)
+
     def __repr__(self):
         return self.name + " " + self.isin
+
+GObject.type_register(Asset)
+
 
 class Dividend(Base):
     __tablename__ = 'dividend'
@@ -82,6 +100,7 @@ class Stock(Asset):
     __tablename__ = 'stock'
     __mapper_args__ = {'polymorphic_identity': 'stock'}
     id = Column(Integer, ForeignKey('asset.id'), primary_key=True)
+
 
 
 class Transaction(Base):

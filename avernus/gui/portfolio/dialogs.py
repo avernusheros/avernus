@@ -2,10 +2,8 @@ from gi.repository import Gtk
 import locale
 import datetime
 
-from avernus import pubsub
 from avernus import config
 from avernus.gui import gui_utils
-from avernus.controller import portfolio_controller
 from avernus.controller import position_controller
 from avernus.controller import asset_controller
 from avernus.controller import dimensions_controller
@@ -132,9 +130,6 @@ class BuyDialog:
             else:
                 self.position = position_controller.new_portfolio_position(price=price, date=date, shares=shares, portfolio=self.pf, asset=asset)
                 ta = asset_controller.new_buy_transaction(date=date, quantity=shares, price=price, cost=ta_costs, position=self.position)
-                #FIXME avoid pubsub
-                pubsub.publish('container.position.added', self.pf, self.position)
-                pubsub.publish('transaction.added', ta)
         self.dlg.destroy()
 
 
@@ -176,7 +171,6 @@ class NewWatchlistPositionDialog(Gtk.Dialog):
             asset = self.asset_selector.get_asset()
             asset_controller.update_asset(asset)
             self.position = position_controller.new_watchlist_position(price=asset.price, date=asset.date, watchlist=self.wl, asset=asset)
-            pubsub.publish('container.position.added', self.wl, self.position)
 
 
 class PosSelector(Gtk.ComboBox):
@@ -666,7 +660,6 @@ class SellDialog(Gtk.Dialog):
                     return
                 self.pos.quantity -= shares
                 ta = asset_controller.new_sell_transaction(position=self.pos, date=date, quantity=shares, price=price, cost=ta_costs)
-                pubsub.publish('transaction.added', ta)
             else:
                 self.pos.price = self.transaction.price = price
                 self.pos.date = self.transaction.date = date

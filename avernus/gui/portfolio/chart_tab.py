@@ -10,24 +10,24 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-class ChartTab(Gtk.ScrolledWindow, page.Page):
+class ChartTab(page.Page):
 
     def __init__(self, pf):
-        Gtk.ScrolledWindow.__init__(self)
+        page.Page.__init__(self)
+        self.sw = Gtk.ScrolledWindow()
+        self.add(self.sw)
         self.pf = pf
-        self.set_property('hscrollbar-policy', Gtk.PolicyType.AUTOMATIC)
-        self.set_property('vscrollbar-policy', Gtk.PolicyType.AUTOMATIC)
+        self.sw.set_property('hscrollbar-policy', Gtk.PolicyType.AUTOMATIC)
+        self.sw.set_property('vscrollbar-policy', Gtk.PolicyType.AUTOMATIC)
         self.show_all()
 
     def show(self):
         self.update_page()
         if len(self.pf.positions) == 0:
-            self.add_with_viewport(Gtk.Label(label='\n%s\n%s\n\n' % (_('No data!'), _('Add positions to portfolio first.'))))
+            self.sw.add_with_viewport(Gtk.Label(label='\n%s\n%s\n\n' % (_('No data!'), _('Add positions to portfolio first.'))))
             self.show_all()
             return
-
-        width = self.get_allocation().width
-        self.clear()
+        width = self.sw.get_allocation().width
         table = Gtk.Table()
         y = 0
 
@@ -116,12 +116,8 @@ class ChartTab(Gtk.ScrolledWindow, page.Page):
         chart = charts.BarChart(controller, width)
         table.attach(chart, 0, 2, y + 4, y + 5)
 
-        self.add_with_viewport(table)
-        self.show_all()
-
-    def clear(self):
-        for child in self.get_children():
-            self.remove(child)
+        self.sw.add_with_viewport(table)
+        self.sw.show_all()
 
     def on_zoom_change(self, combobox):
         value = combobox.get_model()[combobox.get_active()][0]

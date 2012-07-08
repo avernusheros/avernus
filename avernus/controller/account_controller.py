@@ -1,13 +1,10 @@
-from avernus.config import avernusConfig
 from avernus.objects import session, Session
 from avernus.objects.account import *
 from sqlalchemy import or_
 
-from gi.repository import GObject
 import datetime
 
 
-#FIXME decide where to put this object
 class AllAccount(GObject.GObject):
 
     __gsignals__ = {
