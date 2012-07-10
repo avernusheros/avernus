@@ -1,0 +1,19 @@
+avernus 0.9:
+
+  * port database to sqlalchemy
+  * database migrations
+  * started to use glade 
+  * remove pubsub
+  * added asset manager to edit the avernus asset db
+  * some bug fixes and ui improvements
+
+avernus 0.8:
+
+  * switch to gobject introspection
+  * switch to gtk3
+  * manual input of quotations
+  * invested capital over time chart
+  * collapse accout charts
+  * resolved (some) threading issues
+  * lots of fixes and gui improvements
+

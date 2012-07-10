@@ -9,10 +9,11 @@ def to_twelve(db):
     conn = sqlite3.connect(db)
     c = conn.cursor()
     for row in c.execute('SELECT id, last_update from container').fetchall():
-        temp = row[1].split("-")
-        temp = map(int, temp)
-        temp = datetime.date(temp[0], temp[1], temp[2])
-        c.execute('UPDATE container SET last_update = ? WHERE id = ?', (datetime.datetime.combine(temp, datetime.time()), row[0]))
+        if row[1]:
+            temp = row[1].split("-")
+            temp = map(int, temp)
+            temp = datetime.date(temp[0], temp[1], temp[2])
+            c.execute('UPDATE container SET last_update = ? WHERE id = ?', (datetime.datetime.combine(temp, datetime.time()), row[0]))
     conn.commit()
     c.close()
 
