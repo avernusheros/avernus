@@ -2,7 +2,6 @@
 
 from avernus.gui import gui_utils, threads, common_dialogs
 from avernus.gui.portfolio import dialogs
-from avernus.controller import portfolio_controller
 from avernus.controller import asset_controller
 from avernus.controller import position_controller
 from avernus.controller.position_controller import MetaPosition

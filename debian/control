@@ -3,9 +3,10 @@ Section: python
 Priority: extra
 Build-Depends: debhelper (>= 8),
  debhelper (>= 6),
+ cdbs,
  python,
  python-distutils-extra (>= 2.10)
-Maintainer: avernus-heros <wsteitz@gmail.com>
+Maintainer: Wolfgang Steitz <wsteitz@gmail.com>
 Standards-Version: 3.8.3
 X-Python-Version: >= 2.7
 
@@ -14,5 +15,8 @@ Architecture: all
 Depends: ${misc:Depends},
  ${python:Depends},
  python-gobject,
+ python-beautifulsoup,
+ python-dateutil,
+ python-sqlalchemy
  python-chardet
 Description: A simple program to easily track your investment portfolios and banking accounts.

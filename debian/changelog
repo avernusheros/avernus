@@ -7,7 +7,7 @@ avernus (0.9) unstable; urgency=low
   * added asset manager to edit the avernus asset db
   * some bug fixes and ui improvements
 
- -- Wolfgang Steitz <wsteitz@gmail.com>  Tue, 18 May 2011 22:06:47 +0200
+ -- Wolfgang Steitz <wsteitz@gmail.com>  Tue, 10 July 2012 22:06:47 +0200
 
 avernus (0.8) maverick; urgency=low
 

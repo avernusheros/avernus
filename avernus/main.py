@@ -83,7 +83,7 @@ def init_icons():
     from avernus.gui.icons import IconManager
     icons = IconManager()
 
-    path = os.path.join(config.get_data_path(), 'images')
+    path = os.path.join(config.get_data_path(), 'icons/hicolor')
     iconNames = [
     'avernus', 'tags', 'tag', 'watchlists', 'watchlist', 'portfolio',
     'portfolios', 'index', 'indices', 'arrow_down', 'arrow_med_down',

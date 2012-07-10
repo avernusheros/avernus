@@ -36,7 +36,6 @@ class IconManager(object):
         self.icon_theme = Gtk.IconTheme.get_default()
         self.icon_factory = Gtk.IconFactory()
         self.icon_factory.add_default()
-        # TODO: Make svg actually recognized
         self._sizes = [16, 22, 24, 32, 48, 'scalable']
 
     def add_icon_name_from_directory(self, icon_name, directory):
@@ -44,12 +43,11 @@ class IconManager(object):
             Registers an icon name from files found in a directory
         """
         for size in self._sizes:
-            #print size
-            try: # WxH/icon_name.png and scalable/icon_name.svg
+            try: 
                 sizedir = '%dx%d' % (size, size)
             except TypeError:
                 sizedir = size
-            filepath = os.path.join(directory, sizedir, icon_name)
+            filepath = os.path.join(directory, sizedir, "apps", icon_name)
             files = glob.glob('%s.*' % filepath)
             try:
                 icon_size = size if size != 'scalable' else -1

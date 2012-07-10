@@ -39,12 +39,6 @@ timezone = 'CET'
 
 instance = None
 
-def get_ui_file(filename):
-    global data_path
-    if not data_path:
-        get_data_path()
-    return os.path.join(data_path, "ui", filename)
-
 def avernusConfig():
     global instance
     if not instance:
@@ -53,7 +47,7 @@ def avernusConfig():
 
 class AvernusConfig():
     def __init__(self):
-        parser = self.parser = ConfigParser.SafeConfigParser()
+        self.parser = ConfigParser.SafeConfigParser()
         self.filename = os.path.join(config_path, 'avernus.conf')
         if not os.path.exists(self.filename):
             self.create()

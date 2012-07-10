@@ -2,8 +2,7 @@ from gi.repository import Gtk
 import locale
 import datetime
 
-from avernus import config
-from avernus.gui import gui_utils
+from avernus.gui import gui_utils, get_ui_file
 from avernus.controller import position_controller
 from avernus.controller import asset_controller
 from avernus.controller import dimensions_controller
@@ -16,7 +15,7 @@ class BuyDialog:
         self.transaction = transaction
 
         builder = Gtk.Builder()
-        builder.add_from_file(config.get_ui_file("buy_dialog.glade"))
+        builder.add_from_file(get_ui_file("portfolio/buy_dialog.glade"))
 
         self.dlg = builder.get_object("dialog")
         self.shares_entry = builder.get_object("shares_entry")
@@ -659,7 +658,7 @@ class SellDialog(Gtk.Dialog):
                 if shares == 0.0:
                     return
                 self.pos.quantity -= shares
-                ta = asset_controller.new_sell_transaction(position=self.pos, date=date, quantity=shares, price=price, cost=ta_costs)
+                asset_controller.new_sell_transaction(position=self.pos, date=date, quantity=shares, price=price, cost=ta_costs)
             else:
                 self.pos.price = self.transaction.price = price
                 self.pos.date = self.transaction.date = date

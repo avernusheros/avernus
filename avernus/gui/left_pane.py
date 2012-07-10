@@ -4,7 +4,8 @@ from gi.repository import Gtk
 from gi.repository import Gdk
 from gi.repository import Pango
 from gi.repository import GObject
-from avernus import config
+
+from avernus.gui import get_ui_file
 from avernus.gui import gui_utils, progress_manager
 from avernus.gui.page import Page
 from avernus.controller import account_controller
@@ -105,7 +106,7 @@ class MainTree(gui_utils.Tree, GObject.GObject):
 
         self.uimanager = Gtk.UIManager()
         self.uimanager.insert_action_group(actiongroup)
-        self.uimanager.add_ui_from_file(config.get_ui_file("left_pane_popup.ui"))
+        self.uimanager.add_ui_from_file(get_ui_file("left_pane_popup.ui"))
         # Add the accelerator group to the toplevel window
         accelgroup = self.uimanager.get_accel_group()
         #FIXME add accelgroup to toplevel window for keyboard shortcuts
@@ -244,7 +245,7 @@ class MainTree(gui_utils.Tree, GObject.GObject):
 
     def edit_account(self, acc, row):
         builder = Gtk.Builder()
-        builder.add_from_file(config.get_ui_file("edit_account_dialog.glade"))
+        builder.add_from_file(get_ui_file("edit_account_dialog.glade"))
         dlg = builder.get_object("dialog")
         dlg.set_transient_for(self.get_toplevel())
         name_entry = builder.get_object("name_entry")
