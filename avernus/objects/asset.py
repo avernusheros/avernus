@@ -83,7 +83,7 @@ class Quotation(Base):
     close = Column(Float)
     volume = Column(Integer)
     asset_id = Column(Integer, ForeignKey('asset.id'))
-    asset = relationship('Asset', backref=backref('quotations', cascade="all,delete"))
+    asset = relationship('Asset', backref=backref('quotations', cascade="all,delete", order_by="Quotation.date"))
 
 
 class SourceInfo(Base):

@@ -4,6 +4,6 @@ Name=avernus Personal Finance
 Comment=avernus finance application
 Categories=GNOME;Office;
 Exec=avernus
-Icon=/usr/share/avernus/images/icon.png
+Icon=/usr/share/pixmaps/avernus.png
 Terminal=false
 Type=Application

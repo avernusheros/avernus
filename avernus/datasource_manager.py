@@ -91,7 +91,7 @@ class DatasourceManager():
             for qt in sources[stock.source].update_historical_prices(stock, start_date, end_date):
                 #qt : (stock, exchange, date, open, high, low, close, vol)
                 if qt is not None:
-                    yield asset_controller.new_quotation(stock=qt[0], exchange=qt[1], \
+                    yield asset_controller.new_quotation(asset=qt[0], exchange=qt[1], \
                             date=qt[2], open=qt[3], high=qt[4], \
                             low=qt[5], close=qt[6], vol=qt[7])
         #needed to run as generator thread

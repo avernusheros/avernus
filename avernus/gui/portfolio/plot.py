@@ -80,15 +80,15 @@ class ChartWindow(Gtk.Window):
                 self.vbox.pack_end(Gtk.Label(label='No historical data found!'), True, True, 0)
                 self.show_all()
             return
-        chart_controller = chart_controller.StockChartPlotController(data)
-        self.current_chart = charts.SimpleLineChart(chart_controller, 600, dots=0)
+        controller = chart_controller.StockChartPlotController(data)
+        self.current_chart = charts.SimpleLineChart(controller, 600, dots=0)
         self.vbox.pack_end(self.current_chart, True, True, 0)
 
-        change = chart_controller.y_values[-1] - chart_controller.y_values[0]
-        if chart_controller.y_values[0] == 0:
+        change = controller.y_values['close'][-1] - controller.y_values['close'][0]
+        if controller.y_values['close'][0] == 0:
             safeDiv = 1
         else:
-            safeDiv = chart_controller.y_values[0]
+            safeDiv = controller.y_values['close'][0]
         change_str = gui_utils.get_green_red_string(change, gui_utils.get_currency_format_from_float(change) + ' (' + str(round(change / safeDiv * 100, 2)) + '%)')
         self.change_label.set_markup(gui_utils.get_date_string(date2) + ' - ' + gui_utils.get_date_string(date1) + '     ' + change_str)
 

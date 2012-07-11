@@ -63,6 +63,11 @@ def get_sell_transactions(position):
 def get_source_info(source, ass=None):
     return Session.query(SourceInfo).filter_by(asset=ass, source=source).all()
 
+def get_quotations_for_asset(asset, start_date):
+    return Session.query(Quotation).filter(Quotation.asset==asset,\
+                                        Quotation.date>=start_date)\
+                                 .order_by(Quotation.date).all()
+
 def get_ter(ass):
     if isinstance(ass, asset.Fund):
         return ass.ter
@@ -102,8 +107,8 @@ def new_dividend(price=0.0, cost=0.0, date=datetime.date.today(), position=None)
     session.add(div)
     return div
 
-def new_quotation(stock, exchange, date, open, high, low, close, vol):
-    qu = Quotation(asset=stock,
+def new_quotation(asset, exchange, date, open, high, low, close, vol):
+    qu = Quotation(asset=asset,
                    exchange=exchange,
                    date=date,
                    open=open,
@@ -112,11 +117,10 @@ def new_quotation(stock, exchange, date, open, high, low, close, vol):
                    close=close,
                    volume=vol)
     # not needed, since already added to the session via cascade
-    #Session().add(qu)
+    #session.add(qu)
     return qu
 
 def new_source_info(source, asset, info):
-    print "new source info", source, asset, info
     si = SourceInfo(source = source, asset = asset, info = info)
     session.add(si)
     return si

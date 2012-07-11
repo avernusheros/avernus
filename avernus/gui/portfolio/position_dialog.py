@@ -361,7 +361,7 @@ class EditHistoricalQuotationsDialog(Gtk.Dialog):
         selection = self.tree.get_selection()
         model, selection_iter = selection.get_selected()
         if selection_iter:
-            model[selection_iter][0].delete()
+            asset_controller.delete_object(model[selection_iter][0])
             model.remove(selection_iter)
 
     def on_cell_edited(self, cellrenderertext, path, new_text):
