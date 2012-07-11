@@ -59,8 +59,8 @@ class DatasourceManager():
             new = True
             item['source'] = source.name
             asset = asset_controller.new_asset(**item)
-        if source_info is not None:
-            asset_controller.new_source_info(source=source.name, asset=asset, info=source_info)
+            if source_info is not None:
+                asset_controller.new_source_info(source=source.name, asset=asset, info=source_info)
         if new and self.search_callback:
             self.search_callback(asset, 'source')
 

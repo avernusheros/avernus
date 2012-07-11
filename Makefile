@@ -12,3 +12,6 @@ sdist:
 .PHONY: sdist
 
 
+ppa:
+	debuild -S
+	dput ppa:avernus-heros/ppa <source.changes> 

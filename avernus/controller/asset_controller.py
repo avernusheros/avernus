@@ -116,6 +116,7 @@ def new_quotation(stock, exchange, date, open, high, low, close, vol):
     return qu
 
 def new_source_info(source, asset, info):
+    print "new source info", source, asset, info
     si = SourceInfo(source = source, asset = asset, info = info)
     session.add(si)
     return si
