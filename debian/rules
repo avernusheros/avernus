@@ -8,5 +8,9 @@ include /usr/share/cdbs/1/class/python-distutils.mk
 DEB_INSTALL_CHANGELOGS_ALL := CHANGES
 DEB_PYTHON_INSTALL_ARGS_ALL +=--install-lib=/usr/share/avernus --install-scripts=/usr/share/avernus
 
+binary-install/avernus::
+	dh_icons -pavernus
+	dh_link /usr/share/avernus/avernus /usr/bin/avernus
+
 clean::
 	rm -rf build/

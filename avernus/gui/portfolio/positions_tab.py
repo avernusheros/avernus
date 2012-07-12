@@ -129,12 +129,14 @@ class PositionsTree(Tree):
         #    print foo
 
     def on_chart(self, widget, user_data=None):
-        ChartWindow(self.selected_item[0].asset)
+        if self.selected_item:
+            ChartWindow(self.selected_item[0].asset)
 
     def on_edit(self, widget, user_data=None):
-        position, iter = self.selected_item
-        PositionDialog(position, self.get_toplevel())
-        self.update_position_after_edit(position, iter)
+        if self.selected_item:
+            position, iter = self.selected_item
+            PositionDialog(position, self.get_toplevel())
+            self.update_position_after_edit(position, iter)
 
     def update_position_after_edit(self, pos, iter=None):
         if iter is None:
@@ -177,6 +179,12 @@ class PositionsTree(Tree):
                 if result: return result
             return None
         return search(self.model)
+
+    def recalculate_portfolio_fractions(self):
+        for row in self.model:
+            item = row[0]
+            row[self.COLS['pf_percent']] = portfolio_controller.get_fraction(self.container, item)
+
 
 
 class PortfolioPositionsTree(PositionsTree):
@@ -297,11 +305,6 @@ class PortfolioPositionsTree(PositionsTree):
         else:
             dialogs.DividendDialog(pf=self.container, parent=self.get_toplevel())
 
-    def recalculate_portfolio_fractions(self):
-        for row in self.model:
-            item = row[0]
-            row[self.COLS['pf_percent']] = portfolio_controller.get_fraction(self.container, item)
-
     def on_asset_updated(self, asset):
         position = self.asset_cache[asset.id]
         tree_iter = self.find_position(position).iter
@@ -333,8 +336,8 @@ class PortfolioPositionsTree(PositionsTree):
 
 class WatchlistPositionsTree(PositionsTree):
 
-    def __init__(self, watchlist, actiongroup):
-        PositionsTree.__init__(self, watchlist, actiongroup)
+    def __init__(self, watchlist, actiongroup, parent):
+        PositionsTree.__init__(self, watchlist, actiongroup, parent)
         self.actiongroup.add_actions([
                 ('add', Gtk.STOCK_ADD, 'add', None, _('Add new position'), self.on_add),
                 ('edit' , Gtk.STOCK_EDIT, 'edit', None, _('Edit selected position'), self.on_edit),
@@ -392,15 +395,16 @@ class WatchlistPositionsTree(PositionsTree):
         return ret
 
     def on_remove(self, widget, user_data=None):
-        position, iter = self.selected_item
-        dlg = Gtk.MessageDialog(None,
-             Gtk.DialogFlags.DESTROY_WITH_PARENT, Gtk.MessageType.QUESTION,
-                Gtk.ButtonsType.OK_CANCEL, _("Are you sure?"))
-        response = dlg.run()
-        dlg.destroy()
-        if response == Gtk.ResponseType.OK:
-            object_controller.delete_object(position)
-            self.model.remove(iter)
+        if self.selected_item:
+            position, iter = self.selected_item
+            dlg = Gtk.MessageDialog(None,
+                 Gtk.DialogFlags.DESTROY_WITH_PARENT, Gtk.MessageType.QUESTION,
+                    Gtk.ButtonsType.OK_CANCEL, _("Are you sure?"))
+            response = dlg.run()
+            dlg.destroy()
+            if response == Gtk.ResponseType.OK:
+                object_controller.delete_object(position)
+                self.model.remove(iter)
 
     def on_assets_updated(self, container):
         if container.name == self.container.name:
@@ -432,7 +436,7 @@ class WatchlistPositionsTab(page.Page):
         page.Page.__init__(self)
         self.watchlist = watchlist
         actiongroup = Gtk.ActionGroup('watchlist positions tab')
-        positions_tree = WatchlistPositionsTree(watchlist, actiongroup)
+        positions_tree = WatchlistPositionsTree(watchlist, actiongroup, self)
         tb = Gtk.Toolbar()
 
         for action in ['add', 'remove', 'edit', 'chart', '---', 'update']:

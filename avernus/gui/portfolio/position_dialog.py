@@ -5,6 +5,7 @@ from avernus.gui.portfolio import dialogs
 from avernus.controller import asset_controller
 from avernus.controller import position_controller
 from avernus.controller.position_controller import MetaPosition
+from avernus.objects.container import PortfolioPosition
 import datetime
 import logging
 from gi.repository import Gtk
@@ -31,11 +32,12 @@ class PositionDialog(Gtk.Dialog):
             self.is_meta = False
             self.position_table = EditPositionTable(position)
         self.quotation_table = QuotationTable(position.asset)
-        self.transactions_table = TransactionsTab(position)
+        if isinstance(position, PortfolioPosition):
+            transactions_table = TransactionsTab(position)
+            notebook.append_page(transactions_table, Gtk.Label(label=_('Transactions')))
         self.asset_table = dialogs.EditAssetTable(position.asset, self)
         notebook.append_page(self.position_table, Gtk.Label(label=_('Position')))
         notebook.append_page(self.asset_table, Gtk.Label(label=_('Asset')))
-        notebook.append_page(self.transactions_table, Gtk.Label(label=_('Transactions')))
         notebook.append_page(self.quotation_table, Gtk.Label(label=_('Quotations')))
 
         self.previous_page = 0

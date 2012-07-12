@@ -13,5 +13,5 @@ sdist:
 
 
 ppa:
-	debuild -S
+	debuild -S -sa
 	dput ppa:avernus-heros/ppa <source.changes> 
