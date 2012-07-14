@@ -8,7 +8,7 @@ Build-Depends: debhelper (>= 8),
  python-support,
  python-distutils-extra (>= 2.10)
 Maintainer: Wolfgang Steitz <wsteitz@gmail.com>
-Standards-Version: 3.8.3
+Standards-Version: 3.9.3
 X-Python-Version: >= 2.7
 
 Package: avernus
@@ -19,5 +19,6 @@ Depends: ${misc:Depends},
  python-beautifulsoup,
  python-dateutil,
  python-sqlalchemy,
- python-chardet
+ python-chardet,
+ python-tz
 Description: A simple program to easily track your investment portfolios and banking accounts.
