@@ -65,7 +65,7 @@ def account_lastday(account):
         return max([t.date for t in account])
 
 def yield_account_types():
-    for type_id in sorted(TYPES.keys()):
+    for type_id in sorted(TYPES.keys(), key=TYPES.get):
         yield type_id, TYPES[type_id]
 
 def get_all_categories():

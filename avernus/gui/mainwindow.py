@@ -4,7 +4,7 @@ from avernus.controller import filter_controller
 from avernus.controller import asset_controller
 from avernus.gui import progress_manager, threads
 from avernus.gui.account.account_transactions_tab import AccountTransactionTab
-from avernus.gui.account_overview import AccountOverview
+from avernus.gui.account.account_overview import AccountOverview
 from avernus.gui.account.csv_import_dialog import CSVImportDialog
 from avernus.gui.account.filterDialog import FilterDialog
 from avernus.gui.left_pane import MainTreeBox
