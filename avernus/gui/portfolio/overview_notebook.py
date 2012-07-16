@@ -1,8 +1,9 @@
 from gi.repository import Gtk
+
 from avernus.gui import gui_utils
+from avernus.gui import charts
 from avernus.controller import portfolio_controller
 from avernus.controller import chart_controller
-from avernus.gui import charts
 
 
 class OverviewNotebook(Gtk.Notebook):
@@ -85,7 +86,6 @@ class OverviewCharts(Gtk.ScrolledWindow):
 
         label = Gtk.Label()
         label.set_markup('<b>' + _('Market value') + '</b>')
-        #FIXME label.set_tooltip_text(_(""))
         table.attach(label, 0, 1, y, y + 1)
 
         y += 1
@@ -118,11 +118,12 @@ class PortfolioOverviewTree(gui_utils.Tree):
     LAST_UPDATE = 6
     COUNT = 7
     PERCENT = 8
+    ANNUAL = 9
 
     def __init__(self, container):
         self.container = container
         gui_utils.Tree.__init__(self)
-        self.set_model(Gtk.ListStore(object, str, float, float, float, float, object, int, float))
+        self.set_model(Gtk.ListStore(object, str, float, float, float, float, object, int, float, float))
 
         self.create_column(_('Name'), self.NAME)
         self.create_column(_('Current value'), self.VALUE, func=gui_utils.currency_format)
@@ -132,6 +133,7 @@ class PortfolioOverviewTree(gui_utils.Tree):
         self.create_column(_('Change'), self.CHANGE, func=gui_utils.float_to_red_green_string)
         self.create_column(_('Change %'), self.CHANGE_PERCENT, func=gui_utils.float_to_red_green_string)
         self.create_column(unichr(8709) + ' TER', self.TER, func=gui_utils.float_format)
+        self.create_column(_('Annual return'), self.ANNUAL, func=gui_utils.percent_format)
 
         self.set_rules_hint(True)
         self.load_items()
@@ -163,4 +165,5 @@ class PortfolioOverviewTree(gui_utils.Tree):
                                portfolio_controller.get_ter(item),
                                item.last_update,
                                len(item.positions),
-                               100.0 * portfolio_controller.get_current_value(item) / self.overall_value])
+                               portfolio_controller.get_current_value(item) / self.overall_value,
+                               portfolio_controller.get_annual_return(item)])

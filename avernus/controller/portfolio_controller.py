@@ -1,7 +1,9 @@
-from avernus.objects.container import Portfolio, Watchlist, Benchmark
-from avernus.controller import position_controller, asset_controller
+from avernus.objects import Portfolio, Watchlist, Benchmark
 from avernus.objects import session, Session
+from avernus.controller import position_controller, asset_controller
 from avernus.controller.object_controller import delete_object
+from avernus import math
+
 from gi.repository import GObject
 from . import dsm
 
@@ -103,6 +105,20 @@ def get_fraction(portfolio, position):
         return 0.0
     else:
         return position_controller.get_current_value(position) / cvalue
+
+def get_annual_return(portfolio):
+    # get a list of all transactionsm and dividend payments sorted by date
+    transactions = []
+    for position in portfolio.positions:
+        for ta in position.transactions:
+            transactions.append((ta.date, asset_controller.get_total_for_transaction(ta)))
+        for div in position.dividends:
+            transactions.append((div.date, asset_controller.get_total_for_dividend(div)))
+    # append current value
+    transactions.append((portfolio.last_update.date(), get_current_value(portfolio)))
+    transactions.sort()
+    return math.xirr(transactions)
+
 
 def get_closed_positions(portfolio):
     ret = []
