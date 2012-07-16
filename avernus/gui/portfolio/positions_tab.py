@@ -62,6 +62,7 @@ class PositionsTree(Tree):
          'pf_percent': 14,
          'gain_div': 15,
          'gain_div_percent': 16,
+         'annual_return': 17,
           }
 
     def __init__(self, container, actiongroup, parent):
@@ -207,7 +208,7 @@ class PortfolioPositionsTree(PositionsTree):
         portfolio.connect('position_added', self.on_position_added)
 
     def _init_widgets(self):
-        self.model = Gtk.TreeStore(object, str, float, float, float, float, str, float, float, float, float, str, float, str, float, float, float)
+        self.model = Gtk.TreeStore(object, str, float, float, float, float, str, float, float, float, float, str, float, str, float, float, float, float)
         self.set_model(self.model)
 
         self.create_column('#', self.COLS['shares'])
@@ -225,6 +226,7 @@ class PortfolioPositionsTree(PositionsTree):
         self.create_column(_('Today'), self.COLS['days_gain'], gui_utils.float_to_red_green_string_currency)
         self.create_column(_('Gain incl. dividends'), self.COLS['gain_div'], gui_utils.float_to_red_green_string_currency)
         self.create_column('%', self.COLS['gain_div_percent'], func=gui_utils.float_to_red_green_string_percent)
+        self.create_column(_('Annual return'), self.COLS['annual_return'], func=gui_utils.percent_format)
 
     def on_add(self, widget):
         dialogs.BuyDialog(self.container, parent=self.get_toplevel())
@@ -272,6 +274,7 @@ class PortfolioPositionsTree(PositionsTree):
                portfolio_controller.get_fraction(self.container, position),
                gain_div[0],
                float(gain_div[1]),
+               position_controller.get_annual_return(position)
                ]
         if child:
             ret[self.COLS['name']] = ""

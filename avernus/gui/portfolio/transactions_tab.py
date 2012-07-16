@@ -1,26 +1,36 @@
 #!/usr/bin/env python
-
 from gi.repository import Gtk
+
+from avernus.gui import page
 from avernus.gui import gui_utils
 from avernus.gui.gui_utils import Tree
 from avernus.gui.portfolio import dialogs
-
 from avernus.controller import asset_controller
+from avernus.controller import portfolio_controller
 
 
-class TransactionsTab(Gtk.ScrolledWindow):
+class TransactionsTab(page.Page):
 
-    def __init__(self, item):
-        Gtk.ScrolledWindow.__init__(self)
-        self.transactions_tree = TransactionsTree(item)
-        self.set_property('hscrollbar-policy', Gtk.PolicyType.AUTOMATIC)
-        self.set_property('vscrollbar-policy', Gtk.PolicyType.AUTOMATIC)
-        self.add(self.transactions_tree)
+    def __init__(self, portfolio):
+        page.Page.__init__(self)
+        self.portfolio = portfolio
+        sw = Gtk.ScrolledWindow()
+        sw.set_property('hscrollbar-policy', Gtk.PolicyType.AUTOMATIC)
+        sw.set_property('vscrollbar-policy', Gtk.PolicyType.AUTOMATIC)
+        self.transactions_tree = TransactionsTree(self.portfolio)
+        sw.add(self.transactions_tree)
+        self.pack_start(sw, True, True, 0)
         self.show_all()
 
     def show(self):
         self.transactions_tree.clear()
         self.transactions_tree.load_transactions()
+        self.update_page()
+
+    def get_info(self):
+        return [('# transactions', portfolio_controller.get_transaction_count(self.portfolio)),
+                ('Last transaction', gui_utils.get_date_string(portfolio_controller.get_date_of_last_transaction(self.portfolio)))]
+
 
 
 class TransactionsTree(Tree):

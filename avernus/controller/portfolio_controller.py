@@ -46,7 +46,7 @@ class ClosedPosition:
         self.buy_total = self.buy_cost + self.quantity * self.buy_price
         self.sell_total = self.sell_cost + self.quantity * self.sell_price
         self.gain = self.sell_total - self.buy_total
-        self.gain_percent = self.gain * 100.0 / self.buy_total
+        self.gain_percent = self.gain / self.buy_total
 
 
 def delete_position(position):
@@ -102,7 +102,7 @@ def get_fraction(portfolio, position):
     if cvalue == 0:
         return 0.0
     else:
-        return 100.0 * position_controller.get_current_value(position) / cvalue
+        return position_controller.get_current_value(position) / cvalue
 
 def get_closed_positions(portfolio):
     ret = []
@@ -125,14 +125,23 @@ def get_current_change(portfolio):
     return change, percent
 
 def get_date_of_last_dividend(pf):
-    if get_dividends_count(pf) == 0:
-        return datetime.date.today()
     current = None
     for pos in pf:
         for dividend in pos.dividends:
             if not current or dividend.date > current:
                 current = dividend.date
     return current
+
+def get_date_of_last_transaction(pf):
+    current = None
+    for pos in pf:
+        for ta in pos.transactions:
+            if not current or ta.date > current:
+                current = ta.date
+    return current
+
+def get_transaction_count(pf):
+    return sum([len(pos.transactions) for pos in pf])
 
 def get_dividends(portfolio):
     ret = []

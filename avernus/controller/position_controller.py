@@ -1,6 +1,8 @@
-from avernus.objects.container import PortfolioPosition, WatchlistPosition
 from avernus.objects import session, Session
+from avernus.objects import PortfolioPosition
+from avernus.objects import WatchlistPosition
 from avernus.controller import asset_controller
+from avernus import math
 
 import datetime
 
@@ -70,6 +72,18 @@ def new_portfolio_position(price=0.0, date=datetime.datetime.now(), shares=1.0, 
 def get_all_portfolio_position():
     return Session().query(PortfolioPosition).all()
 
+def get_annual_return(position):
+    # get a list of all transactionsm and dividend payments sorted by date
+    transactions = []
+    for ta in position.transactions:
+        transactions.append((ta.date, asset_controller.get_total_for_transaction(ta)))
+    for div in position.dividends:
+        transactions.append((div.date, asset_controller.get_total_for_dividend(div)))
+    # append current value
+    transactions.append((position.asset.date.date(), get_current_value(position)))
+    transactions.sort()
+    return math.xirr(transactions)
+
 def get_buy_value(position):
     return position.quantity * position.price
 
@@ -85,13 +99,13 @@ def get_gain(position):
     if position.price * position.quantity == 0:
         percent = 0
     else:
-        percent = absolute * 100 / (position.price * position.quantity)
+        percent = absolute / (position.price * position.quantity)
     return absolute, percent
 
 def get_gain_with_dividends(position):
     absolute = get_gain(position)[0]
     absolute += sum([asset_controller.get_total_for_dividend(div) for div in position.dividends])
-    percent = absolute * 100 / (position.price * position.quantity)
+    percent = absolute / (position.price * position.quantity)
     return absolute, percent
 
 def get_quantity_at_date(position, t):

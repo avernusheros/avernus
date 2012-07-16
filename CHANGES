@@ -1,3 +1,7 @@
+avernus 0.10:
+  * annual return of portfolio positions
+
+
 avernus 0.9:
 
   * port database to sqlalchemy

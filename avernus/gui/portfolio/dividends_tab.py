@@ -115,7 +115,7 @@ class DividendsTree(Tree):
             parent_row[self.AMOUNT] += div.price
             parent_row[self.TA_COSTS] += div.cost
             parent_row[self.TOTAL] += asset_controller.get_total_for_dividend(div)
-            parent_row[self.DIVIDEND_YIELD] = 100 * parent_row[self.TOTAL] / position_controller.get_buy_value(div.position)
+            parent_row[self.DIVIDEND_YIELD] = parent_row[self.TOTAL] / position_controller.get_buy_value(div.position)
             parent = parent_row.iter
         model.append(parent,
                 [div,
@@ -124,7 +124,7 @@ class DividendsTree(Tree):
                 div.price,
                 div.cost,
                 asset_controller.get_total_for_dividend(div),
-                100*asset_controller.get_dividend_yield(div)
+                asset_controller.get_dividend_yield(div)
                 ])
 
     def on_edit(self, widget, data=None):

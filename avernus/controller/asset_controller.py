@@ -40,7 +40,7 @@ def get_asset_for_searchstring(searchstring):
     return session.query(Asset).filter(or_(Asset.name.like(searchstring), Asset.isin.like(searchstring))).all()
 
 def get_change_percent(asset):
-    return asset.change * 100.0 / (asset.price - asset.change)
+    return asset.change  / (asset.price - asset.change)
 
 def get_date_of_newest_quotation(asset):
     quotation = Session().query(Quotation).filter_by(asset=asset)
