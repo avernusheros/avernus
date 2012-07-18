@@ -54,7 +54,7 @@ class ClosedPositionsTree(gui_utils.Tree):
         self.create_column(_('Expenses'), 9, func=gui_utils.currency_format)
         self.create_column(_('Total'), 10, func=gui_utils.currency_format)
         self.create_column(_('Gain'), 11, func=gui_utils.float_to_red_green_string_currency)
-        self.create_column('%', 12, func=gui_utils.float_to_red_green_string)
+        self.create_column('%', 12, func=gui_utils.float_to_red_green_string_percent)
 
     def load_positions(self):
         for pos in portfolio_controller.get_closed_positions(self.portfolio):

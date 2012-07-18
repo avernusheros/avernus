@@ -257,6 +257,7 @@ class AccountChartsNotebook(Gtk.Notebook):
         label.set_tooltip_text(_('Categorization of spendings.'))
         table.attach(label, 1, 2, 0, 1, xoptions=Gtk.AttachOptions.FILL, yoptions=Gtk.AttachOptions.FILL)
         table.attach(chart, 1, 2, 1, 2)
+
         label = Gtk.Label(label=_('Categories'))
         label.set_tooltip_text(_('Categorization of transactions.'))
         self.append_page(table, label)

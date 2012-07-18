@@ -224,7 +224,7 @@ class PortfolioPositionsTree(PositionsTree):
         self.create_column(_('Gain'), self.COLS['gain'], gui_utils.float_to_red_green_string_currency)
         self.create_icon_text_column('%', self.COLS['gain_icon'], self.COLS['gain_percent'], func2=gui_utils.float_to_red_green_string_percent)
         self.create_column(_('Today'), self.COLS['days_gain'], gui_utils.float_to_red_green_string_currency)
-        self.create_column(_('Gain incl. dividends'), self.COLS['gain_div'], gui_utils.float_to_red_green_string_currency)
+        self.create_column(_('incl. dividends'), self.COLS['gain_div'], gui_utils.float_to_red_green_string_currency)
         self.create_column('%', self.COLS['gain_div_percent'], func=gui_utils.float_to_red_green_string_percent)
         self.create_column(_('Annual return'), self.COLS['annual_return'], func=gui_utils.percent_format)
 

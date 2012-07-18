@@ -63,6 +63,9 @@ class AccountCategory(Base):
     def __repr__(self):
         return "AccountCategory<%s>" % self.name
 
+    def __str__(self):
+        return self.name
+
 
 class AccountTransaction(Base):
 

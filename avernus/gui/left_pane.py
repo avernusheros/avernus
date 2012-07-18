@@ -143,12 +143,32 @@ class MainTree(gui_utils.Tree, GObject.GObject):
 
     def _init_widgets(self):
         #object, icon, name
-        self.set_model(Gtk.TreeStore(object, str, str, str))
-        self.set_headers_visible(False)
-        col, cell = self.create_icon_text_column('', 1, 2)
-        cell.set_property('editable', True)
-        cell.connect('edited', self.on_cell_edited)
+        self.set_model(Gtk.TreeStore(object, str, str, str, bool))
+
+        column = Gtk.TreeViewColumn('')
+        self.append_column(column)
+        cell1 = Gtk.CellRendererPixbuf()
+        cell2 = Gtk.CellRendererText()
+        column.pack_start(cell1, False)
+        column.pack_start(cell2, True)
+        column.add_attribute(cell1, "icon_name", 1)
+        column.add_attribute(cell2, "markup", 2)
+        column.set_sort_column_id(2)
+        column.set_expand(True)
+        cell2.set_property('editable', True)
+        cell2.set_property("ellipsize-set", True)
+        cell2.set_property("ellipsize", Pango.EllipsizeMode.END)
+        cell2.connect('edited', self.on_cell_edited)
+        column.set_cell_data_func(cell1, self.cell_data_func)
+
         self.create_column('', 3)
+
+        self.set_headers_visible(False)
+        self.set_property("show-expanders", False)
+        self.set_property("level-indentation", 10)
+
+    def cell_data_func(self, column, cell, model, iterator, *args):
+        cell.set_property('visible', model[iterator][4])
 
     def on_button_press_event(self, widget, event):
         target = self.get_path_at_pos(int(event.x), int(event.y))
@@ -167,19 +187,19 @@ class MainTree(gui_utils.Tree, GObject.GObject):
                 return True
 
     def insert_categories(self):
-        self.pf_iter = self.get_model().append(None, [Category('Portfolios'), 'portfolios', _("<b>Portfolios</b>"), ''])
-        self.wl_iter = self.get_model().append(None, [Category('Watchlists'), 'watchlists', _("<b>Watchlists</b>"), ''])
-        self.accounts_iter = self.get_model().append(None, [Category('Accounts'), 'accounts', _("<b>Accounts</b>"), ''])
+        self.pf_iter = self.get_model().append(None, [Category('Portfolios'), None, _("<b>Portfolios</b>"), '', False])
+        self.wl_iter = self.get_model().append(None, [Category('Watchlists'), None, _("<b>Watchlists</b>"), '', False])
+        self.accounts_iter = self.get_model().append(None, [Category('Accounts'), None, _("<b>Accounts</b>"), '', False])
 
     def insert_watchlist(self, item):
-        self.get_model().append(self.wl_iter, [item, 'watchlist', item.name, ''])
+        self.get_model().append(self.wl_iter, [item, 'watchlist', item.name, '', True])
 
     def insert_account(self, account):
-        new_iter = self.get_model().append(self.accounts_iter, [account, 'account', account.name, gui_utils.get_currency_format_from_float(account.balance)])
+        new_iter = self.get_model().append(self.accounts_iter, [account, 'account', account.name, gui_utils.get_currency_format_from_float(account.balance), True])
         account.connect("balance_changed", self.on_balance_changed, new_iter)
 
     def insert_portfolio(self, item):
-        new_iter = self.get_model().append(self.pf_iter, [item, 'portfolio', item.name, gui_utils.get_currency_format_from_float(portfolio_controller.get_current_value(item))])
+        new_iter = self.get_model().append(self.pf_iter, [item, 'portfolio', item.name, gui_utils.get_currency_format_from_float(portfolio_controller.get_current_value(item)), True])
         item.connect("position_added", self.on_container_value_changed, new_iter)
 
     def on_remove(self, widget=None, data=None):

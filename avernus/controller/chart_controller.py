@@ -229,15 +229,18 @@ class EarningsVsSpendingsController(ChartController):
 class TransactionCategoryPieController(ChartController):
 
     def __init__(self, transactions, earnings):
-        self.earnings = earnings
         self.transactions = transactions
+        if earnings:
+            self.transactions_filter = lambda x: x.amount>=0
+        else:
+            self.transactions_filter = lambda x: x.amount<0
 
     def update(self, transactions, *args):
         self.transactions = transactions
 
     def calculate_values(self, *args):
         data = {}
-        for trans in ifilter(lambda t: t.amount>=0 == self.earnings, self.transactions):
+        for trans in ifilter(self.transactions_filter, self.transactions):
             try:
                 data[str(trans.category)] += abs(trans.amount)
             except:
@@ -422,7 +425,7 @@ class AllPortfolioValueOverTime(PortfolioChartController):
 
     def __init__(self, step):
         self.step = step
-        self.birthday = min([pf.birthday for pf in portfolio_controller.get_all_portfolio()])
+        self.birthday = min([portfolio_controller.get_birthday(pf) for pf in portfolio_controller.get_all_portfolio()])
 
     def calculate_values(self, *args):
         self._calc_days()
@@ -440,7 +443,7 @@ class AllPortfolioInvestmentsOverTime(PortfolioChartController):
 
     def __init__(self, step):
         self.step = step
-        self.birthday = min([pf.birthday for pf in portfolio_controller.get_all_portfolio()])
+        self.birthday = min([portfolio_controller.get_birthday(pf) for pf in portfolio_controller.get_all_portfolio()])
 
     def calculate_values(self, *args):
         self._calc_days()
@@ -448,7 +451,7 @@ class AllPortfolioInvestmentsOverTime(PortfolioChartController):
         self.y_values = {}
         #FIXME do in parallel
         for pf in portfolio_controller.get_all_portfolio():
-            self.items = pf.getTransactions() + pf.getDividends()
+            self.items = portfolio_controller.get_transactions(pf) + portfolio_controller.get_dividends(pf)
             for foo in self.calculate_investmentsovertime(pf.name):
                 yield foo
         yield 1

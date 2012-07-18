@@ -71,7 +71,7 @@ def new_benchmark(portfolio, percentage):
     return bm
 
 def get_all_portfolio():
-    return session.query(Portfolio).all()
+    return Session().query(Portfolio).all()
 
 def get_all_watchlist():
     return session.query(Watchlist).all()
@@ -115,6 +115,8 @@ def get_annual_return(portfolio):
         for div in position.dividends:
             transactions.append((div.date, asset_controller.get_total_for_dividend(div)))
     # append current value
+    if not portfolio.last_update:
+        return 0.0
     transactions.append((portfolio.last_update.date(), get_current_value(portfolio)))
     transactions.sort()
     return math.xirr(transactions)
