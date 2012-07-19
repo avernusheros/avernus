@@ -1,4 +1,10 @@
 #!/usr/bin/env python
+from gi.repository import Gtk
+from gi.repository import Gdk
+from webbrowser import open as web
+import sys
+
+import avernus
 from avernus import config
 from avernus.controller import filter_controller
 from avernus.controller import asset_controller
@@ -14,167 +20,71 @@ from avernus.gui.portfolio.overview_notebook import OverviewNotebook
 from avernus.gui.portfolio.asset_manager import AssetManager
 from avernus.gui.preferences import PrefDialog
 from avernus.gui.account.exportDialog import ExportDialog
-from webbrowser import open as web
-import avernus
-from gi.repository import Gtk
-from gi.repository import Gdk
-import sys
+from avernus.gui import get_ui_file
 
 reload(sys)
 sys.setdefaultencoding("utf-8")
 
 
+PAGES = {
+    'Portfolio': PortfolioNotebook,
+    'AllPortfolio': PortfolioNotebook,
+    'Watchlist': WatchlistPositionsTab,
+    'Category Accounts': AccountOverview,
+    'Category Portfolios': OverviewNotebook,
+    'Account': AccountTransactionTab,
+    'AllAccount': AccountTransactionTab,
+        }
 
-UI_INFO = """
-<ui>
-  <menubar name='MenuBar'>
-    <menu action='AvernusMenu'>
-      <menuitem action='import' />
-      <menuitem action='export CSV' />
-      <separator />
-      <menuitem action='quit' />
-    </menu>
-    <menu action='EditMenu'>
-      <menuitem action='Preferences' />
-    </menu>
-    <menu action='ToolsMenu'>
-      <menuitem action='update'/>
-      <menuitem action='historical'/>
-      <menuitem action='filter'/>
-      <menuitem action='do_assignments'/>
-      <menuitem action='asset_manager'/>
-    </menu>
-    <menu action='HelpMenu'>
-      <menuitem action='help'/>
-      <menuitem action='website'/>
-      <menuitem action='feature'/>
-      <menuitem action='bug'/>
-      <separator />
-      <menuitem action='about'/>
-    </menu>
-  </menubar>
-</ui>
-"""
-
-
-class AboutDialog(Gtk.AboutDialog):
-
-    def __init__(self, parent=None):
-        Gtk.AboutDialog.__init__(self, parent=parent)
-
-        self.set_name(avernus.__appname__)
-        self.set_version(avernus.__version__)
-        self.set_copyright(avernus.__copyright__)
-        self.set_comments(avernus.__description__)
-        self.set_license(avernus.__license__)
-        self.set_authors(avernus.__authors__)
-        self.set_website(avernus.__url__)
-        self.set_logo_icon_name('avernus')
-
-        self.run()
-        self.hide()
-
-
-class MainWindow(Gtk.Window):
+class MainWindow:
 
     def __init__(self):
-        super(Gtk.Window, self).__init__(type=Gtk.WindowType.TOPLEVEL)
+        builder = Gtk.Builder()
+        builder.add_from_file(get_ui_file("avernus.glade"))
+        builder.connect_signals(self)
+        self.window = builder.get_object("window")
+
         self.config = config.avernusConfig()
-        self.set_title(avernus.__appname__)
+        self.window.set_title(avernus.__appname__)
 
-        vbox = Gtk.VBox()
-        self.add(vbox)
-
-        actiongroup = Gtk.ActionGroup('main')
-        self.add_actions(actiongroup)
-
-        uimanager = Gtk.UIManager()
-        # Throws exception if something went wrong
-        uimanager.add_ui_from_string(UI_INFO)
-        # Add the accelerator group to the toplevel window
-        accelgroup = uimanager.get_accel_group()
-        self.add_accel_group(accelgroup)
-        uimanager.insert_action_group(actiongroup)
-
-        menubar = uimanager.get_widget("/MenuBar")
-        vbox.pack_start(menubar, False, False, 0)
-
-        self.hpaned = Gtk.HPaned()
-        vbox.pack_start(self.hpaned, True, True, 0)
+        self.hpaned = builder.get_object("hpaned")
 
         sidebar = MainTreeBox()
         sidebar.main_tree.connect("unselect", self.on_maintree_unselect)
         sidebar.main_tree.connect("select", self.on_maintree_select)
         self.hpaned.pack1(sidebar)
 
-        self.connect("destroy", self.on_destroy)
-        self.connect('size_allocate', self.on_size_allocate)
-        self.connect('window-state-event', self.on_window_state_event)
-
-        self.pages = {}
-        self.pages['Portfolio'] = PortfolioNotebook
-        self.pages['AllPortfolio'] = PortfolioNotebook
-        self.pages['Watchlist'] = WatchlistPositionsTab
-        self.pages['Category Accounts'] = AccountOverview
-        self.pages['Category Portfolios'] = OverviewNotebook
-        self.pages['Account'] = AccountTransactionTab
-        self.pages['AllAccount'] = AccountTransactionTab
+        self.window.connect("destroy", self.on_destroy)
+        self.window.connect('size_allocate', self.on_size_allocate)
+        self.window.connect('window-state-event', self.on_window_state_event)
 
         #set min size
-        screen = self.get_screen()
+        screen = self.window.get_screen()
         width = int(screen.get_width() * 0.66)
         height = int(screen.get_height() * 0.66)
-        self.set_size_request(width, height)
+        self.window.set_size_request(width, height)
 
         size = self.config.get_option('size', section='Gui')
         if size is not None:
             width, height = eval(size)
-            self.resize(width, height)
+            self.window.resize(width, height)
 
         pos = self.config.get_option('hpaned position', 'Gui') or width * 0.25
         self.hpaned.set_position(int(pos))
 
         #config entries are strings...
         if self.config.get_option('maximize', section='Gui') == 'True':
-            self.maximize()
+            self.window.maximize()
             self.maximized = True
         else:
             self.maximized = False
 
         #display everything
-        self.show_all()
-
-    def add_actions(self, actiongroup):
-        actiongroup.add_actions([
-            ("EditMenu", None, "Edit"),
-            ("Preferences", Gtk.STOCK_PREFERENCES, '_Preferences', None, None,
-             self.on_prefs),
-
-            ("AvernusMenu", None, "_Avernus"),
-            ('import', None, '_Import Account Transactions', None, None, self.on_csv_import),
-            ('export CSV', None, '_Export Account Transactions', None, None, self.on_csv_export),
-            ('quit', Gtk.STOCK_QUIT, '_Quit', '<Control>q', None, self.on_destroy),
-
-            ('ToolsMenu', None, '_Tools'),
-            ('update', Gtk.STOCK_REFRESH, '_Update all stocks', 'F5', None, self.on_update_all),
-            ('historical', Gtk.STOCK_REFRESH, 'Get _historical data', None, None, self.on_historical),
-            ('filter', Gtk.STOCK_PROPERTIES, '_Category Filters', None, None, self.on_category_assignments),
-            ('do_assignments', Gtk.STOCK_EXECUTE, '_Run auto-assignments', None, None, self.on_do_category_assignments),
-            ('asset_manager', Gtk.STOCK_PROPERTIES, '_Asset manager', None, None, self.on_asset_manager),
-
-
-            ('HelpMenu', None, '_Help'),
-            ('help', Gtk.STOCK_HELP, '_Help', 'F1', None, lambda x:web("https://answers.launchpad.net/avernus")),
-            ('website', None, '_Website', None, None, lambda x:web("https://launchpad.net/avernus")),
-            ('feature', None, 'Request a _Feature' , None, None, lambda x:web("https://blueprints.launchpad.net/avernus")),
-            ('bug', None, 'Report a _Bug', None, None, lambda x:web("https://bugs.launchpad.net/avernus")),
-            ('about', Gtk.STOCK_ABOUT, '_About', None, None, self.on_about),
-
-            ])
+        self.window.show_all()
 
     def on_size_allocate(self, widget=None, data=None):
         if not self.maximized:
-            self.config.set_option('size', self.get_size(), 'Gui')
+            self.config.set_option('size', self.window.get_size(), 'Gui')
 
     def on_window_state_event(self, widget, event):
         if event.new_window_state == Gdk.WindowState.MAXIMIZED:
@@ -203,7 +113,7 @@ class MainWindow(Gtk.Window):
         else:
             page = item.__class__.__name__
         if page is not None:
-            self.hpaned.pack2(self.pages[page](item))
+            self.hpaned.pack2(PAGES[page](item))
 
     def on_maintree_unselect(self, caller=None):
         page = self.hpaned.get_child2()
@@ -212,36 +122,58 @@ class MainWindow(Gtk.Window):
             page.destroy()
 
     def on_prefs(self, *args):
-        PrefDialog(parent=self)
+        PrefDialog(parent=self.window)
 
     def on_category_assignments(self, *args):
-        FilterDialog(parent=self)
+        FilterDialog(parent=self.window)
 
     def on_asset_manager(self, *args):
-        AssetManager(parent=self)
+        AssetManager(parent=self.window)
 
-    def on_csv_import(self, *args):
-        CSVImportDialog(parent=self)
+    def on_import(self, *args):
+        CSVImportDialog(parent=self.window)
 
     def on_about(self, *args):
-        AboutDialog(parent=self)
+        dialog = Gtk.AboutDialog(parent=self.window)
+        dialog.set_name(avernus.__appname__)
+        dialog.set_version(avernus.__version__)
+        dialog.set_copyright(avernus.__copyright__)
+        dialog.set_comments(avernus.__description__)
+        dialog.set_license(avernus.__license__)
+        dialog.set_authors(avernus.__authors__)
+        dialog.set_website(avernus.__url__)
+        dialog.set_logo_icon_name('avernus')
+        dialog.run()
+        dialog.hide()
 
-    def on_csv_export(self, *args):
-        ExportDialog(parent=self)
+    def on_help(self, *args):
+        web("https://answers.launchpad.net/avernus")
 
-    def on_do_category_assignments(self, *args):
+    def on_website(self, *args):
+        web("https://launchpad.net/avernus")
+
+    def on_feature(self, *args):
+        web("https://blueprints.launchpad.net/avernus")
+
+    def on_bug(self, *args):
+        web("https://bugs.launchpad.net/avernus")
+
+    def on_export(self, *args):
+        ExportDialog(parent=self.window)
+
+    def on_run_auto_assignments(self, *args):
         #FIXME the threaded version does not work
         #threads.GeneratorTask(filter_controller.run_auto_assignments).start()
         for foo in filter_controller.run_auto_assignments():
             pass
 
-    def on_historical(self, *args):
+    def on_get_historical_data(self, *args):
         def finished_cb():
             progress_manager.remove_monitor(42)
         m = progress_manager.add_monitor(42, _('downloading quotations...'), Gtk.STOCK_REFRESH)
         threads.GeneratorTask(asset_controller.update_historical_prices, m.progress_update, complete_callback=finished_cb).start()
 
-    def on_update_all(self, *args):
+    def on_update_assets(self, *args):
         def finished_cb():
             progress_manager.remove_monitor(11)
         m = progress_manager.add_monitor(11, _('updating stocks...'), Gtk.STOCK_REFRESH)

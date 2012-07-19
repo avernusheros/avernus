@@ -1,8 +1,8 @@
 #!/usr/bin/env python
-
 from gi.repository import Gtk
 from gi.repository import Gdk
 import sys
+
 from avernus.gui.portfolio.plot import ChartWindow
 from avernus.gui.portfolio import dialogs
 from avernus.gui.portfolio.position_dialog import PositionDialog

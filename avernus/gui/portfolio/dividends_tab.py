@@ -1,6 +1,6 @@
 #!/usr/bin/env python
-
 from gi.repository import Gtk
+
 from avernus.gui.gui_utils import Tree, get_name_string
 from avernus.controller import portfolio_controller
 from avernus.controller import asset_controller

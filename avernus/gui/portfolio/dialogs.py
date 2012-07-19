@@ -56,13 +56,7 @@ class BuyDialog:
         content.pack_start(label, True, True, 0)
         self.dlg.get_content_area().pack_start(self.infobar, True, True, 0)
 
-        # connect signals
-        handlers = {
-            "on_change": self.on_change,
-            "day_selected": self.on_calendar_day_selected,
-            "response": self.on_response
-        }
-        builder.connect_signals(handlers)
+        builder.connect_signals(self)
 
         self.date_ok = True
         if self.transaction:
@@ -76,7 +70,7 @@ class BuyDialog:
 
         self.dlg.run()
 
-    def on_calendar_day_selected(self, calendar):
+    def on_day_selected(self, calendar):
         year, month, day = calendar.get_date()
         date = datetime.datetime(year, month + 1, day)
         if date > datetime.datetime.today():

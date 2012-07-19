@@ -22,7 +22,7 @@
     <property name="can_focus">False</property>
     <property name="border_width">5</property>
     <property name="type_hint">dialog</property>
-    <signal name="response" handler="response" swapped="no"/>
+    <signal name="response" handler="on_response" swapped="no"/>
     <child internal-child="vbox">
       <object class="GtkBox" id="dialog-vbox2">
         <property name="can_focus">False</property>
@@ -61,6 +61,7 @@
                 <property name="year">2012</property>
                 <property name="month">4</property>
                 <property name="day">8</property>
+                <signal name="day-selected" handler="on_day_selected" swapped="no"/>
               </object>
               <packing>
                 <property name="left_attach">0</property>

@@ -22,11 +22,16 @@ class Category(object):
 class MainTreeBox(Gtk.VBox):
 
     def __init__(self):
-        super(Gtk.VBox, self).__init__()
+        Gtk.VBox.__init__(self)
 
         self.main_tree = MainTree()
-        self.pack_start(self.main_tree, True, True, 0)
+        sw = Gtk.ScrolledWindow()
+        sw.set_property('hscrollbar-policy', Gtk.PolicyType.NEVER)
+        sw.set_property('vscrollbar-policy', Gtk.PolicyType.AUTOMATIC)
+        sw.set_shadow_type(Gtk.ShadowType.IN)
+        sw.add(self.main_tree)
 
+        self.pack_start(sw, True, True, 0)
         vbox = Gtk.VBox()
         self.pack_start(vbox, False, False, 0)
         progress_manager.box = vbox
