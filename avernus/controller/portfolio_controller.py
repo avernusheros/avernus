@@ -16,6 +16,7 @@ class AllPortfolio(GObject.GObject):
         'position_added': (GObject.SIGNAL_RUN_LAST, None,
                       (object,))
     }
+    name = _("All")
 
     def __iter__(self):
         return self.positions.__iter__()

@@ -1,4 +1,5 @@
 from gi.repository import Gtk
+from gi.repository import Pango
 
 from avernus.gui import gui_utils
 from avernus.gui import charts
@@ -119,51 +120,65 @@ class PortfolioOverviewTree(gui_utils.Tree):
     COUNT = 7
     PERCENT = 8
     ANNUAL = 9
+    PANGO_WEIGHT = 10
 
     def __init__(self, container):
         self.container = container
         gui_utils.Tree.__init__(self)
-        self.set_model(Gtk.ListStore(object, str, float, float, float, float, object, int, float, float))
+        self.set_model(Gtk.TreeStore(object, str, float, float, float, float, object, int, float, float, int))
 
-        self.create_column(_('Name'), self.NAME)
-        self.create_column(_('Current value'), self.VALUE, func=gui_utils.currency_format)
-        self.create_column(_('%'), self.PERCENT, func=gui_utils.percent_format)
+        col, cell = self.create_column(_('Name'), self.NAME)
+        cell.set_property('weight-set', True)
+        col.add_attribute(cell, 'weight', self.PANGO_WEIGHT)
+        col, cell = self.create_column(_('Current value'), self.VALUE, func=gui_utils.currency_format)
+        cell.set_property('weight-set', True)
+        col.add_attribute(cell, 'weight', self.PANGO_WEIGHT)
+        col, cell = self.create_column(_('%'), self.PERCENT, func=gui_utils.percent_format)
+        cell.set_property('weight-set', True)
+        col.add_attribute(cell, 'weight', self.PANGO_WEIGHT)
         self.create_column(_('Last update'), self.LAST_UPDATE, func=gui_utils.date_to_string)
-        self.create_column(_('# positions'), self.COUNT)
-        self.create_column(_('Change'), self.CHANGE, func=gui_utils.float_to_red_green_string)
-        self.create_column(_('Change %'), self.CHANGE_PERCENT, func=gui_utils.float_to_red_green_string)
-        self.create_column(unichr(8709) + ' TER', self.TER, func=gui_utils.float_format)
-        self.create_column(_('Annual return'), self.ANNUAL, func=gui_utils.percent_format)
+        col, cell = self.create_column(_('# positions'), self.COUNT)
+        cell.set_property('weight-set', True)
+        col.add_attribute(cell, 'weight', self.PANGO_WEIGHT)
+        col, cell = self.create_column(_('Change'), self.CHANGE, func=gui_utils.float_to_red_green_string)
+        cell.set_property('weight-set', True)
+        col.add_attribute(cell, 'weight', self.PANGO_WEIGHT)
+        col, cell = self.create_column(_('Change %'), self.CHANGE_PERCENT, func=gui_utils.float_to_red_green_string)
+        cell.set_property('weight-set', True)
+        col.add_attribute(cell, 'weight', self.PANGO_WEIGHT)
+        col, cell = self.create_column(unichr(8709) + ' TER', self.TER, func=gui_utils.float_format)
+        cell.set_property('weight-set', True)
+        col.add_attribute(cell, 'weight', self.PANGO_WEIGHT)
+        col, cell = self.create_column(_('Annual return'), self.ANNUAL, func=gui_utils.percent_format)
+        cell.set_property('weight-set', True)
+        col.add_attribute(cell, 'weight', self.PANGO_WEIGHT)
 
         self.set_rules_hint(True)
         self.load_items()
-
-
+        self.expand_all()
+        self.set_property("show-expanders", False)
         self.selected_item = None
 
     def on_update(self):
         self.container.update_positions()
 
     def load_items(self):
-        items = []
-        if self.container.name == 'Watchlists':
-            items = portfolio_controller.get_all_watchlist()
-        elif self.container.name == 'Portfolios':
-            items = portfolio_controller.get_all_portfolio()
-        self.overall_value = sum([portfolio_controller.get_current_value(i) for i in items])
-        if self.overall_value == 0.0:
-            self.overall_value = 1
-        for item in items:
-            self.insert_item(item)
+        model = self.get_model()
+        all_portfolio = portfolio_controller.AllPortfolio()
+        self.overall_value = portfolio_controller.get_current_value(all_portfolio)
+        iterator = model.append(None, self.get_row(all_portfolio, Pango.Weight.BOLD))
+        for item in portfolio_controller.get_all_portfolio():
+            model.append(iterator, self.get_row(item))
 
-    def insert_item(self, item):
-        self.get_model().append([item,
-                               item.name,
-                               portfolio_controller.get_current_value(item),
-                               portfolio_controller.get_current_change(item)[0],
-                               float(portfolio_controller.get_percent(item)),
-                               portfolio_controller.get_ter(item),
-                               item.last_update,
-                               len(item.positions),
-                               portfolio_controller.get_current_value(item) / self.overall_value,
-                               portfolio_controller.get_annual_return(item)])
+    def get_row(self, item, weight=Pango.Weight.NORMAL):
+        return [item,
+               item.name,
+               portfolio_controller.get_current_value(item),
+               portfolio_controller.get_current_change(item)[0],
+               float(portfolio_controller.get_percent(item)),
+               portfolio_controller.get_ter(item),
+               item.last_update,
+               len(item.positions),
+               portfolio_controller.get_current_value(item) / self.overall_value,
+               portfolio_controller.get_annual_return(item),
+               weight]
