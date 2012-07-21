@@ -123,8 +123,8 @@ def main():
         from avernus.gui.mainwindow import MainWindow
         from avernus.datasource_manager import DatasourceManager
         dsm = DatasourceManager()
-        main_window = MainWindow()
         asset_controller.datasource_manager = dsm
+        main_window = MainWindow()
         try:
             Gtk.main()
         except:

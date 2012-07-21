@@ -26,7 +26,9 @@ class Account(Base, GObject.GObject):
 
     __gsignals__ = {
         'balance_changed': (GObject.SIGNAL_RUN_LAST, None,
-                      (float,))
+                      (float,)),
+        'transaction_added': (GObject.SIGNAL_RUN_LAST, None,
+                      (object,))
     }
 
     def __init__(self, *args, **kwargs):

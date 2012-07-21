@@ -327,6 +327,7 @@ class TransactionsTree(gui_utils.Tree):
         self.single_category = None
         self.reset_filter_dates()
         self.columns_autosize()
+        self.account.connect('transaction_added', self.on_transaction_added)
 
     def on_category_changed(self, cellrendertext, path, new_iter, model):
         category = model[new_iter][0]
@@ -379,9 +380,8 @@ class TransactionsTree(gui_utils.Tree):
         self.searchstring = editable.get_text().lower()
         self.updater()
 
-    def on_transaction_created(self, transaction):
-        if transaction.account == self.account:
-            self.insert_transaction(transaction)
+    def on_transaction_added(self, account, transaction, *args):
+        self.insert_transaction(transaction)
 
     def find_transaction(self, transaction):
         for row in self.model:
@@ -422,9 +422,7 @@ class TransactionsTree(gui_utils.Tree):
 
     def on_add(self, widget=None, data=None):
         dlg = EditTransaction(self.account, parent=self.get_toplevel())
-        b_change, transaction = dlg.start()
-        self.account.balance += transaction.amount
-        self.insert_transaction(transaction)
+        dlg.start()
 
     def on_edit(self, widget=None, data=None):
         transaction, iterator = self._get_selected_transaction()
@@ -436,7 +434,6 @@ class TransactionsTree(gui_utils.Tree):
             child_iter = self._get_child_iter(iterator)
             self.model.remove(child_iter)
             self.insert_transaction(transaction)
-
 
     def on_dividend(self, widget=None, data=None):
         trans, iterator = self._get_selected_transaction()

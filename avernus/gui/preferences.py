@@ -31,7 +31,7 @@ class PrefDialog(Gtk.Dialog):
         self.show_all()
         self.run()
         self.destroy()
-        logger.debug("PrefDialog destroyed")
+
 
 class PreferencesVBox(Gtk.VBox):
 
@@ -69,7 +69,6 @@ class ChartPreferences(PreferencesVBox):
 
     parser_section = "Chart"
 
-
     def __init__(self):
         Gtk.VBox.__init__(self)
         self.configParser = avernusConfig()
@@ -80,8 +79,7 @@ class ChartPreferences(PreferencesVBox):
 
 class PortfolioPreferences(PreferencesVBox):
 
-    parser_section = "General"
-
+    parser_section = "Portfolio"
 
     def __init__(self):
         Gtk.VBox.__init__(self)
@@ -89,7 +87,6 @@ class PortfolioPreferences(PreferencesVBox):
 
         section = self._add_section('Appearance')
         self._add_option(section, _('Save vertical space'), 'smallPosition')
-
 
 
 class AccountPreferences(PreferencesVBox):
@@ -107,8 +104,6 @@ class AccountPreferences(PreferencesVBox):
         #FIXME tooltip
         section = self._add_section('Category Assignments')
         self._add_option(section, _('Include already categorized transactions'), 'assignments categorized transactions')
-
-
 
 
 class DimensionList(Gtk.VBox):

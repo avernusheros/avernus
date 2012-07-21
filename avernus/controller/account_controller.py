@@ -11,11 +11,16 @@ class AllAccount(GObject.GObject):
 
     __gsignals__ = {
         'balance_changed': (GObject.SIGNAL_RUN_LAST, None,
-                      (float,))
+                      (float,)),
+        'transaction_added': (GObject.SIGNAL_RUN_LAST, None,
+                      (object,))
     }
 
     def __init__(self):
         GObject.GObject.__init__(self)
+        for acc in get_all_account():
+            acc.connect("balance_changed", self.on_balance_changed)
+            acc.connect("transaction_added", self.on_transaction_added)
 
     def __iter__(self):
         return self.transactions.__iter__()
@@ -28,6 +33,11 @@ class AllAccount(GObject.GObject):
     def balance(self):
         return sum([acc.balance for acc in get_all_account()])
 
+    def on_balance_changed(self, *args):
+        self.emit("balance_changed", self.balance)
+
+    def on_transaction_added(self, account, transaction):
+        self.emit("transaction_added", transaction)
 
 def get_all_account():
     return session.query(Account).all()
@@ -51,6 +61,7 @@ def new_account_transaction(desc="", account=None, amount=0.0, date=datetime.dat
     session.add(transaction)
     #adjust balance of account
     account.balance += amount
+    account.emit("transaction_added", transaction)
     return transaction
 
 def account_has_transaction(account, trans):
