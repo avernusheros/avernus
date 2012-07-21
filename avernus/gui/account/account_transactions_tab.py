@@ -8,11 +8,82 @@ from avernus.controller import chart_controller, account_controller, object_cont
 from gi.repository import Gtk
 from gi.repository import GObject
 from gi.repository import Gdk
-import datetime
 from gi.repository import Pango
+import datetime
 import logging
 
 logger = logging.getLogger(__name__)
+
+
+class SearchBar(Gtk.HBox):
+
+    __gsignals__ = {
+                    'update': (GObject.SIGNAL_RUN_LAST, None, ()),
+                    }
+
+    def __init__(self, transactions_tree):
+        Gtk.HBox.__init__(self)
+        self.transactions_tree = transactions_tree
+        uncategorized_button = Gtk.ToggleButton(_('uncategorized'))
+        self.pack_start(uncategorized_button, False, False, 0)
+
+        transfer_button = Gtk.ToggleButton()
+        image = Gtk.Image()
+        image.set_from_stock('gtk-convert', Gtk.IconSize.BUTTON)
+        transfer_button.add(image)
+        transfer_button.set_tooltip_text(_('Show transfers'))
+        self.pack_start(transfer_button, False, False, 0)
+
+        self.search_entry = Gtk.Entry()
+        self.pack_start(self.search_entry, True, True, 0)
+        self.search_entry.set_icon_from_stock(1, Gtk.STOCK_CLEAR)
+        self.search_entry.set_property('secondary-icon-tooltip-text', 'Clear search')
+        self.search_entry.connect('icon-press', self.on_clear_search)
+        self.start_entry = Gtk.Entry()
+        self.end_entry = Gtk.Entry()
+        self.start_entry.set_icon_from_stock(1, Gtk.STOCK_SELECT_COLOR)
+        self.start_entry.set_property("secondary-icon-tooltip-text", "Pick Start date")
+        self.start_entry.set_editable(False)
+        self.start_entry.connect('icon-press', self.on_pick_start)
+        self.end_entry.set_icon_from_stock(1, Gtk.STOCK_SELECT_COLOR)
+        self.end_entry.set_property("secondary-icon-tooltip-text", "Pick End date")
+        self.end_entry.set_editable(False)
+        self.end_entry.connect('icon-press', self.on_pick_end)
+        self.pack_start(Gtk.Label(_('Start')), False, False, 0)
+        self.pack_start(self.start_entry, False, False, 0)
+        self.pack_start(Gtk.Label(_('End')), False, False, 0)
+        self.pack_start(self.end_entry, False, False, 0)
+
+        uncategorized_button.set_active(self.transactions_tree.b_show_uncategorized)
+        transfer_button.set_active(self.transactions_tree.b_show_transfer)
+        uncategorized_button.connect('toggled', self.transactions_tree.on_toggle_uncategorized)
+        transfer_button.connect('toggled', self.transactions_tree.on_toggle_transfer)
+
+        self.update_range()
+
+
+    def on_clear_search(self, entry, icon_pos, event):
+        self.search_entry.set_text('')
+
+    def on_pick_start(self, entry, icon_pos, event):
+        dialog = common_dialogs.CalendarDialog(self.transactions_tree.range_start, parent=self.get_toplevel())
+        if dialog.date:
+            self.transactions_tree.range_start = dialog.date
+            self.update_range()
+            self.emit("update")
+
+    def on_pick_end(self, entry, icon_pos, event):
+        dialog = common_dialogs.CalendarDialog(self.transactions_tree.range_end, parent=self.get_toplevel())
+        if dialog.date:
+            self.transactions_tree.range_end = dialog.date
+            self.update_range()
+            self.emit("update")
+
+    def update_range(self):
+        start = self.transactions_tree.range_start
+        self.start_entry.set_text(gui_utils.get_date_string(start))
+        self.end_entry.set_text(gui_utils.get_date_string(self.transactions_tree.range_end))
+
 
 
 class AccountTransactionTab(page.Page):
@@ -28,75 +99,35 @@ class AccountTransactionTab(page.Page):
         self.pack_start(self.vpaned, True, True, 0)
 
         vbox = Gtk.VBox()
-        hbox = Gtk.HBox()
-        uncategorized_button = Gtk.ToggleButton(_('uncategorized'))
-        hbox.pack_start(uncategorized_button, False, False, 0)
+        actiongroup = Gtk.ActionGroup('transactions')
+        self.transactions_tree = TransactionsTree(account, actiongroup, self.update_ui)
+        self.search_bar = SearchBar(self.transactions_tree)
+        self.search_bar.search_entry.connect('changed', self.transactions_tree.on_search_entry_changed)
+        self.search_bar.connect("update", self.update_ui)
 
-        transfer_button = Gtk.ToggleButton()
-        image = Gtk.Image()
-        image.set_from_stock('gtk-convert', Gtk.IconSize.BUTTON)
-        transfer_button.add(image)
-        transfer_button.set_tooltip_text(_('Show transfers'))
-        hbox.pack_start(transfer_button, False, False, 0)
-
-        self.search_entry = Gtk.Entry()
-        hbox.pack_start(self.search_entry, True, True, 0)
-        self.search_entry.set_icon_from_stock(1, Gtk.STOCK_CLEAR)
-        self.search_entry.set_property('secondary-icon-tooltip-text', 'Clear search')
-        self.search_entry.connect('icon-press', self.on_clear_search)
-        self.start_entry = Gtk.Entry()
-        self.end_entry = Gtk.Entry()
-        self.start_entry.set_icon_from_stock(1, Gtk.STOCK_SELECT_COLOR)
-        self.start_entry.set_property("secondary-icon-tooltip-text", "Pick Start date")
-        self.start_entry.set_editable(False)
-        self.start_entry.connect('icon-press', self.on_pick_start)
-        self.end_entry.set_icon_from_stock(1, Gtk.STOCK_SELECT_COLOR)
-        self.end_entry.set_property("secondary-icon-tooltip-text", "Pick End date")
-        self.end_entry.set_editable(False)
-        self.end_entry.connect('icon-press', self.on_pick_end)
-        hbox.pack_start(Gtk.Label(_('Start')), False, False, 0)
-        hbox.pack_start(self.start_entry, False, False, 0)
-        hbox.pack_start(Gtk.Label(_('End')), False, False, 0)
-        hbox.pack_start(self.end_entry, False, False, 0)
-
-        vbox.pack_start(hbox, False, False, 0)
+        vbox.pack_start(self.search_bar, False, False, 0)
 
         self.hpaned = Gtk.HPaned()
         vbox.pack_start(self.hpaned, True, True, 0)
         self.vpaned.pack2(vbox)
         self.hpaned.set_border_width(self.BORDER_WIDTH)
-        sw = Gtk.ScrolledWindow()
-        sw.set_property('hscrollbar-policy', Gtk.PolicyType.AUTOMATIC)
-        sw.set_property('vscrollbar-policy', Gtk.PolicyType.AUTOMATIC)
-        actiongroup = Gtk.ActionGroup('transactions')
-        self.transactions_tree = TransactionsTree(account, actiongroup, self.search_entry, self.update_ui)
+
         actiongroup.add_actions([
                 ('add', Gtk.STOCK_ADD, 'new transaction', None, _('Add new transaction'), self.transactions_tree.on_add),
                 ('edit' , Gtk.STOCK_EDIT, 'edit transaction', None, _('Edit selected transaction'), self.transactions_tree.on_edit),
                 ('remove', Gtk.STOCK_DELETE, 'remove transaction', None, _('Remove selected transaction'), self.transactions_tree.on_remove),
                 ('dividend', Gtk.STOCK_CONVERT, 'dividend payment', None, _('Create dividend from transaction'), self.transactions_tree.on_dividend)
                                 ])
-        sw.add(self.transactions_tree)
-        self.no_trans_infobar = Gtk.InfoBar()
-        self.no_trans_infobar.set_no_show_all(True)
-        no_trans_label = Gtk.Label(label=_("no transactions match your selection"))
-        area = self.no_trans_infobar.get_content_area()
-        area.pack_start(no_trans_label, True, True, 0)
-        no_trans_label.show()
+
         frame = Gtk.Frame()
         vbox = Gtk.VBox()
-        vbox.pack_start(self.no_trans_infobar, False, False, 0)
-        vbox.pack_start(sw, True, True, 0)
         frame.add(vbox)
         frame.set_shadow_type(Gtk.ShadowType.IN)
+        vbox.pack_start(self.transactions_tree, True, True, 0)
+
+        self.no_transactions_label = Gtk.Label(_('No transactions match your selection.'), expand=True)
+        vbox.pack_start(self.no_transactions_label, True, True, 0)
         self.hpaned.pack1(frame, shrink=True, resize=True)
-
-        uncategorized_button.set_active(self.transactions_tree.b_show_uncategorized)
-        transfer_button.set_active(self.transactions_tree.b_show_transfer)
-        uncategorized_button.connect('toggled', self.transactions_tree.on_toggle_uncategorized)
-        transfer_button.connect('toggled', self.transactions_tree.on_toggle_transfer)
-
-        self.update_range()
 
         vbox = Gtk.VBox()
         frame = Gtk.Frame()
@@ -139,6 +170,7 @@ class AccountTransactionTab(page.Page):
 
         self.connect("unrealize", self.on_unrealize)
         self.show_all()
+        self.no_transactions_label.hide()
 
     def on_expander_toggled(self, expander, *args):
         if (not expander.get_expanded()):
@@ -154,29 +186,16 @@ class AccountTransactionTab(page.Page):
         setter(active)
         chart.draw_chart()
 
-    def on_pick_start(self, entry, icon_pos, event):
-        dialog = common_dialogs.CalendarDialog(self.transactions_tree.range_start, parent=self.get_toplevel())
-        if dialog.date:
-            self.transactions_tree.range_start = dialog.date
-            self.update_range()
-            self.update_ui()
+    def get_info(self):
+        return [('# transactions', len(self.transactions_tree.modelfilter)),
+                ('Sum', gui_utils.get_currency_format_from_float(self.transactions_tree.get_filtered_transaction_value()))]
 
-    def on_pick_end(self, entry, icon_pos, event):
-        dialog = common_dialogs.CalendarDialog(self.transactions_tree.range_end, parent=self.get_toplevel())
-        if dialog.date:
-            self.transactions_tree.range_end = dialog.date
-            self.update_range()
-            self.update_ui()
+    def on_unrealize(self, widget):
+        self.config.set_option('account hpaned position', self.hpaned.get_position(), 'Gui')
+        self.config.set_option('show transfer', self.transactions_tree.b_show_transfer, 'Gui')
+        self.config.set_option('show uncategorized', self.transactions_tree.b_show_uncategorized, 'Gui')
 
-    def on_clear_search(self, entry, icon_pos, event):
-        self.search_entry.set_text('')
-
-    def update_range(self):
-        start = self.transactions_tree.range_start
-        self.start_entry.set_text(gui_utils.get_date_string(start))
-        self.end_entry.set_text(gui_utils.get_date_string(self.transactions_tree.range_end))
-
-    def update_ui(self):
+    def update_ui(self, *args):
         self.refilter()
         transactions = [row[0] for row in self.transactions_tree.modelfilter]
         if (not self.charts_notebook == None):
@@ -189,19 +208,10 @@ class AccountTransactionTab(page.Page):
         count = len(self.transactions_tree.modelfilter)
         if count == 0:
             self.transactions_tree.hide()
-            self.no_trans_infobar.show()
+            self.no_transactions_label.show()
         else:
-            self.no_trans_infobar.hide()
+            self.no_transactions_label.hide()
             self.transactions_tree.show()
-
-    def get_info(self):
-        return [('# transactions', len(self.transactions_tree.modelfilter)),
-                ('Sum', gui_utils.get_currency_format_from_float(self.transactions_tree.get_filtered_transaction_value()))]
-
-    def on_unrealize(self, widget):
-        self.config.set_option('account hpaned position', self.hpaned.get_position(), 'Gui')
-        self.config.set_option('show transfer', self.transactions_tree.b_show_transfer, 'Gui')
-        self.config.set_option('show uncategorized', self.transactions_tree.b_show_uncategorized, 'Gui')
 
 
 class AccountChartsNotebook(Gtk.Notebook):
@@ -270,7 +280,7 @@ class AccountChartsNotebook(Gtk.Notebook):
         self.append_page(chart, label)
 
 
-class TransactionsTree(gui_utils.Tree):
+class TransactionsTree(Gtk.ScrolledWindow):
 
     OBJECT = 0
     DESCRIPTION = 1
@@ -279,7 +289,13 @@ class TransactionsTree(gui_utils.Tree):
     DATE = 4
     ICON = 5
 
-    def __init__(self, account, actiongroup, search_entry, updater):
+    def __init__(self, account, actiongroup, updater):
+        Gtk.ScrolledWindow.__init__(self)
+        self.set_property('hscrollbar-policy', Gtk.PolicyType.AUTOMATIC)
+        self.set_property('vscrollbar-policy', Gtk.PolicyType.AUTOMATIC)
+        self.tree = gui_utils.Tree()
+        self.add(self.tree)
+
         self.account = account
         self.actiongroup = actiongroup
         self.updater = updater
@@ -289,21 +305,20 @@ class TransactionsTree(gui_utils.Tree):
         self.b_show_uncategorized = cfg.get_option('show uncategorized', section='Gui') == 'True'
         self.range_start = account_controller.account_birthday(account)
         self.range_end = datetime.date.today()
-        gui_utils.Tree.__init__(self)
 
         self.model = Gtk.ListStore(object, str, float, str, object, str)
         self.modelfilter = self.model.filter_new(None)
         sorter = Gtk.TreeModelSort(model=self.modelfilter)
-        self.set_model(sorter)
+        self.tree.set_model(sorter)
         self.modelfilter.set_visible_func(self.visible_cb, None)
-        self.create_icon_column('', self.ICON)
-        self.create_column(_('Date'), self.DATE, func=gui_utils.date_to_string)
+        self.tree.create_icon_column('', self.ICON)
+        self.tree.create_column(_('Date'), self.DATE, func=gui_utils.date_to_string)
         sorter.set_sort_func(self.DATE, gui_utils.sort_by_time, self.DATE)
-        col, cell = self.create_column(_('Description'), self.DESCRIPTION, func=gui_utils.transaction_desc_markup)
+        col, cell = self.tree.create_column(_('Description'), self.DESCRIPTION, func=gui_utils.transaction_desc_markup)
         cell.props.wrap_mode = Pango.WrapMode.WORD
         cell.props.wrap_width = 400
         col.set_expand(True)
-        self.create_column(_('Amount'), self.AMOUNT, func=gui_utils.currency_format)
+        self.tree.create_column(_('Amount'), self.AMOUNT, func=gui_utils.currency_format)
 
         cell = Gtk.CellRendererCombo()
         cb_model = Gtk.ListStore(object, str)
@@ -315,18 +330,17 @@ class TransactionsTree(gui_utils.Tree):
         cell.set_property('text-column', 1)
         cell.set_property('editable', True)
         column = Gtk.TreeViewColumn(_('Category'), cell, text = self.CATEGORY)
-        self.append_column(column)
+        self.tree.append_column(column)
 
-        self.set_rules_hint(True)
+        self.tree.set_rules_hint(True)
         sorter.set_sort_column_id(self.DATE, Gtk.SortType.DESCENDING)
-        self.get_selection().set_mode(Gtk.SelectionMode.MULTIPLE)
+        self.tree.get_selection().set_mode(Gtk.SelectionMode.MULTIPLE)
 
-        self.connect('button_press_event', self.on_button_press)
-        self.connect('key_press_event', self.on_key_press)
-        search_entry.connect('changed', self.on_search_entry_changed)
+        self.tree.connect('button_press_event', self.on_button_press)
+        self.tree.connect('key_press_event', self.on_key_press)
         self.single_category = None
         self.reset_filter_dates()
-        self.columns_autosize()
+        self.tree.columns_autosize()
         self.account.connect('transaction_added', self.on_transaction_added)
 
     def on_category_changed(self, cellrendertext, path, new_iter, model):
@@ -414,10 +428,10 @@ class TransactionsTree(gui_utils.Tree):
         self.model.append(self.get_item_to_insert(ta))
 
     def _get_selected_transaction(self):
-        selection = self.get_selection()
+        selection = self.tree.get_selection()
         model, paths = selection.get_selected_rows()
         if len(paths) != 0:
-            return self.get_model()[paths[0]][self.OBJECT], model.get_iter(paths[0])
+            return self.tree.get_model()[paths[0]][self.OBJECT], model.get_iter(paths[0])
         return None, None
 
     def on_add(self, widget=None, data=None):
@@ -453,7 +467,7 @@ class TransactionsTree(gui_utils.Tree):
             self.model.remove(child_iter)
 
     def _get_child_iter(self, iterator):
-        child_iter = self.get_model().convert_iter_to_child_iter(iterator)
+        child_iter = self.tree.get_model().convert_iter_to_child_iter(iterator)
         return self.modelfilter.convert_iter_to_child_iter(child_iter)
 
     def on_set_transaction_category(self, category=None):
