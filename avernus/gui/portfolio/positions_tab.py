@@ -471,7 +471,6 @@ class WatchlistPositionsTab(page.Page):
 class PortfolioPositionsTab(page.Page):
 
     def __init__(self, portfolio):
-        Gtk.VBox.__init__(self)
         page.Page.__init__(self)
         self.portfolio = portfolio
         actiongroup = Gtk.ActionGroup('portfolio positions tab')

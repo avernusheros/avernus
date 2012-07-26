@@ -142,8 +142,6 @@ def update_all(*args):
         yield count / itemcount
     for item in Session().query(Container).all():
         item.last_update = datetime.datetime.now()
-    #FIXME
-    #pubsub.publish("stocks.updated", item)
     Session().commit()
     yield 1
 
@@ -161,4 +159,3 @@ def update_historical_prices(*args):
         yield i / l
     Session().commit()
     yield 1
-
