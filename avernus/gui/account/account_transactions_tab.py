@@ -499,6 +499,7 @@ class CategoriesTree(gui_utils.Tree):
             ])
         # toolbar
         toolbar = builder.get_object("category_tb")
+        toolbar.get_style_context().add_class("inline-toolbar")
         for action in self.actiongroup2.list_actions() + self.actiongroup1.list_actions():
             toolbar.insert(action.create_tool_item(), -1)
 

@@ -15,11 +15,12 @@ class AssetManager:
 
         self.tree = gui_utils.Tree()
         self.tree.set_headers_visible(True)
-        model = Gtk.ListStore(object, str, str, str)
+        model = Gtk.ListStore(object, str, str, str, str)
         self.tree.set_model(model)
         self.tree.create_column(_('Name'), 1)
         self.tree.create_column(_('ISIN'), 2)
         self.tree.create_column(_('Type'), 3)
+        self.tree.create_column(_('Currency'), 4)
 
         sw = builder.get_object("scrolledwindow")
         sw.add(self.tree)
@@ -49,7 +50,7 @@ class AssetManager:
         dlg.destroy()
 
     def get_row(self, asset):
-        return [asset, GObject.markup_escape_text(asset.name), asset.isin, asset.type]
+        return [asset, GObject.markup_escape_text(asset.name), asset.isin, asset.type, asset.currency]
 
     def on_button_press_event(self, widget, event):
         if event.button == 1 and event.type == Gdk.EventType._2BUTTON_PRESS:
