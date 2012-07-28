@@ -28,8 +28,8 @@ class Container(Base, GObject.GObject):
     last_update = Column(DateTime)
 
     __gsignals__ = {
-        'position_added': (GObject.SIGNAL_RUN_LAST, None,
-                      (object,))
+        'position_added': (GObject.SIGNAL_RUN_LAST, None, (object,)),
+        'updated' : (GObject.SIGNAL_RUN_LAST, None, ())
     }
 
     def __init__(self, *args, **kwargs):

@@ -112,14 +112,10 @@ class MainTree(gui_utils.Tree, GObject.GObject):
         self.uimanager = Gtk.UIManager()
         self.uimanager.insert_action_group(actiongroup)
         self.uimanager.add_ui_from_file(get_ui_file("left_pane_popup.ui"))
-        # Add the accelerator group to the toplevel window
-        accelgroup = self.uimanager.get_accel_group()
-        #FIXME add accelgroup to toplevel window for keyboard shortcuts
-        #self.get_toplevel().add_accel_group(accelgroup)
 
         self._init_widgets()
         self.insert_categories()
-        self._subscribe()
+        self.connect_signals()
         self._load_items()
 
     def _load_items(self):
@@ -142,7 +138,7 @@ class MainTree(gui_utils.Tree, GObject.GObject):
             self.insert_account(account)
         self.expand_all()
 
-    def _subscribe(self):
+    def connect_signals(self):
         self.connect('button-press-event', self.on_button_press_event)
         self.connect('cursor_changed', self.on_cursor_changed)
 
@@ -206,6 +202,7 @@ class MainTree(gui_utils.Tree, GObject.GObject):
     def insert_portfolio(self, item):
         new_iter = self.get_model().append(self.pf_iter, [item, 'portfolio', item.name, gui_utils.get_currency_format_from_float(portfolio_controller.get_current_value(item)), True])
         item.connect("position_added", self.on_container_value_changed, new_iter)
+        item.connect("updated", self.on_container_updated, new_iter)
 
     def on_remove(self, widget=None, data=None):
         if self.selected_item is None:
@@ -226,6 +223,9 @@ class MainTree(gui_utils.Tree, GObject.GObject):
 
     def on_balance_changed(self, item, balance, iterator):
         self.get_model()[iterator][3] = gui_utils.get_currency_format_from_float(balance)
+
+    def on_container_updated(self, item, iterator):
+        self.get_model()[iterator][3] = gui_utils.get_currency_format_from_float(portfolio_controller.get_current_value(item))
 
     def on_container_value_changed(self, item, new_position, iterator):
         self.get_model()[iterator][3] = gui_utils.get_currency_format_from_float(portfolio_controller.get_current_value(item))

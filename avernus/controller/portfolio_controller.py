@@ -13,8 +13,8 @@ import datetime
 class AllPortfolio(GObject.GObject):
 
     __gsignals__ = {
-        'position_added': (GObject.SIGNAL_RUN_LAST, None,
-                      (object,))
+        'position_added': (GObject.SIGNAL_RUN_LAST, None, (object,)),
+        "updated":  (GObject.SIGNAL_RUN_LAST, None, ())
     }
     name = _("All")
 
@@ -215,5 +215,5 @@ def update_positions(portfolio):
         count += 1.0
         yield count / itemcount
     portfolio.last_update = datetime.datetime.now()
-    #pubsub.publish("stocks.updated", self)
+    portfolio.emit("updated")
     yield 1
