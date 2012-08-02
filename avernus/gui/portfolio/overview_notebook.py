@@ -166,6 +166,9 @@ class PortfolioOverviewTree(gui_utils.Tree):
         model = self.get_model()
         all_portfolio = portfolio_controller.AllPortfolio()
         self.overall_value = portfolio_controller.get_current_value(all_portfolio)
+        # ensure no division by zero error occurs
+        if self.overall_value == 0.0:
+            self.overall_value = 1.0
         iterator = model.append(None, self.get_row(all_portfolio, Pango.Weight.BOLD))
         for item in portfolio_controller.get_all_portfolio():
             model.append(iterator, self.get_row(item))

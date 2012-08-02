@@ -2,6 +2,7 @@
 from gi.repository import Gtk
 from gi.repository import Gdk
 import sys
+import datetime
 
 from avernus.gui.portfolio.plot import ChartWindow
 from avernus.gui.portfolio import dialogs
@@ -77,6 +78,10 @@ class PositionsTree(Tree):
         self.load_positions()
         self._connect_signals()
         self.selected_item = None
+
+        # auto-update assets
+        if not container.last_update or datetime.datetime.now() - container.last_update > datetime.timedelta(minutes=2):
+            self.on_update_positions()
 
     def _connect_signals(self):
         self.connect('button-press-event', self.on_button_press_event)
