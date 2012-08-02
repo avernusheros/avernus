@@ -193,16 +193,18 @@ class MainTree(gui_utils.Tree, GObject.GObject):
         self.accounts_iter = self.get_model().append(None, [Category('Accounts'), None, _("<b>Accounts</b>"), '', False])
 
     def insert_watchlist(self, item):
-        self.get_model().append(self.wl_iter, [item, 'watchlist', item.name, '', True])
+        return self.get_model().append(self.wl_iter, [item, 'watchlist', item.name, '', True])
 
     def insert_account(self, account):
         new_iter = self.get_model().append(self.accounts_iter, [account, 'account', account.name, gui_utils.get_currency_format_from_float(account.balance), True])
         account.connect("balance_changed", self.on_balance_changed, new_iter)
+        return new_iter
 
     def insert_portfolio(self, item):
         new_iter = self.get_model().append(self.pf_iter, [item, 'portfolio', item.name, gui_utils.get_currency_format_from_float(portfolio_controller.get_current_value(item)), True])
         item.connect("position_added", self.on_container_value_changed, new_iter)
         item.connect("updated", self.on_container_updated, new_iter)
+        return new_iter
 
     def on_remove(self, widget=None, data=None):
         if self.selected_item is None:
@@ -310,7 +312,7 @@ class MainTree(gui_utils.Tree, GObject.GObject):
         obj, row = self.selected_item
         model = self.get_model()
 
-        if obj.__class__.__name__ == 'Portfolio' or obj.name == 'Portfolios':
+        if obj.__class__.__name__ == 'Portfolio' or obj.__class__.__name__ == 'AllPortfolio' or obj.name == 'Portfolios':
             inserter = self.insert_portfolio
             cat_type = "portfolio"
             item = portfolio_controller.new_portfolio(_('new portfolio'))
@@ -318,9 +320,9 @@ class MainTree(gui_utils.Tree, GObject.GObject):
             inserter = self.insert_watchlist
             cat_type = "watchlist"
             item = portfolio_controller.new_watchlist(_('new watchlist'))
-        elif obj.__class__.__name__ == 'Account' or obj.name == 'Accounts':
+        elif obj.__class__.__name__ == 'Account' or obj.__class__.__name__ == 'AllAccount' or obj.name == 'Accounts':
             inserter = self.insert_account
             cat_type = "account"
             item = account_controller.new_account(_('new account'))
         iterator = inserter(item)
-        self.set_cursor(model.get_path(iterator), start_editing=True)
+        self.set_cursor(path=self.get_model().get_path(iterator), column=self.get_column(0), start_editing=True)

@@ -5,14 +5,15 @@ if __name__ == '__main__':
     import sys, os
     path = os.path.abspath(os.path.join(os.path.dirname(__file__),".."))
     sys.path.append(path)
-
+else:
+    from avernus.controller import filter_controller, account_controller
 
 from datetime import datetime
 import codecs, csv, re
 from cStringIO import StringIO
 import chardet
 
-from avernus.controller import filter_controller, account_controller
+
 
 
 FORMATS = ['%Y-%m-%d',
@@ -45,6 +46,7 @@ class CsvImporter:
         #csv dialect
         csvdata = StringIO(open(filename, 'rb').read())
         delimiter = self._guess_delimiter(csvdata)
+        csvdata.seek(0)
         profile['dialect'] = csv.Sniffer().sniff(csvdata.read(2048), delimiters=delimiter)
         csvdata.seek(0)
         #encoding
@@ -112,20 +114,26 @@ class CsvImporter:
         return profile
 
     def _guess_delimiter(self, csvdata, candidates=[',',';','\t']):
-        last = None
-        count = 0
+        histogram = {}
+        for can in candidates:
+            histogram[can] = []
         for row in csvdata:
             for can in candidates:
-                temp = row.count(can)
-                if temp>count:
-                    count = temp
-                    last = can
-                elif temp==count:
-                    if last==can:
-                        return can
-                    else:
-                        last = None
-        return None
+                histogram[can].append(0)
+            for char in row:
+                if char in candidates:
+                    histogram[char][-1] += 1
+
+        max_count = 0
+        ret = None
+        for key, hist in histogram.iteritems():
+            max_item = max(hist)
+            if max_item != 0:
+                count = hist.count(max_item)
+                if count > max_count:
+                    max_count = count
+                    ret = key
+        return ret
 
     def _has_header(self, csvdata, profile):
         """

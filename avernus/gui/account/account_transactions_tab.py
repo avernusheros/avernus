@@ -622,17 +622,14 @@ class EditTransaction(Gtk.Dialog):
                      (Gtk.STOCK_CANCEL, Gtk.ResponseType.REJECT,
                       Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT))
         self.transaction = transaction
+        self.account = account
         vbox = self.get_content_area()
-
-        if self.transaction is None:
-            self.transaction = account_controller.new_account_transaction(account=account)
 
         #description
         frame = Gtk.Frame(label='Description')
         self.description_entry = Gtk.TextView()
         self.description_entry.set_wrap_mode(Gtk.WrapMode.WORD)
         entry_buffer = self.description_entry.get_buffer()
-        entry_buffer.set_text(self.transaction.description)
         frame.add(self.description_entry)
         vbox.pack_start(frame, True, True, 0)
 
@@ -640,7 +637,7 @@ class EditTransaction(Gtk.Dialog):
         hbox = Gtk.HBox()
         label = Gtk.Label(label=_('Amount'))
         hbox.pack_start(label, False, False, 0)
-        self.amount_entry = Gtk.SpinButton(adjustment=Gtk.Adjustment(lower= -999999999, upper=999999999, step_increment=10, value=self.transaction.amount), digits=2)
+        self.amount_entry = Gtk.SpinButton(adjustment=Gtk.Adjustment(lower= -999999999, upper=999999999, step_increment=10, value=0.0), digits=2)
         hbox.pack_start(self.amount_entry, True, True, 0)
         vbox.pack_start(hbox, False, False, 0)
 
@@ -656,8 +653,6 @@ class EditTransaction(Gtk.Dialog):
 
         def insert_recursive(cat, parent):
             new_iter = treestore.append(parent, [cat, cat.name])
-            if cat == self.transaction.category:
-                self.combobox.set_active_iter(new_iter)
             for child_cat in cat.children:
                 insert_recursive(child_cat, new_iter)
         new_iter = treestore.append(None, [None, 'None'])
@@ -671,15 +666,11 @@ class EditTransaction(Gtk.Dialog):
 
         #date
         self.calendar = Gtk.Calendar()
-        self.calendar.select_month(self.transaction.date.month - 1, self.transaction.date.year)
-        self.calendar.select_day(self.transaction.date.day)
         vbox.pack_start(self.calendar, False, False, 0)
 
         #transfer
         text = "Transfer: this transaction will not be shown in any of the graphs."
         self.transfer_button = Gtk.CheckButton(text)
-        if self.transaction.transfer:
-            self.transfer_button.set_active(True)
         vbox.pack_start(self.transfer_button, False, False, 0)
 
         self.matching_transactions_tree = gui_utils.Tree()
@@ -693,6 +684,21 @@ class EditTransaction(Gtk.Dialog):
         vbox.pack_end(self.matching_transactions_tree, True, True, 0)
         self.no_matches_label = Gtk.Label(label='No matching transactions found. Continue only if you want to mark this as a tranfer anyway.')
         vbox.pack_end(self.no_matches_label, True, True, 0)
+
+        if self.transaction:
+            entry_buffer.set_text(self.transaction.description)
+            self.amount_entry.set_value(self.transaction.amount)
+            for row in self.combobox:
+                if cat == self.transaction.category:
+                    self.combobox.set_active_iter(new_iter)
+            self.calendar.select_month(self.transaction.date.month - 1, self.transaction.date.year)
+            self.calendar.select_day(self.transaction.date.day)
+            if self.transaction.transfer:
+                self.transfer_button.set_active(True)
+        else:
+            today = datetime.date.today()
+            self.calendar.select_month(today.month - 1, today.year)
+            self.calendar.select_day(today.day)
 
         #connect signals
         self.transfer_button.connect("toggled", self.on_transfer_toggled)
@@ -730,15 +736,27 @@ class EditTransaction(Gtk.Dialog):
     def process_result(self, response):
         if response == Gtk.ResponseType.ACCEPT:
             buffer = self.description_entry.get_buffer()
-            self.transaction.description = unicode(buffer.get_text(buffer.get_start_iter(), buffer.get_end_iter(), True), encoding="utf8")
-            self.transaction.amount = self.amount_entry.get_value()
+            description = unicode(buffer.get_text(buffer.get_start_iter(), buffer.get_end_iter(), True), encoding="utf8")
+            amount = self.amount_entry.get_value()
             year, month, day = self.calendar.get_date()
-            self.transaction.date = datetime.date(year, month + 1, day)
-            iter = self.combobox.get_active_iter()
+            date = datetime.date(year, month + 1, day)
             if iter is None:
-                self.transaction.category = None
+                category = None
             else:
-                self.transaction.category = self.combobox.get_model()[self.combobox.get_active_iter()][0]
+                category = self.combobox.get_model()[self.combobox.get_active_iter()][0]
+
+            if self.transaction is None:
+                self.transaction = account_controller.new_account_transaction(account=self.account
+                                            , desc=description
+                                            , amount=amount
+                                            , date=date
+                                            , category=category)
+            else:
+                self.transaction.description =description
+                self.transaction.amount = amount
+                self.transaction.date = date
+                self.transaction.category = category
+
             if self.transfer_button.get_active():
                 self.transaction.transfer = self.transfer_transaction
                 self.transfer_transaction.transfer = self.transaction
