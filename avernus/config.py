@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# -*- coding: latin-1 -*-
+# -*- coding: utf-8 -*-
 
 import os, glib
 __avernus_data_directory__ = '/usr/local/share/avernus/'

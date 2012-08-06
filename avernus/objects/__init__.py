@@ -1,3 +1,6 @@
+#!/usr/bin/python
+# -*- Mode: Python; coding: utf-8; indent-tabs-mode: nil; tab-width: 4 -*-
+
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base, DeclarativeMeta
 from sqlalchemy.orm import sessionmaker, scoped_session
@@ -11,7 +14,6 @@ from gi.repository.GObject import GObjectMeta
 
 
 logger = logging.getLogger(__name__)
-
 
 # current version of our model
 version = 12
@@ -27,7 +29,6 @@ class SQLBase(object):
 # base for the objects
 #Base = declarative_base(cls=GObjectMeta)
 Base = declarative_base(cls=SQLBase, metaclass=DeclarativeGObjectMeta)
-
 
 
 from account import *

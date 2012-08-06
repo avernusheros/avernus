@@ -26,7 +26,7 @@ class BuildData(build):
         build.run (self)
         for po in glob.glob(os.path.join(PO_DIR, '*.po')):
             lang = os.path.basename(po[:-3])
-            mo = os.path.join(MO_DIR, lang, 'avernus.mo')
+            mo = os.path.join(MO_DIR, lang, 'LC_MESSAGES', 'avernus.mo')
 
             target_dir = os.path.dirname(mo)
             if not os.path.isdir(target_dir):

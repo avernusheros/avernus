@@ -1,14 +1,16 @@
-from avernus.objects.asset import Asset
-from avernus.objects.asset import Quotation
-from avernus.objects.asset import Dividend
-from avernus.objects.asset import SourceInfo
-from avernus.objects.asset import BuyTransaction, SellTransaction, Transaction
-from avernus.objects.container import Position, Container, PortfolioPosition
-from avernus.controller.object_controller import delete_object
-# Session is the class, session the normal instance
-from avernus.objects import Session, session, asset
 from sqlalchemy import or_, desc
 import datetime
+
+from avernus.objects import Asset
+from avernus.objects import Quotation
+from avernus.objects import Dividend
+from avernus.objects import Fund
+from avernus.objects import SourceInfo
+from avernus.objects import BuyTransaction, SellTransaction, Transaction
+from avernus.objects import Position, Container, PortfolioPosition
+from avernus.controller.object_controller import delete_object
+# Session is the class, session the normal instance
+from avernus.objects import Session, session
 
 datasource_manager = None
 
@@ -69,7 +71,7 @@ def get_quotations_for_asset(asset, start_date):
                                  .order_by(Quotation.date).all()
 
 def get_ter(ass):
-    if isinstance(ass, asset.Fund):
+    if isinstance(ass, Fund):
         return ass.ter
     return 0.0
 

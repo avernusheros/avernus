@@ -57,7 +57,7 @@ def init_translations():
     from os.path import pardir, abspath, dirname, join
 
     GETTEXT_DOMAIN = 'avernus'
-    LOCALE_PATH = abspath(join(dirname(__file__), pardir, 'locales'))
+    LOCALE_PATH = abspath(join(dirname(__file__), pardir, 'build/mo'))
     if not os.path.isdir(LOCALE_PATH):
         LOCALE_PATH = '/usr/share/locale'
 
@@ -77,7 +77,7 @@ def init_translations():
                                       languages=languages_used,
                                       fallback=True)
     import __builtin__
-    __builtin__._ = translation.gettext
+    __builtin__._ = translation.ugettext
 
 def init_icons():
     from avernus.gui.icons import IconManager

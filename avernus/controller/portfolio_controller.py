@@ -5,7 +5,6 @@ from avernus.controller.object_controller import delete_object
 from avernus import math
 
 from gi.repository import GObject
-from . import dsm
 
 import datetime
 
@@ -211,7 +210,7 @@ def update_positions(portfolio):
     items = set(pos.asset for pos in portfolio if pos.quantity > 0)
     itemcount = len(items)
     count = 0.0
-    for item in dsm.update_assets(items):
+    for item in asset_controller.datasource_manager.update_assets(items):
         count += 1.0
         yield count / itemcount
     portfolio.last_update = datetime.datetime.now()

@@ -1,4 +1,5 @@
 # -*- Mode: Python; coding: utf-8; indent-tabs-mode: nil; tab-width: 4 -*-
+
 from BeautifulSoup import BeautifulSoup
 from urllib import urlopen
 import csv
@@ -6,7 +7,8 @@ import pytz
 import re
 import json
 from datetime import datetime
-from avernus.objects.asset import Fund, Stock
+
+from avernus.objects import Fund, Stock
 from avernus.controller import asset_controller
 
 import logging

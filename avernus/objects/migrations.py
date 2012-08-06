@@ -1,3 +1,6 @@
+#!/usr/bin/python
+# -*- Mode: Python; coding: utf-8; indent-tabs-mode: nil; tab-width: 4 -*-
+
 import sqlite3
 import datetime
 

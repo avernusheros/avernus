@@ -188,9 +188,9 @@ class MainTree(gui_utils.Tree, GObject.GObject):
                 return True
 
     def insert_categories(self):
-        self.pf_iter = self.get_model().append(None, [Category('Portfolios'), None, _("<b>Portfolios</b>"), '', False])
-        self.wl_iter = self.get_model().append(None, [Category('Watchlists'), None, _("<b>Watchlists</b>"), '', False])
-        self.accounts_iter = self.get_model().append(None, [Category('Accounts'), None, _("<b>Accounts</b>"), '', False])
+        self.pf_iter = self.get_model().append(None, [Category('Portfolios'), None, "<b>"+_('Portfolios')+"</b>", '', False])
+        self.wl_iter = self.get_model().append(None, [Category('Watchlists'), None, "<b>"+_('Watchlists')+"</b>", '', False])
+        self.accounts_iter = self.get_model().append(None, [Category('Accounts'), None, "<b>"+_('Accounts')+"</b>", '', False])
 
     def insert_watchlist(self, item):
         return self.get_model().append(self.wl_iter, [item, 'watchlist', item.name, '', True])
@@ -214,7 +214,7 @@ class MainTree(gui_utils.Tree, GObject.GObject):
             dlg = Gtk.MessageDialog(None,
                  Gtk.DialogFlags.DESTROY_WITH_PARENT, Gtk.MessageType.QUESTION,
                  Gtk.ButtonsType.OK_CANCEL)
-            dlg.set_markup(_("Permanently delete <b>") + obj.name + '</b>?')
+            dlg.set_markup(_("Permanently delete") + "<b>" + obj.name + '</b>?')
             response = dlg.run()
             dlg.destroy()
             if response == Gtk.ResponseType.OK:
