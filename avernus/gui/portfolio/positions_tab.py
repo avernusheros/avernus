@@ -13,6 +13,7 @@ from avernus.controller.position_controller import MetaPosition
 from avernus.controller import portfolio_controller
 from avernus.controller import position_controller
 from avernus.controller import object_controller
+from avernus.controller import asset_controller
 
 
 gain_thresholds = {
@@ -275,7 +276,7 @@ class PortfolioPositionsTree(PositionsTree):
                float(gain[1]),
                gain_icon,
                float(c_change[1]),
-               position.asset.type,
+               asset_controller.ASSET_TYPES[type(position.asset)],
                portfolio_controller.get_fraction(self.container, position),
                gain_div[0],
                float(gain_div[1]),
@@ -398,7 +399,7 @@ class WatchlistPositionsTree(PositionsTree):
                float(gain[1]),
                gain_icon,
                float(c_change[1]),
-               position.asset.type,
+               asset_controller.ASSET_TYPES[type(position.asset)],
                0.0]
         return ret
 

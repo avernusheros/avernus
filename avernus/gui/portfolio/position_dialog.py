@@ -27,7 +27,7 @@ class PositionDialog(Gtk.Dialog):
         vbox.pack_start(notebook, True, True, 0)
         if isinstance(position, MetaPosition):
             self.is_meta = True
-            self.position_table = Gtk.Label(label='This is a meta-position!')
+            self.position_table = Gtk.Label(label=_('This is a meta-position!'))
         else:
             self.is_meta = False
             self.position_table = EditPositionTable(position)

@@ -34,12 +34,12 @@ class CSVImportDialog(Gtk.Dialog):
         self.process_result(response = response)
 
     def _init_widgets(self):
-        self.import_button = self.add_button('Import', Gtk.ResponseType.ACCEPT)
+        self.import_button = self.add_button(_('Import'), Gtk.ResponseType.ACCEPT)
         self.import_button.set_sensitive(False)
         vbox = self.get_content_area()
         fileBox = Gtk.HBox()
         vbox.pack_start(fileBox, False, False, 0)
-        fileBox.pack_start(Gtk.Label('File to import'), False, False, 0)
+        fileBox.pack_start(Gtk.Label(_('File to import')), False, False, 0)
         self.fcbutton = Gtk.FileChooserButton()
         self.fcbutton.set_title(_('File to import'))
         self.file = None
@@ -50,7 +50,7 @@ class CSVImportDialog(Gtk.Dialog):
         fileBox.pack_start(self.fcbutton, True, True, 0)
         accBox = Gtk.HBox()
         vbox.pack_start(accBox, False, False, 0)
-        accBox.pack_start(Gtk.Label('Target account'), False, False, 0)
+        accBox.pack_start(Gtk.Label(_('Target account')), False, False, 0)
         model = Gtk.ListStore(object, str)
         i = 0
         active = -1
@@ -75,7 +75,7 @@ class CSVImportDialog(Gtk.Dialog):
         category_assignment_button.connect('toggled', self.on_toggle_assignments)
 
         frame = Gtk.Frame()
-        frame.set_label('Preview')
+        frame.set_label(_('Preview'))
         sw = Gtk.ScrolledWindow()
         sw.set_policy(Gtk.PolicyType.AUTOMATIC,Gtk.PolicyType.AUTOMATIC)
         self.tree = PreviewTree()
@@ -123,10 +123,10 @@ class CSVImportDialog(Gtk.Dialog):
             self.tree.reload(self.importer.results)
 
     def show_import_error_dialog(self):
-        text = _("""Avernus was unable to parse your csv file.
-- Is the submitted file a csv?
-- Using a csv with more data might give better results.
-- Maybe you want to report a bug.""")
+        text = _("Avernus was unable to parse your csv file.") + "\n"
+        text += "-" + _("Is the submitted file a csv?") + "\n"
+        text += "-" + _("Using a csv with more data might give better results.") + "\n"
+        text += "-" + _("Maybe you want to report a bug.")
         dlg = Gtk.MessageDialog(None, Gtk.DialogFlags.DESTROY_WITH_PARENT, Gtk.MessageType.ERROR, Gtk.ButtonsType.CLOSE, text)
         dlg.run()
         dlg.destroy()
@@ -143,20 +143,20 @@ class PreviewTree(gui_utils.Tree):
         self.model = Gtk.ListStore(object, str, float, bool, str, str)
         self.set_model(self.model)
 
-        column, cell = self.create_check_column('import?', 3)
+        column, cell = self.create_check_column('', 3)
         cell.connect("toggled", self.on_toggled)
-        column, cell = self.create_column('date', 0, func=gui_utils.date_to_string)
+        column, cell = self.create_column(_('Date'), 0, func=gui_utils.date_to_string)
         column.add_attribute(cell, 'foreground', 5)
         cell.set_property('foreground-set', True)
-        column, cell = self.create_column('description', 1)
+        column, cell = self.create_column(_('Description'), 1)
         column.add_attribute(cell, 'foreground', 5)
         cell.set_property('foreground-set', True)
         cell.props.wrap_mode = Pango.WrapMode.WORD
         cell.props.wrap_width = 300
-        column, cell = self.create_column('amount', 2, func=gui_utils.currency_format)
+        column, cell = self.create_column(_('Amount'), 2, func=gui_utils.currency_format)
         column.add_attribute(cell, 'foreground', 5)
         cell.set_property('foreground-set', True)
-        column, cell = self.create_column('category', 4)
+        column, cell = self.create_column(_('Category'), 4)
         column.add_attribute(cell, 'foreground', 5)
         cell.set_property('foreground-set', True)
 

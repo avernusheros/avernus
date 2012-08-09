@@ -28,7 +28,7 @@ class ExportDialog(Gtk.Dialog):
         self.process_result(response = response)
 
     def _init_widgets(self):
-        self.export_button = self.add_button('Export', Gtk.ResponseType.ACCEPT)
+        self.export_button = self.add_button(_('Export'), Gtk.ResponseType.ACCEPT)
         self.export_button.set_sensitive(False)
         vbox = self.get_content_area()
         fileBox = Gtk.HBox()
@@ -46,7 +46,7 @@ class ExportDialog(Gtk.Dialog):
         fileBox.pack_start(self.fcbutton, True, True, 0)
         accBox = Gtk.HBox()
         vbox.pack_start(accBox, False, False, 0)
-        accBox.pack_start(Gtk.Label('Target account'), False, False, 0)
+        accBox.pack_start(Gtk.Label(_('Account')), False, False, 0)
         model = Gtk.ListStore(object, str)
         i = 0
         active = -1
@@ -65,7 +65,7 @@ class ExportDialog(Gtk.Dialog):
         self.account_cb.connect('changed', self._on_account_changed)
         accBox.pack_start(self.account_cb, False, True, 0)
         frame = Gtk.Frame()
-        frame.set_label('Transactions')
+        frame.set_label(_('Transactions'))
         sw = Gtk.ScrolledWindow()
         sw.set_policy(Gtk.PolicyType.AUTOMATIC,Gtk.PolicyType.AUTOMATIC)
         self.tree = TransactionTree()
@@ -103,6 +103,7 @@ class ExportDialog(Gtk.Dialog):
                                      transaction.description, transaction.category])
         self.destroy()
 
+
 class TransactionTree(gui_utils.Tree):
 
     OBJECT = 0
@@ -118,15 +119,15 @@ class TransactionTree(gui_utils.Tree):
         self.model = Gtk.ListStore(object, object, float, str, bool)
         self.set_model(self.model)
 
-        column, cell = self.create_check_column('export?', self.EXPORT)
+        column, cell = self.create_check_column('', self.EXPORT)
         cell.connect("toggled", self.on_toggled)
-        column, cell = self.create_column('date', self.DATE, func=gui_utils.date_to_string)
+        column, cell = self.create_column(_('Date'), self.DATE, func=gui_utils.date_to_string)
         column.add_attribute(cell, 'foreground', 5)
         cell.set_property('foreground-set', True)
-        column, cell = self.create_column('amount', self.AMOUNT, func=gui_utils.currency_format)
+        column, cell = self.create_column(_('Amount'), self.AMOUNT, func=gui_utils.currency_format)
         column.add_attribute(cell, 'foreground', 5)
         cell.set_property('foreground-set', True)
-        column, cell = self.create_column('description', self.DESC)
+        column, cell = self.create_column(_('Description'), self.DESC)
         column.add_attribute(cell, 'foreground', 5)
         cell.set_property('foreground-set', True)
         cell.props.wrap_mode = Pango.WrapMode.WORD

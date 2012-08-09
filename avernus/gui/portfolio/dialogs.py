@@ -433,17 +433,10 @@ class EditAssetTable(Gtk.Table):
         self.attach(self.isin_entry, 1, 2, 1, 2, yoptions=Gtk.AttachOptions.FILL)
 
         self.attach(Gtk.Label(label=_('Type')), 0, 1, 2, 3, yoptions=Gtk.AttachOptions.FILL)
-        liststore = Gtk.ListStore(str, int)
-        #FIXME
-        #for val, name in stock.TYPES.iteritems():
-        #    liststore.append([name, val])
-        self.type_cb = cb = Gtk.ComboBox(model=liststore)
-        cell = Gtk.CellRendererText()
-        cb.pack_start(cell, True)
-        cb.add_attribute(cell, 'text', 0)
-        #FIXME
-        #cb.set_active(self.asset.type)
-        self.attach(cb, 1, 2, 2, 3, yoptions=Gtk.AttachOptions.FILL)
+        entry = Gtk.Entry()
+        entry.set_text(asset_controller.ASSET_TYPES[type(asset_to_edit)])
+        entry.set_editable(False)
+        self.attach(entry, 1, 2, 2, 3, yoptions=Gtk.AttachOptions.FILL)
 
         self.attach(Gtk.Label(label=_('TER')), 0, 1, 3, 4, yoptions=Gtk.AttachOptions.SHRINK)
         self.ter_entry = Gtk.SpinButton(adjustment=Gtk.Adjustment(lower=0, upper=100, step_increment=0.1, value=asset_controller.get_ter(self.asset)), digits=2)
@@ -470,9 +463,6 @@ class EditAssetTable(Gtk.Table):
         if response == Gtk.ResponseType.ACCEPT and self.b_change:
             self.asset.name = self.name_entry.get_text()
             self.asset.isin = self.isin_entry.get_text()
-            active_iter = self.type_cb.get_active_iter()
-            #FIXME
-            #self.asset.type = self.type_cb.get_model()[active_iter][1]
             self.asset.ter = self.ter_entry.get_value()
             for dim in dimensions_controller.get_all_dimensions():
                 box = getattr(self, dim.name + "ValueComboBox")

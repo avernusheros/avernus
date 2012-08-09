@@ -5,6 +5,9 @@ from avernus.objects import Asset
 from avernus.objects import Quotation
 from avernus.objects import Dividend
 from avernus.objects import Fund
+from avernus.objects import Bond
+from avernus.objects import Etf
+from avernus.objects import Stock
 from avernus.objects import SourceInfo
 from avernus.objects import BuyTransaction, SellTransaction, Transaction
 from avernus.objects import Position, Container, PortfolioPosition
@@ -13,6 +16,14 @@ from avernus.controller.object_controller import delete_object
 from avernus.objects import Session, session
 
 datasource_manager = None
+
+
+ASSET_TYPES = {
+               Bond: _('Bond'),
+               Etf: _('ETF'),
+               Fund: _('Fund'),
+               Stock: _('Stock'),
+               }
 
 
 def check_asset_existance(source, isin, currency):

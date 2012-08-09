@@ -287,8 +287,9 @@ class MainTree(gui_utils.Tree, GObject.GObject):
         self.combobox.pack_start(cell, True)
         self.combobox.add_attribute(cell, 'text', 1)
         for account_type, name in account_controller.yield_account_types():
-            liststore.append([account_type, name])
-        self.combobox.set_active(acc.type)
+            iterator = liststore.append([account_type, name])
+            if account_type == acc.type:
+                self.combobox.set_active_iter(iterator)
 
         dlg.add_buttons(Gtk.STOCK_CANCEL, Gtk.ResponseType.REJECT,
                       Gtk.STOCK_APPLY, Gtk.ResponseType.ACCEPT)

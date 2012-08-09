@@ -101,7 +101,7 @@ class ChartTab(page.Page):
             y += 2
 
         label = Gtk.Label()
-        label.set_markup('<b>' + _('Dividends per Year') + '</b>')
+        label.set_markup('<b>' + _('Dividends per year') + '</b>')
         label.set_tooltip_text(_('Total dividend payment per year.'))
         table.attach(label, 0, 2, y, y + 1)
         controller = chart_controller.DividendsPerYearChartController(self.pf)
@@ -133,7 +133,7 @@ class BenchmarkDialog(Gtk.Dialog):
     DEFAULT_HEIGHT = 300
 
     def __init__(self, portfolio, parent=None):
-        Gtk.Dialog.__init__(self, _('New portfolio benchmakr'), parent
+        Gtk.Dialog.__init__(self, _('New portfolio benchmark'), parent
                             , Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,
                      (Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT))
         self.set_default_size(self.DEFAULT_WIDTH, self.DEFAULT_HEIGHT)
@@ -146,7 +146,7 @@ class BenchmarkDialog(Gtk.Dialog):
         self.tree.set_model(self.model)
         vbox.pack_start(self.tree, True, True, 0)
 
-        self.tree.create_column('Name', 1)
+        self.tree.create_column(_('Name'), 1)
         self.tree.create_column(_('Percentage'), 2)
 
         # load items
