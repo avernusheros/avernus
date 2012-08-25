@@ -1,7 +1,10 @@
 avernus 0.10:
   * annual return of portfolio positions
   * annual return of portfolios
-
+  * switch to matplotlib for charts
+  * improved charts
+  * code cleanup and refactoring
+  * translations
 
 avernus 0.9:
 

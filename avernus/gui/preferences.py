@@ -142,6 +142,7 @@ class DimensionList(Gtk.VBox):
                 ('remove', Gtk.STOCK_DELETE, 'remove dimension', None, _('Remove selected dimension'), self.on_remove)
                      ])
         toolbar = Gtk.Toolbar()
+        toolbar.get_style_context().add_class("inline-toolbar")
         self.conditioned = ['rename', 'edit']
 
         for action in actiongroup.list_actions():

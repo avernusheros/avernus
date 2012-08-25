@@ -355,8 +355,8 @@ class EditHistoricalQuotationsDialog(Gtk.Dialog):
 
     def on_add(self, button):
         quotation = asset_controller.new_quotation(datetime.date.today(), self.asset, detectDuplicates=False)
-        iter = self.model.append([quotation, quotation.date, quotation.close])
-        path = self.model.get_path(iter)
+        iterator = self.model.append([quotation, quotation.date, quotation.close])
+        path = self.model.get_path(iterator)
         self.tree.set_cursor(path, focus_column=self.price_column, start_editing=True)
 
     def on_remove(self, button):
@@ -416,8 +416,8 @@ class EditPositionTable(Gtk.Table):
         self.pos.price = self.price_entry.get_value()
         year, month, day = self.calendar.get_date()
         self.pos.date = datetime.datetime(year, month + 1, day)
-        buffer = self.comment_entry.get_buffer()
-        self.pos.comment = unicode(buffer.get_text(buffer.get_start_iter(), buffer.get_end_iter(), True))
+        b = self.comment_entry.get_buffer()
+        self.pos.comment = unicode(b.get_text(b.get_start_iter(), b.get_end_iter(), True))
         if hasattr(self.pos, "buy_transaction"):
             ta = self.pos.buy_transaction
             if ta:

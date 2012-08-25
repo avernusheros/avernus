@@ -166,26 +166,26 @@
                     </child>
                     <child>
                       <object class="GtkImageMenuItem" id="menuitem7">
-                        <property name="label" translatable="yes">_Category filters</property>
+                        <property name="label" translatable="yes">Categorization _rules</property>
                         <property name="use_action_appearance">False</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="use_underline">True</property>
                         <property name="image">image3</property>
                         <property name="use_stock">False</property>
-                        <signal name="activate" handler="on_category_assignments" swapped="no"/>
+                        <signal name="activate" handler="on_categorization_rules" swapped="no"/>
                       </object>
                     </child>
                     <child>
                       <object class="GtkImageMenuItem" id="menuitem8">
-                        <property name="label" translatable="yes">_Run auto-assignments</property>
+                        <property name="label" translatable="yes">Apply _categorization rules</property>
                         <property name="use_action_appearance">False</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="use_underline">True</property>
                         <property name="image">image4</property>
                         <property name="use_stock">False</property>
-                        <signal name="activate" handler="on_run_auto_assignments" swapped="no"/>
+                        <signal name="activate" handler="on_apply_categorization_rules" swapped="no"/>
                       </object>
                     </child>
                     <child>

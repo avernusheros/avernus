@@ -1,13 +1,13 @@
-from avernus.controller import filter_controller, account_controller
+from avernus.controller import categorization_controller, account_controller
 from avernus.gui import gui_utils
 from gi.repository import Gtk
 from gi.repository import Pango
 
 
-class FilterDialog(Gtk.Dialog):
+class CategorizationRulesDialog(Gtk.Dialog):
 
     def __init__(self, parent = None):
-        Gtk.Dialog.__init__(self, _("Account Category Filters"), parent
+        Gtk.Dialog.__init__(self, _("Categorization rules"), parent
                             , Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,
                      (Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT))
         self.set_size_request(800, 600)
@@ -24,14 +24,14 @@ class FilterDialog(Gtk.Dialog):
         sw = Gtk.ScrolledWindow()
         sw.set_size_request(800, 300)
         sw.set_policy(Gtk.PolicyType.AUTOMATIC,Gtk.PolicyType.AUTOMATIC)
-        self.filter_tree = FilterTree()
-        sw.add(self.filter_tree)
+        self.rules_tree = RulesTree()
+        sw.add(self.rules_tree)
         vbox.pack_start(sw, True, True, 0)
 
-        actiongroup = Gtk.ActionGroup('filter')
+        actiongroup = Gtk.ActionGroup('categorization rules')
         actiongroup.add_actions([
-                ('add',     Gtk.STOCK_ADD,    'new transaction filter',    None, _('Add new transaction filter'), self.filter_tree.on_add),
-                ('remove',  Gtk.STOCK_DELETE, 'remove transaction filter', None, _('Remove selected transaction filter'), self.filter_tree.on_remove),
+                ('add',     Gtk.STOCK_ADD,    'new categorization rule',    None, _('Add new categorization rule'), self.rules_tree.on_add),
+                ('remove',  Gtk.STOCK_DELETE, 'remove categorization rule', None, _('Remove selected categorization rule'), self.rules_tree.on_remove),
                 ('refresh', Gtk.STOCK_REFRESH,'reload preview tree',       None, _('Reload preview tree'), self.refresh_preview),
                 ('reset',   Gtk.STOCK_CLEAR,  'reset preview tree',        None, _('Reset the preview tree'), self.reset_preview),
                      ])
@@ -56,7 +56,7 @@ class FilterDialog(Gtk.Dialog):
 
     def refresh_preview(self, widget):
         # get the active rule and refresh the preview tree with it
-        active_rule = self.filter_tree.get_active_filter()
+        active_rule = self.rules_tree.get_active_rule()
         if active_rule:
             self.preview_tree.on_refresh(active_rule)
 
@@ -90,15 +90,15 @@ class PreviewTree(gui_utils.Tree):
         self.create_column(_('Account'), self.ACCOUNT, expand=False)
         self.set_rules_hint(True)
 
-        self.active_filter = None
+        self.active_rule = None
         self.load_all()
 
     def visible_cb(self, model, iterator, user_data):
         transaction = model[iterator][self.OBJECT]
         if transaction and transaction.transfer:
             return False
-        if self.active_filter:
-            return filter_controller.match_transaction(self.active_filter, transaction)
+        if self.active_rule:
+            return categorization_controller.match_transaction(self.active_rule, transaction)
         return True
 
     def load_all(self):
@@ -110,19 +110,19 @@ class PreviewTree(gui_utils.Tree):
             self.model.append([trans, trans.description, trans.amount, cat, trans.date, trans.account.name])
 
     def on_refresh(self, assigner):
-        self.active_filter = assigner
+        self.active_rule = assigner
         self.modelfilter.refilter()
 
     def reset(self):
-        self.active_filter = None
+        self.active_rule = None
         self.modelfilter.refilter()
 
 
-class FilterTree(gui_utils.Tree):
+class RulesTree(gui_utils.Tree):
     OBJECT = 0
     ACTIVE = 1
     PRIORITY = 2
-    FILTER_STR = 3
+    RULE_STR = 3
     CATEGORY = 4
     CATEGORY_STR = 5
 
@@ -143,7 +143,7 @@ class FilterTree(gui_utils.Tree):
         column = Gtk.TreeViewColumn(_('Priority'), cell, text=self.PRIORITY)
         self.append_column(column)
 
-        col, cell = self.create_column(_('Filter'), self.FILTER_STR, expand = True)
+        col, cell = self.create_column(_('Rule'), self.RULE_STR, expand = True)
         cell.set_property('editable', True)
         cell.connect('edited', self.on_cell_edited)
 
@@ -161,12 +161,12 @@ class FilterTree(gui_utils.Tree):
 
         self.load_rules()
 
-    def get_active_filter(self):
+    def get_active_rule(self):
         item, iterator = self.get_selected_item()
         return item
 
     def load_rules(self):
-        for rule in filter_controller.get_all_rules():
+        for rule in categorization_controller.get_all_rules():
             self.insert_rule(rule)
 
     def on_category_changed(self, cellrenderertext, path, new_iter):
@@ -183,7 +183,7 @@ class FilterTree(gui_utils.Tree):
         self.model[path][self.PRIORITY] = self.model[path][self.OBJECT].priority = new_val
 
     def on_cell_edited(self, cellrenderertext, path, new_text):
-        self.model[path][self.FILTER_STR] = self.model[path][self.OBJECT].rule = unicode(new_text)
+        self.model[path][self.RULE_STR] = self.model[path][self.OBJECT].rule = unicode(new_text)
 
     def on_toggled(self, cellrenderertoggle, path):
         active = not self.model[path][self.ACTIVE]
@@ -191,7 +191,7 @@ class FilterTree(gui_utils.Tree):
         self.model[path][self.OBJECT].active = active
 
     def on_add(self, widget, user_data = None):
-        rule = filter_controller.create("new filter - click to edit", self.categories[0], False)
+        rule = categorization_controller.create("new categorization rule - click to edit", self.categories[0], False)
         iterator = self.insert_rule(rule)
         self.scroll_to_cell(self.model.get_path(iterator))
 

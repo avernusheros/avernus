@@ -10,3 +10,4 @@ Makefile
 avernus.geany
 dist
 avernus.egg-info
+*glade.h

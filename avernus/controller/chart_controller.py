@@ -4,11 +4,13 @@ from avernus.controller import asset_controller
 from avernus.controller import portfolio_controller
 from avernus.controller import dimensions_controller
 from avernus.controller import position_controller
+from avernus.controller import account_controller
 
 from dateutil.relativedelta import relativedelta
 from dateutil.rrule import *
 from itertools import ifilter
 import datetime
+import calendar
 import sys
 import logging
 
@@ -23,6 +25,27 @@ def get_step_for_range(start, end):
     return relativedelta(months=1)
 
 
+def calc_days(step, start, end, max_values=None):
+    if step == 'daily':
+        days = [start + datetime.timedelta(n) for n in range(int ((end - start).days))]
+    elif step == 'weekly':
+        days = list(rrule(WEEKLY, dtstart=start, until=end, byweekday=FR))
+    elif step == 'monthly':
+        days = []
+        ym_start= 12 * start.year + start.month - 1
+        ym_end= 12 * end.year + end.month
+        for ym in range(ym_start, ym_end):
+            y, m = divmod(ym, 12)
+            days.append(datetime.date(y, m+1, calendar.monthrange(y, m+1)[1]))
+    elif step == 'yearly':
+        days = []
+        for y in range(start.year, end.year):
+            days.append(datetime.date(y, 12, 31))
+    if max_values is not None and len(days)>max_values:
+        return days[-max_values:]
+    return days
+
+
 def format_days(days, step):
     if step == "daily":
         return map(lambda d: gui_utils.get_date_string(d), days)
@@ -35,22 +58,14 @@ def format_days(days, step):
     return map(lambda d: d.strftime(formatstring), days)
 
 
-def compute_start_date(dateItems):
-    lowest = datetime.date.today()
-    for item in dateItems:
-        if item.date.date() < lowest:
-            lowest = item.date.date()
-    return lowest
-
-
 def calculate_x_values(step, start, end):
-        result = []
-        current = start
-        while current < end:
-            result.append(current)
-            current += step
-        result.append(end)
-        return result
+    result = []
+    current = start
+    while current < end:
+        result.append(current)
+        current += step
+    result.append(end)
+    return result
 
 
 class ChartController:
@@ -61,39 +76,21 @@ class ChartController:
         for series in self.y_values.values():
             i = min(min(series), i)
             a = max(max(series), a)
-        return (i, a)
+        return i, a
 
 
-class TransactionChartController(ChartController):
+class TransactionValueChartController(ChartController):
 
-    def get_step(self):
-        return get_step_for_range(self.start_date, self.end_date)
-
-    def get_start_date(self):
-        return self.start_date
-
-
-class TransactionValueOverTimeChartController(TransactionChartController):
-
-    def __init__(self, transactions, date_range):
-        self.monthly = False
+    def __init__(self, transactions, step="monthly"):
+        self.step = step
         self.rolling_avg = False
         self.total_avg = False
-        self.average_y = 0
-        self.update(transactions, date_range)
+        self.average_y = 0.0
+        self.update(transactions)
+        self.name = _('Transaction value')
 
-    def get_start_date(self):
-        if self.monthly:
-            return datetime.date(self.start_date.year, self.start_date.month, 1)
-        return self.start_date
-
-    def get_step(self):
-        if self.monthly:
-            return relativedelta(months=1)
-        return TransactionChartController.get_step(self)
-
-    def set_monthly(self, monthly):
-        self.monthly = monthly
+    def set_step(self, step):
+        self.step = step
 
     def set_rolling_average(self, avg):
         self.rolling_avg = avg
@@ -101,129 +98,50 @@ class TransactionValueOverTimeChartController(TransactionChartController):
     def set_total_average(self, avg):
         self.total_avg = avg
 
-    def update(self, transactions, date_range):
+    def update(self, transactions, *args):
         self.transactions = sorted(transactions, key=lambda t: t.date)
-        self.start_date, self.end_date = date_range
 
     def calculate_values(self, *args):
-        self.step = self.get_step()
-        self.days = calculate_x_values(self.step, self.start_date, self.end_date)
-        self.x_values = format_days(self.days, 'daily')
+        self.y_values = []
+        if len(self.transactions) == 0:
+            return
+        self.days = calc_days(self.step, self.transactions[0].date, self.transactions[-1].date, 25)
+        self.x_values = format_days(self.days, self.step)
         self.calculate_y_values()
-        self.remove_zero()
         if self.rolling_avg:
             self.calculate_rolling_average()
         if self.total_avg:
             self.calculate_total_average()
         yield 1
 
-    def remove_zero(self):
-        # if the second is the same as the first or the last the same as the one before
-        # only do it if we have more than 4
-        if len(self.y_values['Transaction value']) > 4:
-            if (self.y_values['Transaction value'][0] == self.y_values['Transaction value'][1]):
-                del self.y_values['Transaction value'][0]
-                del self.x_values[0]
-            if (self.y_values['Transaction value'][-1] == self.y_values['Transaction value'][-2]):
-                del self.y_values['Transaction value'][-1]
-                del self.x_values[-1]
-
     def calculate_y_values(self):
-        self.y_values = {'Transaction value':[]}
-        #FIXME do we need this temp dict?
-        temp = {}
-        i = 0
-        x = self.days[i]
-        temp[x] = 0
-        for t in self.transactions:
-            if t.date > x:
-                i += 1
-                x = self.days[i]
-                temp[x] = temp[self.days[i - 1]]
-            temp[x] += t.amount
-        if len(self.days) > len(temp):
-            logger.debug("more x than y, defaulting to the value of the last")
-            for x in self.days:
-                if not x in temp:
-                    logger.debug("X: " + str(x) + " index " + str(self.days.index(x)))
-                    temp[x] = temp[self.days[self.days.index(x) - 1]]
-        for x in self.days:
-            value = x
-            self.y_values['Transaction value'].append(temp[value])
+        # transactions need to be sorted by date
+        t = 1
+        current_day = self.days[t]
+        earnings = [0.0] * len(self.days)
+        spendings = [0.0] * len(self.days)
+        for transaction in self.transactions:
+            while transaction.date > current_day:
+                t += 1
+                current_day = self.days[t]
+            if transaction.amount < 0:
+                spendings[t] += transaction.amount
+            else:
+                earnings[t] += transaction.amount
+        self.y_values =  [(_('Earnings'), earnings), (_('Spendings'), spendings)]
 
     def calculate_total_average(self):
-        self.average_y = sum(self.y_values['Transaction value']) / len(self.y_values['Transaction value'])
-        self.y_values['Total average'] = [self.average_y for y in self.y_values['Transaction value']]
+        self.average_y = sum(self.y_values[self.name]) / len(self.y_values[self.name])
+        self.y_values[_('Total average')] = [self.average_y for y in self.y_values[self.name]]
 
     def calculate_rolling_average(self):
         temp_values = []
-        for y in self.y_values['Transaction value']:
+        for y in self.y_values[self.name]:
             if len(temp_values) == 0:
                 temp_values.append(y)
             else:
                 temp_values.append((y + temp_values[-1]) / 2)
-        self.y_values['Rolling average'] = temp_values
-
-
-class TransactionStepValueChartController(TransactionValueOverTimeChartController):
-
-    def calculate_y_values(self):
-        self.y_values = {'Transaction value': []}
-        temp = {}
-        # initialize to zero
-        for x in self.days:
-            temp[x] = 0
-        for t in self.transactions:
-            # find the right slot for t
-            i = 0
-            while t.date >= self.days[i]:
-                i += 1
-            temp[self.days[i]] += t.amount
-        # see if the first or last x is zero
-        for x in self.days:
-            self.y_values['Transaction value'].append(temp[x])
-
-    def remove_zero(self):
-        if self.y_values['Transaction value'][0] == 0:
-            del self.y_values['Transaction value'][0]
-            del self.x_values[0]
-        if self.y_values['Transaction value'][-1] == 0:
-            del self.y_values['Transaction value'][-1]
-            del self.x_values[-1]
-
-
-class EarningsVsSpendingsController(ChartController):
-
-    def __init__(self, transactions, date_range):
-        self.update(transactions, date_range)
-
-    def update(self, transactions, date_range):
-        self.date_range = date_range
-        self.transactions = transactions
-
-    def calculate_values(self, *args):
-        start, end = self.date_range
-        onemonth = relativedelta(months=1)
-        data = {}
-        self.x_values = []
-        while start.year < end.year or (start.year == end.year and start.month <= end.month):
-            if not start.year in data:
-                data[start.year] = {}
-            if not start.month in data[start.year]:
-                data[start.year][start.month] = [0, 0]
-            self.x_values.append(start)
-            start += onemonth
-
-        for trans in self.transactions:
-            if trans.amount >=0:
-                data[trans.date.year][trans.date.month][0] += trans.amount
-            else:
-                data[trans.date.year][trans.date.month][1] += abs(trans.amount)
-        self.y_values = []
-        for x_value in self.x_values:
-            self.y_values.append([data[x_value.year][x_value.month][0], data[x_value.year][x_value.month][1]])
-        self.x_values = map(str, self.x_values)
-        yield 1
+        self.y_values[_('Rolling average')] = temp_values
 
 
 class TransactionCategoryPieController(ChartController):
@@ -249,26 +167,31 @@ class TransactionCategoryPieController(ChartController):
         yield 1
 
 
-class AccountBalanceOverTimeChartController(TransactionChartController):
+class AccountBalanceController(ChartController):
 
-    def __init__(self, account, date_range):
+    def __init__(self, account, date_range, step="monthly"):
         self.account = account
+        self.step = step
         self.update(None, date_range)
 
     def update(self, transactions, date_range):
         self.start_date, self.end_date = date_range
+        if not self.end_date:
+            self.end_date = datetime.date.today()
+        if not self.start_date:
+            self.start_date = account_controller.account_birthday(self.account)
 
     def calculate_values(self, *args):
-        self.step = self.get_step()
-        self.days = calculate_x_values(self.get_step(), self.start_date, self.end_date)
-        self.x_values = format_days(self.days, 'daily')
+        self.days = calc_days(self.step, self.start_date, self.end_date)
+        self.x_values = format_days(self.days, self.step)
+
         transactions = [t for t in self.account if t.date >= self.start_date]
         transactions.sort(key=lambda t: t.date, reverse=True)
         count = 1
         balance = self.account.balance
         trans_count = len(transactions)
         if trans_count == 0:
-            self.y_values = {'Balance': [balance for x in self.x_values]}
+            self.y_values = [balance] * len(self.days)
             return
         iterator = transactions.__iter__()
         current_trans = iterator.next()
@@ -281,7 +204,7 @@ class AccountBalanceOverTimeChartController(TransactionChartController):
                 count += 1
             y_values.append(balance)
         y_values.reverse()
-        self.y_values = {'Balance': y_values}
+        self.y_values = [('Balance', y_values)]
         yield 1
 
 
@@ -298,9 +221,7 @@ class DividendsPerYearChartController(ChartController):
             for div in pos.dividends:
                 data[str(div.date.year)] += asset_controller.get_total_for_dividend(div)
         self.x_values = sorted(data.keys())
-        self.y_values = []
-        for x_value in self.x_values:
-            self.y_values.append([data[x_value]])
+        self.y_values = [(_('Dividends'), [data[x_value] for x_value in self.x_values])]
         yield 1
 
 
@@ -318,9 +239,7 @@ class DividendsPerPositionChartController(ChartController):
                 except:
                     data[pos.asset.name] = asset_controller.get_total_for_dividend(div)
         self.x_values = sorted(data.keys())
-        self.y_values = []
-        for x_value in self.x_values:
-            self.y_values.append([data[x_value]])
+        self.y_values = [(_('Dividends'), [data[x_value] for x_value in self.x_values])]
         yield 1
 
 
@@ -328,8 +247,7 @@ class StockChartPlotController(ChartController):
     #FIXME move code from plot.py here
 
     def __init__(self, quotations):
-        self.y_values = {}
-        self.y_values['close'] = [d.close for d in quotations]
+        self.y_values = [(_("close"), [d.close for d in quotations])]
         quotation_count = len(quotations)
         self.x_values = [gui_utils.get_date_string(quotations[int(quotation_count / 18 * i)].date) for i in range(18)]
         self.x_values.insert(0, str(quotations[0].date))
@@ -348,26 +266,17 @@ class PortfolioChartController(ChartController):
         self.birthday = portfolio_controller.get_birthday(portfolio)
         self.items = portfolio_controller.get_transactions(portfolio) + portfolio_controller.get_dividends(portfolio)
         self.step = step
-
-    def _calc_days(self):
-        if self.step == 'daily':
-            days = list(rrule(DAILY, dtstart=self.birthday, until=datetime.date.today()))[-self.MAX_VALUES:]
-        elif self.step == 'weekly':
-            days = list(rrule(WEEKLY, dtstart=self.birthday, until=datetime.date.today(), byweekday=FR))[-self.MAX_VALUES:]
-        elif self.step == 'monthly':
-            days = list(rrule(MONTHLY, dtstart=self.birthday, until=datetime.date.today(), bymonthday= -1))[-self.MAX_VALUES:]
-        elif self.step == 'yearly':
-            days = list(rrule(YEARLY, dtstart=self.birthday, until=datetime.date.today(), bymonthday= -1, bymonth=12))[-self.MAX_VALUES:]
-        self.days = [d.date() for d in days]
+        self.name_invested = _('invested capital')
+        self.name_value = _('portfolio value')
 
     def calculate_values(self, *args):
-        self._calc_days()
+        self.days = calc_days(self.step, self.birthday, datetime.date.today(), self.MAX_VALUES)
         self.x_values = format_days(self.days, self.step)
-        self.y_values = {}
+        self.y_values = []
         #FIXME do both things in parallel
-        for foo in self.calculate_valueovertime('portfolio value'):
+        for foo in self.calculate_valueovertime(self.name_value):
             yield foo
-        for foo in self.calculate_investmentsovertime('invested capital'):
+        for foo in self.calculate_investmentsovertime(self.name_invested):
             yield foo
 
         for benchmark in portfolio_controller.get_benchmarks_for_portfolio(self.portfolio):
@@ -380,25 +289,26 @@ class PortfolioChartController(ChartController):
         stepsize = (self.days[-1]-self.days[0]) / len(self.days)
         stepsize = stepsize.total_seconds() / 60 / 60 / 24
         per_step = percent / 365.0 * stepsize
-        values[0] = self.y_values['invested capital'][0]
+        values[0] = self.y_values[1][1][0]
         for i in range(1, len(values)):
             values[i] = values[i - 1] * (1.0 + per_step)\
-                            + self.y_values['invested capital'][i]\
-                            - self.y_values['invested capital'][i - 1]
+                            + self.y_values[1][1][i]\
+                            - self.y_values[1][1][i - 1]
         key = str(benchmark)
-        self.y_values[key] = values
+        self.y_values.append((key, values))
 
     def calculate_valueovertime(self, name):
         #import time
         #t0 = time.clock()
-        self.y_values[name] = [0.0] * len(self.days)
+        temp = [0.0] * len(self.days)
         for asset in asset_controller.get_all_used_assets_for_portfolio(self.portfolio):
             i = 0
             for val in position_controller.get_value_at_daterange(self.portfolio, asset, self.days):
-                self.y_values[name][i] += val
+                temp[i] += val
                 i+=1
                 yield 0
         #print "!!!!", time.clock()-t0, "seconds"
+        self.y_values.append((name, temp))
         yield 1
 
     def update(self):
@@ -406,7 +316,7 @@ class PortfolioChartController(ChartController):
 
     def calculate_investmentsovertime(self, name):
         self.items = sorted(self.items, key=lambda t: t.date)
-        self.y_values[name] = []
+        temp = []
         count = 0
         i = 0
         for current in self.days:
@@ -417,7 +327,8 @@ class PortfolioChartController(ChartController):
                 else:
                     count -= asset_controller.get_total_for_transaction(self.items[i])
                 i += 1
-            self.y_values[name].append(count)
+            temp.append(count)
+        self.y_values.append((name, temp))
         yield 1
 
 
@@ -500,7 +411,6 @@ class PositionAttributeChartController():
         else:
             self.values = data
         yield 1
-
 
 
 class PortfolioAttributeChartController():

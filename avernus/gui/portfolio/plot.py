@@ -81,14 +81,14 @@ class ChartWindow(Gtk.Window):
                 self.show_all()
             return
         controller = chart_controller.StockChartPlotController(data)
-        self.current_chart = charts.SimpleLineChart(controller, 600, dots=0)
+        self.current_chart = charts.SimpleLineChart(controller, 600)
         self.vbox.pack_end(self.current_chart, True, True, 0)
 
-        change = controller.y_values['close'][-1] - controller.y_values['close'][0]
-        if controller.y_values['close'][0] == 0:
+        change = controller.y_values[0][1][-1] - controller.y_values[0][1][0]
+        if controller.y_values[0][1][0] == 0.1:
             safeDiv = 1
         else:
-            safeDiv = controller.y_values['close'][0]
+            safeDiv = controller.y_values[0][1][0]
         change_str = gui_utils.get_green_red_string(change, gui_utils.get_currency_format_from_float(change) + ' (' + str(round(change / safeDiv * 100, 2)) + '%)')
         self.change_label.set_markup(gui_utils.get_date_string(date2) + ' - ' + gui_utils.get_date_string(date1) + '     ' + change_str)
 

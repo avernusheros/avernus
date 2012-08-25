@@ -18,7 +18,7 @@ class CalendarDialog(Gtk.Dialog):
                             )
         vbox = self.get_content_area()
         self.calendar = Gtk.Calendar()
-        self.date = None
+        self.date = date
         if date:
             self.calendar.select_month(date.month - 1, date.year)
             self.calendar.select_day(date.day)
@@ -28,13 +28,12 @@ class CalendarDialog(Gtk.Dialog):
         self.calendar.connect("day-selected-double-click", self.on_day_selected)
         self.show_all()
         response = self.run()
-        self.process_result(response)
+        self.process_result()
 
-    def process_result(self, response):
-        if response == Gtk.ResponseType.ACCEPT:
-            y, m, d = self.calendar.get_date()
-            self.date = datetime.date(y, m + 1, d)
+    def process_result(self):
+        y, m, d = self.calendar.get_date()
+        self.date = datetime.date(y, m + 1, d)
         self.destroy()
 
     def on_day_selected(self, cal):
-        self.process_result(Gtk.ResponseType.ACCEPT)
+        self.process_result()

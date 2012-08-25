@@ -6,13 +6,13 @@ import sys
 
 import avernus
 from avernus import config
-from avernus.controller import filter_controller
+from avernus.controller import categorization_controller
 from avernus.controller import asset_controller
 from avernus.gui import progress_manager, threads
 from avernus.gui.account.account_transactions_tab import AccountTransactionTab
 from avernus.gui.account.account_overview import AccountOverview
 from avernus.gui.account.csv_import_dialog import CSVImportDialog
-from avernus.gui.account.filterDialog import FilterDialog
+from avernus.gui.account.categorization_dialog import CategorizationRulesDialog
 from avernus.gui.left_pane import MainTreeBox
 from avernus.gui.portfolio.portfolio_notebook import PortfolioNotebook
 from avernus.gui.portfolio.positions_tab import WatchlistPositionsTab
@@ -124,8 +124,8 @@ class MainWindow:
     def on_prefs(self, *args):
         PrefDialog(parent=self.window)
 
-    def on_category_assignments(self, *args):
-        FilterDialog(parent=self.window)
+    def on_categorization_rules(self, *args):
+        CategorizationRulesDialog(parent=self.window)
 
     def on_asset_manager(self, *args):
         AssetManager(parent=self.window)
@@ -161,10 +161,10 @@ class MainWindow:
     def on_export(self, *args):
         ExportDialog(parent=self.window)
 
-    def on_run_auto_assignments(self, *args):
+    def on_apply_categorization_rules(self, *args):
         #FIXME the threaded version does not work
-        #threads.GeneratorTask(filter_controller.run_auto_assignments).start()
-        for foo in filter_controller.run_auto_assignments():
+        #threads.GeneratorTask(categorization_controller.apply_categorization_rules).start()
+        for foo in categorization_controller.apply_categorization_rules():
             pass
 
     def on_get_historical_data(self, *args):

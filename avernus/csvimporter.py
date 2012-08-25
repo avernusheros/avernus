@@ -6,7 +6,7 @@ if __name__ == '__main__':
     path = os.path.abspath(os.path.join(os.path.dirname(__file__),".."))
     sys.path.append(path)
 else:
-    from avernus.controller import filter_controller, account_controller
+    from avernus.controller import categorization_controller, account_controller
 
 from datetime import datetime
 import codecs, csv, re

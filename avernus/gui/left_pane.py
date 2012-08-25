@@ -5,9 +5,9 @@ from gi.repository import Gdk
 from gi.repository import Pango
 from gi.repository import GObject
 
-from avernus.gui import get_ui_file
 from avernus.gui import gui_utils, progress_manager
 from avernus.gui.page import Page
+from avernus.gui import get_ui_file
 from avernus.controller import account_controller
 from avernus.controller import object_controller
 from avernus.controller import portfolio_controller
@@ -265,45 +265,13 @@ class MainTree(gui_utils.Tree, GObject.GObject):
         if objtype == 'Category' or objtype == "AllPortfolio" or objtype == 'AllAccount':
             return
         if obj.__class__.__name__ == 'Account':
-            self.edit_account(obj, row)
+            from avernus.gui.account.edit_account_dialog import EditAccountDialog
+            EditAccountDialog(obj, self)
+            # set possible new name
+            self.get_model()[row][2] = obj.name
         else:
             obj, selection_iter = self.selected_item
             self.set_cursor(path=self.get_model().get_path(selection_iter), column=self.get_column(0), start_editing=True)
-
-    def edit_account(self, acc, row):
-        builder = Gtk.Builder()
-        builder.add_from_file(get_ui_file("edit_account_dialog.glade"))
-        dlg = builder.get_object("dialog")
-        dlg.set_transient_for(self.get_toplevel())
-        name_entry = builder.get_object("name_entry")
-        name_entry.set_text(acc.name)
-        balance_entry = builder.get_object("balance_entry")
-        adjustment = builder.get_object("adjustment1")
-        adjustment.set_value(acc.balance)
-        self.combobox = builder.get_object("type_combobox")
-        liststore = Gtk.ListStore(int, str)
-        self.combobox.set_model(liststore)
-        cell = Gtk.CellRendererText()
-        self.combobox.pack_start(cell, True)
-        self.combobox.add_attribute(cell, 'text', 1)
-        for account_type, name in account_controller.yield_account_types():
-            iterator = liststore.append([account_type, name])
-            if account_type == acc.type:
-                self.combobox.set_active_iter(iterator)
-
-        dlg.add_buttons(Gtk.STOCK_CANCEL, Gtk.ResponseType.REJECT,
-                      Gtk.STOCK_APPLY, Gtk.ResponseType.ACCEPT)
-
-        def response_callback(widget, response):
-            if response == Gtk.ResponseType.ACCEPT:
-                acc.name = self.get_model()[row][2] = name_entry.get_text()
-                acc.balance = balance_entry.get_value()
-                self.get_model()[row][3] = gui_utils.get_currency_format_from_float(acc.balance)
-                acc.type = self.combobox.get_model()[self.combobox.get_active_iter()][0]
-            dlg.destroy()
-
-        dlg.connect('response', response_callback)
-        dlg.show()
 
     def on_cell_edited(self, cellrenderertext, path, new_text):
         m = self.get_model()

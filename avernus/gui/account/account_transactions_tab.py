@@ -1,16 +1,20 @@
-#!/usr/bin/env pytho
-from avernus import config
-from avernus.config import avernusConfig
-from avernus.gui import gui_utils, common_dialogs, page, charts
-from avernus.gui import get_ui_file
-from avernus.gui.portfolio import dialogs
-from avernus.controller import chart_controller, account_controller, object_controller
+#!/usr/bin/env python
+
 from gi.repository import Gtk
 from gi.repository import GObject
 from gi.repository import Gdk
 from gi.repository import Pango
 import datetime
 import logging
+
+from avernus import config
+from avernus.config import avernusConfig
+from avernus.gui import gui_utils, common_dialogs, page, charts
+from avernus.gui import get_ui_file
+from avernus.gui.portfolio import dialogs
+from avernus.gui.account.edit_transaction_dialog import EditTransactionDialog
+from avernus.controller import chart_controller, account_controller, object_controller
+
 
 logger = logging.getLogger(__name__)
 builder = None
@@ -117,9 +121,10 @@ class AccountTransactionTab(page.Page):
     def update_ui(self, *args):
         self.refilter()
         transactions = [row[0] for row in self.transactions_tree.modelfilter]
+        date_range = (self.transactions_tree.range_start, self.transactions_tree.range_end)
         if (not self.charts_notebook == None):
             for chart in self.charts_notebook.charts:
-                chart.update(transactions, (self.transactions_tree.range_start, self.transactions_tree.range_end))
+                chart.update(transactions, date_range)
         self.update_page()
 
     def refilter(self):
@@ -146,28 +151,20 @@ class AccountChartsNotebook(Gtk.Notebook):
         self.init_charts()
 
     def init_charts(self):
-        over_time_controller = chart_controller.TransactionValueOverTimeChartController(self.account.transactions, self.date_range)
-        categoryChart = charts.TransactionChart(over_time_controller, 300)
-        self.charts.append(categoryChart)
-        label = Gtk.Label(label=_('Over Time'))
-        #FIXME better tooltip
-        label.set_tooltip_text(_('Account value over time.'))
-        self.append_page(categoryChart, label)
 
-        step_controller = chart_controller.TransactionStepValueChartController(self.account.transactions, self.date_range)
-        valueChart = charts.TransactionChart(step_controller, 300)
-        self.charts.append(valueChart)
-        label = Gtk.Label(label=_('Step Value'))
-        #FIXME better tooltip
-        label.set_tooltip_text(_('step value.'))
-        self.append_page(valueChart, label)
-
-        controller = chart_controller.AccountBalanceOverTimeChartController(self.account, self.date_range)
+        controller = chart_controller.AccountBalanceController(self.account, self.date_range)
         chart = charts.SimpleLineChart(controller, 300)
         self.charts.append(chart)
         label = Gtk.Label(label=_('Account balance'))
         label.set_tooltip_text(_('Account balance over the given time period.'))
         self.append_page(chart, label)
+
+        ta_value_controller = chart_controller.TransactionValueChartController(self.account.transactions)
+        categoryChart = charts.BarChart(ta_value_controller, 300)
+        self.charts.append(categoryChart)
+        label = Gtk.Label(label=_('Transaction value'))
+        label.set_tooltip_text(_('Transaction value'))
+        self.append_page(categoryChart, label)
 
         table = Gtk.Table()
         controller = chart_controller.TransactionCategoryPieController(self.account.transactions, earnings=True)
@@ -192,12 +189,13 @@ class AccountChartsNotebook(Gtk.Notebook):
         label.set_tooltip_text(_('Categorization of transactions.'))
         self.append_page(table, label)
 
-        controller = chart_controller.EarningsVsSpendingsController(self.account.transactions, self.date_range)
-        chart = charts.BarChart(controller, 400)
-        self.charts.append(chart)
-        label = Gtk.Label(label=_('Earnings vs Spendings'))
-        label.set_tooltip_text(_('Earnings vs spendings in given time period.'))
-        self.append_page(chart, label)
+        #FIXME
+        #controller = chart_controller.EarningsVsSpendingsController(self.account.transactions, self.date_range)
+        #chart = charts.BarChart(controller, 400)
+        #self.charts.append(chart)
+        #label = Gtk.Label(label=_('Earnings vs Spendings'))
+        #label.set_tooltip_text(_('Earnings vs spendings in given time period.'))
+        #self.append_page(chart, label)
 
 
 class TransactionsTree(gui_utils.Tree):
@@ -274,8 +272,8 @@ class TransactionsTree(gui_utils.Tree):
             self.single_category = category
             self.updater()
 
-    def visible_cb(self, model, iter, userdata):
-        transaction = model[iter][0]
+    def visible_cb(self, model, iterator, userdata):
+        transaction = model[iterator][0]
         if transaction:
             if self.single_category:
                 # return False if the category does not match, move on to the
@@ -337,10 +335,10 @@ class TransactionsTree(gui_utils.Tree):
         return [ta, ta.description, ta.amount, cat, ta.date, icon]
 
     def get_filtered_transaction_value(self):
-        sum = 0
+        ret = 0
         for row in self.modelfilter:
-            sum += row[self.AMOUNT]
-        return sum
+            ret += row[self.AMOUNT]
+        return ret
 
     def load_transactions(self):
         for ta in self.account:
@@ -357,13 +355,13 @@ class TransactionsTree(gui_utils.Tree):
         return None, None
 
     def on_add(self, widget=None, data=None):
-        dlg = EditTransaction(self.account, parent=self.get_toplevel())
+        dlg = EditTransactionDialog(self.account, parent=self.get_toplevel())
         dlg.start()
 
     def on_edit(self, widget=None, data=None):
         transaction, iterator = self._get_selected_transaction()
         old_amount = transaction.amount
-        dlg = EditTransaction(self.account, transaction, parent=self.get_toplevel())
+        dlg = EditTransactionDialog(self.account, transaction, parent=self.get_toplevel())
         b_change, transaction = dlg.start()
         if b_change:
             self.account.balance = self.account.balance - old_amount + transaction.amount
@@ -612,156 +610,3 @@ class CategoriesTree(gui_utils.Tree):
     def on_select(self, obj):
         self.updater(obj)
         self.actiongroup1.set_sensitive(True)
-
-
-class EditTransaction(Gtk.Dialog):
-
-    def __init__(self, account, transaction=None, parent=None):
-        Gtk.Dialog.__init__(self, _("Edit transaction"), parent
-                            , Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,
-                     (Gtk.STOCK_CANCEL, Gtk.ResponseType.REJECT,
-                      Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT))
-        self.transaction = transaction
-        self.account = account
-        vbox = self.get_content_area()
-
-        #description
-        frame = Gtk.Frame(label='Description')
-        self.description_entry = Gtk.TextView()
-        self.description_entry.set_wrap_mode(Gtk.WrapMode.WORD)
-        entry_buffer = self.description_entry.get_buffer()
-        frame.add(self.description_entry)
-        vbox.pack_start(frame, True, True, 0)
-
-        #amount
-        hbox = Gtk.HBox()
-        label = Gtk.Label(label=_('Amount'))
-        hbox.pack_start(label, False, False, 0)
-        self.amount_entry = Gtk.SpinButton(adjustment=Gtk.Adjustment(lower= -999999999, upper=999999999, step_increment=10, value=0.0), digits=2)
-        hbox.pack_start(self.amount_entry, True, True, 0)
-        vbox.pack_start(hbox, False, False, 0)
-
-        #category
-        hbox = Gtk.HBox()
-        label = Gtk.Label(label=_('Category'))
-        hbox.pack_start(label, False, False, 0)
-        treestore = Gtk.TreeStore(object, str)
-        self.combobox = Gtk.ComboBox(model=treestore)
-        cell = Gtk.CellRendererText()
-        self.combobox.pack_start(cell, False)
-        self.combobox.add_attribute(cell, 'text', 1)
-
-        def insert_recursive(cat, parent):
-            new_iter = treestore.append(parent, [cat, cat.name])
-            for child_cat in cat.children:
-                insert_recursive(child_cat, new_iter)
-        new_iter = treestore.append(None, [None, 'None'])
-        self.combobox.set_active_iter(new_iter)
-        root_categories = account_controller.get_root_categories()
-        for cat in root_categories:
-            insert_recursive(cat, None)
-
-        hbox.pack_start(self.combobox, False, False, 0)
-        vbox.pack_start(hbox, False, False, 0)
-
-        #date
-        self.calendar = Gtk.Calendar()
-        vbox.pack_start(self.calendar, False, False, 0)
-
-        #transfer
-        text = "Transfer: this transaction will not be shown in any of the graphs."
-        self.transfer_button = Gtk.CheckButton(text)
-        vbox.pack_start(self.transfer_button, False, False, 0)
-
-        self.matching_transactions_tree = gui_utils.Tree()
-        model = Gtk.ListStore(object, str, str, object)
-        self.matching_transactions_tree.set_model(model)
-        self.matching_transactions_tree.create_column(_('Account'), 1)
-        col, cell = self.matching_transactions_tree.create_column(_('Description'), 2)
-        cell.props.wrap_width = 200
-        cell.props.wrap_mode = Pango.WrapMode.WORD
-        self.matching_transactions_tree.create_column(_('Date'), 3, func=gui_utils.date_to_string)
-        vbox.pack_end(self.matching_transactions_tree, True, True, 0)
-        self.no_matches_label = Gtk.Label(label='No matching transactions found. Continue only if you want to mark this as a tranfer anyway.')
-        vbox.pack_end(self.no_matches_label, True, True, 0)
-
-        if self.transaction:
-            entry_buffer.set_text(self.transaction.description)
-            self.amount_entry.set_value(self.transaction.amount)
-            for row in self.combobox:
-                if cat == self.transaction.category:
-                    self.combobox.set_active_iter(new_iter)
-            self.calendar.select_month(self.transaction.date.month - 1, self.transaction.date.year)
-            self.calendar.select_day(self.transaction.date.day)
-            if self.transaction.transfer:
-                self.transfer_button.set_active(True)
-        else:
-            today = datetime.date.today()
-            self.calendar.select_month(today.month - 1, today.year)
-            self.calendar.select_day(today.day)
-
-        #connect signals
-        self.transfer_button.connect("toggled", self.on_transfer_toggled)
-        self.matching_transactions_tree.connect('cursor_changed', self.on_transfer_transaction_selected)
-
-    def start(self):
-        self.show_all()
-        self.matching_transactions_tree.hide()
-        self.no_matches_label.hide()
-        return self.process_result(self.run())
-
-    def on_transfer_toggled(self, checkbutton):
-        if checkbutton.get_active():
-            found_one = False
-            for ta in account_controller.yield_matching_transfer_transactions(self.transaction):
-                if found_one == False:
-                    self.matching_transactions_tree.clear()
-                    self.matching_transactions_tree.show()
-                    found_one = True
-                self.matching_transactions_tree.get_model().append([ta, ta.account.name, ta.description, ta.date])
-            self.transfer_transaction = self.transaction
-            if not found_one:
-                self.no_matches_label.show()
-        else:
-            self.matching_transactions_tree.hide()
-            self.no_matches_label.hide()
-
-    def on_transfer_transaction_selected(self, widget):
-        selection = widget.get_selection()
-        if selection:
-            treestore, selection_iter = selection.get_selected()
-            if (selection_iter and treestore):
-                self.transfer_transaction = treestore.get_value(selection_iter, 0)
-
-    def process_result(self, response):
-        if response == Gtk.ResponseType.ACCEPT:
-            buffer = self.description_entry.get_buffer()
-            description = unicode(buffer.get_text(buffer.get_start_iter(), buffer.get_end_iter(), True), encoding="utf8")
-            amount = self.amount_entry.get_value()
-            year, month, day = self.calendar.get_date()
-            date = datetime.date(year, month + 1, day)
-            if iter is None:
-                category = None
-            else:
-                category = self.combobox.get_model()[self.combobox.get_active_iter()][0]
-
-            if self.transaction is None:
-                self.transaction = account_controller.new_account_transaction(account=self.account
-                                            , desc=description
-                                            , amount=amount
-                                            , date=date
-                                            , category=category)
-            else:
-                self.transaction.description =description
-                self.transaction.amount = amount
-                self.transaction.date = date
-                self.transaction.category = category
-
-            if self.transfer_button.get_active():
-                self.transaction.transfer = self.transfer_transaction
-                self.transfer_transaction.transfer = self.transaction
-            elif self.transaction.transfer is not None:
-                self.transaction.transfer.transfer = None
-                self.transaction.transfer = None
-        self.destroy()
-        return response == Gtk.ResponseType.ACCEPT, self.transaction

@@ -69,7 +69,7 @@ class CSVImportDialog(Gtk.Dialog):
         self.account_cb.connect('changed', self._on_account_changed)
         accBox.pack_start(self.account_cb, False, True, 0)
 
-        category_assignment_button = Gtk.CheckButton(label=_('Do automatic category assignments'))
+        category_assignment_button = Gtk.CheckButton(label=_('Apply categorization rules'))
         category_assignment_button.set_active(self.b_categories)
         accBox.pack_start(category_assignment_button, True, True, 0)
         category_assignment_button.connect('toggled', self.on_toggle_assignments)

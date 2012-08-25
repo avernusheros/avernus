@@ -129,7 +129,7 @@ def currency_format(column, cell_renderer, tree_model, iterator, user_data):
 def get_string_from_float(number):
     return locale.format('%g', round(number, 3), grouping=False, monetary=True)
 
-def get_currency_format_from_float(number):
+def get_currency_format_from_float(number, *args):
     try:
         return locale.currency(number)
     except:

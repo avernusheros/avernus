@@ -34,7 +34,7 @@ def get_category(transaction):
             return rule.category
     return None
 
-def run_auto_assignments(*args):
+def apply_categorization_rules(*args):
     if config.get_option('assignments categorized transactions', 'Account') == 'True':
         b_include_categorized = True
     else:
@@ -52,5 +52,4 @@ def run_auto_assignments(*args):
             yield transaction
 
 config = avernusConfig()
-
 rules = get_all_active_by_priority()
