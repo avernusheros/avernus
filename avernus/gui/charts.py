@@ -24,7 +24,6 @@ class ChartBase(Gtk.VBox):
         self.connect('realize', self.on_realize)
 
         self.generate_colors()
-        print self.colors
 
         # spinner
         self.spinner = Gtk.Spinner()
@@ -70,9 +69,10 @@ class ChartBase(Gtk.VBox):
         style = self.get_style()
         color = style.lookup_color('selected_bg_color')[1]
         color = (float(color.red) / 65535, float(color.green) / 65535, float(color.blue) / 65535)
-        self.colors = [color, "red", "green", "yellow"]
-
-
+        self.colors = []
+        for i in range(0, 10):
+            temp  = (((color[0] + 0.8*i) % 1.0), ((color[1] + 0.4*i) % 1.0), ((color[2] + 0.2*i) % 1.0))
+            self.colors.append(temp)
 
 
 class SimpleLineChart(ChartBase):
@@ -173,12 +173,24 @@ class BarChart(ChartBase):
 
         fig.subplots_adjust(left=0.1, right=0.95, top=0.95, bottom=0.2)
 
+        # font
+        matplotlib.rc('font', family="sans", weight="normal", size=9)
+
+        # frame
+        self.ax.set_frame_on(False)
+
+        # pack fig
+        self.plot = FigureCanvas(fig)
+        self.pack_start(self.plot, True, True, 0)
+
+        # connect events
+        fig.canvas.mpl_connect('motion_notify_event', self.on_move)
+
+    def draw_plot(self):
+        self.ax.clear()
         # gridlines
         self.ax.yaxis.grid(color='gray')
         self.ax.xaxis.grid(color='gray')
-
-        # font
-        matplotlib.rc('font', family="sans", weight="normal", size=9)
 
         # annotation
         self.annotation = self.ax.annotate("",
@@ -190,33 +202,6 @@ class BarChart(ChartBase):
                 )
         self.annotation.set_visible(False)
 
-        # frame
-        self.ax.set_frame_on(False)
-
-        # gridlines
-        #self.ax.yaxis.grid(color='gray')
-        self.ax.xaxis.grid(color='gray')
-
-        # formatter
-        formatter = FuncFormatter(gui_utils.get_currency_format_from_float)
-        self.ax.yaxis.set_major_formatter(formatter)
-        formatter = FuncFormatter(self.x_formatter)
-        self.ax.xaxis.set_major_formatter(formatter)
-
-        # vertical line
-        self.line = self.ax.axvline(color='gray')
-        self.line.set_visible(False)
-
-        # pack fig
-        self.plot = FigureCanvas(fig)
-        self.pack_start(self.plot, True, True, 0)
-
-        self.ax.autoscale(enable=True, axis='both', tight=True)
-
-        # connect events
-        fig.canvas.mpl_connect('motion_notify_event', self.on_move)
-
-    def draw_plot(self):
         self.spinner.hide()
         pos = range(len(self.controller.x_values))
         if len(self.controller.y_values) == 0:
@@ -235,10 +220,31 @@ class BarChart(ChartBase):
             c += 1
         #self.ax.set_xticklabels(self.controller.x_values)
 
-        # ensure that bars with zero are shown
-        #self.ax.set_xlim([-self.bar_width, pos[-1]+self.bar_width])
-        #self.ax.xaxis.set_ticks(pos)
-        # show
+        # formatter
+        formatter = FuncFormatter(gui_utils.get_currency_format_from_float)
+        self.ax.yaxis.set_major_formatter(formatter)
+        formatter = FuncFormatter(self.x_formatter)
+        self.ax.xaxis.set_major_formatter(formatter)
+
+        # ensure plots with less than 5 bars look ok
+        if len(pos) < 5:
+            self.ax.xaxis.set_ticks(pos)
+
+        # legend
+        legend = self.ax.legend(loc="best")
+        #legend.draw_frame(False)
+        legend.get_frame().set_edgecolor("gray")
+
+        # recalc limits
+        self.ax.relim()
+        self.ax.autoscale_view(True, True, True)
+
+        # vertical line
+        # line needs to be drawn after recalc limits
+        self.line = self.ax.axvline(color='gray')
+        self.line.set_visible(False)
+
+        # show plot
         self.plot.show()
 
     def on_move(self, event):
@@ -267,15 +273,20 @@ class Pie(ChartBase):
         fig = Figure(figsize=(10,10), dpi=100, facecolor="white", edgecolor="white")
         self.ax = fig.add_subplot(111)
         fig.subplots_adjust(left=0.1, right=0.90, top=0.95, bottom=0.05)
+        # ensure the pie is round
+        self.ax.set_aspect('equal')
+
         matplotlib.rc('font', family="sans", weight="normal", size=9)
 
         self.plot = FigureCanvas(fig)
         self.pack_start(self.plot, True, True, 0)
 
     def draw_plot(self):
+        self.ax.clear()
         self.ax.pie(self.controller.values.values(),
                     labels=self.controller.values.keys(),
-                    autopct='%1.1f%%'
+                    autopct='%1.1f%%',
+                    colors = self.colors
                     )
         # show pie
         self.spinner.hide()

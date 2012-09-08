@@ -1,19 +1,17 @@
 #!/usr/bin/env python
 # -*- Mode: Python; coding: utf-8; indent-tabs-mode: nil; tab-width: 4 -*-
 
+from datetime import datetime
+import codecs, csv, re
+from cStringIO import StringIO
+import chardet
+
 if __name__ == '__main__':
     import sys, os
     path = os.path.abspath(os.path.join(os.path.dirname(__file__),".."))
     sys.path.append(path)
 else:
     from avernus.controller import categorization_controller, account_controller
-
-from datetime import datetime
-import codecs, csv, re
-from cStringIO import StringIO
-import chardet
-
-
 
 
 FORMATS = ['%Y-%m-%d',
@@ -274,7 +272,7 @@ class CsvImporter:
     def check_categories(self):
         if self.do_categories:
             for trans in self.results:
-                trans.category = filter_controller.get_category(trans)
+                trans.category = categorization_controller.get_category(trans)
         else:
             for trans in self.results:
                 trans.category = None

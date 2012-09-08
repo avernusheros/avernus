@@ -76,7 +76,7 @@ setup(
       ('share/avernus/data/icons/hicolor/48x48/apps', glob.glob('data/icons/hicolor/48x48/apps/*.png')),
      ],
     packages = ['avernus',
-                'avernus.cairoplot',
+                'avernus.matplotlib',
                 'avernus.gui',
                 'avernus.gui.account',
                 'avernus.gui.portfolio',

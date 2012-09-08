@@ -121,6 +121,9 @@ class TransactionValueChartController(ChartController):
         earnings = [0.0] * len(self.days)
         spendings = [0.0] * len(self.days)
         for transaction in self.transactions:
+            # skip transaction out of desired range
+            if transaction.date <= self.days[0]:
+                continue
             while transaction.date > current_day:
                 t += 1
                 current_day = self.days[t]

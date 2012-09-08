@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 
-from gi.repository import Gtk
 import os
+from gi.repository import Gtk
 from gi.repository import Pango
+
 from avernus.gui import gui_utils
 from avernus import csvimporter, config
 from avernus.controller import account_controller
@@ -42,7 +43,7 @@ class CSVImportDialog(Gtk.Dialog):
         fileBox.pack_start(Gtk.Label(_('File to import')), False, False, 0)
         self.fcbutton = Gtk.FileChooserButton()
         self.fcbutton.set_title(_('File to import'))
-        self.file = None
+        self.filename = None
         self.fcbutton.connect('file-set', self._on_file_set)
         folder = self.config.get_option('last_csv_folder')
         if folder is not None:
@@ -96,23 +97,26 @@ class CSVImportDialog(Gtk.Dialog):
         self.config.set_option('category_assignments_on_import', self.b_categories)
         if self.b_file:
             self.importer.check_categories()
-            self.tree.reload(self.importer.results)
+            self.tree.refresh(self.importer.results)
 
     def _on_file_set(self, button):
         self.b_file = True
-        self.file = button.get_filename()
-        self.set_title(self.TITLE+' - '+os.path.basename(self.file))
-        self.config.set_option('last_csv_folder', button.get_current_folder())
-        self.fcbutton.set_current_folder(button.get_current_folder())
+        self.filename = button.get_filename()
+        self.set_title(self.TITLE+' - '+os.path.basename(self.filename))
+        last_folder = button.get_current_folder()
+        # last folder is None if Gnome's recent files is used
+        if last_folder:
+            self.config.set_option('last_csv_folder', last_folder)
+            self.fcbutton.set_current_folder(last_folder)
         try:
-            self.importer.load_transactions_from_csv(self.file)
+            self.importer.load_transactions_from_csv(self.filename)
         except:
             self.show_import_error_dialog()
             return
         if self.b_account:
             self.import_button.set_sensitive(True)
             self.importer.check_duplicates(self.account)
-        self.tree.reload(self.importer.results)
+        self.tree.refresh(self.importer.results)
 
     def _on_account_changed(self, *args):
         self.b_account = True
@@ -120,7 +124,7 @@ class CSVImportDialog(Gtk.Dialog):
         if self.b_file:
             self.import_button.set_sensitive(True)
             self.importer.check_duplicates(self.account)
-            self.tree.reload(self.importer.results)
+            self.tree.refresh(self.importer.results)
 
     def show_import_error_dialog(self):
         text = _("Avernus was unable to parse your csv file.") + "\n"
@@ -160,7 +164,7 @@ class PreviewTree(gui_utils.Tree):
         column.add_attribute(cell, 'foreground', 5)
         cell.set_property('foreground-set', True)
 
-    def reload(self, transactions):
+    def refresh(self, transactions):
         self.transactions = transactions
         self.clear()
         model = self.get_model()
