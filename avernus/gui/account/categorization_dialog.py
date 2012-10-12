@@ -1,12 +1,12 @@
-from avernus.controller import categorization_controller, account_controller
+from avernus.controller import categorization_controller
 from avernus.gui import gui_utils
-from gi.repository import Gtk
-from gi.repository import Pango
+from avernus.objects import account
+from gi.repository import Gtk, Pango
 
 
 class CategorizationRulesDialog(Gtk.Dialog):
 
-    def __init__(self, parent = None):
+    def __init__(self, parent=None):
         Gtk.Dialog.__init__(self, _("Categorization rules"), parent
                             , Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,
                      (Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT))
@@ -23,17 +23,17 @@ class CategorizationRulesDialog(Gtk.Dialog):
 
         sw = Gtk.ScrolledWindow()
         sw.set_size_request(800, 300)
-        sw.set_policy(Gtk.PolicyType.AUTOMATIC,Gtk.PolicyType.AUTOMATIC)
+        sw.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
         self.rules_tree = RulesTree()
         sw.add(self.rules_tree)
         vbox.pack_start(sw, True, True, 0)
 
         actiongroup = Gtk.ActionGroup('categorization rules')
         actiongroup.add_actions([
-                ('add',     Gtk.STOCK_ADD,    'new categorization rule',    None, _('Add new categorization rule'), self.rules_tree.on_add),
-                ('remove',  Gtk.STOCK_DELETE, 'remove categorization rule', None, _('Remove selected categorization rule'), self.rules_tree.on_remove),
-                ('refresh', Gtk.STOCK_REFRESH,'reload preview tree',       None, _('Reload preview tree'), self.refresh_preview),
-                ('reset',   Gtk.STOCK_CLEAR,  'reset preview tree',        None, _('Reset the preview tree'), self.reset_preview),
+                ('add', Gtk.STOCK_ADD, 'new categorization rule', None, _('Add new categorization rule'), self.rules_tree.on_add),
+                ('remove', Gtk.STOCK_DELETE, 'remove categorization rule', None, _('Remove selected categorization rule'), self.rules_tree.on_remove),
+                ('refresh', Gtk.STOCK_REFRESH, 'reload preview tree', None, _('Reload preview tree'), self.refresh_preview),
+                ('reset', Gtk.STOCK_CLEAR, 'reset preview tree', None, _('Reset the preview tree'), self.reset_preview),
                      ])
         toolbar = Gtk.Toolbar()
         toolbar.insert(actiongroup.get_action('add').create_tool_item(), -1)
@@ -48,7 +48,7 @@ class CategorizationRulesDialog(Gtk.Dialog):
         frame = Gtk.Frame()
         frame.set_label(_('Preview'))
         sw = Gtk.ScrolledWindow()
-        sw.set_policy(Gtk.PolicyType.AUTOMATIC,Gtk.PolicyType.AUTOMATIC)
+        sw.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
         self.preview_tree = PreviewTree()
         frame.add(sw)
         sw.add(self.preview_tree)
@@ -77,7 +77,7 @@ class PreviewTree(gui_utils.Tree):
         self.set_size_request(800, 300)
         self.model = Gtk.ListStore(object, str, float, str, object, str)
         self.modelfilter = self.model.filter_new(None)
-        sorter = Gtk.TreeModelSort(model = self.modelfilter)
+        sorter = Gtk.TreeModelSort(model=self.modelfilter)
         self.set_model(sorter)
         self.modelfilter.set_visible_func(self.visible_cb, None)
         self.create_column(_('Date'), self.DATE, func=gui_utils.date_to_string, expand=False)
@@ -102,7 +102,7 @@ class PreviewTree(gui_utils.Tree):
         return True
 
     def load_all(self):
-        for trans in account_controller.get_all_transactions():
+        for trans in account.get_all_transactions():
             if trans.category:
                 cat = trans.category.name
             else:
@@ -143,20 +143,20 @@ class RulesTree(gui_utils.Tree):
         column = Gtk.TreeViewColumn(_('Priority'), cell, text=self.PRIORITY)
         self.append_column(column)
 
-        col, cell = self.create_column(_('Rule'), self.RULE_STR, expand = True)
+        col, cell = self.create_column(_('Rule'), self.RULE_STR, expand=True)
         cell.set_property('editable', True)
         cell.connect('edited', self.on_cell_edited)
 
         cell = Gtk.CellRendererCombo()
         cell.connect('changed', self.on_category_changed)
         self.cb_model = Gtk.ListStore(object, str)
-        self.categories = account_controller.get_all_categories()
+        self.categories = account.get_all_categories()
         for category in self.categories:
             self.cb_model.append([category, category.name])
         cell.set_property('model', self.cb_model)
         cell.set_property('text-column', 1)
         cell.set_property('editable', True)
-        column = Gtk.TreeViewColumn(_('Category'), cell, text = self.CATEGORY_STR)
+        column = Gtk.TreeViewColumn(_('Category'), cell, text=self.CATEGORY_STR)
         self.append_column(column)
 
         self.load_rules()
@@ -190,12 +190,12 @@ class RulesTree(gui_utils.Tree):
         self.model[path][self.ACTIVE] = active
         self.model[path][self.OBJECT].active = active
 
-    def on_add(self, widget, user_data = None):
+    def on_add(self, widget, user_data=None):
         rule = categorization_controller.create("new categorization rule - click to edit", self.categories[0], False)
         iterator = self.insert_rule(rule)
         self.scroll_to_cell(self.model.get_path(iterator))
 
-    def on_remove(self, widget, user_data = None):
+    def on_remove(self, widget, user_data=None):
         item, iterator = self.get_selected_item()
         if item is not None:
             item.delete()

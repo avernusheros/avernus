@@ -1,17 +1,16 @@
 # -*- Mode: Python; coding: utf-8; indent-tabs-mode: nil; tab-width: 4 -*-
-
 from BeautifulSoup import BeautifulSoup
 from urllib import urlopen
 import csv
 import pytz
 import re
 import json
+import logging
 from datetime import datetime
 
-from avernus.objects import Fund, Stock
-from avernus.controller import asset_controller
+from avernus.objects.asset import Fund, Stock
 
-import logging
+
 logger = logging.getLogger(__name__)
 
 TYPES = {'Fonds':Fund, 'Aktien':Stock, 'Namensaktie':Stock, 'Vorzugsaktie':Stock}
@@ -19,6 +18,7 @@ EXCHANGE_CURRENCY = [(['NYQ', 'PNK'], 'USD'),
                      (['GER', 'BER', 'FRA', 'MUN', 'STU', 'HAN' ,'HAM' ,'DUS', 'AMS'], 'EUR'),
                      (['LSE'], 'GBP')
                      ]
+
 
 class DataSource():
     name = "yahoo"
@@ -39,10 +39,10 @@ class DataSource():
             logger.debug("exception in request_csv")
             return None
 
-    def __get_all_yahoo_ids(self, stocks):
+    def __get_all_yahoo_ids(self, assets):
         ids = []
-        for stock in stocks:
-            ids += [source_info.info for source_info in asset_controller.get_source_info(self.name, stock)]
+        for asset in assets:
+            ids += [source_info.info for source_info in asset.get_source_info(self.name)]
         return '+'.join(ids)
 
     def update_stocks(self, stocks):
@@ -56,7 +56,7 @@ class DataSource():
             while len_ids == 0 and current_stock < len(stocks)-1:
                 current_stock += 1
                 #print current_stock, stocks
-                len_ids = len(asset_controller.get_source_info(self.name, stocks[current_stock]))
+                len_ids = len(stocks[current_stock].get_source_info(self.name))
             len_ids -= 1
             if len(row) > 1:
                 if row[1] == 'N/A':
@@ -95,7 +95,7 @@ class DataSource():
     def update_historical_prices(self, stock, start_date, end_date):
         #we should use a more intelligent way of choosing the exchange
         #e.g. the exchange with the highest volume for this stock
-        sourceInfo = asset_controller.get_source_info(self.name, stock)
+        sourceInfo = stock.get_source_info(self.name)
         if len(sourceInfo) == 0:
             logger.debug("no source info for stock")
             return

@@ -1,16 +1,8 @@
 #!/usr/bin/env python
-
-from gi.repository import Gtk
-from gi.repository import Gdk
-from gi.repository import Pango
-from gi.repository import GObject
-
-from avernus.gui import gui_utils, progress_manager
+from avernus.gui import get_ui_file, gui_utils, progress_manager
 from avernus.gui.page import Page
-from avernus.gui import get_ui_file
-from avernus.controller import account_controller
-from avernus.controller import object_controller
-from avernus.controller import portfolio_controller
+from avernus.objects import account, container
+from gi.repository import GObject, Gdk, Gtk, Pango
 
 
 class Category(object):
@@ -60,15 +52,18 @@ class InfoBox(Gtk.Table):
         info.set_markup(info_text)
         label.set_justify(Gtk.Justification.RIGHT)
         info.set_justify(Gtk.Justification.LEFT)
-        label.set_markup("<span font_weight=\"bold\">" + label_text + ':' + "</span>")
+        label.set_markup("<span font_weight=\"bold\">"
+                         + label_text + ':' + "</span>")
 
-        label.set_alignment(1, 0);
-        info.set_alignment(0, 0);
+        label.set_alignment(1, 0)
+        info.set_alignment(0, 0)
 
         info.set_ellipsize(Pango.EllipsizeMode.END)
         info.set_selectable(True)
 
-        self.attach(label, 0, 1, self.line_count, self.line_count + 1, xoptions=Gtk.AttachOptions.FILL, yoptions=Gtk.AttachOptions.FILL)
+        self.attach(label, 0, 1, self.line_count, self.line_count + 1,
+                     xoptions=Gtk.AttachOptions.FILL,
+                     yoptions=Gtk.AttachOptions.FILL)
         self.attach(info, 1, 2, self.line_count, self.line_count + 1)
 
         self.line_count += 1
@@ -106,7 +101,8 @@ class MainTree(gui_utils.Tree, GObject.GObject):
         actiongroup.add_actions([
             ('add', Gtk.STOCK_ADD, _('New'), "plus", _('New'), self.on_add),
             ('edit', Gtk.STOCK_EDIT, _('Edit'), "F2", _('Edit'), self.on_edit),
-            ('remove', Gtk.STOCK_DELETE, _('Remove'), 'Delete', _('Delete'), self.on_remove)
+            ('remove', Gtk.STOCK_DELETE, _('Remove'), 'Delete', _('Delete'),
+                                        self.on_remove)
         ])
 
         self.uimanager = Gtk.UIManager()
@@ -119,23 +115,23 @@ class MainTree(gui_utils.Tree, GObject.GObject):
         self._load_items()
 
     def _load_items(self):
-        portfolios = portfolio_controller.get_all_portfolio()
+        portfolios = container.get_all_portfolios()
         if len(portfolios) > 1:
-            all_pf = portfolio_controller.AllPortfolio()
+            all_pf = container.AllPortfolio()
             all_pf.name = "<i>%s</i>" % (_('All'),)
             self.insert_portfolio(all_pf)
         for pf in portfolios:
             self.insert_portfolio(pf)
-        for wl in portfolio_controller.get_all_watchlist():
+        for wl in container.get_all_watchlists():
             self.insert_watchlist(wl)
 
-        accounts = account_controller.get_all_account()
+        accounts = account.get_all_accounts()
         if len(accounts) > 1:
-            all_account = account_controller.AllAccount()
+            all_account = account.AllAccount()
             all_account.name = "<i>%s</i>" % (_('All'),)
             self.insert_account(all_account)
-        for account in accounts:
-            self.insert_account(account)
+        for acc in accounts:
+            self.insert_account(acc)
         self.expand_all()
 
     def connect_signals(self):
@@ -188,9 +184,9 @@ class MainTree(gui_utils.Tree, GObject.GObject):
                 return True
 
     def insert_categories(self):
-        self.pf_iter = self.get_model().append(None, [Category('Portfolios'), None, "<b>"+_('Portfolios')+"</b>", '', False])
-        self.wl_iter = self.get_model().append(None, [Category('Watchlists'), None, "<b>"+_('Watchlists')+"</b>", '', False])
-        self.accounts_iter = self.get_model().append(None, [Category('Accounts'), None, "<b>"+_('Accounts')+"</b>", '', False])
+        self.pf_iter = self.get_model().append(None, [Category('Portfolios'), None, "<b>" + _('Portfolios') + "</b>", '', False])
+        self.wl_iter = self.get_model().append(None, [Category('Watchlists'), None, "<b>" + _('Watchlists') + "</b>", '', False])
+        self.accounts_iter = self.get_model().append(None, [Category('Accounts'), None, "<b>" + _('Accounts') + "</b>", '', False])
 
     def insert_watchlist(self, item):
         return self.get_model().append(self.wl_iter, [item, 'watchlist', item.name, '', True])
@@ -201,7 +197,11 @@ class MainTree(gui_utils.Tree, GObject.GObject):
         return new_iter
 
     def insert_portfolio(self, item):
-        new_iter = self.get_model().append(self.pf_iter, [item, 'portfolio', item.name, gui_utils.get_currency_format_from_float(portfolio_controller.get_current_value(item)), True])
+        new_iter = self.get_model().append(self.pf_iter,
+                                          [item, 'portfolio',
+                                           item.name,
+                                           gui_utils.get_currency_format_from_float(item.get_current_value()),
+                                            True])
         item.connect("position_added", self.on_container_value_changed, new_iter)
         item.connect("updated", self.on_container_updated, new_iter)
         return new_iter
@@ -214,11 +214,11 @@ class MainTree(gui_utils.Tree, GObject.GObject):
             dlg = Gtk.MessageDialog(None,
                  Gtk.DialogFlags.DESTROY_WITH_PARENT, Gtk.MessageType.QUESTION,
                  Gtk.ButtonsType.OK_CANCEL)
-            dlg.set_markup(_("Permanently delete") + "<b>" + obj.name + '</b>?')
+            dlg.set_markup(_("Permanently delete") + " <b>" + obj.name + '</b>?')
             response = dlg.run()
             dlg.destroy()
             if response == Gtk.ResponseType.OK:
-                object_controller.delete_object(obj)
+                obj.delete()
                 self.get_model().remove(iterator)
                 self.selected_item = None
                 self.emit("unselect")
@@ -227,14 +227,14 @@ class MainTree(gui_utils.Tree, GObject.GObject):
         self.get_model()[iterator][3] = gui_utils.get_currency_format_from_float(balance)
 
     def on_container_updated(self, item, iterator):
-        self.get_model()[iterator][3] = gui_utils.get_currency_format_from_float(portfolio_controller.get_current_value(item))
+        self.get_model()[iterator][3] = gui_utils.get_currency_format_from_float(item.get_current_value())
 
     def on_container_value_changed(self, item, new_position, iterator):
-        self.get_model()[iterator][3] = gui_utils.get_currency_format_from_float(portfolio_controller.get_current_value(item))
+        self.get_model()[iterator][3] = gui_utils.get_currency_format_from_float(item.get_current_value())
 
     def on_updated(self, item):
-        obj, iter = self.selected_item
-        row = self.get_model()[iter]
+        obj, iterator = self.selected_item
+        row = self.get_model()[iterator]
         if row:
             #row[1] = item
             row[2] = item.name
@@ -279,19 +279,15 @@ class MainTree(gui_utils.Tree, GObject.GObject):
 
     def on_add(self, widget=None, data=None):
         obj, row = self.selected_item
-        model = self.get_model()
 
         if obj.__class__.__name__ == 'Portfolio' or obj.__class__.__name__ == 'AllPortfolio' or obj.name == 'Portfolios':
             inserter = self.insert_portfolio
-            cat_type = "portfolio"
-            item = portfolio_controller.new_portfolio(_('new portfolio'))
+            item = container.Portfolio(name=_('new portfolio'))
         elif obj.__class__.__name__ == 'Watchlist' or obj.name == 'Watchlists':
             inserter = self.insert_watchlist
-            cat_type = "watchlist"
-            item = portfolio_controller.new_watchlist(_('new watchlist'))
+            item = container.Watchlist(name=_('new watchlist'))
         elif obj.__class__.__name__ == 'Account' or obj.__class__.__name__ == 'AllAccount' or obj.name == 'Accounts':
             inserter = self.insert_account
-            cat_type = "account"
-            item = account_controller.new_account(_('new account'))
+            item = account.Account(name=_('new account'), balance=0.0)
         iterator = inserter(item)
         self.set_cursor(path=self.get_model().get_path(iterator), column=self.get_column(0), start_editing=True)

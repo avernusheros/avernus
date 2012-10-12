@@ -1,16 +1,16 @@
 # -*- Mode: Python; coding: utf-8; indent-tabs-mode: nil; tab-width: 4 -*-
 from BeautifulSoup import BeautifulSoup
-from datetime import datetime, date
-import pytz
-import threading
-import re
 from Queue import Queue
+from avernus.objects.asset import Fund, Bond, Etf
+from datetime import datetime, date
+import logging
+import pytz
+import re
+import threading
 import urllib
 import urllib2
-from avernus.objects.asset import Fund, Bond, Etf
 
 
-import logging
 logger = logging.getLogger(__name__)
 
 
@@ -24,24 +24,26 @@ QUEUE_THRESHOLD = 3
 QUEUE_DIVIDEND = 10
 QUEUE_MAX = 10
 
+
 def to_float(s):
-    return float(s.replace('.','').replace('%','').replace(',','.').split('&')[0])
+    return float(s.replace('.', '').replace('%', '').replace(',', '.').split('&')[0])
+
 
 def to_datetime(datestring, time='', toUTC=True):
     if time == '':
-        ret_date = datetime.strptime(datestring+time, "%d.%m.%y")
+        ret_date = datetime.strptime(datestring + time, "%d.%m.%y")
     else:
-        ret_date = datetime.strptime(datestring+time, "%d.%m.%y%H:%M:%S")
+        ret_date = datetime.strptime(datestring + time, "%d.%m.%y%H:%M:%S")
     ret_date = pytz.timezone('Europe/Berlin').localize(ret_date)
     if toUTC:
         ret_date = ret_date.astimezone(pytz.utc)
-        ret_date = ret_date.replace(tzinfo = None)
+        ret_date = ret_date.replace(tzinfo=None)
     #print ret_date
     return ret_date
 
 
 def to_int(s):
-    s = s.replace('.','')
+    s = s.replace('.', '')
     try:
         return int(s)
     except:
@@ -92,8 +94,8 @@ class Paralyzer:
         logger.debug('Performing Tasks #' + str(self.taskSize))
         self.finished = []
         queueSize = min(QUEUE_THRESHOLD, self.taskSize)
-        calcSize = self.taskSize/QUEUE_DIVIDEND
-        size = max(queueSize,calcSize)
+        calcSize = self.taskSize / QUEUE_DIVIDEND
+        size = max(queueSize, calcSize)
         size = min(size, QUEUE_MAX)
         logger.debug("ThreadQueue Size: " + str(size))
         self.q = Queue(size)
@@ -140,7 +142,7 @@ class KursParseParalyzer(Paralyzer):
         for page in self.pages:
             thread = FunctionThread(self.func, page)
             thread.start()
-            self.q.put(thread,True)
+            self.q.put(thread, True)
 
 fondTDS = {
            'table_class':'t',
@@ -176,7 +178,7 @@ class DataSource():
 
     def __init__(self):
         self.name = 'onvista.de'
-        self.exchangeBlacklist = [u'Summe:',u'Realtime-Kurse',u'Neartime-Kurse',\
+        self.exchangeBlacklist = [u'Summe:', u'Realtime-Kurse', u'Neartime-Kurse', \
                                  u'Leider stehen zu diesem Fonds keine Informationen zur Verfügung.']
 
     def search(self, searchstring):
@@ -247,57 +249,61 @@ class DataSource():
                     yield (item, self, None)
         logger.debug("Finished Searching " + searchstring)
 
-    def _parse_kurse_html(self, kursPage, tdInd=fondTDS, stockType = Fund):
-        base = BeautifulSoup(kursPage).find('div', 'INHALT')
-        regex404 = re.compile("http://www\\.onvista\\.de/404\\.html")
-        if regex404.search(str(base)):
-            logger.info("Encountered 404 while Searching")
-            return
-        name = unicode(base.h1.contents[0])
-        if stockType == Bond:
-            temp = base.findAll('tr','hgrau2')[0].findAll('td', text=True)
-            isin = temp[3]
-            currency = temp[9]
-        else:
-            isin = str(base.findAll('tr','hgrau2')[1].findAll('td', text=True)[1])
+    def _parse_kurse_html(self, kursPage, tdInd=fondTDS, stockType=Fund):
+        try:
+            base = BeautifulSoup(kursPage).find('div', 'INHALT')
+            regex404 = re.compile("http://www\\.onvista\\.de/404\\.html")
+            if regex404.search(str(base)):
+                logger.info("Encountered 404 while Searching")
+                return
+            name = unicode(base.h1.contents[0])
+            if stockType == Bond:
+                temp = base.findAll('tr', 'hgrau2')[0].findAll('td', text=True)
+                isin = temp[3]
+                currency = temp[9]
+            else:
+                isin = str(base.findAll('tr', 'hgrau2')[1].findAll('td', text=True)[1])
 
-            #getting the year
-            #FIXME
-            #try:
-            #    yearTable = base.find('div','tt_hl').findNextSibling('table','weiss abst').find('tr','hgrau2')
-            #except:
-            #    print "Error getting year in ", kursPage
-            #    yearTable = None
-            #if yearTable:
-            #    print yearTable.td
-            #    year = yearTable.td.string.split(".")[2]
-            #else:
-            #    #fallback to the hardcoded current year
-            year = unicode(str(date.today().year)[2:])
-        isin = isin.replace('&nbsp;', '')
-        for row in base.findAll('div',tdInd['table_class'])[tdInd['table']].find('table'):
-            tds = row.findAll('td')
-            if len(tds)>3:
-                if not tds[0].contents[0] in self.exchangeBlacklist:
-                    exchange = unicode(tds[0].find(text=True))
-                    price = to_float(tds[tdInd['price']].contents[0])
-                    if stockType == Bond:
-                        temp_date = to_datetime(tds[tdInd['temp_date']].contents[0],
-                                            tds[tdInd['temp_date']+1].contents[0])
-                    else:
-                        currency = unicode(tds[tdInd['currency']].contents[0])
-                        temp_date = to_datetime(tds[tdInd['temp_date']].contents[0]+year,
-                                            tds[tdInd['temp_date']+1].contents[0])
-                    volume = to_int(tds[tdInd['volume']].contents[0])
-                    change = tds[tdInd['change']]
-                    if change.span:
-                        change = change.span
-                    change = to_float(change.contents[0])
-                    erg = {'name':name,'isin':isin,'exchange':exchange,'price':price,
-                      'date':temp_date,'currency':currency,'volume':volume,
-                      'assettype':stockType,'change':change}
-                    #print [(k,type(v)) for k,v in erg.items()]
-                    yield erg
+                #getting the year
+                #FIXME
+                #try:
+                #    yearTable = base.find('div','tt_hl').findNextSibling('table','weiss abst').find('tr','hgrau2')
+                #except:
+                #    print "Error getting year in ", kursPage
+                #    yearTable = None
+                #if yearTable:
+                #    print yearTable.td
+                #    year = yearTable.td.string.split(".")[2]
+                #else:
+                #    #fallback to the hardcoded current year
+                year = unicode(str(date.today().year)[2:])
+            isin = isin.replace('&nbsp;', '')
+            for row in base.findAll('div', tdInd['table_class'])[tdInd['table']].find('table'):
+                tds = row.findAll('td')
+                if len(tds) > 3:
+                    if not tds[0].contents[0] in self.exchangeBlacklist:
+                        exchange = unicode(tds[0].find(text=True))
+                        price = to_float(tds[tdInd['price']].contents[0])
+                        if stockType == Bond:
+                            temp_date = to_datetime(tds[tdInd['temp_date']].contents[0],
+                                                tds[tdInd['temp_date'] + 1].contents[0])
+                        else:
+                            currency = unicode(tds[tdInd['currency']].contents[0])
+                            temp_date = to_datetime(tds[tdInd['temp_date']].contents[0] + year,
+                                                tds[tdInd['temp_date'] + 1].contents[0])
+                        volume = to_int(tds[tdInd['volume']].contents[0])
+                        change = tds[tdInd['change']]
+                        if change.span:
+                            change = change.span
+                        change = to_float(change.contents[0])
+                        erg = {'name':name, 'isin':isin, 'exchange':exchange, 'price':price,
+                          'date':temp_date, 'currency':currency, 'volume':volume,
+                          'assettype':stockType, 'change':change}
+                        #print [(k,type(v)) for k,v in erg.items()]
+                        yield erg
+        except:
+            logger.error("parsing errror in onvista.py")
+            return
 
     def update_stocks(self, sts):
         for st in sts:
@@ -332,12 +338,12 @@ class DataSource():
             url = 'http://anleihen.onvista.de/kurshistorie.html'
         else:
             logger.error("Uknown stock type in onvistaplugin.search_kurse")
-        fileobj = opener.open(url,urllib.urlencode({'ISIN':st.isin, 'RANGE':'60M'}))
+        fileobj = opener.open(url, urllib.urlencode({'ISIN':st.isin, 'RANGE':'60M'}))
         soup = BeautifulSoup(fileobj)
         if isinstance(st, Bond):
-            lines = soup.findAll('tr',{'class':'hr'})
+            lines = soup.findAll('tr', {'class':'hr'})
         else:
-            lines = soup.findAll('tr',{'align':'right'})
+            lines = soup.findAll('tr', {'align':'right'})
         for line in lines:
             tds = line.findAll('td', text=True)
             day = to_datetime(tds[0].replace('&nbsp;', '')).date()
@@ -347,7 +353,7 @@ class DataSource():
                 return
 
             if isinstance(st, Bond):
-                yield (st,'KAG',
+                yield (st, 'KAG',
                        day,
                        to_float(tds[1].replace('&nbsp;', '')),
                        to_float(tds[2].replace('&nbsp;', '')),
@@ -356,7 +362,7 @@ class DataSource():
                        0)
             else:
                 kurs = to_float(tds[1].replace('&nbsp;', ''))
-                yield (st,'KAG',day,kurs,kurs,kurs,kurs,0)
+                yield (st, 'KAG', day, kurs, kurs, kurs, kurs, 0)
 
 
 if __name__ == "__main__":
@@ -367,8 +373,7 @@ if __name__ == "__main__":
             self.type = type
             self.exchange = ex
             self.currency = 'EUR'
-            self.date = datetime(2008,5,1)
-
+            self.date = datetime(2008, 5, 1)
 
     def test_update(s):
         for item in plugin.update_stocks([s]):
@@ -382,22 +387,20 @@ if __name__ == "__main__":
 
     def test_historicals():
         print "los"
-        for quot in plugin.update_historical_prices(s2, date(2010,1,1), date.today()):
+        for quot in plugin.update_historical_prices(s2, date(2010, 1, 1), date.today()):
             print quot
         print "fertsch"
 
-
     def test_parse_kurse():
         page = opener.open('http://fonds.onvista.de/kurse.html?ID_INSTRUMENT=83602')
-        for item in plugin._parse_kurse_html(page, tdInd=fondTDS, stockType = Fund):
+        for item in plugin._parse_kurse_html(page, tdInd=fondTDS, stockType=Fund):
             print item
         print "---------------------------------"
         page = opener.open('http://www.onvista.de/etf/kurse.html?ISIN=LU0203243414')
-        for item in plugin._parse_kurse_html(page, tdInd=etfTDS, stockType = Etf):
+        for item in plugin._parse_kurse_html(page, tdInd=etfTDS, stockType=Etf):
             print item
 
-
-    plugin = Onvista()
+    plugin = DataSource()
     s1 = Fund('DE000A0RFEE5', 'foo')
     s2 = Fund('LU0103598305', 'foo')
     #test_search()

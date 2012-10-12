@@ -1,6 +1,5 @@
 #!/usr/bin/python
 # -*- Mode: Python; coding: utf-8; indent-tabs-mode: nil; tab-width: 4 -*-
-
 import sys
 import os
 import gi
@@ -22,8 +21,10 @@ import avernus
 from avernus import config
 from avernus.gui import threads
 
+
 if b_from_source:
     config.__avernus_data_directory__ = '../data/'
+
 
 def init_logger(debug=False):
     if debug:
@@ -64,7 +65,7 @@ def init_translations():
     # setup translation
     languages_used = []
 
-    lc, encoding = locale.getdefaultlocale()
+    lc = locale.getdefaultlocale()[0]
     if lc:
         languages_used = [lc]
     lang_in_env = os.environ.get('LANGUAGE', None)
@@ -78,6 +79,7 @@ def init_translations():
                                       fallback=True)
     import __builtin__
     __builtin__._ = translation.ugettext
+
 
 def init_icons():
     from avernus.gui.icons import IconManager
@@ -112,18 +114,13 @@ def main():
             default_file = os.path.join(config.config_path, 'avernus.db')
             db_file = configs.get_option('database file', default=default_file)
 
-        from avernus.objects import set_db, connect
-        set_db(db_file)
-        connect(True)
+        from avernus.objects import db
+        db.set_db(db_file)
+        db.connect(True)
 
         GObject.threads_init()
 
-        from avernus.controller import asset_controller
-
         from avernus.gui.mainwindow import MainWindow
-        from avernus.datasource_manager import DatasourceManager
-        dsm = DatasourceManager()
-        asset_controller.datasource_manager = dsm
         main_window = MainWindow()
         try:
             Gtk.main()
@@ -131,12 +128,11 @@ def main():
             main_window.on_destroy()
             raise
     except:
-        print "crashed, abgekachelt ... !!"
+        print "crashed ... !!"
         import traceback
         traceback.print_exc()
-        from avernus.objects import session
-        session.commit()
-        session.close_all()
+        from avernus import objects
+        objects.session.commit()
+        objects.session.close_all()
         threads.terminate_all()
-        print "wie gesagt ... abgekachelt ..."
         exit(1)

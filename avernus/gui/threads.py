@@ -5,6 +5,7 @@ import threading
 
 logger = logging.getLogger(__name__)
 
+
 class BackgroundTask():
     def __init__(self, function, complete_callback=None):
         self.function = function
@@ -19,7 +20,7 @@ class BackgroundTask():
 
 class GeneratorTask(threading.Thread):
 
-    def __init__(self, generator, loop_callback=None, complete_callback=None,  args=()):
+    def __init__(self, generator, loop_callback=None, complete_callback=None, args=()):
         threading.Thread.__init__(self, group=None)
         self.generator = generator
         self.loop_callback = loop_callback
@@ -41,7 +42,7 @@ class GeneratorTask(threading.Thread):
                         ret = ()
                     elif not isinstance(ret, tuple):
                         ret = (ret,)
-                    GObject.idle_add( self.loop_callback, *ret)
+                    GObject.idle_add(self.loop_callback, *ret)
 
             if self.complete_callback is not None:
                 GObject.idle_add(self.complete_callback)
@@ -73,5 +74,3 @@ def terminate_all():
         except:
             logger.debug("unable to stop thread, started?")
     logger.debug("all threads terminated")
-
-

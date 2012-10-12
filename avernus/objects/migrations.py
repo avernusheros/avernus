@@ -1,12 +1,9 @@
 #!/usr/bin/python
 # -*- Mode: Python; coding: utf-8; indent-tabs-mode: nil; tab-width: 4 -*-
-
-import sqlite3
+from avernus.objects import account, container, dimension
 import datetime
+import sqlite3
 
-from avernus.controller import account_controller
-from avernus.controller import dimensions_controller
-from avernus.controller import portfolio_controller
 
 def to_twelve(db):
     conn = sqlite3.connect(db)
@@ -19,6 +16,7 @@ def to_twelve(db):
             c.execute('UPDATE container SET last_update = ? WHERE id = ?', (datetime.datetime.combine(temp, datetime.time()), row[0]))
     conn.commit()
     c.close()
+
 
 def to_eleven(db):
     conn = sqlite3.connect(db)
@@ -98,9 +96,9 @@ def to_ten(database, old_db):
             assettype = 'bond'
         c_new.execute("INSERT INTO asset (id, name, isin, currency, source, price, change, exchange, type, date) VALUES (?,?,?,?,?,1.0, 0.0, '',?,?)", (row[0], row [2], row[4], row[1], row[3], assettype, stockdate))
         if assettype == 'etf' or assettype == 'fund':
-            c_new.execute("INSERT INTO "+assettype+" VALUES (?, ?)", (row[0], row[6]))
+            c_new.execute("INSERT INTO " + assettype + " VALUES (?, ?)", (row[0], row[6]))
         else:
-            c_new.execute("INSERT INTO "+assettype+" (id) VALUES (?)", (row[0],))
+            c_new.execute("INSERT INTO " + assettype + " (id) VALUES (?)", (row[0],))
 
     # quotations
     for row in c_old.execute('SELECT high, low, volume, exchange, date, close, open, stock from quotation').fetchall():
@@ -125,11 +123,11 @@ def to_ten(database, old_db):
 
     # accounts
     for row in c_old.execute('SELECT id, name, amount from account').fetchall():
-        c_new.execute("INSERT INTO account (name, type, balance, id) VALUES (?, 1, ?, ?)", (row[1], row[2], row[0]  ))
+        c_new.execute("INSERT INTO account (name, type, balance, id) VALUES (?, 1, ?, ?)", (row[1], row[2], row[0]))
 
     # account transactions
     for row in c_old.execute('SELECT id, category, account, description, transferid, amount, date from accounttransaction').fetchall():
-        c_new.execute("INSERT INTO account_transaction (id, description, amount, date, account_id, transfer_id, category_id) VALUES (?, ?,?,?,?,?,?)", (row[0], row[3], row[5], row[6], row[2], row[4], row[1]  ))
+        c_new.execute("INSERT INTO account_transaction (id, description, amount, date, account_id, transfer_id, category_id) VALUES (?, ?,?,?,?,?,?)", (row[0], row[3], row[5], row[6], row[2], row[4], row[1]))
 
     # categories
     for row in c_old.execute('SELECT parentid, id, name from accountcategory').fetchall():
@@ -137,7 +135,7 @@ def to_ten(database, old_db):
             parent = None
         else:
             parent = row[0]
-        c_new.execute("INSERT INTO account_category (id, parent_id, name) VALUES (?, ?, ?)", (row[1], parent, row[2]  ))
+        c_new.execute("INSERT INTO account_category (id, parent_id, name) VALUES (?, ?, ?)", (row[1], parent, row[2]))
 
     # transaction filter
     for row in c_old.execute('SELECT id, active, priority, category, rule from transactionFilter').fetchall():
@@ -174,15 +172,15 @@ def load_sample_data(session):
     }
 
     for dim, vals in DIMENSIONS.iteritems():
-        new_dim = dimensions_controller.new_dimension(dim)
+        new_dim = dimension.Dimension(name=dim)
         for val in vals:
-            dimensions_controller.new_dimension_value(dimension=new_dim, name=val)
+            dimension.DimensionValue(dimension=new_dim, name=val)
     for cat, subcats in CATEGORIES.iteritems():
-        parent = account_controller.new_account_category(name=cat)
+        parent = account.AccountCategory(name=cat)
         for subcat in subcats:
-            account_controller.new_account_category(name=subcat, parent=parent)
-    acc = account_controller.new_account(_('sample account'))
-    account_controller.new_account_transaction(account=acc, desc='this is a sample transaction', amount=99.99, date=datetime.date.today())
-    account_controller.new_account_transaction(account=acc, desc='another sample transaction', amount= -33.90, date=datetime.date.today())
-    portfolio_controller.new_portfolio(_('sample portfolio'))
-    portfolio_controller.new_watchlist(_('sample watchlist'))
+            account.AccountCategory(name=subcat, parent=parent)
+    acc = account.Account(name=_('sample account'), balance=100.0)
+    account.AccountTransaction(account=acc, description='this is a sample transaction', amount=99.99, date=datetime.date.today())
+    account.AccountTransaction(account=acc, description='another sample transaction', amount= -33.90, date=datetime.date.today())
+    container.Portfolio(name=_('sample portfolio'))
+    container.Watchlist(name=_('sample watchlist'))

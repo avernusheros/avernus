@@ -1,9 +1,7 @@
-from gi.repository import Gtk, GObject, Gdk
-
-from avernus.gui import get_ui_file
-from avernus.gui import gui_utils
-from avernus.controller import asset_controller
+from avernus.objects import asset as asset_m
+from avernus.gui import get_ui_file, gui_utils
 from avernus.gui.portfolio.dialogs import EditAssetDialog
+from gi.repository import Gtk, GObject, Gdk
 
 
 class AssetManager:
@@ -37,7 +35,7 @@ class AssetManager:
         self.tree.connect("button-press-event", self.on_button_press_event)
 
         # load items
-        for asset in asset_controller.get_all_assets():
+        for asset in asset_m.get_all_assets():
             model.append(self.get_row(asset))
 
         dlg = builder.get_object("dialog")
@@ -67,15 +65,15 @@ class AssetManager:
         asset, iterator = self.tree.get_selected_item()
         if asset:
             # check if there is a position with this stock
-            if asset_controller.is_asset_used(asset):
+            if asset.is_used:
                 # show warning
                 dlg = Gtk.MessageDialog(self.parent,
                 Gtk.DialogFlags.DESTROY_WITH_PARENT, Gtk.MessageType.INFO,
                 Gtk.ButtonsType.OK)
                 dlg.set_markup(_("The asset ") + "<b>" + asset.name + '</b>' + _(" is linked to a position and cannot be deleted."))
                 dlg.show_all()
-                response = dlg.run()
+                dlg.run()
                 dlg.destroy()
             else:
-                asset_controller.delete_object(asset)
+                asset.delete()
                 self.tree.get_model().remove(iterator)

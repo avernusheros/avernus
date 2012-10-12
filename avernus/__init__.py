@@ -1,14 +1,14 @@
 __appname__ = 'avernus'
-__version__ = '0.9'
+__version__ = '0.10'
 __description__ = 'A simple program to easily manage your investments.'
-__url__='https://launchpad.net/avernus'
+__url__ = 'https://launchpad.net/avernus'
 __authors__ = ['Wolfgang Steitz', 'Bastian Kennel']
 __mail__ = 'wsteitz(at)gmail.com'
 __copyright__ = '''\
 Copyright (c) 2008-2012
 
 '''
-__license__='''\
+__license__ = '''\
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation; either version 2 of the License, or

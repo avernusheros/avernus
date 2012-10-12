@@ -1,9 +1,7 @@
 #!/usr/bin/env python
-
-from gi.repository import Gtk
-
+from avernus.objects import account as account_m
 from avernus.gui import get_ui_file
-from avernus.controller import account_controller
+from gi.repository import Gtk
 
 
 class EditAccountDialog:
@@ -25,7 +23,7 @@ class EditAccountDialog:
         cell = Gtk.CellRendererText()
         self.combobox.pack_start(cell, True)
         self.combobox.add_attribute(cell, 'text', 1)
-        for account_type, name in account_controller.yield_account_types():
+        for account_type, name in account_m.yield_account_types():
             iterator = liststore.append([account_type, name])
             if account_type == account.type:
                 self.combobox.set_active_iter(iterator)

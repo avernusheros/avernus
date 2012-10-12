@@ -2,7 +2,6 @@
 
 from gi.repository import Gtk
 import matplotlib
-import datetime
 from matplotlib.figure import Figure
 from matplotlib.ticker import FuncFormatter
 
@@ -71,7 +70,7 @@ class ChartBase(Gtk.VBox):
         color = (float(color.red) / 65535, float(color.green) / 65535, float(color.blue) / 65535)
         self.colors = []
         for i in range(0, 10):
-            temp  = (((color[0] + 0.8*i) % 1.0), ((color[1] + 0.4*i) % 1.0), ((color[2] + 0.2*i) % 1.0))
+            temp = (((color[0] + 0.8 * i) % 1.0), ((color[1] + 0.4 * i) % 1.0), ((color[2] + 0.2 * i) % 1.0))
             self.colors.append(temp)
 
 
@@ -107,7 +106,7 @@ class SimpleLineChart(ChartBase):
         self.annotation = ax.annotate("foo",
                 xy=(0.0, 0.0), xytext=(-20, 20),
                 textcoords='offset points', ha='right', va='bottom',
-                color = 'white',
+                color='white',
                 bbox=dict(boxstyle='round,pad=0.5', color=self.colors[0]),
                 #arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=0')
                 )
@@ -151,14 +150,14 @@ class SimpleLineChart(ChartBase):
             event.canvas.draw()
             return
 
-        x_val = min(int(round(event.xdata, 0)), len(self.controller.x_values)-1)
+        x_val = min(int(round(event.xdata, 0)), len(self.controller.x_values) - 1)
         self.line.set_xdata(x_val)
         self.line.set_visible(True)
         self.annotation.set_visible(True)
         self.annotation.xy = x_val, event.ydata
-        text = self.controller.x_values[x_val]+"\n"
+        text = self.controller.x_values[x_val] + "\n"
         for name, vals in self.controller.y_values:
-            text += name +": "+ gui_utils.get_currency_format_from_float(vals[x_val]) +"\n"
+            text += name + ": " + gui_utils.get_currency_format_from_float(vals[x_val]) + "\n"
         self.annotation.set_text(text)
         event.canvas.draw()
 
@@ -168,7 +167,7 @@ class BarChart(ChartBase):
     bar_width = 0.6
 
     def setup(self):
-        fig = Figure(figsize=(5,5), dpi=100, facecolor="white", edgecolor="white")
+        fig = Figure(figsize=(5, 5), dpi=100, facecolor="white", edgecolor="white")
         self.ax = fig.add_subplot(111)
 
         fig.subplots_adjust(left=0.1, right=0.95, top=0.95, bottom=0.2)
@@ -196,7 +195,7 @@ class BarChart(ChartBase):
         self.annotation = self.ax.annotate("",
                 xy=(0.0, 0.0), xytext=(-20, 20),
                 textcoords='offset points', ha='right', va='bottom',
-                color = 'white',
+                color='white',
                 bbox=dict(boxstyle='round,pad=0.5', color=self.colors[0]),
                 #arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=0')
                 )
@@ -254,15 +253,15 @@ class BarChart(ChartBase):
             event.canvas.draw()
             return
 
-        x_val = min(int(round(event.xdata,0)), len(self.controller.x_values)-1)
+        x_val = min(int(round(event.xdata, 0)), len(self.controller.x_values) - 1)
 
         self.annotation.set_visible(True)
         self.line.set_visible(True)
         self.line.set_xdata(x_val)
         self.annotation.xy = x_val, event.ydata
-        text = self.controller.x_values[x_val]+"\n"
+        text = self.controller.x_values[x_val] + "\n"
         for name, vals in self.controller.y_values:
-            text += name +": "+ gui_utils.get_currency_format_from_float(vals[x_val]) +"\n"
+            text += name + ": " + gui_utils.get_currency_format_from_float(vals[x_val]) + "\n"
         self.annotation.set_text(text)
         event.canvas.draw()
 
@@ -270,7 +269,7 @@ class BarChart(ChartBase):
 class Pie(ChartBase):
 
     def setup(self):
-        fig = Figure(figsize=(10,10), dpi=100, facecolor="white", edgecolor="white")
+        fig = Figure(figsize=(10, 10), dpi=100, facecolor="white", edgecolor="white")
         self.ax = fig.add_subplot(111)
         fig.subplots_adjust(left=0.1, right=0.90, top=0.95, bottom=0.05)
         # ensure the pie is round
@@ -286,7 +285,7 @@ class Pie(ChartBase):
         self.ax.pie(self.controller.values.values(),
                     labels=self.controller.values.keys(),
                     autopct='%1.1f%%',
-                    colors = self.colors
+                    colors=self.colors
                     )
         # show pie
         self.spinner.hide()

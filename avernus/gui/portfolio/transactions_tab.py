@@ -1,12 +1,8 @@
 #!/usr/bin/env python
-from gi.repository import Gtk
-
-from avernus.gui import page
-from avernus.gui import gui_utils
+from avernus.gui import gui_utils, page
 from avernus.gui.gui_utils import Tree
-from avernus.gui.portfolio import dialogs
-from avernus.controller import asset_controller
-from avernus.controller import portfolio_controller
+from avernus.gui.portfolio import buy_dialog, sell_dialog
+from gi.repository import Gtk
 
 
 class TransactionsTab(page.Page):
@@ -28,9 +24,8 @@ class TransactionsTab(page.Page):
         self.update_page()
 
     def get_info(self):
-        return [('# transactions', portfolio_controller.get_transaction_count(self.portfolio)),
-                ('Last transaction', gui_utils.get_date_string(portfolio_controller.get_date_of_last_transaction(self.portfolio)))]
-
+        return [('# transactions', self.portfolio.transaction_count),
+                ('Last transaction', gui_utils.get_date_string(self.portfolio.date_of_last_transaction))]
 
 
 class TransactionsTree(Tree):
@@ -78,9 +73,9 @@ class TransactionsTree(Tree):
     def on_edit(self, widget, data=None):
         transaction, iter = self.get_selected_item()
         if transaction.type == "portfolio_sell_transaction":
-            dialogs.SellDialog(transaction.position, transaction, parent=self.get_toplevel())
+            sell_dialog.SellDialog(transaction.position, transaction, parent=self.get_toplevel())
         elif transaction.type == "portfolio_buy_transaction":
-            dialogs.BuyDialog(transaction.position.portfolio, transaction, parent=self.get_toplevel())
+            buy_dialog.BuyDialog(transaction.position.portfolio, transaction, parent=self.get_toplevel())
 
         #update treeview by removing and re-adding the transaction
         self.model.remove(iter)
@@ -95,7 +90,8 @@ class TransactionsTree(Tree):
                     float(ta.position.quantity),
                     ta.price,
                     ta.cost,
-                    asset_controller.get_total_for_transaction(ta)])
+                    ta.total
+                    ])
 
     def show_context_menu(self, event):
         transaction, iter = self.get_selected_item()

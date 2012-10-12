@@ -1,12 +1,8 @@
 #!/usr/bin/env python
-from gi.repository import Gtk
-
-from avernus.gui.gui_utils import Tree, get_name_string
-from avernus.controller import portfolio_controller
-from avernus.controller import asset_controller
-from avernus.controller import position_controller
 from avernus.gui import gui_utils, page
-from avernus.gui.portfolio import dialogs
+from avernus.gui.gui_utils import Tree, get_name_string
+from avernus.gui.portfolio import dividend_dialog
+from gi.repository import Gtk
 
 
 class DividendsTab(page.Page):
@@ -43,7 +39,7 @@ class DividendsTab(page.Page):
         self.pack_start(sw, True, True, 0)
 
     def on_add(self, widget=None, data=None):
-        dialogs.DividendDialog(self.portfolio, tree=self.tree, parent=self.get_toplevel())
+        dividend_dialog.DividendDialog(self.portfolio, tree=self.tree, parent=self.get_toplevel())
         self.update_page()
 
     def show(self):
@@ -51,9 +47,9 @@ class DividendsTab(page.Page):
         self.update_page()
 
     def get_info(self):
-        return [('# dividends', portfolio_controller.get_dividends_count(self.portfolio)),
-                ('Sum', gui_utils.get_currency_format_from_float(portfolio_controller.get_dividends_sum(self.portfolio))),
-                ('Last dividend', gui_utils.get_date_string(portfolio_controller.get_date_of_last_dividend(self.portfolio)))]
+        return [('# dividends', self.portfolio.get_dividends_count()),
+                ('Sum', gui_utils.get_currency_format_from_float(self.portfolio.get_dividends_sum())),
+                ('Last dividend', gui_utils.get_date_string(self.portfolio.date_of_last_dividend))]
 
 
 class DividendsTree(Tree):
@@ -108,14 +104,14 @@ class DividendsTree(Tree):
                             None,
                             div.price,
                             div.cost,
-                            div.price-div.cost,
+                            div.price - div.cost,
                             None
                             ])
         else:
             parent_row[self.AMOUNT] += div.price
             parent_row[self.TA_COSTS] += div.cost
-            parent_row[self.TOTAL] += asset_controller.get_total_for_dividend(div)
-            parent_row[self.DIVIDEND_YIELD] = parent_row[self.TOTAL] / position_controller.get_buy_value(div.position)
+            parent_row[self.TOTAL] += div.total
+            parent_row[self.DIVIDEND_YIELD] = parent_row[self.TOTAL] / div.position.buy_value
             parent = parent_row.iter
         model.append(parent,
                 [div,
@@ -123,14 +119,14 @@ class DividendsTree(Tree):
                 div.date,
                 div.price,
                 div.cost,
-                asset_controller.get_total_for_dividend(div),
-                asset_controller.get_dividend_yield(div)
+                div.total,
+                div.dividend_yield
                 ])
 
     def on_edit(self, widget, data=None):
         obj, iterator = self.get_selected_item()
         if obj:
-            dialogs.DividendDialog(self.portfolio, tree=self, dividend=obj, parent=self.get_toplevel())
+            dividend_dialog.DividendDialog(self.portfolio, tree=self, dividend=obj, parent=self.get_toplevel())
 
     def on_remove(self, widget=None, data=None):
         obj, iterator = self.get_selected_item()

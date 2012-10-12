@@ -1,20 +1,18 @@
-from gi.repository import Gtk
-from gi.repository import Pango
-import datetime
-
-from avernus.controller import account_controller
 from avernus.gui import gui_utils
+from avernus.objects import account
+from gi.repository import Gtk, Pango
+import datetime
 
 
 class EditTransactionDialog(Gtk.Dialog):
 
-    def __init__(self, account, transaction=None, parent=None):
+    def __init__(self, acc, transaction=None, parent=None):
         Gtk.Dialog.__init__(self, _("Edit transaction"), parent
-                            , Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,
+                , Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,
                      (Gtk.STOCK_CANCEL, Gtk.ResponseType.REJECT,
                       Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT))
         self.transaction = transaction
-        self.account = account
+        self.account = acc
         vbox = self.get_content_area()
 
         #description
@@ -56,7 +54,7 @@ class EditTransactionDialog(Gtk.Dialog):
         new_iter = treestore.append(None, [None, 'None'])
         if active_category == None:
             self.combobox.set_active_iter(new_iter)
-        root_categories = account_controller.get_root_categories()
+        root_categories = account.get_root_categories()
         for cat in root_categories:
             insert_recursive(cat, None)
 
@@ -109,7 +107,7 @@ class EditTransactionDialog(Gtk.Dialog):
     def on_transfer_toggled(self, checkbutton):
         if checkbutton.get_active():
             found_one = False
-            for ta in account_controller.yield_matching_transfer_transactions(self.transaction):
+            for ta in self.transaction.yield_matching_transfer_transactions():
                 if found_one == False:
                     self.matching_transactions_tree.clear()
                     self.matching_transactions_tree.show()
@@ -142,13 +140,14 @@ class EditTransactionDialog(Gtk.Dialog):
                 category = self.combobox.get_model()[self.combobox.get_active_iter()][0]
 
             if self.transaction is None:
-                self.transaction = account_controller.new_account_transaction(account=self.account
-                                            , desc=description
-                                            , amount=amount
-                                            , date=date
-                                            , category=category)
+                self.transaction = account.AccountTransaction(
+                                            account=self.account,
+                                            description=description,
+                                            amount=amount,
+                                            date=date,
+                                            category=category)
             else:
-                self.transaction.description =description
+                self.transaction.description = description
                 self.transaction.amount = amount
                 self.transaction.date = date
                 self.transaction.category = category

@@ -27,7 +27,7 @@ class CalendarDialog(Gtk.Dialog):
 
         self.calendar.connect("day-selected-double-click", self.on_day_selected)
         self.show_all()
-        response = self.run()
+        self.run()
         self.process_result()
 
     def process_result(self):

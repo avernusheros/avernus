@@ -1,27 +1,25 @@
 #!/usr/bin/env python
-from gi.repository import Gtk
-from gi.repository import Gdk
-from webbrowser import open as web
-import sys
-
-import avernus
-from avernus import config
-from avernus.controller import categorization_controller
-from avernus.controller import asset_controller
-from avernus.gui import progress_manager, threads
-from avernus.gui.account.account_transactions_tab import AccountTransactionTab
+from avernus import config, objects
+from avernus.controller import datasource_controller, categorization_controller
+from avernus.gui import get_ui_file, progress_manager, threads
 from avernus.gui.account.account_overview import AccountOverview
-from avernus.gui.account.csv_import_dialog import CSVImportDialog
+from avernus.gui.account.account_transactions_tab import AccountTransactionTab
 from avernus.gui.account.categorization_dialog import CategorizationRulesDialog
+from avernus.gui.account.csv_import_dialog import CSVImportDialog
+from avernus.gui.account.exportDialog import ExportDialog
 from avernus.gui.left_pane import MainTreeBox
+from avernus.gui.portfolio.asset_manager import AssetManager
+from avernus.gui.portfolio.overview_notebook import OverviewNotebook
 from avernus.gui.portfolio.portfolio_notebook import PortfolioNotebook
 from avernus.gui.portfolio.positions_tab import WatchlistPositionsTab
-from avernus.gui.portfolio.overview_notebook import OverviewNotebook
-from avernus.gui.portfolio.asset_manager import AssetManager
 from avernus.gui.preferences import PrefDialog
-from avernus.gui.account.exportDialog import ExportDialog
-from avernus.gui import get_ui_file
+from gi.repository import Gdk, Gtk
+from webbrowser import open as web
+import avernus
+import sys
 
+
+# hack to switch from ascii to utf8. can be removed once we switch to python3
 reload(sys)
 sys.setdefaultencoding("utf-8")
 
@@ -35,6 +33,7 @@ PAGES = {
     'Account': AccountTransactionTab,
     'AllAccount': AccountTransactionTab,
         }
+
 
 class MainWindow:
 
@@ -96,7 +95,7 @@ class MainWindow:
 
     def on_destroy(self, widget=None, data=None):
         """on_destroy - called when the avernusWindow is closed. """
-        avernus.objects.session.commit()
+        objects.session.commit()
         #save db on quit
         self.config.set_option('hpaned position', self.hpaned.get_position(), 'Gui')
         threads.terminate_all()
@@ -171,10 +170,10 @@ class MainWindow:
         def finished_cb():
             progress_manager.remove_monitor(42)
         m = progress_manager.add_monitor(42, _('downloading quotations...'), Gtk.STOCK_REFRESH)
-        threads.GeneratorTask(asset_controller.update_historical_prices, m.progress_update, complete_callback=finished_cb).start()
+        threads.GeneratorTask(datasource_controller.update_historical_prices, m.progress_update, complete_callback=finished_cb).start()
 
     def on_update_assets(self, *args):
         def finished_cb():
             progress_manager.remove_monitor(11)
         m = progress_manager.add_monitor(11, _('updating stocks...'), Gtk.STOCK_REFRESH)
-        threads.GeneratorTask(asset_controller.update_all, m.progress_update, complete_callback=finished_cb).start()
+        threads.GeneratorTask(datasource_controller.update_all, m.progress_update, complete_callback=finished_cb).start()

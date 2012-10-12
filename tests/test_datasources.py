@@ -1,28 +1,24 @@
 #!/usr/bin/env python
 
+from avernus.data_sources import onvista, yahoo
+from avernus.objects import db
 import __builtin__
+import datetime
+import unittest
 __builtin__._ = str
 
-import unittest
-import datetime
 
-from avernus.data_sources import onvista, yahoo
-from avernus.datasource_manager import DatasourceManager
-from avernus import objects
 
 dbfile = ":memory:"
-objects.set_db(dbfile)
-objects.connect()
-objects.session.commit()
+db.set_db(dbfile)
+db.connect()
+db.session.commit()
 
 #stocks which are mentioned in bug reports
 ITEMS_WITH_PROBLEMS = ['AT0000859582']
 
 
 class DataSourcesTest(unittest.TestCase):
-
-    def setUp(self):
-        self.dsm = DatasourceManager()
 
     def test_yahoo_search(self):
         y = yahoo.DataSource()
@@ -84,7 +80,7 @@ class DataSourcesTest(unittest.TestCase):
 
     def test_items_with_problems(self):
         for item in ITEMS_WITH_PROBLEMS:
-            self.dsm.search(item, threaded = False)
+            self.dsm.search(item, threaded=False)
             stock = controller.getStockForSearchstring(item)[0]
 
             test_date = datetime.datetime(1900, 1, 1)

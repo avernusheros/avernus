@@ -1,12 +1,11 @@
 #!/usr/bin/env python
-
 from avernus.controller import chart_controller
 from avernus.gui import charts, page, gui_utils
-from avernus.controller import portfolio_controller
-from avernus.controller import dimensions_controller
+from avernus.objects import container, dimension
 from gi.repository import Gtk
-
 import logging
+
+
 logger = logging.getLogger(__name__)
 
 
@@ -82,7 +81,7 @@ class ChartTab(page.Page):
 
         col = 0
         switch = True
-        for dim in dimensions_controller.get_all_dimensions():
+        for dim in dimension.get_all_dimensions():
             label = Gtk.Label()
             label.set_markup('<b>' + dim.name + '</b>')
             label.set_tooltip_text(_('Percentual fraction by "') + dim.name + '".')
@@ -151,7 +150,7 @@ class BenchmarkDialog(Gtk.Dialog):
 
         # load items
         self.count = 0
-        for bm in portfolio_controller.get_benchmarks_for_portfolio(portfolio):
+        for bm in portfolio.get_benchmarks():
             self.model.append([bm, str(bm), bm.percentage * 100])
             self.count += 1
 
@@ -182,7 +181,7 @@ class BenchmarkDialog(Gtk.Dialog):
             vbox = dlg.get_content_area()
             table = Gtk.Table()
             vbox.pack_end(table, True, True, 0)
-            table.attach(Gtk.Label("Percentage:"), 0,1,0,1)
+            table.attach(Gtk.Label("Percentage:"), 0, 1, 0, 1)
             entry = Gtk.SpinButton()
             entry.set_adjustment(Gtk.Adjustment(lower=0, upper=100, step_increment=1.0, value=1))
             entry.set_digits(1)
@@ -190,8 +189,8 @@ class BenchmarkDialog(Gtk.Dialog):
             dlg.show_all()
             response = dlg.run()
             if response == Gtk.ResponseType.ACCEPT:
-                bm = portfolio_controller.new_benchmark(self.portfolio, entry.get_value() / 100.0)
-                self.model.append([bm, str(bm), bm.percentage*100.0])
+                bm = container.Benchmark(portfolio=self.portfolio, percentage=entry.get_value() / 100.0)
+                self.model.append([bm, str(bm), bm.percentage * 100.0])
                 self.count += 1
             dlg.destroy()
 
@@ -203,6 +202,6 @@ class BenchmarkDialog(Gtk.Dialog):
         selection = self.tree.get_selection()
         model, selection_iter = selection.get_selected()
         if selection_iter:
-            portfolio_controller.delete_object(model[selection_iter][0])
+            model[selection_iter][0].delete()
             self.model.remove(selection_iter)
             self.count -= 1

@@ -1,10 +1,7 @@
-from gi.repository import Gtk
-from gi.repository import Pango
-
-from avernus.gui import gui_utils
-from avernus.gui import charts
-from avernus.controller import portfolio_controller
 from avernus.controller import chart_controller
+from avernus.gui import charts, gui_utils
+from avernus.objects import container
+from gi.repository import Gtk, Pango
 
 
 class OverviewNotebook(Gtk.Notebook):
@@ -164,24 +161,24 @@ class PortfolioOverviewTree(gui_utils.Tree):
 
     def load_items(self):
         model = self.get_model()
-        all_portfolio = portfolio_controller.AllPortfolio()
-        self.overall_value = portfolio_controller.get_current_value(all_portfolio)
+        all_portfolio = container.AllPortfolio()
+        self.overall_value = all_portfolio.get_current_value()
         # ensure no division by zero error occurs
         if self.overall_value == 0.0:
             self.overall_value = 1.0
         iterator = model.append(None, self.get_row(all_portfolio, Pango.Weight.BOLD))
-        for item in portfolio_controller.get_all_portfolio():
+        for item in container.get_all_portfolios():
             model.append(iterator, self.get_row(item))
 
     def get_row(self, item, weight=Pango.Weight.NORMAL):
         return [item,
                item.name,
-               portfolio_controller.get_current_value(item),
-               portfolio_controller.get_current_change(item)[0],
-               float(portfolio_controller.get_percent(item)),
-               portfolio_controller.get_ter(item),
+               item.get_current_value(),
+               item.current_change[0],
+               float(item.percent),
+               item.ter,
                item.last_update,
                len(item.positions),
-               portfolio_controller.get_current_value(item) / self.overall_value,
-               portfolio_controller.get_annual_return(item),
+               item.get_current_value() / self.overall_value,
+               item.get_annual_return(),
                weight]

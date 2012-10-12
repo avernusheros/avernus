@@ -1,11 +1,11 @@
 from avernus import config
 from avernus.gui import gui_utils
-from avernus.controller import account_controller
-from gi.repository import Gtk
-import os
-from gi.repository import Pango
-import time
+from avernus.objects import account
+from gi.repository import Gtk, Pango
 import csv
+import os
+import time
+
 
 class ExportDialog(Gtk.Dialog):
 
@@ -13,7 +13,7 @@ class ExportDialog(Gtk.Dialog):
     WIDTH = 800
     HEIGHT = 500
 
-    def __init__(self, parent=None, account =None):
+    def __init__(self, parent=None, account=None):
         Gtk.Dialog.__init__(self, self.TITLE, parent
                             , Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,
                      (Gtk.STOCK_CANCEL, Gtk.ResponseType.REJECT,))
@@ -25,7 +25,7 @@ class ExportDialog(Gtk.Dialog):
         self._init_widgets()
 
         response = self.run()
-        self.process_result(response = response)
+        self.process_result(response=response)
 
     def _init_widgets(self):
         self.export_button = self.add_button(_('Export'), Gtk.ResponseType.ACCEPT)
@@ -50,14 +50,14 @@ class ExportDialog(Gtk.Dialog):
         model = Gtk.ListStore(object, str)
         i = 0
         active = -1
-        for account in account_controller.get_all_account():
-            model.append([account, account.name])
-            if self.account == account:
+        for acc in account.get_all_accounts():
+            model.append([acc, acc.name])
+            if self.account == acc:
                 active = i
-            i+=1
+            i += 1
         self.account_cb = Gtk.ComboBox()
         self.account_cb.set_model(model)
-        if active>-1:
+        if active > -1:
             self.account_cb.set_active(active)
         cell = Gtk.CellRendererText()
         self.account_cb.pack_start(cell, True)
@@ -67,7 +67,7 @@ class ExportDialog(Gtk.Dialog):
         frame = Gtk.Frame()
         frame.set_label(_('Transactions'))
         sw = Gtk.ScrolledWindow()
-        sw.set_policy(Gtk.PolicyType.AUTOMATIC,Gtk.PolicyType.AUTOMATIC)
+        sw.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
         self.tree = TransactionTree()
         frame.add(sw)
 
@@ -85,7 +85,7 @@ class ExportDialog(Gtk.Dialog):
         self.tree.reload(self.account)
         self.export_button.set_sensitive(True)
 
-    def process_result(self, widget=None, response = Gtk.ResponseType.ACCEPT):
+    def process_result(self, widget=None, response=Gtk.ResponseType.ACCEPT):
         if response == Gtk.ResponseType.ACCEPT:
             # gather the transactions
             self.transactions = self.tree.getExportTransactions()
@@ -115,7 +115,7 @@ class TransactionTree(gui_utils.Tree):
     def __init__(self):
         gui_utils.Tree.__init__(self)
         self.set_rules_hint(True)
-        self.set_size_request(700,400)
+        self.set_size_request(700, 400)
         self.model = Gtk.ListStore(object, object, float, str, bool)
         self.set_model(self.model)
 

@@ -1,17 +1,20 @@
 #!/usr/bin/env python
 # -*- Mode: Python; coding: utf-8; indent-tabs-mode: nil; tab-width: 4 -*-
-
-from datetime import datetime
-import codecs, csv, re
 from cStringIO import StringIO
+from datetime import datetime
 import chardet
+import codecs
+import csv
+import re
 
 if __name__ == '__main__':
-    import sys, os
-    path = os.path.abspath(os.path.join(os.path.dirname(__file__),".."))
+    import sys
+    import os
+    path = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
     sys.path.append(path)
 else:
-    from avernus.controller import categorization_controller, account_controller
+    from avernus.controller import categorization_controller
+    from avernus.objects import account
 
 
 FORMATS = ['%Y-%m-%d',
@@ -20,13 +23,13 @@ FORMATS = ['%Y-%m-%d',
 
 class TempTransaction(object):
 
-    def create(self, account):
+    def create(self, acc):
         if self.b_import:
-            account_controller.new_account_transaction(
-                        desc=self.description,
+            account.AccountTransaction(
+                        description=self.description,
                         amount=self.amount,
                         date=self.date,
-                        account=account,
+                        account=acc,
                         category=self.category)
 
     def __repr__(self):
@@ -81,7 +84,7 @@ class CsvImporter:
                 for col in row:
                     #strip whitespace
                     col = col.strip(' ')
-                    if re.match('^[0-9]+[\.\-]+[0-9]*[\.\-][0-9]+$', col ) is not None:
+                    if re.match('^[0-9]+[\.\-]+[0-9]*[\.\-][0-9]+$', col) is not None:
                         profile['date column'] = col_count
                         profile['date format'] = self._detect_date_format(col)
                     elif re.match('^[-+]?[0-9]+[\.\,]+[0-9]*[\.\,]?[0-9]*$', col) is not None:
@@ -99,7 +102,7 @@ class CsvImporter:
                         pass
                     else:
                         profile['description column'].append(col_count)
-                    col_count+=1
+                    col_count += 1
 
                 #check if profile contains the required info, otherwise check the next row
                 required = ['description column', 'date column', 'amount column']
@@ -111,7 +114,7 @@ class CsvImporter:
                     break
         return profile
 
-    def _guess_delimiter(self, csvdata, candidates=[',',';','\t']):
+    def _guess_delimiter(self, csvdata, candidates=[',', ';', '\t']):
         histogram = {}
         for can in candidates:
             histogram[can] = []
@@ -192,12 +195,14 @@ class CsvImporter:
         # on whether it's a header
         hasHeader = 0
         for col, colType in columnTypes.items():
-            if type(colType) == type(0): # it's a length
+            if type(colType) == type(0):
+                # it's a length
                 if len(header[col]) != colType:
                     hasHeader += 1
                 else:
                     hasHeader -= 1
-            else: # attempt typecast
+            else:
+                # attempt typecast
                 try:
                     colType(header[col])
                 except (ValueError, TypeError):
@@ -220,11 +225,11 @@ class CsvImporter:
 
     def _parse_amount(self, amount_string, decimal_separator, saldo_indicator=None):
         if decimal_separator == '.':
-            amount_string = amount_string.replace(',','')
+            amount_string = amount_string.replace(',', '')
         elif decimal_separator == ',':
-            amount_string = amount_string.replace('.','').replace(',','.')
+            amount_string = amount_string.replace('.', '').replace(',', '.')
         amount = float(amount_string)
-        if saldo_indicator and saldo_indicator in ['s','S','c','C']:
+        if saldo_indicator and saldo_indicator in ['s', 'S', 'c', 'C']:
             amount = -amount
         return amount
 
@@ -249,7 +254,7 @@ class CsvImporter:
                                            profile['decimal separator'])
 
                 tran.date = self._parse_date(row[profile['date column']].strip(' '), profile['date format'])
-                tran.description = ' - '.join([row[d] for d in profile['description column'] if len(row[d])>0])
+                tran.description = ' - '.join([row[d] for d in profile['description column'] if len(row[d]) > 0])
                 if profile['category'] == -1:
                     tran.category = None
                 else:
@@ -257,14 +262,14 @@ class CsvImporter:
                 tran.b_import = True
                 result.append(tran)
             #If we find a blank line, assume we've hit the end of the transactions.
-            if not row and not len(result)==0:
+            if not row and not len(result) == 0:
                 break
         self.results = result
         self.check_categories()
 
     def check_duplicates(self, account):
         for trans in self.results:
-            if account_controller.account_has_transaction(account, {'date':trans.date,'amount':trans.amount,'description':trans.description}):
+            if account.has_transaction({'date':trans.date, 'amount':trans.amount, 'description':trans.description}):
                 trans.b_import = False
             else:
                 trans.b_import = True

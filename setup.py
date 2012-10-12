@@ -5,7 +5,7 @@ from distutils.core import setup
 from distutils.command.install_data import install_data
 from distutils.command.build import build
 from distutils.dep_util import newer
-from distutils.log import warn, info, error
+from distutils.log import info, error
 
 import subprocess
 import glob
@@ -17,7 +17,6 @@ import avernus
 
 PO_DIR = 'po'
 MO_DIR = os.path.join('build', 'mo')
-
 
 
 class BuildData(build):
@@ -75,7 +74,7 @@ setup(
       ('share/avernus/data/icons/hicolor/scalable/apps', glob.glob('data/icons/hicolor/scalable/apps/*.svg')),
       ('share/avernus/data/icons/hicolor/48x48/apps', glob.glob('data/icons/hicolor/48x48/apps/*.png')),
      ],
-    packages = ['avernus',
+    packages=['avernus',
                 'avernus.matplotlib',
                 'avernus.gui',
                 'avernus.gui.account',

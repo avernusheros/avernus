@@ -1,12 +1,9 @@
 #!/usr/bin/env python
-
-import os
-from gi.repository import Gtk
-from gi.repository import Pango
-
-from avernus.gui import gui_utils
 from avernus import csvimporter, config
-from avernus.controller import account_controller
+from avernus.gui import gui_utils
+from avernus.objects import account
+from gi.repository import Gtk, Pango
+import os
 
 
 class CSVImportDialog(Gtk.Dialog):
@@ -32,7 +29,7 @@ class CSVImportDialog(Gtk.Dialog):
         self.set_size_request(self.WIDTH, self.HEIGHT)
 
         response = self.run()
-        self.process_result(response = response)
+        self.process_result(response=response)
 
     def _init_widgets(self):
         self.import_button = self.add_button(_('Import'), Gtk.ResponseType.ACCEPT)
@@ -55,14 +52,14 @@ class CSVImportDialog(Gtk.Dialog):
         model = Gtk.ListStore(object, str)
         i = 0
         active = -1
-        for account in account_controller.get_all_account():
-            model.append([account, account.name])
-            if self.account == account:
+        for acc in account.get_all_accounts():
+            model.append([acc, acc.name])
+            if self.account == acc:
                 active = i
-            i+=1
+            i += 1
         self.account_cb = Gtk.ComboBox()
         self.account_cb.set_model(model)
-        if active>-1:
+        if active > -1:
             self.account_cb.set_active(active)
         cell = Gtk.CellRendererText()
         self.account_cb.pack_start(cell, True)
@@ -78,7 +75,7 @@ class CSVImportDialog(Gtk.Dialog):
         frame = Gtk.Frame()
         frame.set_label(_('Preview'))
         sw = Gtk.ScrolledWindow()
-        sw.set_policy(Gtk.PolicyType.AUTOMATIC,Gtk.PolicyType.AUTOMATIC)
+        sw.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
         self.tree = PreviewTree()
         frame.add(sw)
 
@@ -86,7 +83,7 @@ class CSVImportDialog(Gtk.Dialog):
         vbox.pack_start(frame, True, True, 0)
         self.show_all()
 
-    def process_result(self, widget=None, response = Gtk.ResponseType.ACCEPT):
+    def process_result(self, widget=None, response=Gtk.ResponseType.ACCEPT):
         if response == Gtk.ResponseType.ACCEPT:
             self.account_cb.get_model()
             self.importer.create_transactions(self.account)
@@ -102,7 +99,7 @@ class CSVImportDialog(Gtk.Dialog):
     def _on_file_set(self, button):
         self.b_file = True
         self.filename = button.get_filename()
-        self.set_title(self.TITLE+' - '+os.path.basename(self.filename))
+        self.set_title(self.TITLE + ' - ' + os.path.basename(self.filename))
         last_folder = button.get_current_folder()
         # last folder is None if Gnome's recent files is used
         if last_folder:
@@ -143,7 +140,7 @@ class PreviewTree(gui_utils.Tree):
         gui_utils.Tree.__init__(self)
         self.set_rules_hint(True)
 
-        self.set_size_request(700,400)
+        self.set_size_request(700, 400)
         self.model = Gtk.ListStore(object, str, float, bool, str, str)
         self.set_model(self.model)
 

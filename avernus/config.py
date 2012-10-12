@@ -1,15 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
-import os, glib
-__avernus_data_directory__ = '/usr/local/share/avernus/'
 import ConfigParser
+import os
+import glib
+__avernus_data_directory__ = '/usr/local/share/avernus/'
 
 
 class project_path_not_found(Exception):
     pass
 
 data_path = None
+
 
 def get_data_path():
     """Retrieve data path
@@ -22,7 +23,7 @@ def get_data_path():
     if data_path:
         return data_path
     # get pathname absolute or relative
-    if os.path.exists(__avernus_data_directory__): #.startswith('/')
+    if os.path.exists(__avernus_data_directory__):
         pathname = __avernus_data_directory__
     else:
         pathname = os.path.dirname(__file__) + '/../data'
@@ -34,16 +35,19 @@ def get_data_path():
     else:
         raise project_path_not_found, abs_data_path
 
+
 config_path = os.path.join(glib.get_user_config_dir(), 'avernus')
 timezone = 'CET'
 
 instance = None
+
 
 def avernusConfig():
     global instance
     if not instance:
         instance = AvernusConfig()
     return instance
+
 
 class AvernusConfig():
     def __init__(self):
@@ -69,7 +73,7 @@ class AvernusConfig():
         with open(self.filename, 'wb') as configfile:
             self.parser.write(configfile)
 
-    def get_option(self, name, section = 'General', default = None):
+    def get_option(self, name, section='General', default=None):
         #print name, type(name), section, type(section)
         if self.parser.has_option(section, name):
             return self.parser.get(section, name)
@@ -78,7 +82,7 @@ class AvernusConfig():
         return default
         #print "unkown config request ", name, section
 
-    def set_option(self, name, value, section = 'General'):
+    def set_option(self, name, value, section='General'):
         if not self.parser.has_section(section):
             self.parser.add_section(section)
         self.parser.set(section, name, str(value))
@@ -88,9 +92,9 @@ class AvernusConfig():
     def __repr__(self):
         txt = ''
         for section in self.parser.sections():
-            txt+=section
-            txt+='\n-----------'
+            txt += section
+            txt += '\n-----------'
             for option in self.parser.options(section):
-                txt+='\n'+option
-            txt+='\n\n'
+                txt += '\n' + option
+            txt += '\n\n'
         return txt
