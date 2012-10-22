@@ -98,9 +98,9 @@ class TransactionValueChartController(ChartController):
         self.transactions = sorted(transactions, key=lambda t: t.date)
 
     def calculate_values(self, *args):
-        self.y_values = []
-        if len(self.transactions) == 0:
+        if not self.transactions:
             return
+        self.y_values = []
         self.days = calc_days(self.step, self.transactions[0].date, self.transactions[-1].date, 25)
         self.x_values = format_days(self.days, self.step)
         self.calculate_y_values()

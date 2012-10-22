@@ -124,8 +124,7 @@ class PositionsTree(Tree):
     def on_update_positions(self, *args):
         def finished_cb():
             progress_manager.remove_monitor(555)
-            self.recalculate_portfolio_fractions()
-            self.parent_widget.update_page()
+            self.update()
         m = progress_manager.add_monitor(555, _('updating assets...'), Gtk.STOCK_REFRESH)
         threads.GeneratorTask(datasource_controller.update_positions, m.progress_update, complete_callback=finished_cb, args=(self.container)).start()
         #for foo in portfolio_controller.update_positions(self.container):
@@ -183,16 +182,11 @@ class PositionsTree(Tree):
             return None
         return search(self.model)
 
-    def recalculate_portfolio_fractions(self):
-        for row in self.model:
-            item = row[0]
-            row[self.COLS['pf_percent']] = self.container.get_fraction(item)
-
-
 
 class PortfolioPositionsTree(PositionsTree):
 
     def __init__(self, portfolio, actiongroup, parent):
+        self.portfolio = portfolio
         PositionsTree.__init__(self, portfolio, actiongroup, parent)
         self.actiongroup.add_actions([
                 ('add', Gtk.STOCK_ADD, 'add', None, _('Add new position'), self.on_add),
@@ -326,9 +320,8 @@ class PortfolioPositionsTree(PositionsTree):
 
     def on_position_added(self, portfolio, item):
         self.insert_position(item)
-        #update portfolio fractions
-        for row in self.model:
-            row[self.COLS['pf_percent']] = portfolio.get_fraction(item)
+        # update portfolio fractions
+        self.update()
 
     def on_unselect(self):
         for action in ['edit', 'sell', 'remove', 'chart']:
@@ -337,6 +330,12 @@ class PortfolioPositionsTree(PositionsTree):
     def on_select(self, obj):
         for action in ['edit', 'sell', 'remove', 'chart']:
             self.actiongroup.get_action(action).set_sensitive(True)
+
+    def update(self):
+        for row in self.model:
+            item = row[0]
+            row[self.COLS['pf_percent']] = self.portfolio.get_fraction(item)
+        self.parent_widget.update_page()
 
 
 class WatchlistPositionsTree(PositionsTree):
@@ -376,6 +375,10 @@ class WatchlistPositionsTree(PositionsTree):
 
     def insert_position(self, position):
         self.model.append(None, self._get_row(position))
+
+    def update(self):
+        # called after a position is added
+        pass
 
     def _get_row(self, position):
         asset = position.asset

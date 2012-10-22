@@ -307,26 +307,31 @@ class DataSource():
 
     def update_stocks(self, sts):
         for st in sts:
-            if isinstance(st, Fund):
-                file = opener.open("http://www.onvista.de/fonds/kurse.html", urllib.urlencode({"ISIN": st.isin}))
-                generator = self._parse_kurse_html(file)
-            elif isinstance(st, Etf):
-                file = opener.open("http://www.onvista.de/etf/kurse.html", urllib.urlencode({"ISIN": st.isin}))
-                generator = self._parse_kurse_html(file, tdInd=etfTDS, stockType=Etf)
-            elif isinstance(st, Bond):
-                file = opener.open("http://www.onvista.de/anleihen/kurse.html", urllib.urlencode({"ISIN": st.isin}))
-                generator = self._parse_kurse_html(file, tdInd=bondTDS, stockType=Bond)
-            else:
-                print "Unknown stock type in onvistaplugin.update_stocks: ", type(st)
-                generator = []
+            try:
+                if isinstance(st, Fund):
+                    f = opener.open("http://www.onvista.de/fonds/kurse.html", urllib.urlencode({"ISIN": st.isin}))
+                    generator = self._parse_kurse_html(f)
+                elif isinstance(st, Etf):
+                    f = opener.open("http://www.onvista.de/etf/kurse.html", urllib.urlencode({"ISIN": st.isin}))
+                    generator = self._parse_kurse_html(f, tdInd=etfTDS, stockType=Etf)
+                elif isinstance(st, Bond):
+                    f = opener.open("http://www.onvista.de/anleihen/kurse.html", urllib.urlencode({"ISIN": st.isin}))
+                    generator = self._parse_kurse_html(f, tdInd=bondTDS, stockType=Bond)
+                else:
+                    print "Unknown stock type in onvistaplugin.update_stocks: ", type(st)
+                    return
+            except:
+                logger.info("can not download quotations")
+                return
             for item in generator:
-                if st.date < item['date']: #found newer price
+                # found newer price?
+                if st.date < item['date']:
                     st.exchange = item['exchange']
                     st.price = item['price']
                     st.date = item['date']
                     st.change = item['change']
                     st.volume = item['volume']
-            yield st
+                    yield st
 
     def update_historical_prices(self, st, start_date, end_date):
         url = ''

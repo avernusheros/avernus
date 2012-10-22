@@ -183,14 +183,6 @@ class AccountChartsNotebook(Gtk.Notebook):
         label.set_tooltip_text(_('Categorization of transactions.'))
         self.append_page(table, label)
 
-        #FIXME
-        #controller = chart_controller.EarningsVsSpendingsController(self.account.transactions, self.date_range)
-        #chart = charts.BarChart(controller, 400)
-        #self.charts.append(chart)
-        #label = Gtk.Label(label=_('Earnings vs Spendings'))
-        #label.set_tooltip_text(_('Earnings vs spendings in given time period.'))
-        #self.append_page(chart, label)
-
 
 class TransactionsTree(gui_utils.Tree):
 

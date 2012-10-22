@@ -64,6 +64,29 @@ class PortfolioBase(object):
             percent = round(100.0 / start * change, 2)
         return change, percent
 
+    @property
+    def transaction_count(self):
+        return sum([len(pos.transactions) for pos in self])
+
+    @property
+    def date_of_last_dividend(self):
+        #FIXME faster, simpler!
+        current = None
+        for pos in self:
+            for dividend in pos.dividends:
+                if not current or dividend.date > current:
+                    current = dividend.date
+        return current
+
+    @property
+    def date_of_last_transaction(self):
+        current = None
+        for pos in self:
+            for ta in pos.transactions:
+                if not current or ta.date > current:
+                    current = ta.date
+        return current
+
     def get_closed_positions(self):
         ret = []
         for pos in self:
@@ -71,6 +94,40 @@ class PortfolioBase(object):
                 buy_ta = pos.get_buy_transaction()
                 ret.append(position.ClosedPosition(buy_ta, sell_ta))
         return ret
+
+    def get_dividends_count(self):
+        return sum([len(pos.dividends) for pos in self])
+
+    def get_transactions(self):
+        ret = []
+        for pos in self:
+            ret += pos.transactions
+        return ret
+
+    def get_dividends(self):
+        ret = []
+        for pos in self:
+            ret += pos.dividends
+        return ret
+
+    def get_dividends_sum(self):
+        ret = 0.0
+        for pos in self:
+            ret += sum([div.price for div in pos.dividends])
+        return ret
+
+    def get_used_assets(self):
+        return objects.Session().query(asset_m.Asset)\
+                       .join(position.PortfolioPosition)\
+                       .filter(position.PortfolioPosition.portfolio == self)\
+                       .distinct()\
+                       .all()
+
+    def get_current_value(self):
+        value = 0.0
+        for pos in self:
+            value += pos.current_value
+        return value
 
     def get_annual_return(self):
         # get a list of all transactionsm and dividend payments sorted by date
@@ -86,6 +143,14 @@ class PortfolioBase(object):
                                  self.get_current_value()))
         transactions.sort()
         return math.xirr(transactions)
+
+    def get_birthday(self):
+        current = datetime.date.today()
+        for position in self.positions:
+            for transaction in position.transactions:
+                if transaction.date < current:
+                    current = transaction.date
+        return current
 
     def get_fraction(self, position):
         cvalue = self.get_current_value()
@@ -160,13 +225,6 @@ class Container(objects.Base, GObject.GObject):
     def __iter__(self):
         return self.positions.__iter__()
 
-    def get_used_assets(self):
-        return objects.Session().query(asset_m.Asset)\
-                       .join(position.PortfolioPosition)\
-                       .filter(position.PortfolioPosition.portfolio == self)\
-                       .distinct()\
-                       .all()
-
 
 GObject.type_register(Container)
 
@@ -188,67 +246,9 @@ class Portfolio(Container, PortfolioBase):
                                position.Position.asset == asset)\
                        .order_by(portfolio_transaction.Transaction.date).all()
 
-    def get_transactions(self):
-        ret = []
-        for pos in self:
-            ret += pos.transactions
-        return ret
-
-    def get_dividends(self):
-        ret = []
-        for pos in self:
-            ret += pos.dividends
-        return ret
-
-    def get_dividends_count(self):
-        return sum([len(pos.dividends) for pos in self])
-
-    def get_dividends_sum(self):
-        ret = 0.0
-        for pos in self:
-            ret += sum([div.price for div in pos.dividends])
-        return ret
-
-    def get_current_value(self):
-        value = 0.0
-        for pos in self:
-            value += pos.current_value
-        return value
-
     def get_benchmarks(self):
         return objects.Session().query(Benchmark)\
                     .filter_by(portfolio=self).all()
-
-    def get_birthday(self):
-        current = datetime.date.today()
-        for position in self.positions:
-            for transaction in position.transactions:
-                if transaction.date < current:
-                    current = transaction.date
-        return current
-
-    @property
-    def transaction_count(self):
-        return sum([len(pos.transactions) for pos in self])
-
-    @property
-    def date_of_last_dividend(self):
-        #FIXME faster, simpler!
-        current = None
-        for pos in self:
-            for dividend in pos.dividends:
-                if not current or dividend.date > current:
-                    current = dividend.date
-        return current
-
-    @property
-    def date_of_last_transaction(self):
-        current = None
-        for pos in self:
-            for ta in pos.transactions:
-                if not current or ta.date > current:
-                    current = ta.date
-        return current
 
     def get_value_at_daterange(self, asset, days):
         quantity = 0
