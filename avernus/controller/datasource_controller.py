@@ -28,7 +28,7 @@ def search(searchstring, callback=None, complete_cb=None, threaded=True):
     global search_callback
     search_callback = callback
     for name, source in sources.iteritems():
-        #check whether search function exists
+        # check whether search function exists
         func = getattr(source, "search", None)
         if func:
             if threaded:
@@ -54,14 +54,14 @@ def stop_search():
 
 
 def _item_found_callback(item, source, source_info=None):
-    #mandatory: isin, type, name
+    # mandatory: isin, type, name
     if not validate_isin(item['isin']):
         return
     new = False
     new_asset = check_asset_existance(source=source.name,
                                                    isin=item['isin'],
                                                    currency=item['currency'])
-    #FIXME ugly
+    # FIXME ugly
     if not new_asset:
         new = True
         item['source'] = source.name
@@ -90,7 +90,7 @@ def update_assets(assets):
             logger.debug("updating %s using %s" % (temp, source.name))
             for ret in source.update_stocks(temp):
                 ret.emit("updated")
-                yield 1
+                yield ret
 
 
 def update_asset(asset):
@@ -105,12 +105,12 @@ def get_historical_prices(asset, start_date=None, end_date=None):
         start_date = datetime.date(end_date.year - 20, end_date.month, end_date.day)
     if start_date < end_date:
         for qt in sources[asset.source].update_historical_prices(asset, start_date, end_date):
-            #qt : (stock, exchange, date, open, high, low, close, vol)
+            # qt : (stock, exchange, date, open, high, low, close, vol)
             if qt is not None:
                 yield asset.Quotation(asset=qt[0], exchange=qt[1], \
                         date=qt[2], open=qt[3], high=qt[4], \
                         low=qt[5], close=qt[6], vol=qt[7])
-    #needed to run as generator thread
+    # needed to run as generator thread
     yield 1
 
 
@@ -133,7 +133,7 @@ def update_all(*args):
     itemcount = len(items)
     count = 0.0
     for item in update_assets(items):
-        count += 1.0
+        count += 1
         yield count / itemcount
     for item in objects.Session().query(container.Container).all():
         item.last_update = datetime.datetime.now()
@@ -158,10 +158,9 @@ def update_positions(portfolio):
     items = set(pos.asset for pos in portfolio if pos.quantity > 0)
     itemcount = len(items)
     count = 0.0
-    for foo in update_assets(items):
-        count += 1.0
+    for i in update_assets(items):
+        count += 1
         yield count / itemcount
     portfolio.last_update = datetime.datetime.now()
     portfolio.emit("updated")
     yield 1
-

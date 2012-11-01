@@ -2,7 +2,7 @@
 from avernus.controller import datasource_controller
 from avernus.gui import gui_utils, progress_manager, page, threads
 from avernus.gui.gui_utils import Tree, get_name_string
-from avernus.gui.portfolio import buy_dialog, dialogs, sell_dialog
+from avernus.gui.portfolio import buy_dialog, dialogs, sell_dialog, dividend_dialog
 from avernus.gui.portfolio.plot import ChartWindow
 from avernus.gui.portfolio.position_dialog import PositionDialog
 from avernus.objects import container
@@ -43,19 +43,19 @@ def current_price_markup(column, cell, model, iter, user_data):
 
 class PositionsTree(Tree):
 
-    COLS = {'obj':0,
-         'name':1,
-         'start':2,
-         'last_price':3,
-         'change':4,
-         'gain':5,
-         'shares':6,
-         'buy_value':7,
-         'mkt_value':8,
-         'days_gain':9,
-         'gain_percent':10,
-         'gain_icon':11,
-         'change_percent':12,
+    COLS = {'obj': 0,
+         'name': 1,
+         'start': 2,
+         'last_price': 3,
+         'change': 4,
+         'gain': 5,
+         'shares': 6,
+         'buy_value': 7,
+         'mkt_value': 8,
+         'days_gain': 9,
+         'gain_percent': 10,
+         'gain_icon': 11,
+         'change_percent': 12,
          'type': 13,
          'pf_percent': 14,
          'gain_div': 15,
@@ -101,7 +101,7 @@ class PositionsTree(Tree):
         if len(all_portfolios) > 1:
             self.context_menu.add_item('----')
 
-            #Move to another portfolio
+            # Move to another portfolio
             item = Gtk.MenuItem(label=_("Move"))
             self.context_menu.add(item)
             menu = Gtk.Menu()
@@ -123,11 +123,15 @@ class PositionsTree(Tree):
 
     def on_update_positions(self, *args):
         def finished_cb():
-            progress_manager.remove_monitor(555)
+            progress_manager.remove_monitor(self.container.id)
             self.update()
-        m = progress_manager.add_monitor(555, _('updating assets...'), Gtk.STOCK_REFRESH)
-        threads.GeneratorTask(datasource_controller.update_positions, m.progress_update, complete_callback=finished_cb, args=(self.container)).start()
-        #for foo in portfolio_controller.update_positions(self.container):
+        m = progress_manager.add_monitor(self.container.id, _('updating assets...'),
+                                         Gtk.STOCK_REFRESH)
+        threads.GeneratorTask(datasource_controller.update_positions,
+                              m.progress_update,
+                              complete_callback=finished_cb,
+                              args=(self.container)).start()
+        # for foo in portfolio_controller.update_positions(self.container):
         #    print foo
 
     def on_chart(self, widget, user_data=None):
@@ -151,13 +155,13 @@ class PositionsTree(Tree):
                 self.update_position_after_edit(item)
 
     def on_cursor_changed(self, widget):
-        #Get the current selection in the Gtk.TreeView
+        # Get the current selection in the Gtk.TreeView
         selection = widget.get_selection()
         if selection:
             # Get the selection iter
             treestore, selection_iter = selection.get_selected()
             if (selection_iter and treestore):
-                #Something is selected so get the object
+                # Something is selected so get the object
                 obj = treestore.get_value(selection_iter, 0)
                 self.selected_item = obj, selection_iter
                 self.on_select(obj)
@@ -171,7 +175,7 @@ class PositionsTree(Tree):
             self.model.append(parent, self._get_row(position, parent != None))
 
     def find_position(self, pos):
-        #search recursiv
+        # search recursiv
         def search(rows):
             if not rows: return None
             for row in rows:
@@ -300,9 +304,9 @@ class PortfolioPositionsTree(PositionsTree):
 
     def on_dividend(self, widget):
         if self.selected_item is not None:
-            dialogs.DividendDialog(pf=self.container, position=self.selected_item[0], parent=self.get_toplevel())
+            dividend_dialog.DividendDialog(pf=self.container, position=self.selected_item[0], parent=self.get_toplevel())
         else:
-            dialogs.DividendDialog(pf=self.container, parent=self.get_toplevel())
+            dividend_dialog.DividendDialog(pf=self.container, parent=self.get_toplevel())
 
     def on_asset_updated(self, asset):
         position = self.asset_cache[asset.id]

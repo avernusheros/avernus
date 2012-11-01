@@ -18,7 +18,7 @@ if __name__ == "__main__":
     import sys
     sys.path.append("../../")
 
-#from avernus.objects import stock
+# from avernus.objects import stock
 
 QUEUE_THRESHOLD = 3
 QUEUE_DIVIDEND = 10
@@ -38,7 +38,7 @@ def to_datetime(datestring, time='', toUTC=True):
     if toUTC:
         ret_date = ret_date.astimezone(pytz.utc)
         ret_date = ret_date.replace(tzinfo=None)
-    #print ret_date
+    # print ret_date
     return ret_date
 
 
@@ -183,12 +183,12 @@ class DataSource():
 
     def search(self, searchstring):
         logger.debug("Starting search for " + searchstring)
-        #http://www.onvista.de/suche.html?TARGET=kurse&SEARCH_VALUE=&ID_TOOL=FUN
+        # http://www.onvista.de/suche.html?TARGET=kurse&SEARCH_VALUE=&ID_TOOL=FUN
         search_url = "http://www.onvista.de/suche.html"
-        #ID_TOOL FUN only searches fonds and etfs
-        page = opener.open(search_url, urllib.urlencode({"TARGET": "kurse", "SEARCH_VALUE": searchstring}))#,'ID_TOOL':'FUN' }))
+        # ID_TOOL FUN only searches fonds and etfs
+        page = opener.open(search_url, urllib.urlencode({"TARGET": "kurse", "SEARCH_VALUE": searchstring}))  # ,'ID_TOOL':'FUN' }))
         received_url = page.geturl()
-        #print "received url ", received_url
+        # print "received url ", received_url
         # single result http://www.onvista.de/etf/kurse.html?ID_INSTRUMENT=16353286&SEARCH_VALUE=DBX0AE
         # result page http://www.onvista.de/suche.html
         # now check if we got a single result or a result page
@@ -197,9 +197,9 @@ class DataSource():
             logger.debug("Received result page")
             # we have a result page
             soup = BeautifulSoup(page.read())
-            #print soup
+            # print soup
             linkTagsFonds = soup.findAll(attrs={'href' : re.compile('http://fonds\\.onvista\\.de/kurse\\.html\?ID_INSTRUMENT=\d+')})
-            etfRegex = re.compile("http://www\\.onvista\\.de/etf/.+?") #re.compile('http://etf\\.onvista\\.de/kurse\\.html\?ID_INSTRUMENT=\d+')
+            etfRegex = re.compile("http://www\\.onvista\\.de/etf/.+?")  # re.compile('http://etf\\.onvista\\.de/kurse\\.html\?ID_INSTRUMENT=\d+')
             linkTagsETF = soup.findAll(attrs={'href' : etfRegex})
             linkTagsBond = soup.findAll(attrs={'href' : re.compile('http://anleihen\\.onvista\\.de/kurse\\.html\?ID_INSTRUMENT=\d+')})
             filePara = FileDownloadParalyzer([tag['href'] for tag in linkTagsFonds])
@@ -235,12 +235,12 @@ class DataSource():
             html = page.read()
             if "etf" in received_url:
                 # etf
-                #print "found ETF-onepage"
+                # print "found ETF-onepage"
                 for item in self._parse_kurse_html(html, tdInd=etfTDS, stockType=Etf):
-                    #print "Yield ", item
+                    # print "Yield ", item
                     yield (item, self, None)
             elif "anleihen" in received_url:
-                #bond
+                # bond
                 for item in self._parse_kurse_html(html, tdInd=bondTDS, stockType=Bond):
                     yield (item, self, None)
             elif "fond" in received_url:
@@ -264,17 +264,17 @@ class DataSource():
             else:
                 isin = str(base.findAll('tr', 'hgrau2')[1].findAll('td', text=True)[1])
 
-                #getting the year
-                #FIXME
-                #try:
+                # getting the year
+                # FIXME
+                # try:
                 #    yearTable = base.find('div','tt_hl').findNextSibling('table','weiss abst').find('tr','hgrau2')
-                #except:
+                # except:
                 #    print "Error getting year in ", kursPage
                 #    yearTable = None
-                #if yearTable:
+                # if yearTable:
                 #    print yearTable.td
                 #    year = yearTable.td.string.split(".")[2]
-                #else:
+                # else:
                 #    #fallback to the hardcoded current year
                 year = unicode(str(date.today().year)[2:])
             isin = isin.replace('&nbsp;', '')
@@ -299,14 +299,14 @@ class DataSource():
                         erg = {'name':name, 'isin':isin, 'exchange':exchange, 'price':price,
                           'date':temp_date, 'currency':currency, 'volume':volume,
                           'assettype':stockType, 'change':change}
-                        #print [(k,type(v)) for k,v in erg.items()]
+                        # print [(k,type(v)) for k,v in erg.items()]
                         yield erg
         except:
             logger.error("parsing errror in onvista.py")
             return
 
     def update_stocks(self, sts):
-        for st in sts:
+        for i, st in enumerate(sts):
             try:
                 if isinstance(st, Fund):
                     f = opener.open("http://www.onvista.de/fonds/kurse.html", urllib.urlencode({"ISIN": st.isin}))
@@ -384,7 +384,7 @@ if __name__ == "__main__":
         for item in plugin.update_stocks([s]):
             pass
         print s.price, s.change, s.date
-        #print s2.price, s2.change, s2.date
+        # print s2.price, s2.change, s2.date
 
     def test_search():
         for res in plugin.search('DE0008474248'):
@@ -408,9 +408,9 @@ if __name__ == "__main__":
     plugin = DataSource()
     s1 = Fund('DE000A0RFEE5', 'foo')
     s2 = Fund('LU0103598305', 'foo')
-    #test_search()
-    #print plugin.search_kurse(s1)
-    #print plugin.search_kurse(s3)
-    #test_parse_kurse()
+    # test_search()
+    # print plugin.search_kurse(s1)
+    # print plugin.search_kurse(s3)
+    # test_parse_kurse()
     test_update(s1)
-    #test_historicals()
+    # test_historicals()
