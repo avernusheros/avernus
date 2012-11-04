@@ -18,8 +18,10 @@ class CategorizationRulesDialog:
         self.searchstring_entry = builder.get_object("searchstring_entry")
         self.priority_entry = builder.get_object("priority_entry")
         self.category_combobox = builder.get_object("category_combobox")
+        self.preview_sw = builder.get_object("preview_sw")
 
         self.active_rule = None
+        self.preview_active = None
 
         # create gui elements
         self._init_tree()
@@ -32,6 +34,11 @@ class CategorizationRulesDialog:
         dlg.show_all()
         dlg.run()
         dlg.destroy()
+
+    def _init_preview(self):
+        self.preview_tree = PreviewTree()
+        self.preview_sw.add(self.preview_tree)
+        self.preview_tree.show()
 
     def _init_tree(self):
         self.rules_tree = gui_utils.Tree()
@@ -75,6 +82,9 @@ class CategorizationRulesDialog:
         model = self.rules_tree.get_model()
         new_text = searchstring_entry.get_text()
         model[self.rules_tree.get_selected_item()[1]][2] = new_text
+        if self.preview_active:
+            self.active_rule.rule = new_text
+            self.preview_tree.refresh(self.active_rule)
 
     def on_active_toggled(self, cellrenderertoggle, path):
         model = self.rules_tree.get_model()
@@ -104,47 +114,27 @@ class CategorizationRulesDialog:
             model = self.rules_tree.get_model()
             model.remove(iterator)
 
-    def _init_widgets(self):
-        # unused
-
-        actiongroup.add_actions([
-                ('refresh', Gtk.STOCK_REFRESH, 'reload preview tree', None, _('Reload preview tree'), self.refresh_preview),
-                ('reset', Gtk.STOCK_CLEAR, 'reset preview tree', None, _('Reset the preview tree'), self.reset_preview),
-                     ])
-        toolbar.insert(actiongroup.get_action('refresh').create_tool_item(), -1)
-        toolbar.insert(actiongroup.get_action('reset').create_tool_item(), -1)
-
-        frame = Gtk.Frame()
-        frame.set_label(_('Preview'))
-        sw = Gtk.ScrolledWindow()
-        sw.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
-        self.preview_tree = PreviewTree()
-        frame.add(sw)
-        sw.add(self.preview_tree)
-        vpaned.add2(frame)
-
-    def refresh_preview(self, widget):
-        # get the active rule and refresh the preview tree with it
-        active_rule = self.rules_tree.get_active_rule()
-        if active_rule:
-            self.preview_tree.on_refresh(active_rule)
-
-    def reset_preview(self, widget):
-        self.preview_tree.reset()
+    def on_toggle_preview(self, widget):
+        if self.preview_active == None:
+            self._init_preview()
+            self.preview_active = True
+        else:
+            self.preview_active = not self.preview_active
+        if self.preview_active:
+            self.preview_tree.refresh(self.active_rule)
 
 
 class PreviewTree(gui_utils.Tree):
     OBJECT = 0
     DESCRIPTION = 1
     AMOUNT = 2
-    CATEGORY = 3
-    DATE = 4
-    ACCOUNT = 5
+    DATE = 3
+    ACCOUNT = 4
 
     def __init__(self):
         gui_utils.Tree.__init__(self)
         self.set_size_request(800, 300)
-        self.model = Gtk.ListStore(object, str, float, str, object, str)
+        self.model = Gtk.ListStore(object, str, float, object, str)
         self.modelfilter = self.model.filter_new(None)
         sorter = Gtk.TreeModelSort(model=self.modelfilter)
         self.set_model(sorter)
@@ -155,7 +145,6 @@ class PreviewTree(gui_utils.Tree):
         cell.props.wrap_mode = Pango.WrapMode.WORD
         cell.props.wrap_width = 300
         self.create_column(_('Amount'), self.AMOUNT, func=gui_utils.currency_format, expand=False)
-        self.create_column(_('Category'), self.CATEGORY, expand=False)
         self.create_column(_('Account'), self.ACCOUNT, expand=False)
         self.set_rules_hint(True)
 
@@ -164,25 +153,20 @@ class PreviewTree(gui_utils.Tree):
 
     def visible_cb(self, model, iterator, user_data):
         transaction = model[iterator][self.OBJECT]
-        if transaction and transaction.transfer:
-            return False
         if self.active_rule:
-            return categorization_controller.match_transaction(self.active_rule, transaction)
+            return categorization_controller.match_transaction(self.active_rule,
+                                                               transaction)
         return True
 
     def load_all(self):
         for trans in account.get_all_transactions():
-            if trans.category:
-                cat = trans.category.name
-            else:
-                cat = ''
-            self.model.append([trans, trans.description, trans.amount, cat, trans.date, trans.account.name])
+            if not trans.transfer:
+                self.model.append([trans,
+                               trans.description,
+                               trans.amount,
+                               trans.date,
+                               trans.account.name])
 
-    def on_refresh(self, assigner):
-        self.active_rule = assigner
+    def refresh(self, rule):
+        self.active_rule = rule
         self.modelfilter.refilter()
-
-    def reset(self):
-        self.active_rule = None
-        self.modelfilter.refilter()
-
