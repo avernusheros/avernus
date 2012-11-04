@@ -128,12 +128,16 @@ class CsvImporter:
         max_count = 0
         ret = None
         for key, hist in histogram.iteritems():
-            max_item = max(hist)
-            if max_item != 0:
-                count = hist.count(max_item)
-                if count > max_count:
-                    max_count = count
-                    ret = key
+            #max_item = max(hist)
+            #if max_item != 0:
+            #    count = hist.count(max_item)
+            #    print key, max_item, count
+            # counting the appearance of the max item is not good if the
+            # max_item is low, so the average appearance gives a better result
+            count = sum(hist) / len(hist)
+            if count > max_count:
+                max_count = count
+                ret = key
         return ret
 
     def _has_header(self, csvdata, profile):
