@@ -156,7 +156,7 @@ class AccountTransaction(objects.Base):
 
     def __init__(self, ** kwargs):
         objects.Base.__init__(self, **kwargs)
-        #adjust balance of account
+        # adjust balance of account
         self.account.balance += self.amount
         self.account.emit("transaction_added", self)
 
@@ -170,7 +170,7 @@ class AccountTransaction(objects.Base):
                         AccountTransaction.amount == -self.amount,
                         or_(AccountTransaction.transfer == None,
                             AccountTransaction.transfer == self))
-        #FIXME maybe do this in sqlalchemy
+        # FIXME maybe do this in sqlalchemy
         fivedays = datetime.timedelta(5)
         for trans in res:
             if self.date - fivedays < trans.date and self.date + fivedays > trans.date:
@@ -182,9 +182,9 @@ class CategoryFilter(objects.Base):
     __tablename__ = 'category_filter'
 
     id = Column(Integer, primary_key=True)
-    rule = Column(String)
-    active = Column(Boolean)
-    priority = Column(Integer)
+    rule = Column(String, default="")
+    active = Column(Boolean, default=False)
+    priority = Column(Integer, default=1)
     category_id = Column(String, ForeignKey('account_category.id'))
     category = relationship('AccountCategory', remote_side=[AccountCategory.id])
 

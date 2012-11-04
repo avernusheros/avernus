@@ -8,17 +8,6 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def create(rule, category, priority=10, active=False):
-    result = CategoryFilter(rule=rule, category=category, active=active,
-                            priority=priority)
-    objects.session.add(result)
-    #update rule list
-    if result.active:
-        global rules
-        rules.append(result)
-    return result
-
-
 def get_all_rules():
     return objects.session.query(CategoryFilter).all()
 
@@ -29,13 +18,13 @@ def get_all_active_by_priority():
 
 
 def match_transaction(rule, transaction):
-    #print rule.rule, transaction.description
+    # print rule.rule, transaction.description
     return rule.rule in transaction.description
 
 
 def get_category(transaction):
     for rule in rules:
-        #print "Probing rule ", rule, transaction.description
+        # print "Probing rule ", rule, transaction.description
         if match_transaction(rule, transaction):
             return rule.category
     return None
@@ -49,7 +38,7 @@ def apply_categorization_rules(*args):
     global rules
     rules = get_all_active_by_priority()
     transactions = account.get_all_transactions()
-    #print "Size: ", len(transactions)
+    # print "Size: ", len(transactions)
     for transaction in transactions:
         if b_include_categorized or transaction.category is None:
             cat = get_category(transaction)

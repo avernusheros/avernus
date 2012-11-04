@@ -1,49 +1,118 @@
 from avernus.controller import categorization_controller
 from avernus.gui import gui_utils
+from avernus.gui import get_ui_file
 from avernus.objects import account
 from gi.repository import Gtk, Pango
 
 
-class CategorizationRulesDialog(Gtk.Dialog):
+class CategorizationRulesDialog:
 
     def __init__(self, parent=None):
-        Gtk.Dialog.__init__(self, _("Categorization rules"), parent
-                            , Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,
-                     (Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT))
-        self.set_size_request(800, 600)
-        self._init_widgets()
-        self.show_all()
-        self.run()
-        self.destroy()
+        builder = Gtk.Builder()
+        builder.add_from_file(get_ui_file("account/category_assignments_dialog.glade"))
+        builder.connect_signals(self)
+
+        # get gui objects
+        sw = builder.get_object("scrolledwindow")
+        dlg = builder.get_object("dialog")
+        self.searchstring_entry = builder.get_object("searchstring_entry")
+        self.priority_entry = builder.get_object("priority_entry")
+        self.category_combobox = builder.get_object("category_combobox")
+
+        self.active_rule = None
+
+        # create gui elements
+        self._init_tree()
+        self._init_combobox()
+        sw.add(self.rules_tree)
+
+        # setup and show dialog
+        dlg.set_transient_for(parent)
+        dlg.add_buttons(Gtk.STOCK_CLOSE, Gtk.ResponseType.ACCEPT)
+        dlg.show_all()
+        dlg.run()
+        dlg.destroy()
+
+    def _init_tree(self):
+        self.rules_tree = gui_utils.Tree()
+        model = Gtk.ListStore(object, bool, str)
+        self.rules_tree.set_model(model)
+
+        col, cell = self.rules_tree.create_check_column(_('Active'), 1)
+        cell.connect("toggled", self.on_active_toggled)
+        self.rules_tree.create_column(_('Rule'), 2, expand=True)
+
+        # load rules
+        for rule in categorization_controller.get_all_rules():
+            model.append([rule, rule.active, rule.rule])
+
+        self.rules_tree.connect('cursor_changed', self.on_cursor_changed)
+
+    def _init_combobox(self):
+        def insert_recursive(cat, parent):
+            new_iter = treestore.append(parent, [cat, cat.name])
+            self.categories[cat.id] = new_iter
+            for child_cat in cat.children:
+                insert_recursive(child_cat, new_iter)
+        self.categories = {}
+        root_categories = account.get_root_categories()
+        treestore = self.category_combobox.get_model()
+        for cat in root_categories:
+            insert_recursive(cat, None)
+
+    def get_active_rule(self):
+        return self.rules_tree.get_selected_item()[0]
+
+    def save_active_rule(self):
+        if self.active_rule:
+            self.active_rule.rule = self.searchstring_entry.get_text()
+            self.active_rule.priority = self.priority_entry.get_value()
+            active_iter = self.category_combobox.get_active_iter()
+            model = self.category_combobox.get_model()
+            self.active_rule.category = model[active_iter][0]
+
+    def on_searchstring_changed(self, searchstring_entry):
+        model = self.rules_tree.get_model()
+        new_text = searchstring_entry.get_text()
+        model[self.rules_tree.get_selected_item()[1]][2] = new_text
+
+    def on_active_toggled(self, cellrenderertoggle, path):
+        model = self.rules_tree.get_model()
+        active = not model[path][1]
+        model[path][1] = active
+        model[path][0].active = active
+
+    def on_cursor_changed(self, widget):
+        self.save_active_rule()
+        self.active_rule = self.get_active_rule()
+        if self.active_rule:
+            self.searchstring_entry.set_text(self.active_rule.rule)
+            self.priority_entry.set_value(self.active_rule.priority)
+            active_iter = self.categories[self.active_rule.category.id]
+            self.category_combobox.set_active_iter(active_iter)
+
+    def on_add(self, widget, user_data=None):
+        rule = account.CategoryFilter(rule="", priority=1, active=True)
+        model = self.rules_tree.get_model()
+        iterator = model.append([rule, rule.active, rule.rule])
+        self.rules_tree.scroll_to_cell(model.get_path(iterator))
+
+    def on_delete(self, widget, user_data=None):
+        item, iterator = self.rules_tree.get_selected_item()
+        if item is not None:
+            item.delete()
+            model = self.rules_tree.get_model()
+            model.remove(iterator)
 
     def _init_widgets(self):
-        vpaned = Gtk.VPaned()
-        self.get_content_area().pack_start(vpaned, True, True, 0)
-        vbox = Gtk.VBox()
+        # unused
 
-        sw = Gtk.ScrolledWindow()
-        sw.set_size_request(800, 300)
-        sw.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
-        self.rules_tree = RulesTree()
-        sw.add(self.rules_tree)
-        vbox.pack_start(sw, True, True, 0)
-
-        actiongroup = Gtk.ActionGroup('categorization rules')
         actiongroup.add_actions([
-                ('add', Gtk.STOCK_ADD, 'new categorization rule', None, _('Add new categorization rule'), self.rules_tree.on_add),
-                ('remove', Gtk.STOCK_DELETE, 'remove categorization rule', None, _('Remove selected categorization rule'), self.rules_tree.on_remove),
                 ('refresh', Gtk.STOCK_REFRESH, 'reload preview tree', None, _('Reload preview tree'), self.refresh_preview),
                 ('reset', Gtk.STOCK_CLEAR, 'reset preview tree', None, _('Reset the preview tree'), self.reset_preview),
                      ])
-        toolbar = Gtk.Toolbar()
-        toolbar.insert(actiongroup.get_action('add').create_tool_item(), -1)
-        toolbar.insert(actiongroup.get_action('remove').create_tool_item(), -1)
-        toolbar.insert(Gtk.SeparatorToolItem(), -1)
         toolbar.insert(actiongroup.get_action('refresh').create_tool_item(), -1)
         toolbar.insert(actiongroup.get_action('reset').create_tool_item(), -1)
-        vbox.pack_start(toolbar, False, True, 0)
-
-        vpaned.add1(vbox)
 
         frame = Gtk.Frame()
         frame.set_label(_('Preview'))
@@ -117,89 +186,3 @@ class PreviewTree(gui_utils.Tree):
         self.active_rule = None
         self.modelfilter.refilter()
 
-
-class RulesTree(gui_utils.Tree):
-    OBJECT = 0
-    ACTIVE = 1
-    PRIORITY = 2
-    RULE_STR = 3
-    CATEGORY = 4
-    CATEGORY_STR = 5
-
-    def __init__(self):
-        gui_utils.Tree.__init__(self)
-        self.set_size_request(800, 300)
-        self.model = Gtk.ListStore(object, bool, int, str, object, str)
-        self.set_model(self.model)
-
-        column, cell = self.create_check_column(_('Active'), self.ACTIVE)
-        cell.connect("toggled", self.on_toggled)
-
-        cell = Gtk.CellRendererSpin()
-        adjustment = Gtk.Adjustment(1, 1, 100, 1, 10, 0)
-        cell.set_property("editable", True)
-        cell.set_property("adjustment", adjustment)
-        cell.connect("edited", self.on_spin_edited)
-        column = Gtk.TreeViewColumn(_('Priority'), cell, text=self.PRIORITY)
-        self.append_column(column)
-
-        col, cell = self.create_column(_('Rule'), self.RULE_STR, expand=True)
-        cell.set_property('editable', True)
-        cell.connect('edited', self.on_cell_edited)
-
-        cell = Gtk.CellRendererCombo()
-        cell.connect('changed', self.on_category_changed)
-        self.cb_model = Gtk.ListStore(object, str)
-        self.categories = account.get_all_categories()
-        for category in self.categories:
-            self.cb_model.append([category, category.name])
-        cell.set_property('model', self.cb_model)
-        cell.set_property('text-column', 1)
-        cell.set_property('editable', True)
-        column = Gtk.TreeViewColumn(_('Category'), cell, text=self.CATEGORY_STR)
-        self.append_column(column)
-
-        self.load_rules()
-
-    def get_active_rule(self):
-        item, iterator = self.get_selected_item()
-        return item
-
-    def load_rules(self):
-        for rule in categorization_controller.get_all_rules():
-            self.insert_rule(rule)
-
-    def on_category_changed(self, cellrenderertext, path, new_iter):
-        category = self.cb_model[new_iter][0]
-        self.model[path][self.CATEGORY_STR] = category.name
-        self.model[path][self.OBJECT].category = category
-
-    def on_spin_edited(self, cell, path, new_text):
-        try:
-            new_val = int(new_text)
-        except:
-            #no integer value
-            return
-        self.model[path][self.PRIORITY] = self.model[path][self.OBJECT].priority = new_val
-
-    def on_cell_edited(self, cellrenderertext, path, new_text):
-        self.model[path][self.RULE_STR] = self.model[path][self.OBJECT].rule = unicode(new_text)
-
-    def on_toggled(self, cellrenderertoggle, path):
-        active = not self.model[path][self.ACTIVE]
-        self.model[path][self.ACTIVE] = active
-        self.model[path][self.OBJECT].active = active
-
-    def on_add(self, widget, user_data=None):
-        rule = categorization_controller.create("new categorization rule - click to edit", self.categories[0], False)
-        iterator = self.insert_rule(rule)
-        self.scroll_to_cell(self.model.get_path(iterator))
-
-    def on_remove(self, widget, user_data=None):
-        item, iterator = self.get_selected_item()
-        if item is not None:
-            item.delete()
-            self.model.remove(iterator)
-
-    def insert_rule(self, rule):
-        return self.model.append([rule, rule.active, rule.priority, rule.rule, rule.category, rule.category.name])
