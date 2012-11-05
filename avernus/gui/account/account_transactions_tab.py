@@ -196,7 +196,7 @@ class TransactionsTree(gui_utils.Tree):
     def __init__(self, acc, updater):
         gui_utils.Tree.__init__(self)
         
-        self.set_grid_lines(Gtk.TreeViewGridLines.HORIZONTAL)
+        self.config = avernusConfig()
         self.account = acc
         self.updater = updater
         self.searchstring = ''
@@ -204,6 +204,9 @@ class TransactionsTree(gui_utils.Tree):
         self.b_show_uncategorized = True
         self.range_start = None
         self.range_end = None
+        
+        if self.config.get_option('transactionGrid', 'Account') == 'True':
+            self.set_grid_lines(Gtk.TreeViewGridLines.HORIZONTAL)
 
         self.model = Gtk.ListStore(object, str, float, str, object, str)
         self.modelfilter = self.model.filter_new(None)

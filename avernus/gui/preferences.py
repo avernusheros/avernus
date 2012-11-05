@@ -104,6 +104,9 @@ class AccountPreferences(PreferencesVBox):
         #FIXME tooltip
         section = self._add_section(_('Category Assignments'))
         self._add_option(section, _('Include already categorized transactions'), 'assignments categorized transactions')
+        
+        section = self._add_section(_('Transactions'))
+        self._add_option(section, _('Show horizontal grid lines'), 'transactionGrid')
 
 
 class DimensionList(Gtk.VBox):
