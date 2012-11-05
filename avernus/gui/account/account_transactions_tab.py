@@ -195,6 +195,8 @@ class TransactionsTree(gui_utils.Tree):
 
     def __init__(self, acc, updater):
         gui_utils.Tree.__init__(self)
+        
+        self.set_grid_lines(Gtk.TreeViewGridLines.HORIZONTAL)
         self.account = acc
         self.updater = updater
         self.searchstring = ''
