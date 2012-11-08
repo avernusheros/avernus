@@ -97,11 +97,11 @@ class AccountPreferences(PreferencesVBox):
         Gtk.VBox.__init__(self)
         self.configParser = avernusConfig()
 
-        #FIXME tooltip
+        # FIXME tooltip
         section = self._add_section(_('Charts'))
         self._add_option(section, _('Include child categories'), 'categoryChildren')
 
-        #FIXME tooltip
+        # FIXME tooltip
         section = self._add_section(_('Category Assignments'))
         self._add_option(section, _('Include already categorized transactions'), 'assignments categorized transactions')
 
@@ -140,7 +140,7 @@ class DimensionList(Gtk.VBox):
         actiongroup.add_actions([
                 ('add', Gtk.STOCK_ADD, 'new dimension', None, _('Add new dimension'), self.on_add),
                 ('rename', Gtk.STOCK_EDIT, 'rename dimension', None, _('Rename selected dimension'), self.on_edit),
-                ('remove', Gtk.STOCK_DELETE, 'remove dimension', None, _('Remove selected dimension'), self.on_remove)
+                ('remove', Gtk.STOCK_REMOVE, 'remove dimension', None, _('Remove selected dimension'), self.on_remove)
                      ])
         toolbar = Gtk.Toolbar()
         toolbar.get_style_context().add_class("inline-toolbar")
@@ -154,7 +154,7 @@ class DimensionList(Gtk.VBox):
     def on_add(self, widget, user_data=None):
         dim = dimension.Dimension(name=_('new dimension'))
         iterator = self.model.append(None, [dim, dim.name])
-        #self.expand_row( model.get_path(parent_iter), True)
+        # self.expand_row( model.get_path(parent_iter), True)
         self.tree.set_cursor(self.model.get_path(iterator), self.tree.get_column(0), True)
 
     def on_edit(self, widget, user_data=None):

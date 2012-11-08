@@ -195,7 +195,7 @@ class PortfolioPositionsTree(PositionsTree):
         self.actiongroup.add_actions([
                 ('add', Gtk.STOCK_ADD, 'add', None, _('Add new position'), self.on_add),
                 ('edit' , Gtk.STOCK_EDIT, 'edit', None, _('Edit selected position'), self.on_edit),
-                ('sell', Gtk.STOCK_DELETE, 'sell', None, _('Sell selected position'), self.on_sell),
+                ('sell', Gtk.STOCK_REMOVE, 'sell', None, _('Sell selected position'), self.on_sell),
                 ('remove', Gtk.STOCK_DELETE, 'remove', None, _('Delete selected position'), self.on_remove),
                 ('chart', None, 'chart', None, _('Chart selected position'), self.on_chart),
                 ('dividend', None, 'dividend', None, _('Add dividend payment'), self.on_dividend),
