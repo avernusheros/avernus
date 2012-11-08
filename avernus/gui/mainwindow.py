@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from avernus import config, objects
 from avernus.controller import datasource_controller, categorization_controller
-from avernus.gui import get_ui_file, progress_manager, threads
+from avernus.gui import get_ui_file, progress_manager, threads, get_avernus_builder
 from avernus.gui.account.account_overview import AccountOverview
 from avernus.gui.account.account_transactions_tab import AccountTransactionTab
 from avernus.gui.account.categorization_dialog import CategorizationRulesDialog
@@ -30,34 +30,50 @@ PAGES = {
     'Watchlist': WatchlistPositionsTab,
     'Category Accounts': AccountOverview,
     'Category Portfolios': OverviewNotebook,
-    'Account': AccountTransactionTab,
-    'AllAccount': AccountTransactionTab,
         }
+
+
+class HandlerFinder(object):
+    """Searches for handler implementations across multiple objects.
+    """
+    # http://stackoverflow.com/questions/4637792/pygtk-gtk-builder-connect-signals-onto-multiple-objects
+
+    def __init__(self, objects):
+        self.objects = objects
+
+    def __getattr__(self, name):
+        for o in self.objects:
+            if hasattr(o, name):
+                return getattr(o, name)
+        else:
+            raise AttributeError("%r not found on any of %r"
+                % (name, self.objects))
 
 
 class MainWindow:
 
     def __init__(self):
-        builder = Gtk.Builder()
-        builder.add_from_file(get_ui_file("avernus.glade"))
-        builder.connect_signals(self)
-        self.window = builder.get_object("window")
+        builder = get_avernus_builder()
+        self.window = builder.get_object("main_window")
 
         self.config = config.avernusConfig()
         self.window.set_title(avernus.__appname__)
 
         self.hpaned = builder.get_object("hpaned")
+        self.account_page = AccountTransactionTab()
 
         sidebar = MainTreeBox()
         sidebar.main_tree.connect("unselect", self.on_maintree_unselect)
         sidebar.main_tree.connect("select", self.on_maintree_select)
         self.hpaned.pack1(sidebar)
 
-        self.window.connect("destroy", self.on_destroy)
+        # signals
+        self.window.connect('destroy', self.on_destroy)
         self.window.connect('size_allocate', self.on_size_allocate)
         self.window.connect('window-state-event', self.on_window_state_event)
+        builder.connect_signals(HandlerFinder([self, self.account_page]))
 
-        #set min size
+        # set min size
         screen = self.window.get_screen()
         width = int(screen.get_width() * 0.66)
         height = int(screen.get_height() * 0.66)
@@ -111,14 +127,21 @@ class MainWindow:
                 page = "Category Accounts"
         else:
             page = item.__class__.__name__
-        if page is not None:
+        if page=="Account" or page=="AllAccount":
+            self.hpaned.pack2(self.account_page)
+            self.account_page.show()
+            self.account_page.set_account(item)
+        elif page is not None:
             self.hpaned.pack2(PAGES[page](item))
 
     def on_maintree_unselect(self, caller=None):
         page = self.hpaned.get_child2()
         if page:
             self.hpaned.remove(page)
-            page.destroy()
+            try:
+                page.close()
+            except:
+                pass
 
     def on_prefs(self, *args):
         PrefDialog(parent=self.window)

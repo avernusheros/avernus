@@ -23,7 +23,7 @@
   <object class="GtkAction" id="delete">
     <property name="label" translatable="yes">Delete</property>
     <property name="tooltip" translatable="yes">Remove selected categorization rule</property>
-    <property name="stock_id">gtk-delete</property>
+    <property name="stock_id">gtk-remove</property>
     <signal name="activate" handler="on_delete" swapped="no"/>
   </object>
   <object class="GtkDialog" id="dialog">
@@ -68,6 +68,7 @@
                 <property name="orientation">vertical</property>
                 <child>
                   <object class="GtkScrolledWindow" id="scrolledwindow">
+                    <property name="width_request">100</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="shadow_type">in</property>
