@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 from avernus import config, objects
 from avernus.controller import datasource_controller, categorization_controller
-from avernus.gui import get_ui_file, progress_manager, threads, get_avernus_builder
+from avernus.gui import progress_manager, threads, get_avernus_builder
 from avernus.gui.account.account_overview import AccountOverview
 from avernus.gui.account.account_transactions_tab import AccountTransactionTab
 from avernus.gui.account.categorization_dialog import CategorizationRulesDialog
 from avernus.gui.account.csv_import_dialog import CSVImportDialog
 from avernus.gui.account.exportDialog import ExportDialog
-from avernus.gui.left_pane import MainTreeBox
+from avernus.gui.left_pane import Sidebar
 from avernus.gui.portfolio.asset_manager import AssetManager
 from avernus.gui.portfolio.overview_notebook import OverviewNotebook
 from avernus.gui.portfolio.portfolio_notebook import PortfolioNotebook
@@ -62,16 +62,13 @@ class MainWindow:
         self.hpaned = builder.get_object("hpaned")
         self.account_page = AccountTransactionTab()
 
-        sidebar = MainTreeBox()
-        sidebar.main_tree.connect("unselect", self.on_maintree_unselect)
-        sidebar.main_tree.connect("select", self.on_maintree_select)
-        self.hpaned.pack1(sidebar)
+        sidebar = Sidebar()
+        sidebar.connect("unselect", self.on_sidebar_unselect)
+        sidebar.connect("select", self.on_sidebar_select)
 
-        # signals
-        self.window.connect('destroy', self.on_destroy)
-        self.window.connect('size_allocate', self.on_size_allocate)
-        self.window.connect('window-state-event', self.on_window_state_event)
-        builder.connect_signals(HandlerFinder([self, self.account_page]))
+        builder.connect_signals(HandlerFinder([self,
+                                               self.account_page,
+                                               sidebar]))
 
         # set min size
         screen = self.window.get_screen()
@@ -87,17 +84,17 @@ class MainWindow:
         pos = self.config.get_option('hpaned position', 'Gui') or width * 0.25
         self.hpaned.set_position(int(pos))
 
-        #config entries are strings...
+        # config entries are strings...
         if self.config.get_option('maximize', section='Gui') == 'True':
             self.window.maximize()
             self.maximized = True
         else:
             self.maximized = False
 
-        #display everything
+        # display everything
         self.window.show_all()
 
-    def on_size_allocate(self, widget=None, data=None):
+    def on_window_size_allocate(self, widget, allocation):
         if not self.maximized:
             self.config.set_option('size', self.window.get_size(), 'Gui')
 
@@ -112,13 +109,13 @@ class MainWindow:
     def on_destroy(self, widget=None, data=None):
         """on_destroy - called when the avernusWindow is closed. """
         objects.session.commit()
-        #save db on quit
+        # save db on quit
         self.config.set_option('hpaned position', self.hpaned.get_position(), 'Gui')
         threads.terminate_all()
         Gtk.main_quit()
 
-    def on_maintree_select(self, caller=None, item=None):
-        self.on_maintree_unselect()
+    def on_sidebar_select(self, caller=None, item=None):
+        self.on_sidebar_unselect()
         page = None
         if item.__class__.__name__ == 'Category':
             if item.name == 'Portfolios':
@@ -127,14 +124,14 @@ class MainWindow:
                 page = "Category Accounts"
         else:
             page = item.__class__.__name__
-        if page=="Account" or page=="AllAccount":
+        if page == "Account" or page == "AllAccount":
             self.hpaned.pack2(self.account_page)
             self.account_page.show()
             self.account_page.set_account(item)
         elif page is not None:
             self.hpaned.pack2(PAGES[page](item))
 
-    def on_maintree_unselect(self, caller=None):
+    def on_sidebar_unselect(self, caller=None):
         page = self.hpaned.get_child2()
         if page:
             self.hpaned.remove(page)
@@ -184,8 +181,8 @@ class MainWindow:
         ExportDialog(parent=self.window)
 
     def on_apply_categorization_rules(self, *args):
-        #FIXME the threaded version does not work
-        #threads.GeneratorTask(categorization_controller.apply_categorization_rules).start()
+        # FIXME the threaded version does not work
+        # threads.GeneratorTask(categorization_controller.apply_categorization_rules).start()
         for foo in categorization_controller.apply_categorization_rules():
             pass
 

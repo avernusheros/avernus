@@ -2,7 +2,8 @@
 from avernus import config
 from avernus.config import avernusConfig
 from avernus.controller import chart_controller
-from avernus.gui import get_avernus_builder, gui_utils, common_dialogs, page, charts
+from avernus.gui import get_avernus_builder, gui_utils, common_dialogs, page, \
+    charts
 from avernus.gui.account import edit_transaction_dialog
 from avernus.gui.portfolio import dividend_dialog
 from avernus.objects import account

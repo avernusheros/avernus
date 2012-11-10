@@ -1,61 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <interface>
   <!-- interface-requires gtk+ 3.0 -->
-  <object class="GtkMenu" id="acc_transaction_contextmenu">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <child>
-      <object class="GtkImageMenuItem" id="add2">
-        <property name="related_action">add_acc_transaction</property>
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="use_underline">True</property>
-        <property name="use_stock">True</property>
-      </object>
-    </child>
-    <child>
-      <object class="GtkSeparatorMenuItem" id="menuitem14">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-      </object>
-    </child>
-    <child>
-      <object class="GtkImageMenuItem" id="menuitem12">
-        <property name="related_action">edit1</property>
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="use_underline">True</property>
-        <property name="use_stock">True</property>
-      </object>
-    </child>
-    <child>
-      <object class="GtkImageMenuItem" id="remove4">
-        <property name="related_action">remove3</property>
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="use_underline">True</property>
-        <property name="use_stock">True</property>
-      </object>
-    </child>
-    <child>
-      <object class="GtkImageMenuItem" id="menuitem13">
-        <property name="related_action">div_from_transaction</property>
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="use_underline">True</property>
-        <property name="use_stock">True</property>
-      </object>
-    </child>
-    <child>
-      <object class="GtkImageMenuItem" id="menuitem15">
-        <property name="related_action">remove_transaction_category</property>
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="use_underline">True</property>
-        <property name="use_stock">True</property>
-      </object>
-    </child>
-  </object>
   <object class="GtkAccelGroup" id="accelgroup1"/>
   <object class="GtkActionGroup" id="acc_transaction_actiongroup">
     <property name="accel_group">accelgroup1</property>
@@ -130,6 +75,90 @@
       </object>
     </child>
   </object>
+  <object class="GtkActionGroup" id="sidebar_actiongroup">
+    <property name="accel_group">accelgroup1</property>
+    <child>
+      <object class="GtkAction" id="edit2">
+        <property name="label" translatable="yes">_Edit</property>
+        <property name="short_label" translatable="yes">_Edit</property>
+        <property name="tooltip" translatable="yes">Edit</property>
+        <property name="stock_id">gtk-edit</property>
+        <signal name="activate" handler="on_sidebar_edit" swapped="no"/>
+      </object>
+    </child>
+    <child>
+      <object class="GtkAction" id="remove5">
+        <property name="label" translatable="yes">_Remove</property>
+        <property name="short_label" translatable="yes">_Remove</property>
+        <property name="tooltip" translatable="yes">Remove</property>
+        <property name="stock_id">gtk-remove</property>
+        <signal name="activate" handler="on_sidebar_remove" swapped="no"/>
+      </object>
+    </child>
+    <child>
+      <object class="GtkAction" id="add3">
+        <property name="label" translatable="yes">Add</property>
+        <property name="short_label" translatable="yes">New</property>
+        <property name="stock_id">gtk-add</property>
+        <signal name="activate" handler="on_sidebar_add" swapped="no"/>
+      </object>
+    </child>
+  </object>
+  <object class="GtkMenu" id="acc_transaction_contextmenu">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <child>
+      <object class="GtkImageMenuItem" id="add2">
+        <property name="related_action">add_acc_transaction</property>
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="use_underline">True</property>
+        <property name="use_stock">True</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkSeparatorMenuItem" id="menuitem14">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkImageMenuItem" id="menuitem12">
+        <property name="related_action">edit1</property>
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="use_underline">True</property>
+        <property name="use_stock">True</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkImageMenuItem" id="remove4">
+        <property name="related_action">remove3</property>
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="use_underline">True</property>
+        <property name="use_stock">True</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkImageMenuItem" id="menuitem13">
+        <property name="related_action">div_from_transaction</property>
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="use_underline">True</property>
+        <property name="use_stock">True</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkImageMenuItem" id="menuitem15">
+        <property name="related_action">remove_transaction_category</property>
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="use_underline">True</property>
+        <property name="use_stock">True</property>
+      </object>
+    </child>
+  </object>
   <object class="GtkListStore" id="account_transactions_treestore">
     <columns>
       <!-- column-name object -->
@@ -191,11 +220,10 @@
               <object class="GtkTreeView" id="account_transactions_tree">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
-                <property name="model">treemodelsort1</property>
+                <property name="model">treemodelfilter1</property>
                 <property name="headers_clickable">False</property>
                 <property name="rules_hint">True</property>
                 <property name="enable_search">False</property>
-                <property name="search_column">1</property>
                 <signal name="button-press-event" handler="on_acc_transaction_button_press" swapped="no"/>
                 <signal name="key-press-event" handler="on_account_transactions_tree_key_press" swapped="no"/>
                 <child internal-child="selection">
@@ -588,9 +616,13 @@
   </object>
   <object class="GtkWindow" id="main_window">
     <property name="can_focus">False</property>
+    <property name="title">Avernus</property>
     <accel-groups>
       <group name="accelgroup1"/>
     </accel-groups>
+    <signal name="destroy" handler="on_destroy" swapped="no"/>
+    <signal name="window-state-event" handler="on_window_state_event" swapped="no"/>
+    <signal name="size-allocate" handler="on_window_size_allocate" swapped="no"/>
     <child>
       <object class="GtkBox" id="vbox">
         <property name="visible">True</property>
@@ -821,7 +853,130 @@
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <child>
-              <placeholder/>
+              <object class="GtkBox" id="sidebar_box">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="orientation">vertical</property>
+                <child>
+                  <object class="GtkScrolledWindow" id="scrolledwindow1">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="hscrollbar_policy">never</property>
+                    <property name="shadow_type">in</property>
+                    <child>
+                      <object class="GtkTreeView" id="sidebar_tree">
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="model">sidebar_treestore</property>
+                        <property name="headers_visible">False</property>
+                        <property name="show_expanders">False</property>
+                        <property name="level_indentation">10</property>
+                        <signal name="button-press-event" handler="on_sidebar_button_press" swapped="no"/>
+                        <signal name="cursor-changed" handler="on_sidebar_cursor_changed" swapped="no"/>
+                        <child internal-child="selection">
+                          <object class="GtkTreeSelection" id="treeview-selection4"/>
+                        </child>
+                        <child>
+                          <object class="GtkTreeViewColumn" id="sidebar_column1">
+                            <property name="title" translatable="yes">column</property>
+                            <child>
+                              <object class="GtkCellRendererPixbuf" id="cellrendererpixbuf2"/>
+                              <attributes>
+                                <attribute name="visible">4</attribute>
+                                <attribute name="icon-name">1</attribute>
+                              </attributes>
+                            </child>
+                            <child>
+                              <object class="GtkCellRendererText" id="cellrenderertext6">
+                                <property name="ellipsize">end</property>
+                                <signal name="edited" handler="on_sidebar_cell_edited" swapped="no"/>
+                              </object>
+                              <attributes>
+                                <attribute name="editable">5</attribute>
+                                <attribute name="markup">2</attribute>
+                              </attributes>
+                            </child>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkTreeViewColumn" id="treeviewcolumn8">
+                            <property name="title" translatable="yes">column</property>
+                            <child>
+                              <object class="GtkCellRendererText" id="cellrenderertext7"/>
+                              <attributes>
+                                <attribute name="text">3</attribute>
+                              </attributes>
+                            </child>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                  </object>
+                  <packing>
+                    <property name="expand">True</property>
+                    <property name="fill">True</property>
+                    <property name="position">0</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkBox" id="progress_box">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="orientation">vertical</property>
+                    <child>
+                      <placeholder/>
+                    </child>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">1</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkGrid" id="infobox">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="column_spacing">6</property>
+                    <child>
+                      <placeholder/>
+                    </child>
+                    <child>
+                      <placeholder/>
+                    </child>
+                    <child>
+                      <placeholder/>
+                    </child>
+                    <child>
+                      <placeholder/>
+                    </child>
+                    <child>
+                      <placeholder/>
+                    </child>
+                    <child>
+                      <placeholder/>
+                    </child>
+                    <child>
+                      <placeholder/>
+                    </child>
+                    <child>
+                      <placeholder/>
+                    </child>
+                    <child>
+                      <placeholder/>
+                    </child>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">2</property>
+                  </packing>
+                </child>
+              </object>
+              <packing>
+                <property name="resize">False</property>
+                <property name="shrink">True</property>
+              </packing>
             </child>
             <child>
               <placeholder/>
@@ -836,22 +991,76 @@
       </object>
     </child>
   </object>
-  <object class="GtkTreeModelFilter" id="treemodelfilter1">
-    <property name="child_model">account_transactions_treestore</property>
+  <object class="GtkMenu" id="sidebar_category_contextmenu">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <child>
+      <object class="GtkImageMenuItem" id="add5">
+        <property name="related_action">add3</property>
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="use_underline">True</property>
+        <property name="use_stock">True</property>
+      </object>
+    </child>
   </object>
-  <object class="GtkTreeModelSort" id="treemodelsort1">
-    <property name="model">treemodelfilter1</property>
+  <object class="GtkMenu" id="sidebar_contextmenu">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <child>
+      <object class="GtkImageMenuItem" id="add4">
+        <property name="related_action">add3</property>
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="use_underline">True</property>
+        <property name="use_stock">True</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkSeparatorMenuItem" id="menuitem18">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkImageMenuItem" id="menuitem16">
+        <property name="related_action">edit2</property>
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="use_underline">True</property>
+        <property name="use_stock">True</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkImageMenuItem" id="remove6">
+        <property name="related_action">remove5</property>
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="use_underline">True</property>
+        <property name="use_stock">True</property>
+      </object>
+    </child>
   </object>
-  <object class="GtkTreeStore" id="treestore1">
+  <object class="GtkTreeStore" id="sidebar_treestore">
     <columns>
       <!-- column-name object -->
-      <column type="GObject"/>
+      <column type="PyObject"/>
       <!-- column-name icon -->
       <column type="gchararray"/>
       <!-- column-name name -->
       <column type="gchararray"/>
       <!-- column-name balance -->
-      <column type="gdouble"/>
+      <column type="gchararray"/>
+      <!-- column-name visible -->
+      <column type="gboolean"/>
+      <!-- column-name editable -->
+      <column type="gboolean"/>
     </columns>
+  </object>
+  <object class="GtkTreeModelSort" id="treemodelsort1">
+    <property name="model">treemodelfilter1</property>
+  </object>
+  <object class="GtkTreeModelFilter" id="treemodelfilter1">
+    <property name="child_model">account_transactions_treestore</property>
   </object>
 </interface>
