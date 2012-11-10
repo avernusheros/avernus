@@ -7,7 +7,7 @@ from avernus.gui.account.account_transactions_tab import AccountTransactionTab
 from avernus.gui.account.categorization_dialog import CategorizationRulesDialog
 from avernus.gui.account.csv_import_dialog import CSVImportDialog
 from avernus.gui.account.exportDialog import ExportDialog
-from avernus.gui.left_pane import Sidebar
+from avernus.gui import sidebar
 from avernus.gui.portfolio.asset_manager import AssetManager
 from avernus.gui.portfolio.overview_notebook import OverviewNotebook
 from avernus.gui.portfolio.portfolio_notebook import PortfolioNotebook
@@ -62,7 +62,7 @@ class MainWindow:
         self.hpaned = builder.get_object("hpaned")
         self.account_page = AccountTransactionTab()
 
-        sidebar = Sidebar()
+        sidebar = sidebar.Sidebar()
         sidebar.connect("unselect", self.on_sidebar_unselect)
         sidebar.connect("select", self.on_sidebar_select)
 
