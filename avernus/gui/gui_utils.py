@@ -1,11 +1,9 @@
 from avernus import config
-
-from gi.repository import Gtk
-from gi.repository import GObject
-
-import pytz
+from gi.repository import GObject, Gtk
 import locale
 import logging
+import pytz
+
 
 logger = logging.getLogger(__name__)
 
@@ -17,7 +15,7 @@ class Tree(Gtk.TreeView):
         super(Gtk.TreeView, self).__init__()
 
     def get_selected_item(self):
-        #Get the current selection in the Gtk.TreeView
+        # Get the current selection in the Gtk.TreeView
         selection = self.get_selection()
         if selection != None:
             # Get the selection iter
@@ -40,7 +38,7 @@ class Tree(Gtk.TreeView):
         return column, cell
 
     def create_icon_column(self, name, attribute, size=None):
-        #Gtk.IconSize.MENU, Gtk.IconSize.SMALL_TOOLBAR, Gtk.IconSize.LARGE_TOOLBAR, Gtk.IconSize.BUTTON, Gtk.IconSize.DND and Gtk.IconSize.DIALOG.
+        # Gtk.IconSize.MENU, Gtk.IconSize.SMALL_TOOLBAR, Gtk.IconSize.LARGE_TOOLBAR, Gtk.IconSize.BUTTON, Gtk.IconSize.DND and Gtk.IconSize.DIALOG.
         column = Gtk.TreeViewColumn(name)
         self.append_column(column)
         cell = Gtk.CellRendererPixbuf()
@@ -74,17 +72,6 @@ class Tree(Gtk.TreeView):
         column.add_attribute(cell, 'active', attribute)
         return column, cell
 
-    def find_item(self, row0, itemtype=None):
-        def search(rows):
-            if not rows: return None
-            for row in rows:
-                if row[0] == row0 and (itemtype is None or itemtype == row[1].type):
-                    return row
-                result = search(row.iterchildren())
-                if result: return result
-            return None
-        return search(self.get_model())
-
     def clear(self):
         self.get_model().clear()
 
@@ -111,23 +98,28 @@ class ContextMenu(Gtk.Menu):
             self.append(item)
             return item
 
+
 def float_format(column, cell_renderer, tree_model, iterator, user_data):
     number = tree_model.get_value(iterator, user_data)
     cell_renderer.set_property('text', get_string_from_float(number))
     return
 
+
 def percent_format(column, cell_renderer, tree_model, iterator, user_data):
-    number = tree_model.get_value(iterator, user_data)*100
+    number = tree_model.get_value(iterator, user_data) * 100
     cell_renderer.set_property('text', get_string_from_float(number) + '%')
     return
+
 
 def currency_format(column, cell_renderer, tree_model, iterator, user_data):
     number = tree_model.get_value(iterator, user_data)
     cell_renderer.set_property('text', get_currency_format_from_float(number))
     return
 
+
 def get_string_from_float(number):
     return locale.format('%g', round(number, 3), grouping=False, monetary=True)
+
 
 def get_currency_format_from_float(number, *args):
     try:
@@ -135,26 +127,29 @@ def get_currency_format_from_float(number, *args):
     except:
         return str(round(number, 2))
 
+
 def float_to_red_green_string_currency(column, cell, model, iterator, user_data):
     num = model.get_value(iterator, user_data)
     text = get_currency_format_from_float(num)
     cell.set_property('markup', get_green_red_string(num, text))
+
 
 def float_to_red_green_string(column, cell, model, iterator, user_data):
     num = model.get_value(iterator, user_data)
     text = get_string_from_float(num)
     cell.set_property('markup', get_green_red_string(num, text))
 
+
 def float_to_red_green_string_percent(column, cell, model, iterator, user_data):
-    num = model.get_value(iterator, user_data) *100.0
+    num = model.get_value(iterator, user_data) * 100.0
     text = get_string_from_float(num) + '%'
     cell.set_property('markup', get_green_red_string(num, text))
 
-def sort_by_time(model, iter1, iter2, data=None):
-    #why is d2 None?
-    d1 = model.get_value(iter1, data)
-    d2 = model.get_value(iter2, data)
+
+def sort_by_datetime(model, iter1, iter2, data=None):
     try:
+        d1 = model.get_value(iter1, data)
+        d2 = model.get_value(iter2, data)
         if not d1 or not d2:
             return 1
         elif d1 < d2:
@@ -162,24 +157,29 @@ def sort_by_time(model, iter1, iter2, data=None):
         elif d1 > d2:
             return 1
     except:
-        logger.error("error in sort by time")
         return 0
-    return 0
+
 
 def date_to_string(column, cell, model, iterator, user_data):
-    item = model.get_value(iterator, user_data)
-    cell.set_property('text', get_date_string(item))
+    try:
+        item = model.get_value(iterator, user_data)
+        cell.set_property('text', get_date_string(item))
+    except:
+        pass
+
 
 def get_price_string(item):
     if item.price is None:
         return 'n/a'
     return get_string_from_float(item.price) + '\n<small>' + get_datetime_string(item.date) + '</small>'
 
+
 def to_local_time(date):
     if date is not None:
         date = date.replace(tzinfo=pytz.utc)
         date = date.astimezone(pytz.timezone(config.timezone))
         return date.replace(tzinfo=None)
+
 
 def get_name_string(stock):
     configParser = config.AvernusConfig()
@@ -190,6 +190,7 @@ def get_name_string(stock):
         format_string = '<b>%s</b>\n<small>%s\n%s</small>'
     return format_string % (GObject.markup_escape_text(stock.name), GObject.markup_escape_text(stock.isin), GObject.markup_escape_text(stock.exchange.encode('utf8')))
 
+
 def get_green_red_string(num, text=None):
     if text is None:
         text = str(num)
@@ -198,6 +199,7 @@ def get_green_red_string(num, text=None):
     elif num > 0.0:
         text = '<span foreground="dark green">' + text + '</span>'
     return text
+
 
 def datetime_format(datetime, nl=True):
     if datetime is not None:
@@ -212,6 +214,7 @@ def datetime_format(datetime, nl=True):
                 return get_date_string(datetime.date()) + '\n' + datetime.time().strftime(locale.nl_langinfo(locale.T_FMT))
     return 'never'
 
+
 def get_date_string(date):
     if date is None:
         return ''
@@ -219,6 +222,7 @@ def get_date_string(date):
         return date.strftime(locale.nl_langinfo(locale.D_FMT))
     except:
         return str(date)
+
 
 def get_datetime_string(datetime):
     if datetime is not None:
@@ -234,8 +238,9 @@ def transaction_desc_markup(column, cell, model, iterator, user_data):
     markup = '<span size="small">%s</span>' % (GObject.markup_escape_text(text),)
     cell.set_property('markup', markup)
 
-#FIXME horizontal scrollbars are always shown
-#without the "+10" it crashes sometimes
+
+# FIXME horizontal scrollbars are always shown
+# without the "+10" it crashes sometimes
 def resize_wrap(scroll, allocation, treeview, column, cell):
     newWidth = allocation.width - sum(c.get_width() for c in treeview.get_columns() if c != column)
     newWidth -= treeview.style_get_property("horizontal-separator") * 4

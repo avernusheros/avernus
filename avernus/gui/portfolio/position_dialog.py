@@ -47,7 +47,7 @@ class PositionDialog(Gtk.Dialog):
         self.process_result()
 
     def on_switch_page(self, notebook, page, page_num):
-        #previous was the position tab
+        # previous was the position tab
         if self.previous_page == 0 and not self.is_meta:
             self.position_table.process_result()
         self.previous_page = page_num
@@ -124,7 +124,7 @@ class TransactionsTab(Gtk.VBox):
         self.position = position
         Gtk.VBox.__init__(self)
 
-        #init wigets
+        # init wigets
         self.tree = gui_utils.Tree()
         sw = Gtk.ScrolledWindow()
         sw.set_property('hscrollbar-policy', Gtk.PolicyType.AUTOMATIC)
@@ -134,13 +134,13 @@ class TransactionsTab(Gtk.VBox):
         toolbar = Gtk.Toolbar()
         self.pack_start(toolbar, False, True, 0)
 
-        #init tree
+        # init tree
         self.model = Gtk.ListStore(object, str, object, float, float, float, float)
         self.tree.set_model(self.model)
 
         self.date_column, cell = self.tree.create_column(_('Date'), self.COL_DATE, func=gui_utils.date_to_string)
         self.tree.connect("row-activated", self.on_row_activated)
-        self.model.set_sort_func(self.COL_DATE, gui_utils.sort_by_time, self.COL_DATE)
+        self.model.set_sort_func(self.COL_DATE, gui_utils.sort_by_datetime, self.COL_DATE)
         self.tree.create_column(_('Type'), 1)
 
         cell = Gtk.CellRendererSpin()
@@ -176,13 +176,13 @@ class TransactionsTab(Gtk.VBox):
         self.costs_column.set_cell_data_func(cell, gui_utils.currency_format, 5)
         self.tree.append_column(self.costs_column)
 
-        #total
+        # total
         self.tree.create_column(_('Total'), self.COL_TOTAL, func=gui_utils.float_to_red_green_string_currency)
 
         self.tree.set_model(self.model)
         self.tree.get_model().set_sort_column_id(self.COL_DATE, Gtk.SortType.ASCENDING)
 
-        #init toolbar
+        # init toolbar
         actiongroup = Gtk.ActionGroup('transactionstab')
         actiongroup.add_actions([
                 ('add', Gtk.STOCK_ADD, 'new quotation', None, _('Add new quotation'), self.on_add),
@@ -191,7 +191,7 @@ class TransactionsTab(Gtk.VBox):
         for action in actiongroup.list_actions():
             toolbar.insert(action.create_tool_item(), -1)
 
-        #load values
+        # load values
         for transaction in position.transactions:
             self.insert_transaction(transaction)
 
@@ -211,7 +211,7 @@ class TransactionsTab(Gtk.VBox):
             transaction = self.model[path][0]
             dlg = common_dialogs.CalendarDialog(transaction.date, parent=self.get_toplevel())
             if dlg.date:
-                #be carefull, transactions have datetimes...
+                # be carefull, transactions have datetimes...
                 transaction.date = transaction.date.replace(dlg.date.year, dlg.date.month, dlg.date.day)
                 transaction.position.date = transaction.date
                 self.model[path][self.COL_DATE] = transaction.date
@@ -245,13 +245,13 @@ class TransactionsTab(Gtk.VBox):
             response = dlg.run()
             dlg.destroy()
             if response == Gtk.ResponseType.OK:
-                #update position
+                # update position
                 ta = model[selection_iter][0]
                 if ta.is_sell():
                     ta.position.quantity += ta.quantity
                 else:
                     ta.position.quantity -= ta.quantity
-                #delete
+                # delete
                 ta.delete()
                 model.remove(selection_iter)
 
@@ -270,7 +270,7 @@ class TransactionsTab(Gtk.VBox):
             ta = self.model[path][0]
             ta.price = value
             ta.position.price = value
-            #update gui
+            # update gui
             self.model[path][columnnumber] = value
             self.model[path][self.COL_TOTAL] = ta.total
         except:
@@ -282,7 +282,7 @@ class TransactionsTab(Gtk.VBox):
             ta = self.model[path][0]
             ta.cost = value
             ta.position.cost = value
-            #update gui
+            # update gui
             self.model[path][columnnumber] = value
             self.model[path][self.COL_TOTAL] = ta.total
         except:
@@ -300,7 +300,7 @@ class EditHistoricalQuotationsDialog(Gtk.Dialog):
                      (Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT))
         self.set_default_size(300, 300)
 
-        #init wigets
+        # init wigets
         vbox = self.get_content_area()
         self.tree = gui_utils.Tree()
         sw = Gtk.ScrolledWindow()
@@ -311,7 +311,7 @@ class EditHistoricalQuotationsDialog(Gtk.Dialog):
         toolbar = Gtk.Toolbar()
         vbox.pack_start(toolbar, False, True, 0)
 
-        #init tree
+        # init tree
         self.model = Gtk.ListStore(object, object, float)
         self.tree.set_model(self.model)
         self.date_column, cell = self.tree.create_column(_('Date'), 1, func=gui_utils.date_to_string)
@@ -327,7 +327,7 @@ class EditHistoricalQuotationsDialog(Gtk.Dialog):
         self.price_column.set_cell_data_func(cell, gui_utils.float_format, 2)
         self.tree.append_column(self.price_column)
 
-        #init toolbar
+        # init toolbar
         actiongroup = Gtk.ActionGroup('quotations')
         actiongroup.add_actions([
                 ('add', Gtk.STOCK_ADD, 'new quotation', None, _('Add new quotation'), self.on_add),
@@ -336,11 +336,11 @@ class EditHistoricalQuotationsDialog(Gtk.Dialog):
         for action in actiongroup.list_actions():
             toolbar.insert(action.create_tool_item(), -1)
 
-        #load values
+        # load values
         for quotation in self.asset.quotations:
             self.model.append([quotation, quotation.date, quotation.close])
 
-        #show dialog
+        # show dialog
         self.show_all()
         self.run()
         self.destroy()

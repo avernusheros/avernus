@@ -10,8 +10,13 @@ from avernus.gui.account.exportDialog import ExportDialog
 from avernus.gui import sidebar
 from avernus.gui.portfolio.asset_manager import AssetManager
 from avernus.gui.portfolio.overview_notebook import OverviewNotebook
-from avernus.gui.portfolio.portfolio_notebook import PortfolioNotebook
-from avernus.gui.portfolio.positions_tab import WatchlistPositionsTab
+from avernus.gui.portfolio.positions_tab import PortfolioPositionsTab
+from avernus.gui.portfolio.transactions_tab import TransactionsTab
+from avernus.gui.portfolio.dividends_tab import DividendsTab
+from avernus.gui.portfolio.closed_positions_tab import ClosedPositionsTab
+from avernus.gui.portfolio.chart_tab import ChartTab
+from avernus.gui.portfolio import watchlist_positions_page
+# from avernus.gui.portfolio.positions_tab import WatchlistPositionsTab
 from avernus.gui.preferences import PrefDialog
 from gi.repository import Gdk, Gtk
 from webbrowser import open as web
@@ -25,9 +30,6 @@ sys.setdefaultencoding("utf-8")
 
 
 PAGES = {
-    'Portfolio': PortfolioNotebook,
-    'AllPortfolio': PortfolioNotebook,
-    'Watchlist': WatchlistPositionsTab,
     'Category Accounts': AccountOverview,
     'Category Portfolios': OverviewNotebook,
         }
@@ -61,14 +63,23 @@ class MainWindow:
 
         self.hpaned = builder.get_object("hpaned")
         self.account_page = AccountTransactionTab()
+        self.portfolio_notebook = builder.get_object("portfolio_notebook")
+        self.portfolio_pages = [PortfolioPositionsTab(),
+                                TransactionsTab(),
+                                DividendsTab(),
+                                ClosedPositionsTab(),
+                                ChartTab()
+                                ]
+        self.watchlist_page = watchlist_positions_page.WatchlistPositionsPage()
 
-        sidebar = sidebar.Sidebar()
-        sidebar.connect("unselect", self.on_sidebar_unselect)
-        sidebar.connect("select", self.on_sidebar_select)
+        sb = sidebar.Sidebar()
+        sb.connect("unselect", self.on_sidebar_unselect)
+        sb.connect("select", self.on_sidebar_select)
 
-        builder.connect_signals(HandlerFinder([self,
-                                               self.account_page,
-                                               sidebar]))
+        # connect signals
+        handlers = [self, self.account_page, sb, self.watchlist_page]
+        handlers.extend(self.portfolio_pages)
+        builder.connect_signals(HandlerFinder(handlers))
 
         # set min size
         screen = self.window.get_screen()
@@ -106,6 +117,9 @@ class MainWindow:
             self.maximized = False
             self.config.set_option('maximize', False, section='Gui')
 
+    def on_portfolio_notebook_selection(self, notebook, page, page_num):
+        notebook.get_nth_page(page_num).show()
+
     def on_destroy(self, widget=None, data=None):
         """on_destroy - called when the avernusWindow is closed. """
         objects.session.commit()
@@ -125,9 +139,16 @@ class MainWindow:
         else:
             page = item.__class__.__name__
         if page == "Account" or page == "AllAccount":
-            self.hpaned.pack2(self.account_page)
-            self.account_page.show()
+            self.hpaned.pack2(self.account_page.widget)
+            self.account_page.widget.show()
             self.account_page.set_account(item)
+        elif page == "Portfolio" or page == "AllPortfolio":
+            self.hpaned.pack2(self.portfolio_notebook)
+            for page in self.portfolio_pages:
+                page.set_portfolio(item)
+        elif page == "Watchlist":
+            self.hpaned.pack2(self.watchlist_page.widget)
+            self.watchlist_page.set_watchlist(item)
         elif page is not None:
             self.hpaned.pack2(PAGES[page](item))
 

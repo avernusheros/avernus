@@ -16,6 +16,11 @@ logger = logging.getLogger(__name__)
 
 class AccountTransactionTab(page.Page):
 
+    OBJECT = 0
+    DESCRIPTION = 1
+    AMOUNT = 2
+    DATE = 4
+
     def __init__(self):
         page.Page.__init__(self)
         self.config = config.avernusConfig()
@@ -28,19 +33,18 @@ class AccountTransactionTab(page.Page):
         self.range_end = None
         self.context_menu_setup = False
         self.builder = get_avernus_builder()
+        self.charts_notebook = None
 
-        vbox = self.builder.get_object("account_vbox")
+        self.widget = self.builder.get_object("account_vbox")
         self.hpaned = self.builder.get_object("account_hpaned")
         self.category_tree = self.builder.get_object("category_tree")
-        self.transactions_tree = self.builder.get_object("account_transactions_tree")
         self.start_entry = self.builder.get_object("start_entry")
         self.end_entry = self.builder.get_object("end_entry")
         self.search_entry = self.builder.get_object("search_entry")
         self.category_actiongroup = self.builder.get_object("category_actiongroup")
         self.category_context_menu = self.builder.get_object("category_context_menu")
 
-        self.pack_start(vbox, True, True, 0)
-        self.charts_notebook = None
+        self.widget.connect("draw", self.update_page)
         pre = self.config.get_option('account hpaned position', 'Gui')
         pos = pre or 600
         self.hpaned.set_position(int(pos))
@@ -50,11 +54,11 @@ class AccountTransactionTab(page.Page):
 
     def set_account(self, account):
         self.account = account
+        self.model.clear()
         for ta in self.account:
             self.model.append(self.get_item_to_insert(ta))
         self.signal_id = self.account.connect('transaction_added', self.on_transaction_added)
         self.update_page()
-        self.show_all()
 
     def get_item_to_insert(self, ta):
         if ta.category:
@@ -85,12 +89,13 @@ class AccountTransactionTab(page.Page):
         self.category_tree.expand_all()
 
     def _init_transactions_tree(self):
+        self.transactions_tree = self.builder.get_object("account_transactions_tree")
         self.modelfilter = self.builder.get_object("treemodelfilter1")
         self.model = self.modelfilter.get_model()
-        sorter = self.builder.get_object("treemodelsort1")
-        sorter.set_sort_func(4, gui_utils.sort_by_time, 4)
-
         self.modelfilter.set_visible_func(self.visible_cb, None)
+        sorter = self.builder.get_object("treemodelsort1")
+        sorter.set_sort_func(self.DATE, gui_utils.sort_by_datetime, self.DATE)
+        self.model.set_sort_func(self.DATE, gui_utils.sort_by_datetime, self.DATE)
 
         if self.config.get_option('transactionGrid', 'Account') == 'True':
             self.transactions_tree.set_grid_lines(Gtk.TreeViewGridLines.HORIZONTAL)
@@ -98,17 +103,15 @@ class AccountTransactionTab(page.Page):
         # date format
         cell = self.builder.get_object("cellrenderertext3")
         column = self.builder.get_object("treeviewcolumn4")
-        column.set_cell_data_func(cell, gui_utils.date_to_string, 4)
-
+        column.set_cell_data_func(cell, gui_utils.date_to_string, self.DATE)
         # amount format
         cell = self.builder.get_object("cellrenderertext4")
         column = self.builder.get_object("treeviewcolumn5")
-        column.set_cell_data_func(cell, gui_utils.currency_format, 2)
-
+        column.set_cell_data_func(cell, gui_utils.currency_format, self.AMOUNT)
         # description format
         cell = self.builder.get_object("cellrenderertext2")
         column = self.builder.get_object("treeviewcolumn2")
-        column.set_cell_data_func(cell, gui_utils.transaction_desc_markup, 1)
+        column.set_cell_data_func(cell, gui_utils.transaction_desc_markup, self.DESCRIPTION)
         column.set_expand(True)
 
     def on_row_changed(self, model, path, iterator):
@@ -391,7 +394,7 @@ class AccountTransactionTab(page.Page):
     def on_edit_transaction(self, widget):
         transaction, iterator = self.get_selected_transaction()
         old_amount = transaction.amount
-        dlg = edit_transaction_dialog.EditTransactionDialog(self.account, transaction, parent=self.get_toplevel())
+        dlg = edit_transaction_dialog.EditTransactionDialog(self.account, transaction, parent=self.widget.get_toplevel())
         b_change, transaction = dlg.start()
         if b_change:
             self.account.balance = self.account.balance - old_amount + transaction.amount

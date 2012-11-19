@@ -4,6 +4,8 @@ avernus 0.10:
   * switch to matplotlib for charts
   * improved charts
   * code cleanup and refactoring
+  * ported most gui elements to glade
+  * keyboard shortcuts are working again
   * translations
 
 avernus 0.9:

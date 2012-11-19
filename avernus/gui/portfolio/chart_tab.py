@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from avernus.controller import chart_controller
-from avernus.gui import charts, page, gui_utils
+from avernus.gui import charts, page, gui_utils, get_avernus_builder
 from avernus.objects import container, dimension
 from gi.repository import Gtk
 import logging
@@ -11,26 +11,27 @@ logger = logging.getLogger(__name__)
 
 class ChartTab(page.Page):
 
-    def __init__(self, pf):
+    def __init__(self):
         page.Page.__init__(self)
-        self.sw = Gtk.ScrolledWindow()
-        self.add(self.sw)
-        self.pf = pf
-        self.sw.set_property('hscrollbar-policy', Gtk.PolicyType.AUTOMATIC)
-        self.sw.set_property('vscrollbar-policy', Gtk.PolicyType.AUTOMATIC)
-        self.show_all()
+        builder = get_avernus_builder()
+        self.sw = builder.get_object("charts_sw")
+        self.sw.connect("draw", self.update_page)
 
-    def show(self):
+    def set_portfolio(self, portfolio):
+        self.pf = portfolio
+        child = self.sw.get_child()
+        if child:
+            self.sw.remove(child)
         self.update_page()
         if len(self.pf.positions) == 0:
             self.sw.add_with_viewport(Gtk.Label(label='\n%s\n%s\n\n' % (_('No data!'), _('Add positions to portfolio first.'))))
-            self.show_all()
+            self.sw.show_all()
             return
         width = self.sw.get_allocation().width
         table = Gtk.Table()
         y = 0
 
-        #value over time chart
+        # value over time chart
         hbox = Gtk.HBox()
         table.attach(hbox, 0, 2, y, y + 1)
         label = Gtk.Label()
@@ -72,7 +73,7 @@ class ChartTab(page.Page):
         label.set_markup('<b>' + _('Investment types') + '</b>')
         label.set_tooltip_text(_("Percentual fraction by investment type."))
         table.attach(label, 1, 2, y - 1, y)
-        #FIXME
+        # FIXME
         controller = chart_controller.PositionAttributeChartController(self.pf, 'type')
         chart = charts.Pie(controller, width / 2)
         table.attach(chart, 1, 2, y, y + 1)
@@ -196,7 +197,7 @@ class BenchmarkDialog(Gtk.Dialog):
 
         else:
             pass
-            #FIXME show some error message
+            # FIXME show some error message
 
     def on_remove(self, widget, user_data=None):
         selection = self.tree.get_selection()

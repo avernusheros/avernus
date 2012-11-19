@@ -1,8 +1,7 @@
 from gi.repository import GObject
-from gi.repository import Gtk
 
 
-class Page(Gtk.VBox):
+class Page(GObject.GObject):
 
     __gsignals__ = {
         'update': (GObject.SIGNAL_RUN_LAST, None,
@@ -10,7 +9,7 @@ class Page(Gtk.VBox):
     }
 
     def __init__(self):
-        Gtk.VBox.__init__(self)
+        GObject.GObject.__init__(self)
 
     def get_info(self):
         return []
