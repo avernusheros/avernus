@@ -95,7 +95,7 @@ class Sidebar(GObject.GObject):
                                          gui_utils.get_currency_format_from_float(item.get_current_value()),
                                          True,
                                          True])
-        item.connect("position_added", self.on_container_value_changed, new_iter)
+        item.connect("positions_changed", self.on_container_updated, new_iter)
         item.connect("updated", self.on_container_updated, new_iter)
         return new_iter
 
@@ -120,9 +120,6 @@ class Sidebar(GObject.GObject):
         self.tree.get_model()[iterator][3] = gui_utils.get_currency_format_from_float(balance)
 
     def on_container_updated(self, item, iterator):
-        self.tree.get_model()[iterator][3] = gui_utils.get_currency_format_from_float(item.get_current_value())
-
-    def on_container_value_changed(self, item, new_position, iterator):
         self.tree.get_model()[iterator][3] = gui_utils.get_currency_format_from_float(item.get_current_value())
 
     def on_updated(self, item):

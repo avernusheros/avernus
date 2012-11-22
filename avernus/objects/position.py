@@ -160,6 +160,7 @@ class PortfolioPosition(Position):
     def __init__(self, **kwargs):
         Position.__init__(self, **kwargs)
         self.portfolio.emit("position_added", self)
+        self.portfolio.emit("positions_changed")
 
     def get_buy_transaction(self):
         return objects.session.query(portfolio_transaction.BuyTransaction)\
@@ -168,6 +169,10 @@ class PortfolioPosition(Position):
     def get_sell_transactions(self):
         return objects.Session().query(portfolio_transaction.SellTransaction)\
                         .filter_by(position=self).all()
+
+    def delete(self, *args):
+        Position.delete(self)
+        self.portfolio.emit("positions_changed")
 
 
 class WatchlistPosition(Position):

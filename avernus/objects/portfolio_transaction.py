@@ -24,6 +24,10 @@ class SellTransaction(Transaction):
     id = Column(Integer, ForeignKey('portfolio_transaction.id'),
                 primary_key=True)
 
+    def __init__(self, **kwargs):
+        Transaction.__init__(self, **kwargs)
+        self.position.portfolio.emit("positions_changed")
+
     def __str__(self):
         return _("sell")
 
@@ -37,6 +41,10 @@ class BuyTransaction(Transaction):
     __mapper_args__ = {'polymorphic_identity': 'portfolio_buy_transaction'}
     id = Column(Integer, ForeignKey('portfolio_transaction.id'),
                 primary_key=True)
+
+    def __init__(self, **kwargs):
+        Transaction.__init__(self, **kwargs)
+        self.position.portfolio.emit("positions_changed")
 
     def __str__(self):
         return _("buy")

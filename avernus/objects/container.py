@@ -65,12 +65,16 @@ class PortfolioBase(object):
         return change, percent
 
     @property
+    def active_positions_count(self):
+        return len(filter(lambda p: p.quantity > 0, self.positions))
+
+    @property
     def transaction_count(self):
         return sum([len(pos.transactions) for pos in self])
 
     @property
     def date_of_last_dividend(self):
-        #FIXME faster, simpler!
+        # FIXME faster, simpler!
         current = None
         for pos in self:
             for dividend in pos.dividends:
@@ -211,6 +215,7 @@ class Container(objects.Base, GObject.GObject):
 
     __gsignals__ = {
         'position_added': (GObject.SIGNAL_RUN_LAST, None, (object,)),
+        'positions_changed': (GObject.SIGNAL_RUN_LAST, None, ()),
         'updated': (GObject.SIGNAL_RUN_LAST, None, ())
     }
 
@@ -263,7 +268,7 @@ class Portfolio(Container, PortfolioBase):
                 else:
                     quantity -= ta.quantity
             # get price
-            if quantity == 0.0:
+            if not quantity:
                 yield 0
             else:
                 price = asset.get_price_at_date(day, day - delta)

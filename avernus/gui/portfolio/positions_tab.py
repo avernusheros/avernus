@@ -238,7 +238,7 @@ class PortfolioPositionsTab(page.Page):
         return [(_('Day\'s gain'), gui_utils.get_green_red_string(change, change_text)),
                 (_('Overall gain'), gui_utils.get_green_red_string(o_change, o_change_text)),
                 ('Investments', gui_utils.get_currency_format_from_float(self.portfolio.get_current_value())),
-                ('# positions', len(self.portfolio.positions)),
+                ('# positions', self.portfolio.active_positions_count),
                 ('Last update', gui_utils.datetime_format(self.portfolio.last_update, False))
                 ]
 
