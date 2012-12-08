@@ -274,14 +274,16 @@ class AccountTransactionTab(page.Page):
         chart.draw_chart()
 
     def on_pick_start(self, entry, *args):
-        dialog = common_dialogs.CalendarDialog(self.range_start, parent=self.get_toplevel())
+        dialog = common_dialogs.CalendarDialog(self.range_start,
+                                        parent=self.widget.get_toplevel())
         if dialog.date:
             self.range_start = dialog.date
             self.update_ui()
             self.start_entry.set_text(gui_utils.get_date_string(self.range_start))
 
     def on_pick_end(self, entry, *args):
-        dialog = common_dialogs.CalendarDialog(self.range_end, parent=self.get_toplevel())
+        dialog = common_dialogs.CalendarDialog(self.range_end,
+                                        parent=self.widget.get_toplevel())
         if dialog.date:
             self.range_end = dialog.date
             self.update_ui()
@@ -372,7 +374,6 @@ class AccountTransactionTab(page.Page):
                     or self.searchstring in str(transaction.amount) \
                     or transaction.category and self.searchstring in transaction.category.name.lower():
                 return True
-
         return False
 
     def _get_child_iter(self, iterator):
