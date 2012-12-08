@@ -7,12 +7,11 @@ import datetime
 
 class DividendDialog(Gtk.Dialog):
 
-    def __init__(self, pf=None, tree=None, date=None, price=None, position=None, dividend=None, parent=None):
+    def __init__(self, pf=None, date=None, price=None, position=None, dividend=None, parent=None):
         Gtk.Dialog.__init__(self, _("Add dividend"), parent
                             , Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,
                      (Gtk.STOCK_CANCEL, Gtk.ResponseType.REJECT,
                       'Add', Gtk.ResponseType.ACCEPT))
-        self.tree = tree
         self.dividend = dividend
         vbox = self.get_content_area()
         table = Gtk.Table()
@@ -85,10 +84,8 @@ class DividendDialog(Gtk.Dialog):
             value = self.value_entry.get_value()
             ta_costs = self.tacosts_entry.get_value()
             if self.dividend is None:
-                div = asset.Dividend(price=value, date=date, cost=ta_costs,
+                self.dividend = asset.Dividend(price=value, date=date, cost=ta_costs,
                                      position=self.selected_pos)
-                if self.tree is not None:
-                    self.tree.insert_dividend(div)
             else:
                 self.dividend.price = value
                 self.dividend.date = date

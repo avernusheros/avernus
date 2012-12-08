@@ -12,7 +12,6 @@ import datetime
 import sys
 
 
-# FIXME
 gain_thresholds = {
                    (-sys.maxint, -0.5): 'arrow_down',
                    (-0.5, -0.2): 'arrow_med_down',
@@ -24,54 +23,52 @@ gain_thresholds = {
 
 def get_arrow_icon(perc):
     for (min_val, max_val), name in gain_thresholds.items():
-        if min_val <= perc and max_val >= perc:
+        if min_val < perc and max_val >= perc:
             return name
 
 
-def start_price_markup(column, cell, model, iterator, user_data):
+def start_price_markup(column, cell, model, iterator, column_id):
     pos = model.get_value(iterator, 0)
-    markup = "%s\n<small>%s</small>" % (gui_utils.get_currency_format_from_float(model.get_value(iterator, user_data)), gui_utils.get_date_string(pos.date))
+    markup = "%s\n<small>%s</small>" % (gui_utils.get_currency_format_from_float(model.get_value(iterator, column_id)), gui_utils.get_date_string(pos.date))
     if isinstance(pos, position_model.MetaPosition):
         markup = unichr(8709) + " " + markup
     cell.set_property('markup', markup)
 
 
-def quantity_markup(column, cell, model, iterator, user_data):
+def quantity_markup(column, cell, model, iterator, column_id):
     pos = model.get_value(iterator, 0)
-    markup = gui_utils.get_string_from_float(model.get_value(iterator, 6))
+    markup = gui_utils.get_string_from_float(model.get_value(iterator, column_id))
     if isinstance(pos, position_model.MetaPosition):
         markup = unichr(8721) + " " + markup
     cell.set_property('markup', markup)
 
 
-def current_price_markup(column, cell, model, iterator, user_data):
+def current_price_markup(column, cell, model, iterator, column_id):
     asset = model.get_value(iterator, 0).asset
-    markup = "%s\n<small>%s</small>" % (gui_utils.get_currency_format_from_float(model.get_value(iterator, user_data)), gui_utils.get_datetime_string(asset.date))
+    markup = "%s\n<small>%s</small>" % (gui_utils.get_currency_format_from_float(model.get_value(iterator, column_id)), gui_utils.get_datetime_string(asset.date))
     cell.set_property('markup', markup)
 
 
 class PortfolioPositionsTab(page.Page):
 
-    """
-    obj: 0,
-    name: 1,
-    start: 2,
-    last_price: 3,
-    change: 4,
-    gain: 5,
-    shares: 6,
-    buy_value: 7,
-    mkt_value: 8,
-    days_gain: 9,
-    gain_percent: 10,
-    gain_icon: 11,
-    change_percent: 12,
-    type: 13,
-    pf_percent: 14,
-    gain_div: 15,
-    gain_div_percent: 16,
-    annual_return: 17,
-    """
+    OBJECT = 0
+    NAME = 1
+    START = 2
+    LAST_PRICE = 3
+    CHANGE = 4
+    GAIN = 5
+    QUANTITY = 6
+    BUY_VALUE = 7
+    MKT_VALUE = 8
+    DAYS_GAIN = 9
+    GAIN_PERCENT = 10
+    GAIN_ICON = 11
+    CHANGE_PERCENT = 12
+    TYPE = 13
+    PF_PERCENT = 14
+    GAIN_DIV = 15
+    GAIN_DIV_PERCENT = 16
+    ANNUAL_RETURN = 17
 
     def __init__(self):
         page.Page.__init__(self)
@@ -85,59 +82,59 @@ class PortfolioPositionsTab(page.Page):
         # quantity
         cell = self.builder.get_object("cellrenderertext8")
         column = self.builder.get_object("treeviewcolumn7")
-        column.set_cell_data_func(cell, quantity_markup)
+        column.set_cell_data_func(cell, quantity_markup, self.QUANTITY)
         # pf percent format
         cell = self.builder.get_object("cellrenderertext11")
         column = self.builder.get_object("treeviewcolumn11")
-        column.set_cell_data_func(cell, gui_utils.percent_format, 14)
+        column.set_cell_data_func(cell, gui_utils.percent_format, self.PF_PERCENT)
         # start price
         cell = self.builder.get_object("cellrenderertext12")
         column = self.builder.get_object("treeviewcolumn12")
-        column.set_cell_data_func(cell, start_price_markup, 2)
+        column.set_cell_data_func(cell, start_price_markup, self.START)
         # buy value
         cell = self.builder.get_object("cellrenderertext13")
         column = self.builder.get_object("treeviewcolumn13")
-        column.set_cell_data_func(cell, gui_utils.currency_format, 7)
+        column.set_cell_data_func(cell, gui_utils.currency_format, self.BUY_VALUE)
         # last price
         cell = self.builder.get_object("cellrenderertext14")
         column = self.builder.get_object("treeviewcolumn14")
-        column.set_cell_data_func(cell, current_price_markup, 3)
+        column.set_cell_data_func(cell, current_price_markup, self.LAST_PRICE)
         # change
         cell = self.builder.get_object("cellrenderertext15")
         column = self.builder.get_object("treeviewcolumn15")
-        column.set_cell_data_func(cell, gui_utils.float_to_red_green_string_currency, 4)
+        column.set_cell_data_func(cell, gui_utils.float_to_red_green_string_currency, self.CHANGE)
         # change %
         cell = self.builder.get_object("cellrenderertext16")
         column = self.builder.get_object("treeviewcolumn16")
-        column.set_cell_data_func(cell, gui_utils.float_to_red_green_string_percent, 12)
+        column.set_cell_data_func(cell, gui_utils.float_to_red_green_string_percent, self.CHANGE_PERCENT)
         # market value
         cell = self.builder.get_object("cellrenderertext17")
         column = self.builder.get_object("treeviewcolumn17")
-        column.set_cell_data_func(cell, gui_utils.currency_format, 8)
+        column.set_cell_data_func(cell, gui_utils.currency_format, self.MKT_VALUE)
         # gain
         cell = self.builder.get_object("cellrenderertext18")
         column = self.builder.get_object("treeviewcolumn18")
-        column.set_cell_data_func(cell, gui_utils.float_to_red_green_string_currency, 5)
+        column.set_cell_data_func(cell, gui_utils.float_to_red_green_string_currency, self.GAIN)
         # gain %
         cell = self.builder.get_object("cellrenderertext19")
         column = self.builder.get_object("treeviewcolumn19")
-        column.set_cell_data_func(cell, gui_utils.float_to_red_green_string_percent, 10)
+        column.set_cell_data_func(cell, gui_utils.float_to_red_green_string_percent, self.GAIN_PERCENT)
         # today
         cell = self.builder.get_object("cellrenderertext20")
         column = self.builder.get_object("treeviewcolumn20")
-        column.set_cell_data_func(cell, gui_utils.float_to_red_green_string_currency, 9)
+        column.set_cell_data_func(cell, gui_utils.float_to_red_green_string_currency, self.DAYS_GAIN)
         # gain incl dividends
         cell = self.builder.get_object("cellrenderertext21")
         column = self.builder.get_object("treeviewcolumn21")
-        column.set_cell_data_func(cell, gui_utils.float_to_red_green_string_currency, 15)
+        column.set_cell_data_func(cell, gui_utils.float_to_red_green_string_currency, self.GAIN_DIV)
         # gain incl dividends percent
         cell = self.builder.get_object("cellrenderertext22")
         column = self.builder.get_object("treeviewcolumn22")
-        column.set_cell_data_func(cell, gui_utils.float_to_red_green_string_percent, 16)
+        column.set_cell_data_func(cell, gui_utils.float_to_red_green_string_percent, self.GAIN_DIV_PERCENT)
         # annual return
         cell = self.builder.get_object("cellrenderertext23")
         column = self.builder.get_object("treeviewcolumn23")
-        column.set_cell_data_func(cell, gui_utils.percent_format, 17)
+        column.set_cell_data_func(cell, gui_utils.percent_format, self.ANNUAL_RETURN)
 
     def set_portfolio(self, portfolio):
         # clear
@@ -202,7 +199,7 @@ class PortfolioPositionsTab(page.Page):
                position.get_annual_return()
                ]
         if child:
-            ret[1] = ""
+            ret[self.NAME] = ""
         return ret
 
     def _move_position(self, position, parent=None):
@@ -217,7 +214,7 @@ class PortfolioPositionsTab(page.Page):
             if not rows:
                 return None
             for row in rows:
-                if row[0] == pos:
+                if row[self.OBJECT] == pos:
                     return row
                 result = search(row.iterchildren())
                 if result:
@@ -247,12 +244,12 @@ class PortfolioPositionsTab(page.Page):
         tree_iter = self.find_position(position).iter
         if isinstance(position, position_model.MetaPosition):
             position.recalculate()
-            self.treestore[tree_iter] = self._get_row(self.treestore[tree_iter][0])
+            self.treestore[tree_iter] = self._get_row(self.treestore[tree_iter][self.OBJECT])
             child_iter = self.treestore.iter_children(tree_iter)
-            self.treestore[child_iter] = self._get_row(self.treestore[child_iter][0], True)
+            self.treestore[child_iter] = self._get_row(self.treestore[child_iter][self.OBJECT], True)
             while self.treestore.iter_next(child_iter) != None:
                 child_iter = self.treestore.iter_next(child_iter)
-                self.treestore[child_iter] = self._get_row(self.treestore[child_iter][0], True)
+                self.treestore[child_iter] = self._get_row(self.treestore[child_iter][self.OBJECT], True)
         else:
             self.treestore[tree_iter] = self._get_row(position)
 
@@ -299,7 +296,7 @@ class PortfolioPositionsTab(page.Page):
             if position.quantity != 0.0:
                 self.insert_position(position)
 
-    def on_add_dividend(self, widget):
+    def on_add_dividend_for_position(self, widget):
         if self.selected_item is not None:
             dividend_dialog.DividendDialog(pf=self.portfolio, position=self.selected_item[0], parent=self.widget.get_toplevel())
         else:
@@ -317,8 +314,8 @@ class PortfolioPositionsTab(page.Page):
 
     def update(self):
         for row in self.treestore:
-            item = row[0]
-            row[14] = self.portfolio.get_fraction(item)
+            item = row[self.OBJECT]
+            row[self.PF_PERCENT] = self.portfolio.get_fraction(item)
         self.update_page()
 
     def on_position_added(self, portfolio, position):
@@ -334,7 +331,7 @@ class PortfolioPositionsTab(page.Page):
             treestore, selection_iter = selection.get_selected()
             if selection_iter and treestore:
                 # Something is selected so get the object
-                obj = treestore.get_value(selection_iter, 0)
+                obj = treestore.get_value(selection_iter, self.OBJECT)
                 self.selected_item = obj, selection_iter
                 self.actiongroup.set_sensitive(True)
                 return

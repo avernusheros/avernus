@@ -105,6 +105,85 @@
       </object>
     </child>
   </object>
+  <object class="GtkActionGroup" id="sidebar_actiongroup">
+    <property name="accel_group">accelgroup1</property>
+    <child>
+      <object class="GtkAction" id="edit2">
+        <property name="label" translatable="yes">_Edit</property>
+        <property name="short_label" translatable="yes">_Edit</property>
+        <property name="tooltip" translatable="yes">Edit</property>
+        <property name="stock_id">gtk-edit</property>
+        <signal name="activate" handler="on_sidebar_edit" swapped="no"/>
+      </object>
+    </child>
+    <child>
+      <object class="GtkAction" id="remove5">
+        <property name="label" translatable="yes">_Remove</property>
+        <property name="short_label" translatable="yes">_Remove</property>
+        <property name="tooltip" translatable="yes">Remove</property>
+        <property name="stock_id">gtk-remove</property>
+        <signal name="activate" handler="on_sidebar_remove" swapped="no"/>
+      </object>
+    </child>
+    <child>
+      <object class="GtkAction" id="add3">
+        <property name="label" translatable="yes">Add</property>
+        <property name="short_label" translatable="yes">New</property>
+        <property name="stock_id">gtk-add</property>
+        <signal name="activate" handler="on_sidebar_add" swapped="no"/>
+      </object>
+    </child>
+  </object>
+  <object class="GtkActionGroup" id="wl_position_actiongroup">
+    <property name="sensitive">False</property>
+    <property name="accel_group">accelgroup1</property>
+    <child>
+      <object class="GtkAction" id="edit5">
+        <property name="label" translatable="yes">_Edit</property>
+        <property name="short_label" translatable="yes">_Edit</property>
+        <property name="tooltip" translatable="yes">Edit selected position</property>
+        <property name="stock_id">gtk-edit</property>
+        <signal name="activate" handler="on_wlposition_edit" swapped="no"/>
+      </object>
+    </child>
+    <child>
+      <object class="GtkAction" id="remove8">
+        <property name="label" translatable="yes">_Delete</property>
+        <property name="short_label" translatable="yes">_Delete</property>
+        <property name="tooltip" translatable="yes">Delete selected position</property>
+        <property name="stock_id">gtk-remove</property>
+        <signal name="activate" handler="on_wlposition_remove" swapped="no"/>
+      </object>
+    </child>
+    <child>
+      <object class="GtkAction" id="chart1">
+        <property name="label" translatable="yes">Chart position</property>
+        <property name="short_label" translatable="yes">Chart position</property>
+        <property name="tooltip" translatable="yes">Chart selected position</property>
+        <property name="icon_name">avernus</property>
+        <signal name="activate" handler="on_wlposition_chart" swapped="no"/>
+      </object>
+    </child>
+  </object>
+  <object class="GtkActionGroup" id="wl_position_tree_actiongroup">
+    <property name="accel_group">accelgroup1</property>
+    <child>
+      <object class="GtkAction" id="add7">
+        <property name="label" translatable="yes">Add new position</property>
+        <property name="tooltip" translatable="yes">Add new position</property>
+        <property name="stock_id">gtk-add</property>
+        <signal name="activate" handler="on_add_wlposition" swapped="no"/>
+      </object>
+    </child>
+    <child>
+      <object class="GtkAction" id="action2">
+        <property name="label" translatable="yes">Update positions</property>
+        <property name="tooltip" translatable="yes">Update positions</property>
+        <property name="stock_id">gtk-refresh</property>
+        <signal name="activate" handler="on_update_wlpositions" swapped="no"/>
+      </object>
+    </child>
+  </object>
   <object class="GtkMenu" id="acc_transaction_contextmenu">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
@@ -663,86 +742,7 @@
         <property name="label" translatable="yes">Add dividend</property>
         <property name="tooltip" translatable="yes">Add dividend payment</property>
         <property name="stock_id">gtk-convert</property>
-        <signal name="activate" handler="on_add_dividend" swapped="no"/>
-      </object>
-    </child>
-  </object>
-  <object class="GtkActionGroup" id="sidebar_actiongroup">
-    <property name="accel_group">accelgroup1</property>
-    <child>
-      <object class="GtkAction" id="edit2">
-        <property name="label" translatable="yes">_Edit</property>
-        <property name="short_label" translatable="yes">_Edit</property>
-        <property name="tooltip" translatable="yes">Edit</property>
-        <property name="stock_id">gtk-edit</property>
-        <signal name="activate" handler="on_sidebar_edit" swapped="no"/>
-      </object>
-    </child>
-    <child>
-      <object class="GtkAction" id="remove5">
-        <property name="label" translatable="yes">_Remove</property>
-        <property name="short_label" translatable="yes">_Remove</property>
-        <property name="tooltip" translatable="yes">Remove</property>
-        <property name="stock_id">gtk-remove</property>
-        <signal name="activate" handler="on_sidebar_remove" swapped="no"/>
-      </object>
-    </child>
-    <child>
-      <object class="GtkAction" id="add3">
-        <property name="label" translatable="yes">Add</property>
-        <property name="short_label" translatable="yes">New</property>
-        <property name="stock_id">gtk-add</property>
-        <signal name="activate" handler="on_sidebar_add" swapped="no"/>
-      </object>
-    </child>
-  </object>
-  <object class="GtkActionGroup" id="wl_position_actiongroup">
-    <property name="sensitive">False</property>
-    <property name="accel_group">accelgroup1</property>
-    <child>
-      <object class="GtkAction" id="edit5">
-        <property name="label" translatable="yes">_Edit</property>
-        <property name="short_label" translatable="yes">_Edit</property>
-        <property name="tooltip" translatable="yes">Edit selected position</property>
-        <property name="stock_id">gtk-edit</property>
-        <signal name="activate" handler="on_wlposition_edit" swapped="no"/>
-      </object>
-    </child>
-    <child>
-      <object class="GtkAction" id="remove8">
-        <property name="label" translatable="yes">_Delete</property>
-        <property name="short_label" translatable="yes">_Delete</property>
-        <property name="tooltip" translatable="yes">Delete selected position</property>
-        <property name="stock_id">gtk-remove</property>
-        <signal name="activate" handler="on_wlposition_remove" swapped="no"/>
-      </object>
-    </child>
-    <child>
-      <object class="GtkAction" id="chart1">
-        <property name="label" translatable="yes">Chart position</property>
-        <property name="short_label" translatable="yes">Chart position</property>
-        <property name="tooltip" translatable="yes">Chart selected position</property>
-        <property name="icon_name">avernus</property>
-        <signal name="activate" handler="on_wlposition_chart" swapped="no"/>
-      </object>
-    </child>
-  </object>
-  <object class="GtkActionGroup" id="wl_position_tree_actiongroup">
-    <property name="accel_group">accelgroup1</property>
-    <child>
-      <object class="GtkAction" id="add7">
-        <property name="label" translatable="yes">Add new position</property>
-        <property name="tooltip" translatable="yes">Add new position</property>
-        <property name="stock_id">gtk-add</property>
-        <signal name="activate" handler="on_add_wlposition" swapped="no"/>
-      </object>
-    </child>
-    <child>
-      <object class="GtkAction" id="action2">
-        <property name="label" translatable="yes">Update positions</property>
-        <property name="tooltip" translatable="yes">Update positions</property>
-        <property name="stock_id">gtk-refresh</property>
-        <signal name="activate" handler="on_update_wlpositions" swapped="no"/>
+        <signal name="activate" handler="on_add_dividend_for_position" swapped="no"/>
       </object>
     </child>
   </object>
@@ -2150,6 +2150,30 @@
     <property name="stock_id">gtk-refresh</property>
     <signal name="activate" handler="on_update_portfolio_positions" swapped="no"/>
   </object>
+  <object class="GtkTreeStore" id="wl_positions_treestore">
+    <columns>
+      <!-- column-name object -->
+      <column type="PyObject"/>
+      <!-- column-name name -->
+      <column type="gchararray"/>
+      <!-- column-name type -->
+      <column type="gchararray"/>
+      <!-- column-name start -->
+      <column type="gfloat"/>
+      <!-- column-name last -->
+      <column type="gfloat"/>
+      <!-- column-name change -->
+      <column type="gfloat"/>
+      <!-- column-name change_percent -->
+      <column type="gfloat"/>
+      <!-- column-name gain -->
+      <column type="gfloat"/>
+      <!-- column-name gain_percent -->
+      <column type="gfloat"/>
+      <!-- column-name gain_icon -->
+      <column type="gchararray"/>
+    </columns>
+  </object>
   <object class="GtkBox" id="watchlist_box">
     <property name="width_request">400</property>
     <property name="height_request">300</property>
@@ -2387,29 +2411,5 @@
         <property name="position">1</property>
       </packing>
     </child>
-  </object>
-  <object class="GtkTreeStore" id="wl_positions_treestore">
-    <columns>
-      <!-- column-name object -->
-      <column type="PyObject"/>
-      <!-- column-name name -->
-      <column type="gchararray"/>
-      <!-- column-name type -->
-      <column type="gchararray"/>
-      <!-- column-name start -->
-      <column type="gfloat"/>
-      <!-- column-name last -->
-      <column type="gfloat"/>
-      <!-- column-name change -->
-      <column type="gfloat"/>
-      <!-- column-name change_percent -->
-      <column type="gfloat"/>
-      <!-- column-name gain -->
-      <column type="gfloat"/>
-      <!-- column-name gain_percent -->
-      <column type="gfloat"/>
-      <!-- column-name gain_icon -->
-      <column type="gchararray"/>
-    </columns>
   </object>
 </interface>

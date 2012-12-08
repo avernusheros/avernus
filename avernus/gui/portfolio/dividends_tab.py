@@ -74,8 +74,10 @@ class DividendsTab(page.Page):
         return None, None
 
     def on_add_dividend(self, widget):
-        dividend_dialog.DividendDialog(self.portfolio, tree=self.tree, parent=self.tree.get_toplevel())
-        self.update_page()
+        dlg = dividend_dialog.DividendDialog(self.portfolio, parent=self.tree.get_toplevel())
+        if dlg.dividend:
+            self.insert_dividend(dlg.dividend)
+            self.update_page()
 
     def on_delete_dividend(self, widget):
         dividend, iterator = self.get_selected_dividend()

@@ -19,10 +19,23 @@ class Benchmark(objects.Base):
         return _('Benchmark ') + str(round(self.percentage * 100, 2)) + "%"
 
 
-class PortfolioBase(object):
+class PortfolioBase(GObject.GObject):
     """
     everything that is used by Portfolio and AllPortfolio
     """
+
+    __gsignals__ = {
+        'position_added': (GObject.SIGNAL_RUN_LAST, None, (object,)),
+        'positions_changed': (GObject.SIGNAL_RUN_LAST, None, ()),
+        'updated': (GObject.SIGNAL_RUN_LAST, None, ())
+    }
+
+    def __init__(self, *args, **kwargs):
+        GObject.GObject.__init__(self)
+
+    @reconstructor
+    def _init(self):
+        GObject.GObject.__init__(self)
 
     @property
     def percent(self):
@@ -169,14 +182,14 @@ class PortfolioBase(object):
             value += pos.buy_value
         return value
 
+GObject.type_register(PortfolioBase)
 
-class AllPortfolio(GObject.GObject, PortfolioBase):
 
-    __gsignals__ = {
-        'position_added': (GObject.SIGNAL_RUN_LAST, None, (object,)),
-        "updated":  (GObject.SIGNAL_RUN_LAST, None, ())
-    }
+class AllPortfolio(PortfolioBase):
+
     name = _("All")
+    # FIXME dont use portfolio id for progress monitor
+    id = 1233312
 
     def __iter__(self):
         return self.positions.__iter__()
@@ -204,7 +217,7 @@ class AllPortfolio(GObject.GObject, PortfolioBase):
         return value
 
 
-class Container(objects.Base, GObject.GObject):
+class Container(objects.Base):
     __tablename__ = 'container'
     discriminator = Column('type', String(30))
     __mapper_args__ = {'polymorphic_on': discriminator}
@@ -213,25 +226,8 @@ class Container(objects.Base, GObject.GObject):
     name = Column(String)
     last_update = Column(DateTime)
 
-    __gsignals__ = {
-        'position_added': (GObject.SIGNAL_RUN_LAST, None, (object,)),
-        'positions_changed': (GObject.SIGNAL_RUN_LAST, None, ()),
-        'updated': (GObject.SIGNAL_RUN_LAST, None, ())
-    }
-
-    def __init__(self, *args, **kwargs):
-        GObject.GObject.__init__(self)
-        objects.Base.__init__(self, **kwargs)
-
-    @reconstructor
-    def _init(self):
-        GObject.GObject.__init__(self)
-
     def __iter__(self):
         return self.positions.__iter__()
-
-
-GObject.type_register(Container)
 
 
 class Portfolio(Container, PortfolioBase):
