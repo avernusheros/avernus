@@ -174,6 +174,8 @@ class AccountBalanceController(ChartController):
         self.update(None, date_range)
 
     def update(self, transactions, date_range):
+        if transactions:
+            self.account = transactions[0].account
         self.start_date, self.end_date = date_range
         if not self.end_date:
             self.end_date = datetime.date.today()
@@ -243,7 +245,7 @@ class DividendsPerPositionChartController(ChartController):
 
 
 class StockChartPlotController(ChartController):
-    #FIXME move code from plot.py here
+    # FIXME move code from plot.py here
 
     def __init__(self, quotations):
         self.y_values = [(_("close"), [d.close for d in quotations])]
@@ -272,7 +274,7 @@ class PortfolioChartController(ChartController):
         self.days = calc_days(self.step, self.birthday, datetime.date.today(), self.MAX_VALUES)
         self.x_values = format_days(self.days, self.step)
         self.y_values = []
-        #FIXME do both things in parallel
+        # FIXME do both things in parallel
         for foo in self.calculate_valueovertime(self.name_value):
             yield foo
         for foo in self.calculate_investmentsovertime(self.name_invested):
@@ -297,8 +299,8 @@ class PortfolioChartController(ChartController):
         self.y_values.append((key, values))
 
     def calculate_valueovertime(self, name):
-        #import time
-        #t0 = time.clock()
+        # import time
+        # t0 = time.clock()
         temp = [0.0] * len(self.days)
         for asset in self.portfolio.get_used_assets():
             i = 0
@@ -306,7 +308,7 @@ class PortfolioChartController(ChartController):
                 temp[i] += val
                 i += 1
                 yield 0
-        #print "!!!!", time.clock()-t0, "seconds"
+        # print "!!!!", time.clock()-t0, "seconds"
         self.y_values.append((name, temp))
         yield 1
 
@@ -337,7 +339,7 @@ class AllPortfolioValueOverTime(PortfolioChartController):
         self.days = calc_days(self.step, self.birthday, datetime.date.today(), self.MAX_VALUES)
         self.x_values = format_days(self.days, self.step)
         self.y_values = []
-        #FIXME do in parallel
+        # FIXME do in parallel
         for pf in container.get_all_portfolios():
             self.portfolio = pf
             for foo in self.calculate_valueovertime(pf.name):
@@ -355,7 +357,7 @@ class AllPortfolioInvestmentsOverTime(PortfolioChartController):
         self.days = calc_days(self.step, self.birthday, datetime.date.today(), self.MAX_VALUES)
         self.x_values = format_days(self.days, self.step)
         self.y_values = []
-        #FIXME do in parallel
+        # FIXME do in parallel
         for pf in container.get_all_portfolios():
             self.items = pf.get_transactions() + pf.get_dividends()
             for foo in self.calculate_investmentsovertime(pf.name):
@@ -376,7 +378,7 @@ class DimensionChartController():
         for pos in self.portfolio:
             for adv in self.dimension.get_asset_dimension_value(pos.asset):
                 data[adv.dimension_value.name] += adv.value * pos.current_value
-        #remove unused dimvalues
+        # remove unused dimvalues
         data = dict((k, v) for k, v in data.iteritems() if v != 0.0)
         if sum(data.values()) == 0:
             self.values = {' ': 1}

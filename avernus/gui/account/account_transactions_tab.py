@@ -59,6 +59,7 @@ class AccountTransactionTab(page.Page):
             self.model.append(self.get_item_to_insert(ta))
         self.signal_id = self.account.connect('transaction_added', self.on_transaction_added)
         self.update_page()
+        self.update_charts()
 
     def get_item_to_insert(self, ta):
         if ta.category:
@@ -253,7 +254,7 @@ class AccountTransactionTab(page.Page):
             self.update_ui()
 
     def on_expander_toggled(self, expander, *args):
-        if (not expander.get_expanded()):
+        if not expander.get_expanded():
             start = self.range_start
             if not start:
                 start = self.account.birthday
@@ -322,13 +323,15 @@ class AccountTransactionTab(page.Page):
 
     def update_ui(self, *args):
         self.modelfilter.refilter()
-        model = self.transactions_tree.get_model()
-        transactions = [row[0] for row in model]
+        self.update_charts()
+        self.update_page()
+
+    def update_charts(self):
+        transactions = [row[0] for row in self.modelfilter]
         date_range = (self.range_start, self.range_end)
         if self.charts_notebook:
             for chart in self.charts_notebook.charts:
                 chart.update(transactions, date_range)
-        self.update_page()
 
     def visible_cb(self, model, iterator, userdata):
         transaction = model[iterator][0]
@@ -401,7 +404,7 @@ class AccountTransactionTab(page.Page):
             self.account.balance = self.account.balance - old_amount + transaction.amount
             child_iter = self._get_child_iter(iterator)
             self.model.remove(child_iter)
-            self.insert_transaction(transaction)
+            self.model.append(self.get_item_to_insert(transaction))
 
     def on_remove_transaction(self, widget):
         trans, iterator = self.get_selected_transaction()
