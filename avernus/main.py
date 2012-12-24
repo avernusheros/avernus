@@ -105,7 +105,6 @@ def main():
         parser.add_option("-d", "--debug", action="store_true", dest="debug", help=_("enable debug output"))
         parser.add_option("-f", "--file", dest="datafile", help="set database file")
         (options, args) = parser.parse_args()
-
         init_logger(options.debug)
         init_icons()
         db_file = options.datafile
