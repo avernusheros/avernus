@@ -274,13 +274,13 @@ class Portfolio(Container, PortfolioBase):
                     yield 0
 
 
-class Watchlist(Container):
+class Watchlist(Container, GObject.GObject):
     __tablename__ = 'watchlist'
     __mapper_args__ = {'polymorphic_identity': 'watchlist'}
     id = Column(Integer, ForeignKey('container.id'), primary_key=True)
     positions = relationship('WatchlistPosition',
                     backref='watchlist', cascade="all,delete")
-
+    
 
 def get_all_portfolios():
     return objects.Session().query(Portfolio).all()
