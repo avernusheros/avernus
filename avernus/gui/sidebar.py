@@ -172,13 +172,15 @@ class Sidebar(GObject.GObject):
 
     def on_sidebar_add(self, widget):
         obj = self.selected_item[0]
-        if obj.__class__.__name__ == 'Portfolio' or obj.__class__.__name__ == 'AllPortfolio' or obj.name == 'Portfolios':
+        inserter = item = None
+        obj = obj.replace("Category ","")
+        if obj.__class__.__name__ == 'Portfolio' or obj.__class__.__name__ == 'AllPortfolio' or obj == 'Portfolios':
             inserter = self.insert_portfolio
             item = container.Portfolio(name=_('new portfolio'))
-        elif obj.__class__.__name__ == 'Watchlist' or obj.name == 'Watchlists':
+        elif obj.__class__.__name__ == 'Watchlist' or obj == 'Watchlists':
             inserter = self.insert_watchlist
             item = container.Watchlist(name=_('new watchlist'))
-        elif obj.__class__.__name__ == 'Account' or obj.__class__.__name__ == 'AllAccount' or obj.name == 'Accounts':
+        elif obj.__class__.__name__ == 'Account' or obj.__class__.__name__ == 'AllAccount' or obj == 'Accounts':
             inserter = self.insert_account
             item = account.Account(name=_('new account'), balance=0.0)
         iterator = inserter(item)
