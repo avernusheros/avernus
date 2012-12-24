@@ -109,7 +109,7 @@ class AssetAllocation(page.Page):
                 menu = Gtk.Menu()
                 positions_menu.set_submenu(menu)
                 for pos in positions:
-                    if pos.asset_category != selected_item:
+                    if pos.asset_category != selected_item and pos.quantity > 0:
                         item = Gtk.MenuItem(label=pos.asset.name)
                         item.connect("activate", self.on_add_position, selected_item, pos)
                         menu.append(item)

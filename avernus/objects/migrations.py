@@ -3,6 +3,20 @@ import datetime
 import sqlite3
 
 
+def to_fourteen(db):
+    for pf in container.get_all_portfolios():
+        cache = {}
+        for pos in pf.positions:
+            if pos.asset in cache:
+                for ta in pos.transactions:
+                    ta.position = cache[pos.asset]
+                for div in pos.dividends:
+                    div.position = cache[pos.asset]
+                pos.delete()
+            else:
+                cache[pos.asset] = pos
+
+
 def to_thirteen(db):
     asset_category.AssetCategory(name=_("All"), target_percent=1.0)
     conn = sqlite3.connect(db)

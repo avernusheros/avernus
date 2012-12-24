@@ -85,7 +85,7 @@ class BuyDialog:
     def on_asset_selection(self, *args):
         self.asset_ok = True
         asset = self.asset_selector.get_asset()
-        #TODO update does not work
+        # TODO update does not work
         datasource_controller.update_asset(asset)
         print asset, asset.date, asset.price
         self.price_entry.set_value(asset.price)
@@ -123,7 +123,9 @@ class BuyDialog:
                 self.position.shares = self.transaction.quantity = shares
                 self.transaction.cost = ta_costs
             else:
-                self.position = position.PortfolioPosition(price=price,
+                self.position = position.get_position(portfolio=self.pf, asset=ass)
+                if not self.position:
+                    self.position = position.PortfolioPosition(price=price,
                                                            date=date,
                                                            quantity=shares,
                                                            portfolio=self.pf,

@@ -46,6 +46,35 @@ class BuyTransaction(Transaction):
         Transaction.__init__(self, **kwargs)
         self.position.portfolio.emit("positions_changed")
 
+    @property
+    def gain(self):
+        if self.position.asset:
+            change = self.position.asset.price - self.price
+        else:
+            return 0, 0
+        absolute = change * self.quantity
+        if self.price * self.quantity == 0:
+            percent = 0.0
+        else:
+            percent = absolute / (self.price * self.quantity)
+        return absolute, percent
+
+    @property
+    def buy_value(self):
+        return self.quantity * self.price
+
+    @property
+    def current_value(self):
+        return self.quantity * self.position.asset.price
+
+    @property
+    def current_change(self):
+        return self.position.asset.change, self.position.asset.change_percent
+
+    @property
+    def days_gain(self):
+        return self.position.asset.change * self.quantity
+
     def __str__(self):
         return _("buy")
 

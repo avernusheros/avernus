@@ -23,12 +23,7 @@ class PositionDialog(Gtk.Dialog):
         vbox = self.get_content_area()
         notebook = Gtk.Notebook()
         vbox.pack_start(notebook, True, True, 0)
-        if isinstance(pos, position.MetaPosition):
-            self.is_meta = True
-            self.position_table = Gtk.Label(label=_('This is a meta-position!'))
-        else:
-            self.is_meta = False
-            self.position_table = EditPositionTable(pos)
+        self.position_table = EditPositionTable(pos)
         self.quotation_table = QuotationTable(pos.asset)
         if isinstance(pos, position.PortfolioPosition):
             transactions_table = TransactionsTab(pos)
@@ -48,13 +43,12 @@ class PositionDialog(Gtk.Dialog):
 
     def on_switch_page(self, notebook, page, page_num):
         # previous was the position tab
-        if self.previous_page == 0 and not self.is_meta:
+        if self.previous_page == 0:
             self.position_table.process_result()
         self.previous_page = page_num
 
     def process_result(self, widget=None):
-        if not self.is_meta:
-            self.position_table.process_result()
+        self.position_table.process_result()
         self.asset_table.process_result()
         self.destroy()
 
@@ -120,8 +114,8 @@ class TransactionsTab(Gtk.VBox):
     COL_DATE = 2
     COL_TOTAL = 6
 
-    def __init__(self, position):
-        self.position = position
+    def __init__(self, pos):
+        self.position = pos
         Gtk.VBox.__init__(self)
 
         # init wigets
@@ -192,8 +186,8 @@ class TransactionsTab(Gtk.VBox):
             toolbar.insert(action.create_tool_item(), -1)
 
         # load values
-        for transaction in position.transactions:
-            self.insert_transaction(transaction)
+        for ta in pos.transactions:
+            self.insert_transaction(ta)
 
     def insert_transaction(self, ta):
         return self.model.append(

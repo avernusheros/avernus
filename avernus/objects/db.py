@@ -11,7 +11,7 @@ import traceback
 
 
 # current version of our model
-version = 13
+version = 14
 
 logger = logging.getLogger(__name__)
 database = None
@@ -79,6 +79,7 @@ def migrate(from_version, database):
                 (11, migrations.to_eleven),
                 (12, migrations.to_twelve),
                 (13, migrations.to_thirteen),
+                (14, migrations.to_fourteen)
                 ]
 
     # pre sqlalchemy area
