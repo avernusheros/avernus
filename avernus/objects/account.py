@@ -54,6 +54,7 @@ class Account(objects.Base, GObject.GObject):
     type = Column(Integer, default=1)
     balance = Column(Float, default=0.0)
     transactions = relationship('AccountTransaction', backref='account', cascade="all,delete")
+    asset_category_id = Column(Integer, ForeignKey('asset_category.id'))
 
     __gsignals__ = {
         'balance_changed': (GObject.SIGNAL_RUN_LAST, None,

@@ -16,6 +16,7 @@ from avernus.gui.portfolio.dividends_tab import DividendsTab
 from avernus.gui.portfolio.closed_positions_tab import ClosedPositionsTab
 from avernus.gui.portfolio.chart_tab import ChartTab
 from avernus.gui.portfolio import watchlist_positions_page
+from avernus.gui.portfolio import asset_allocation
 # from avernus.gui.portfolio.positions_tab import WatchlistPositionsTab
 from avernus.gui.preferences import PrefDialog
 from gi.repository import Gdk, Gtk
@@ -61,6 +62,7 @@ class MainWindow:
         self.config = config.avernusConfig()
         self.window.set_title(avernus.__appname__)
 
+        sb = sidebar.Sidebar()
         self.hpaned = builder.get_object("hpaned")
         self.account_page = AccountTransactionTab()
         self.portfolio_notebook = builder.get_object("portfolio_notebook")
@@ -71,13 +73,15 @@ class MainWindow:
                                 ChartTab()
                                 ]
         self.watchlist_page = watchlist_positions_page.WatchlistPositionsPage()
+        self.asset_allocation_page = asset_allocation.AssetAllocation()
+        sb.insert_report('asset allocation', _("Asset allocation"))
+        sb.tree.expand_all()
 
-        sb = sidebar.Sidebar()
         sb.connect("unselect", self.on_sidebar_unselect)
         sb.connect("select", self.on_sidebar_select)
 
         # connect signals
-        handlers = [self, self.account_page, sb, self.watchlist_page]
+        handlers = [self, self.account_page, sb, self.watchlist_page, self.asset_allocation_page]
         handlers.extend(self.portfolio_pages)
         builder.connect_signals(HandlerFinder(handlers))
 
@@ -130,12 +134,8 @@ class MainWindow:
 
     def on_sidebar_select(self, caller=None, item=None):
         self.on_sidebar_unselect()
-        page = None
-        if item.__class__.__name__ == 'Category':
-            if item.name == 'Portfolios':
-                page = "Category Portfolios"
-            elif item.name == 'Accounts':
-                page = "Category Accounts"
+        if isinstance(item, str):
+            page = item
         else:
             page = item.__class__.__name__
         if page == "Account" or page == "AllAccount":
@@ -149,6 +149,9 @@ class MainWindow:
         elif page == "Watchlist":
             self.hpaned.pack2(self.watchlist_page.widget)
             self.watchlist_page.set_watchlist(item)
+        elif page == "asset allocation":
+            self.hpaned.pack2(self.asset_allocation_page.widget)
+            self.asset_allocation_page.load_categories()
         elif page is not None:
             self.hpaned.pack2(PAGES[page](item))
 

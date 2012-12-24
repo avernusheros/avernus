@@ -154,6 +154,8 @@ class PortfolioPosition(Position):
     id = Column(Integer, ForeignKey('position.id'), primary_key=True)
     quantity = Column(Float, default=0.0)
     portfolio_id = Column(Integer, ForeignKey('portfolio.id'))
+    asset_category_id = Column(Integer, ForeignKey('asset_category.id'))
+
     # to prevent some warnings
     portfolio = None
 

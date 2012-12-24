@@ -1,8 +1,16 @@
-#!/usr/bin/python
-# -*- Mode: Python; coding: utf-8; indent-tabs-mode: nil; tab-width: 4 -*-
-from avernus.objects import account, container, dimension
+from avernus.objects import account, container, dimension, asset_category
 import datetime
 import sqlite3
+
+
+def to_thirteen(db):
+    asset_category.AssetCategory(name=_("All"), target_percent=1.0)
+    conn = sqlite3.connect(db)
+    c = conn.cursor()
+    c.execute("ALTER TABLE portfolio_position ADD asset_category_id INTEGER")
+    c.execute("ALTER TABLE account ADD asset_category_id INTEGER")
+    conn.commit()
+    c.close()
 
 
 def to_twelve(db):
@@ -184,3 +192,4 @@ def load_sample_data(session):
     account.AccountTransaction(account=acc, description='another sample transaction', amount= -33.90, date=datetime.date.today())
     container.Portfolio(name=_('sample portfolio'))
     container.Watchlist(name=_('sample watchlist'))
+    asset_category.AssetCategory(name=_('All'))

@@ -5,12 +5,6 @@ from avernus.objects import account, container
 from gi.repository import GObject, Gtk, Pango
 
 
-class Category(object):
-
-    def __init__(self, name):
-        self.name = name
-
-
 class Sidebar(GObject.GObject):
 
     __gsignals__ = {
@@ -56,7 +50,7 @@ class Sidebar(GObject.GObject):
 
     def on_sidebar_button_press(self, widget, event):
         if event.button == 3:
-            if isinstance(self.selected_item[0], Category):
+            if isinstance(self.selected_item[0], str):
                 popup = self.builder.get_object("sidebar_category_contextmenu")
             else:
                 popup = self.builder.get_object("sidebar_contextmenu")
@@ -66,19 +60,25 @@ class Sidebar(GObject.GObject):
     def insert_categories(self):
         model = self.tree.get_model()
         self.pf_iter = model.append(None,
-                                    [Category('Portfolios'),
+                                    ['Category Portfolios',
                                       None,
                                      "<b>" + _('Portfolios') + "</b>",
                                       '',
                                      False, False])
-        self.wl_iter = model.append(None, [Category('Watchlists'),
+        self.wl_iter = model.append(None, ['Category Watchlists',
                                             None,
                                            "<b>" + _('Watchlists') + "</b>",
                                             '',
                                              False, False])
-        self.accounts_iter = model.append(None, [Category('Accounts'), None,
+        self.accounts_iter = model.append(None, ['Category Accounts', None,
                                      "<b>" + _('Accounts') + "</b>", '',
                                       False, False])
+        self.report_iter = model.append(None, ['Category Reports', None,
+                                     "<b>" + _('Reports') + "</b>", '',
+                                      False, False])
+
+    def insert_report(self, key, name):
+        return self.tree.get_model().append(self.report_iter, [key, 'report', name, '', False, False])
 
     def insert_watchlist(self, item):
         return self.tree.get_model().append(self.wl_iter, [item, 'watchlist', item.name, '', True, True])
@@ -103,7 +103,7 @@ class Sidebar(GObject.GObject):
         if self.selected_item is None:
             return
         obj, iterator = self.selected_item
-        if not isinstance(obj, Category):
+        if not isinstance(obj, str):
             dlg = Gtk.MessageDialog(None,
                  Gtk.DialogFlags.DESTROY_WITH_PARENT, Gtk.MessageType.QUESTION,
                  Gtk.ButtonsType.OK_CANCEL)

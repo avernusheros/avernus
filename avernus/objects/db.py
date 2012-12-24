@@ -11,13 +11,13 @@ import traceback
 
 
 # current version of our model
-version = 12
+version = 13
 
 logger = logging.getLogger(__name__)
 database = None
 
 
-#automatically add new objects to the session
+# automatically add new objects to the session
 @event.listens_for(mapper, 'init')
 def auto_add(target, args, kwargs):
     objects.Session.add(target)
@@ -39,7 +39,7 @@ class SQLBase(object):
         objects.session.commit()
 
 # base for the objects
-#Base = declarative_base(cls=GObjectMeta)
+# Base = declarative_base(cls=GObjectMeta)
 objects.Base = declarative_base(cls=SQLBase, metaclass=DeclarativeGObjectMeta)
 
 
@@ -51,9 +51,9 @@ class Meta(objects.Base):
 
 
 def set_version(version):
-    m = objects.session.session.query(Meta).first()
+    m = objects.Session.query(Meta).first()
     m.version = version
-    objects.session.session.commit()
+    objects.Session.commit()
 
 
 def backup(db):
@@ -62,11 +62,23 @@ def backup(db):
     return old_db
 
 
+def add_new_tables(*args):
+        # import all objects that are stored in the db
+    # sqlalchemy needs this to setup tables
+    from avernus.objects import account
+    from avernus.objects import asset
+    from avernus.objects import container
+    from avernus.objects import dimension
+    from avernus.objects import asset_category
+    objects.Base.metadata.create_all(engine)
+
+
 def migrate(from_version, database):
     from avernus.objects import migrations
     scripts = [(9, migrations.to_ten),
                 (11, migrations.to_eleven),
-                (12, migrations.to_twelve)
+                (12, migrations.to_twelve),
+                (13, migrations.to_thirteen),
                 ]
 
     # pre sqlalchemy area
@@ -83,6 +95,9 @@ def migrate(from_version, database):
             traceback.print_exc()
             exit(1)
     else:
+        # creatae missing tables
+        add_new_tables()
+        # run migration scripts
         for version, script in scripts:
             if from_version < version:
                 logger.info("migrate from version %i to %i" % (from_version, version))
@@ -105,13 +120,7 @@ def set_db(db_file):
 def create_new_database(create_sample_data=False):
     # create the tables, if not there already
     logger.debug("creating new db")
-    # import all objects that are stored in the db
-    # sqlalchemy needs this to setup tables
-    from avernus.objects import account
-    from avernus.objects import asset
-    from avernus.objects import container
-    from avernus.objects import dimension
-    objects.Base.metadata.create_all(engine)
+    add_new_tables()
     # store version
     m = Meta(version=version)
     objects.session.add(m)
