@@ -3,6 +3,28 @@ import datetime
 import sqlite3
 
 
+def to_sixteen(db):
+    for pf in container.get_all_portfolios():
+        for pos in pf:
+            for ta in pos.transactions:
+                if ta.type == "portfolio_sell_transaction":
+                    ta.price = ta.price * ta.quantity
+                else:
+                    ta.price = ta.price * ta.quantity
+
+
+def to_fifteen(db):
+    conn = sqlite3.connect(db)
+    conn.execute("ALTER TABLE watchlist_position ADD date DATE")
+    conn.execute("ALTER TABLE watchlist_position ADD price FLOAT")
+    conn.commit()
+    for row in conn.execute('SELECT type, id, date, price from position').fetchall():
+        if "watchlistposition" in row[0]:
+            conn.execute('UPDATE watchlist_position SET date = ? WHERE id = ?', (row[2], row[1]))
+            conn.execute('UPDATE watchlist_position SET price = ? WHERE id = ?', (row[3], row[1]))
+    conn.close()
+
+
 def to_fourteen(db):
     for pf in container.get_all_portfolios():
         cache = {}

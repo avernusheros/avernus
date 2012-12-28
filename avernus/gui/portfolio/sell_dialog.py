@@ -26,13 +26,13 @@ class SellDialog(Gtk.Dialog):
         table.set_col_spacings(4)
         vbox.pack_end(table, True, True, 0)
 
-        #name
+        # name
         label = Gtk.Label()
         label.set_markup(gui_utils.get_name_string(pos.asset))
         label.set_alignment(0.0, 0.5)
         table.attach(label, 0, 2, 0, 1, Gtk.AttachOptions.FILL, 0)
 
-        #shares entry
+        # shares entry
         table.attach(Gtk.Label(label=_('Shares')), 1, 2, 1, 2)
         self.shares_entry = Gtk.SpinButton()
         self.shares_entry.set_adjustment(Gtk.Adjustment(lower=0, upper=max_quantity, step_increment=1, value=0))
@@ -40,7 +40,7 @@ class SellDialog(Gtk.Dialog):
         self.shares_entry.connect("value-changed", self.on_change)
         table.attach(self.shares_entry, 2, 3, 1, 2, xoptions=Gtk.AttachOptions.SHRINK, yoptions=Gtk.AttachOptions.SHRINK)
 
-        #price entry
+        # price entry
         table.attach(Gtk.Label(label=_('Price:')), 1, 2, 2, 3)
         self.price_entry = Gtk.SpinButton()
         self.price_entry.set_adjustment(Gtk.Adjustment(lower=0, upper=100000, step_increment=0.1, value=1.0))
@@ -48,7 +48,7 @@ class SellDialog(Gtk.Dialog):
         self.price_entry.connect("value-changed", self.on_change)
         table.attach(self.price_entry, 2, 3, 2, 3, xoptions=Gtk.AttachOptions.SHRINK, yoptions=Gtk.AttachOptions.SHRINK)
 
-        #ta_costs entry
+        # ta_costs entry
         table.attach(Gtk.Label(label=_('Transaction Costs')), 1, 2, 3, 4, xoptions=Gtk.AttachOptions.SHRINK, yoptions=Gtk.AttachOptions.SHRINK)
         self.tacosts_entry = Gtk.SpinButton()
         self.tacosts_entry.set_adjustment(Gtk.Adjustment(lower=0, upper=100000, step_increment=0.1, value=0.0))
@@ -56,19 +56,21 @@ class SellDialog(Gtk.Dialog):
         self.tacosts_entry.connect("value-changed", self.on_change)
         table.attach(self.tacosts_entry, 2, 3, 3, 4, xoptions=Gtk.AttachOptions.SHRINK, yoptions=Gtk.AttachOptions.SHRINK)
 
-        #total
+        # total
         table.attach(Gtk.Label(label=_('Total')), 1, 2, 4, 5, xoptions=Gtk.AttachOptions.SHRINK, yoptions=Gtk.AttachOptions.SHRINK)
-        self.total = Gtk.Label()
-        self.total.set_markup('<b>' + gui_utils.get_currency_format_from_float(0.0) + '</b>')
-        table.attach(self.total, 2, 3, 4, 5, xoptions=Gtk.AttachOptions.SHRINK, yoptions=Gtk.AttachOptions.SHRINK)
+        self.total_entry = Gtk.SpinButton()
+        self.total_entry.set_adjustment(Gtk.Adjustment(lower=0, upper=1000000, step_increment=0.1, value=0.0))
+        self.total_entry.set_digits(2)
+        self.total_entry.connect("value-changed", self.on_change)
+        table.attach(self.total_entry, 2, 3, 4, 5, xoptions=Gtk.AttachOptions.SHRINK, yoptions=Gtk.AttachOptions.SHRINK)
 
-        #date
+        # date
         self.calendar = Gtk.Calendar()
         table.attach(self.calendar, 0, 1, 1, 5)
 
         if self.transaction is not None:
             self.shares_entry.set_value(self.transaction.quantity)
-            self.price_entry.set_value(self.transaction.price)
+            self.total_entry.set_value(self.transaction.total)
             self.tacosts_entry.set_value(self.transaction.cost)
             self.calendar.select_month(self.transaction.date.month - 1, self.transaction.date.year)
             self.calendar.select_day(self.transaction.date.day)
@@ -83,10 +85,11 @@ class SellDialog(Gtk.Dialog):
     def process_result(self):
         if self.response == Gtk.ResponseType.ACCEPT:
             shares = self.shares_entry.get_value()
-            price = self.price_entry.get_value()
+            total = self.total_entry.get_value()
             year, month, day = self.calendar.get_date()
             date = datetime.date(year, month + 1, day)
             ta_costs = self.tacosts_entry.get_value()
+            price = total - ta_costs
 
             if self.transaction is None:
                 if shares == 0.0:
@@ -94,11 +97,13 @@ class SellDialog(Gtk.Dialog):
                 self.pos.quantity -= shares
                 portfolio_transaction.SellTransaction(position=self.pos, date=date, quantity=shares, price=price, cost=ta_costs)
             else:
+                # FIXME
                 self.pos.price = self.transaction.price = price
                 self.pos.date = self.transaction.date = date
                 self.transaction.cost = ta_costs
                 self.pos.quantity = self.transaction.quantity = shares
 
     def on_change(self, widget=None):
-        total = self.shares_entry.get_value() * self.price_entry.get_value() + self.tacosts_entry.get_value()
-        self.total.set_markup('<b>' + gui_utils.get_currency_format_from_float(total) + '</b>')
+        price = self.total_entry.get_value() - self.tacosts_entry.get_value()
+        price_per_share = price / self.shares_entry.get_value()
+        self.price_entry.set_value(price_per_share)

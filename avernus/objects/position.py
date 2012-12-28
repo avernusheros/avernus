@@ -2,7 +2,7 @@ from avernus import objects
 from avernus.objects import asset, portfolio_transaction
 from avernus import math
 from sqlalchemy import Column, Integer, String, Float, Date, ForeignKey
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, reconstructor
 import datetime
 
 
@@ -12,25 +12,25 @@ class Position(objects.Base):
     __mapper_args__ = {'polymorphic_on': discriminator}
 
     id = Column(Integer, primary_key=True)
-    date = Column(Date)
-    price = Column(Float)
     comment = Column(String, default='')
 
     asset_id = Column(Integer, ForeignKey('asset.id'))
     asset = relationship('Asset', backref='positions')
 
     def __iter__(self):
-        return self.positions.__iter__()
+        return self.transactions.__iter__()
 
     @property
     def buy_value(self):
-        return self.quantity * self.price
+        # FIXME how is the price calculate if parts are sold?
+        return self.price
 
     @property
     def days_gain(self):
         return self.asset.change * self.quantity
 
     def get_quantity_at_date(self, t):
+        # FIXME
         if t < self.date:
             return 0
         q = self.quantity
@@ -40,6 +40,7 @@ class Position(objects.Base):
         return q
 
     def get_value_at_date(self, t):
+        # FIXME
         quantity = self.get_quantity_at_date(self, t)
         if quantity == 0:
             return 0
@@ -50,23 +51,27 @@ class Position(objects.Base):
         return 0.0
 
     @property
+    def price_per_share(self):
+        return self.price / self.quantity
+
+    @property
     def gain(self):
         if self.asset:
-            change = self.asset.price - self.price
+            change = self.asset.price - self.price_per_share
         else:
             return 0, 0
         absolute = change * self.quantity
-        if self.price * self.quantity == 0:
+        if self.price == 0:
             percent = 0
         else:
-            percent = absolute / (self.price * self.quantity)
+            percent = absolute / self.price
         return absolute, percent
 
     @property
     def gain_with_dividends(self):
         absolute = self.gain[0]
         absolute += sum([div.total for div in self.dividends])
-        percent = absolute / (self.price * self.quantity)
+        percent = absolute / self.price
         return absolute, percent
 
     @property
@@ -94,7 +99,6 @@ class PortfolioPosition(Position):
     __tablename__ = 'portfolio_position'
     __mapper_args__ = {'polymorphic_identity': 'portfolioposition'}
     id = Column(Integer, ForeignKey('position.id'), primary_key=True)
-    quantity = Column(Float, default=0.0)
     portfolio_id = Column(Integer, ForeignKey('portfolio.id'))
     asset_category_id = Column(Integer, ForeignKey('asset_category.id'))
 
@@ -105,6 +109,22 @@ class PortfolioPosition(Position):
         Position.__init__(self, **kwargs)
         self.portfolio.emit("position_added", self)
         self.portfolio.emit("positions_changed")
+
+    @reconstructor
+    def _init(self):
+        try:
+            self.date = min([ta.date for ta in self])
+        except:
+            self.date = None
+        self.quantity = 0.0
+        self.price = 0.0
+        for ta in self.transactions:
+            if ta.type == "portfolio_buy_transaction":
+                self.quantity += ta.quantity
+                self.price += ta.price
+            else:
+                self.quantity -= ta.quantity
+                self.price -= ta.price
 
     def get_buy_transactions(self):
         return objects.session.query(portfolio_transaction.BuyTransaction)\
@@ -123,6 +143,8 @@ class WatchlistPosition(Position):
     __tablename__ = 'watchlist_position'
     __mapper_args__ = {'polymorphic_identity': 'watchlistposition'}
     id = Column(Integer, ForeignKey('position.id'), primary_key=True)
+    date = Column(Date)
+    price = Column(Float)
     quantity = 1
 
     watchlist_id = Column(Integer, ForeignKey('watchlist.id'))
@@ -152,6 +174,7 @@ class ClosedPosition(object):
         else:
             print "ERROR"
             # FIXME calculate price if there is more than one bue transaction
+
 
 def get_all_portfolio_positions():
     return objects.Session().query(PortfolioPosition).all()

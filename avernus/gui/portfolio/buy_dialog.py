@@ -19,7 +19,7 @@ class BuyDialog:
         self.shares_entry = builder.get_object("shares_entry")
         self.price_entry = builder.get_object("price_entry")
         self.costs_entry = builder.get_object("costs_entry")
-        self.total_label = builder.get_object("total_label")
+        self.total_entry = builder.get_object("total_entry")
         self.calendar = builder.get_object("calendar")
         grid = builder.get_object("grid")
 
@@ -37,10 +37,11 @@ class BuyDialog:
             self.asset_selector.result_tree.get_model().connect('row-deleted', self.on_asset_deselection)
         else:
             self.shares_entry.set_value(self.transaction.quantity)
-            self.price_entry.set_value(self.transaction.price)
+            self.total_entry.set_value(-self.transaction.total)
             self.costs_entry.set_value(self.transaction.cost)
             self.calendar.select_month(self.transaction.date.month - 1, self.transaction.date.year)
             self.calendar.select_day(self.transaction.date.day)
+            self.on_change()
 
         # info bar to show warnings
         self.infobar = Gtk.InfoBar()
@@ -79,16 +80,16 @@ class BuyDialog:
         self.set_response_sensitivity()
 
     def on_change(self, widget=None):
-        total = self.shares_entry.get_value() * self.price_entry.get_value() + self.costs_entry.get_value()
-        self.total_label.set_markup('<b>' + gui_utils.get_currency_format_from_float(total) + '</b>')
+        price = self.total_entry.get_value() - self.costs_entry.get_value()
+        price_per_share = price / self.shares_entry.get_value()
+        self.price_entry.set_value(price_per_share)
 
     def on_asset_selection(self, *args):
         self.asset_ok = True
         asset = self.asset_selector.get_asset()
         # TODO update does not work
-        datasource_controller.update_asset(asset)
-        print asset, asset.date, asset.price
-        self.price_entry.set_value(asset.price)
+        # datasource_controller.update_asset(asset)
+        # self.price_entry.set_total_labelvalue(asset.price)
         self.set_response_sensitivity()
 
     def on_asset_deselection(self, *args):
@@ -109,27 +110,29 @@ class BuyDialog:
             ass = self.transaction.position.asset
 
         if response == Gtk.ResponseType.ACCEPT:
-            price = self.price_entry.get_value()
+            total = self.total_entry.get_value()
             year, month, day = self.calendar.get_date()
             date = datetime.date(year, month + 1, day)
             ta_costs = self.costs_entry.get_value()
             shares = self.shares_entry.get_value()
+            price = total - ta_costs
 
             if shares == 0.0:
                 return
             if self.transaction:
-                self.position.price = self.transaction.price = price
-                self.position.date = self.transaction.date = date
-                self.position.shares = self.transaction.quantity = shares
+                # FIXME update position
+                self.transaction.price = total - ta_costs
+                self.transaction.date = date
+                self.transaction.quantity = shares
                 self.transaction.cost = ta_costs
             else:
                 self.position = position.get_position(portfolio=self.pf, asset=ass)
                 if not self.position:
                     self.position = position.PortfolioPosition(price=price,
-                                                           date=date,
                                                            quantity=shares,
                                                            portfolio=self.pf,
                                                            asset=ass)
+                    self.position.date = date
                 portfolio_transaction.BuyTransaction(date=date, quantity=shares,
                                      price=price, cost=ta_costs,
                                      position=self.position)

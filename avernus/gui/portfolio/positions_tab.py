@@ -5,7 +5,7 @@ from avernus.gui.gui_utils import get_name_string
 from avernus.gui.portfolio import buy_dialog, sell_dialog, dividend_dialog
 from avernus.gui.portfolio.plot import ChartWindow
 from avernus.gui.portfolio.position_dialog import PositionDialog
-from avernus.objects import container
+from avernus.objects import container, position
 from gi.repository import Gdk, Gtk
 import datetime
 import sys
@@ -168,7 +168,7 @@ class PortfolioPositionsTab(page.Page):
         c_change = position.current_change
         return [position,
                get_name_string(asset),
-               position.price,
+               position.price_per_share,
                asset.price,
                c_change[0],
                gain[0],
@@ -240,8 +240,9 @@ class PortfolioPositionsTab(page.Page):
             if not rows:
                 return None
             for row in rows:
-                if row[self.OBJECT].asset == asset:
-                    return row
+                if isinstance(row[self.OBJECT], position.PortfolioPosition):
+                    if row[self.OBJECT].asset == asset:
+                        return row
                 result = search(row.iterchildren())
                 if result:
                     return result

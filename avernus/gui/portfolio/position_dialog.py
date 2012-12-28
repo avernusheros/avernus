@@ -195,7 +195,7 @@ class TransactionsTab(Gtk.VBox):
                 str(ta),
                 ta.date,
                 ta.quantity,
-                ta.price,
+                ta.price_per_share,
                 ta.cost,
                 ta.total
                 ])

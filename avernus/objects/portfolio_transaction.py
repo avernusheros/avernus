@@ -17,6 +17,10 @@ class Transaction(objects.Base):
     position = relationship('PortfolioPosition',
                          backref=backref('transactions', cascade="all,delete"))
 
+    @property
+    def price_per_share(self):
+        return self.price / self.quantity
+
 
 class SellTransaction(Transaction):
     __tablename__ = 'portfolio_sell_transaction'
@@ -33,7 +37,7 @@ class SellTransaction(Transaction):
 
     @property
     def total(self):
-        return self.price * self.quantity + self.cost
+        return self.price - self.cost
 
 
 class BuyTransaction(Transaction):
@@ -48,6 +52,7 @@ class BuyTransaction(Transaction):
 
     @property
     def gain(self):
+        # FIXME
         if self.position.asset:
             change = self.position.asset.price - self.price
         else:
@@ -59,9 +64,10 @@ class BuyTransaction(Transaction):
             percent = absolute / (self.price * self.quantity)
         return absolute, percent
 
+    # FIXME use in code
     @property
     def buy_value(self):
-        return self.quantity * self.price
+        return self.price
 
     @property
     def current_value(self):
@@ -80,4 +86,4 @@ class BuyTransaction(Transaction):
 
     @property
     def total(self):
-        return -1.0 * self.price * self.quantity + self.cost
+        return -self.price - self.cost
