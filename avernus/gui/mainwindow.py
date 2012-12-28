@@ -19,21 +19,19 @@ from avernus.gui.portfolio import watchlist_positions_page
 from avernus.gui.portfolio import asset_allocation
 # from avernus.gui.portfolio.positions_tab import WatchlistPositionsTab
 from avernus.gui.preferences import PrefDialog
+
 from gi.repository import Gdk, Gtk
 from webbrowser import open as web
 import avernus
 import sys
+import logging
 
+logger = logging.getLogger(__name__)
 
 # hack to switch from ascii to utf8. can be removed once we switch to python3
 reload(sys)
 sys.setdefaultencoding("utf-8")
 
-
-PAGES = {
-    'Category Accounts': AccountOverview,
-    'Category Portfolios': OverviewNotebook,
-        }
 
 
 class HandlerFinder(object):
@@ -152,8 +150,12 @@ class MainWindow:
         elif page == "asset allocation":
             self.hpaned.pack2(self.asset_allocation_page.widget)
             self.asset_allocation_page.load_categories()
+        elif page == 'Category Accounts':
+            self.hpaned.pack2(AccountOverview())
+        elif page == "Category Portfolios":
+            self.hpaned.pack2(OverviewNotebook())
         elif page is not None:
-            self.hpaned.pack2(PAGES[page](item))
+           logger.debug("Sidebar select unknown page " + page)
 
     def on_sidebar_unselect(self, caller=None):
         page = self.hpaned.get_child2()

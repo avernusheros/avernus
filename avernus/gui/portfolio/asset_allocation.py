@@ -99,7 +99,7 @@ class AssetAllocation(page.Page):
                 for acc in all_accounts:
                     if acc.asset_category != selected_item:
                         item = Gtk.MenuItem(label=acc.name)
-                        item.connect("activate", self.on_add_account, selected_item, acc)
+                        item.connect("activate", self.on_aa_add_account, selected_item, acc)
                         menu.append(item)
             # positions
             positions_menu = self.builder.get_object("aa_add_positions_menu")
@@ -111,7 +111,7 @@ class AssetAllocation(page.Page):
                 for pos in positions:
                     if pos.asset_category != selected_item and pos.quantity > 0:
                         item = Gtk.MenuItem(label=pos.asset.name)
-                        item.connect("activate", self.on_add_position, selected_item, pos)
+                        item.connect("activate", self.on_aa_add_position, selected_item, pos)
                         menu.append(item)
                 account_menu.show_all()
         else:
@@ -130,11 +130,11 @@ class AssetAllocation(page.Page):
     def is_category(self, item):
         return isinstance(item, asset_category.AssetCategory)
 
-    def on_add_account(self, widget, category, acc):
+    def on_aa_add_account(self, widget, category, acc):
         acc.asset_category = category
         self.load_categories()
 
-    def on_add_position(self, widget, category, pos):
+    def on_aa_add_position(self, widget, category, pos):
         pos.asset_category = category
         self.load_categories()
 

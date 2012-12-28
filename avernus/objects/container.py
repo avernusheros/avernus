@@ -274,12 +274,27 @@ class Portfolio(Container, PortfolioBase):
                     yield 0
 
 
-class Watchlist(Container):
+class Watchlist(Container, GObject.GObject):
     __tablename__ = 'watchlist'
     __mapper_args__ = {'polymorphic_identity': 'watchlist'}
     id = Column(Integer, ForeignKey('container.id'), primary_key=True)
     positions = relationship('WatchlistPosition',
                     backref='watchlist', cascade="all,delete")
+
+    __gsignals__ = {
+        'position_added': (GObject.SIGNAL_RUN_LAST, None, (object,)),
+        'positions_changed': (GObject.SIGNAL_RUN_LAST, None, ()),
+        'updated': (GObject.SIGNAL_RUN_LAST, None, ())
+    }
+
+    def __init__(self, *args, **kwargs):
+        GObject.GObject.__init__(self)
+
+    @reconstructor
+    def _init(self):
+        GObject.GObject.__init__(self)
+
+GObject.type_register(Watchlist)
 
 
 def get_all_portfolios():

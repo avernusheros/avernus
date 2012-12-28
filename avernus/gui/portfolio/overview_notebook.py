@@ -6,9 +6,9 @@ from gi.repository import Gtk, Pango
 
 class OverviewNotebook(Gtk.Notebook):
 
-    def __init__(self, portfolio):
+    def __init__(self):
         Gtk.Notebook.__init__(self)
-        tree = PortfolioOverviewTree(portfolio)
+        tree = PortfolioOverviewTree()
         self.append_page(tree, Gtk.Label(label=_('Overview')))
         self.append_page(OverviewCharts(), Gtk.Label(label=_('Charts')))
 
@@ -119,8 +119,7 @@ class PortfolioOverviewTree(gui_utils.Tree):
     ANNUAL = 9
     PANGO_WEIGHT = 10
 
-    def __init__(self, container):
-        self.container = container
+    def __init__(self):
         gui_utils.Tree.__init__(self)
         self.set_model(Gtk.TreeStore(object, str, float, float, float, float, object, int, float, float, int))
 
@@ -155,9 +154,6 @@ class PortfolioOverviewTree(gui_utils.Tree):
         self.expand_all()
         self.set_property("show-expanders", False)
         self.selected_item = None
-
-    def on_update(self):
-        self.container.update_positions()
 
     def load_items(self):
         model = self.get_model()

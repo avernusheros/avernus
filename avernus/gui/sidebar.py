@@ -171,16 +171,20 @@ class Sidebar(GObject.GObject):
         model[path][0].name = model[path][2] = new_text
 
     def on_sidebar_add(self, widget):
-        obj = self.selected_item[0]
-        if obj.__class__.__name__ == 'Portfolio' or obj.__class__.__name__ == 'AllPortfolio' or obj.name == 'Portfolios':
+        obj_string = self.selected_item[0]
+        if not isinstance(obj_string, str):
+            obj_string = obj_string.__class__.__name__
+        if "Portfolio" in obj_string:
             inserter = self.insert_portfolio
             item = container.Portfolio(name=_('new portfolio'))
-        elif obj.__class__.__name__ == 'Watchlist' or obj.name == 'Watchlists':
+        elif "Watchlist" in obj_string:
             inserter = self.insert_watchlist
             item = container.Watchlist(name=_('new watchlist'))
-        elif obj.__class__.__name__ == 'Account' or obj.__class__.__name__ == 'AllAccount' or obj.name == 'Accounts':
+        elif "Account" in obj_string:
             inserter = self.insert_account
             item = account.Account(name=_('new account'), balance=0.0)
+        else:
+            return
         iterator = inserter(item)
         self.tree.set_cursor(path=self.tree.get_model().get_path(iterator),
                              column=self.tree.get_column(0),
