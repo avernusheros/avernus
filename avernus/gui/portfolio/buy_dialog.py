@@ -87,9 +87,12 @@ class BuyDialog:
         asset = self.asset_selector.get_asset()
         #TODO update does not work
         datasource_controller.update_asset(asset)
-        print asset, asset.date, asset.price
-        self.price_entry.set_value(asset.price)
-        self.set_response_sensitivity()
+        if asset != None:
+            print asset, asset.date, asset.price
+            self.price_entry.set_value(asset.price)
+            self.set_response_sensitivity()
+        else:
+            print "Asset: ", None
 
     def on_asset_deselection(self, *args):
         self.asset_ok = False
