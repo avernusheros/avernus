@@ -52,16 +52,15 @@ class BuyTransaction(Transaction):
 
     @property
     def gain(self):
-        # FIXME
         if self.position.asset:
-            change = self.position.asset.price - self.price
+            change = self.position.asset.price - self.price_per_share
         else:
             return 0, 0
         absolute = change * self.quantity
-        if self.price * self.quantity == 0:
+        if self.price == 0:
             percent = 0.0
         else:
-            percent = absolute / (self.price * self.quantity)
+            percent = absolute / self.price
         return absolute, percent
 
     # FIXME use in code

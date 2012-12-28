@@ -112,6 +112,7 @@ class QuotationTable(Gtk.Table):
 
 class TransactionsTab(Gtk.VBox):
     COL_DATE = 2
+    COL_PRICE = 4
     COL_TOTAL = 6
 
     def __init__(self, pos):
@@ -149,11 +150,7 @@ class TransactionsTab(Gtk.VBox):
         self.tree.append_column(self.shares_column)
 
         cell = Gtk.CellRendererSpin()
-        adjustment = Gtk.Adjustment(0.00, 0, 9999999, 0.01, 10, 0)
         cell.set_property("digits", 2)
-        cell.set_property("editable", True)
-        cell.set_property("adjustment", adjustment)
-        cell.connect("edited", self.on_price_edited, 4)
         self.price_column = Gtk.TreeViewColumn(_('Price'), cell, text=4)
         self.price_column.set_resizable(True)
         self.price_column.set_cell_data_func(cell, gui_utils.currency_format, 4)
@@ -171,7 +168,16 @@ class TransactionsTab(Gtk.VBox):
         self.tree.append_column(self.costs_column)
 
         # total
-        self.tree.create_column(_('Total'), self.COL_TOTAL, func=gui_utils.float_to_red_green_string_currency)
+        cell = Gtk.CellRendererSpin()
+        adjustment = Gtk.Adjustment(0.00, 0, 9999999, 0.01, 10, 0)
+        cell.set_property("digits", 2)
+        cell.set_property("editable", True)
+        cell.set_property("adjustment", adjustment)
+        cell.connect("edited", self.on_total_edited, 6)
+        self.total_column = Gtk.TreeViewColumn(_('Total'), cell, text=6)
+        self.total_column.set_resizable(True)
+        self.total_column.set_cell_data_func(cell, gui_utils.currency_format, 6)
+        self.tree.append_column(self.total_column)
 
         self.tree.set_model(self.model)
         self.tree.get_model().set_sort_column_id(self.COL_DATE, Gtk.SortType.ASCENDING)
@@ -213,18 +219,12 @@ class TransactionsTab(Gtk.VBox):
 
     def on_add(self, button):
         last_transaction = list(self.position.transactions)[-1]
-        new_position = position.PortfolioPosition(
-                    price=self.position.price,
-                    date=datetime.datetime.now(),
-                    shares=last_transaction.quantity,
-                    portfolio=self.position.portfolio,
-                    asset=self.position.asset)
         transaction = portfolio_transaction.BuyTransaction(
-                    date=new_position.date,
-                    quantity=new_position.quantity,
-                    price=new_position.price,
+                    date=datetime.date.today(),
+                    quantity=last_transaction.quantity,
+                    price=last_transaction.price,
                     cost=last_transaction.cost,
-                    position=position)
+                    position=self.position)
         iterator = self.insert_transaction(transaction)
         self.tree.scroll_to_cell(self.model.get_path(iterator))
 
@@ -254,19 +254,20 @@ class TransactionsTab(Gtk.VBox):
             value = float(new_text.replace(",", "."))
             self.model[path][columnnumber] = value
             self.model[path][0].quantity = value
-            self.model[path][0].position.quantity = value
         except:
             logger.debug("entered value is not a float", new_text)
 
-    def on_price_edited(self, cellrenderertext, path, new_text, columnnumber):
+    def on_total_edited(self, cellrenderertext, path, new_text, columnnumber):
         try:
             value = float(new_text.replace(",", "."))
             ta = self.model[path][0]
-            ta.price = value
-            ta.position.price = value
+            if ta.type == 'portfolio_sell_transaction':
+                ta.price = value + ta.cost
+            else:
+                ta.price = abs(value) - ta.cost
             # update gui
             self.model[path][columnnumber] = value
-            self.model[path][self.COL_TOTAL] = ta.total
+            self.model[path][self.COL_PRICE] = ta.price_per_share
         except:
             logger.debug("entered value is not a float", new_text)
 
@@ -275,13 +276,11 @@ class TransactionsTab(Gtk.VBox):
             value = float(new_text.replace(",", "."))
             ta = self.model[path][0]
             ta.cost = value
-            ta.position.cost = value
             # update gui
             self.model[path][columnnumber] = value
-            self.model[path][self.COL_TOTAL] = ta.total
+            self.model[path][self.COL_PRICE] = ta.price_per_share
         except:
             logger.debug("entered value is not a float", new_text)
-
 
 
 class EditHistoricalQuotationsDialog(Gtk.Dialog):

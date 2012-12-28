@@ -1,5 +1,8 @@
 from gi.repository import Gtk
 from gi.repository import GObject
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class ProgressMonitor(Gtk.Frame):
@@ -79,7 +82,10 @@ def remove_monitor(progress_id):
     """
     Removes a monitor from the manager
     """
-    box.remove(monitors[progress_id])
-    del monitors[progress_id]
-    if not monitors:
-        box.hide()
+    try:
+        box.remove(monitors[progress_id])
+        del monitors[progress_id]
+        if not monitors:
+            box.hide()
+    except:
+        logger.error("ERROR removing monitor")
