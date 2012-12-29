@@ -31,10 +31,12 @@ class PortfolioBase(GObject.GObject):
     }
 
     def __init__(self, *args, **kwargs):
+        print "init", self.name
         GObject.GObject.__init__(self)
 
     @reconstructor
     def _init(self):
+        print "reinit base", self.name
         GObject.GObject.__init__(self)
 
     @property
@@ -236,6 +238,10 @@ class Portfolio(Container, PortfolioBase):
     id = Column(Integer, ForeignKey('container.id'), primary_key=True)
     positions = relationship('PortfolioPosition',
                             backref='portfolio', cascade="all,delete")
+
+    def __init__(self, *args, **kwargs):
+        Container.__init__(self, *args, **kwargs)
+        PortfolioBase.__init__(self, *args, **kwargs)
 
     def __iter__(self):
         return self.positions.__iter__()
