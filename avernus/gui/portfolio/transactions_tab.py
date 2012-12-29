@@ -53,7 +53,7 @@ class TransactionsTab(page.Page):
                     str(ta),
                     gui_utils.get_name_string(ta.position.asset),
                     ta.date,
-                    float(ta.position.quantity),
+                    float(ta.quantity),
                     ta.price_per_share,
                     ta.cost,
                     ta.total

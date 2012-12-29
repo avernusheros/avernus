@@ -383,3 +383,4 @@ class PortfolioPositionsTab(page.Page):
     def on_move_position(self, widget, new_portfolio):
         position, iterator = self.selected_item
         position.portfolio = new_portfolio
+        self.treestore.remove(iterator)

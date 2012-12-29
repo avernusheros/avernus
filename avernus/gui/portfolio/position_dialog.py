@@ -241,10 +241,7 @@ class TransactionsTab(Gtk.VBox):
             if response == Gtk.ResponseType.OK:
                 # update position
                 ta = model[selection_iter][0]
-                if ta.is_sell():
-                    ta.position.quantity += ta.quantity
-                else:
-                    ta.position.quantity -= ta.quantity
+                ta.position.recalculate()
                 # delete
                 ta.delete()
                 model.remove(selection_iter)

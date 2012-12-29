@@ -136,4 +136,5 @@ class BuyDialog:
                 portfolio_transaction.BuyTransaction(date=date, quantity=shares,
                                      price=price, cost=ta_costs,
                                      position=self.position)
+                self.position.recalculate()
         self.dlg.destroy()

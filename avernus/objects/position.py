@@ -112,6 +112,9 @@ class PortfolioPosition(Position):
 
     @reconstructor
     def _init(self):
+        self.recalculate()
+
+    def recalculate(self):
         try:
             self.date = min([ta.date for ta in self])
         except:
@@ -157,18 +160,19 @@ class WatchlistPosition(Position):
 class ClosedPosition(object):
 
     def __init__(self, buy_transactions, sell_transaction):
+        self.asset = sell_transaction.position.asset
+        self.sell_date = sell_transaction.date
+        self.quantity = sell_transaction.quantity
+        self.sell_price = sell_transaction.price
+        self.sell_cost = sell_transaction.cost
+        self.sell_total = sell_transaction.total
+        self.buy_date = sell_transaction.position.date
         if len(buy_transactions) == 1:
-            self.quantity = sell_transaction.quantity
-            self.asset = sell_transaction.position.asset
-            self.buy_date = buy_transactions[0].date
-            self.sell_date = sell_transaction.date
-            self.buy_price = buy_transactions[0].price
-            self.sell_price = sell_transaction.price
+            self.buy_price = buy_transactions[0].price_per_share
             self.buy_cost = buy_transactions[0].cost / buy_transactions[0].quantity \
                                     * sell_transaction.quantity
-            self.sell_cost = sell_transaction.cost
             self.buy_total = self.buy_cost + self.quantity * self.buy_price
-            self.sell_total = self.sell_cost + self.quantity * self.sell_price
+
             self.gain = self.sell_total - self.buy_total
             self.gain_percent = self.gain / self.buy_total
         else:
