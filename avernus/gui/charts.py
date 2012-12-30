@@ -126,8 +126,11 @@ class SimpleLineChart(ChartBase):
         self.line = self.ax.axvline(color='gray')
         self.line.set_visible(False)
         c = 0
+        x_values = range(len(self.controller.x_values))
         for key, val in self.controller.y_values:
-            self.ax.plot(range(len(self.controller.x_values)),
+            while len(val) < len(x_values):
+                val.append(0.0)
+            self.ax.plot(x_values,
                          val,
                          'o-',
                          label=key,
