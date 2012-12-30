@@ -129,7 +129,8 @@ class BuyDialog:
                 self.transaction.cost = ta_costs
             else:
                 self.position = position.get_position(portfolio=self.pf, asset=ass)
-                if not self.position:
+                # create a new position if there is no active position with this asset in this portfolio
+                if not self.position or self.position.quantity == 0:
                     self.position = position.PortfolioPosition(price=price,
                                                            quantity=shares,
                                                            portfolio=self.pf,

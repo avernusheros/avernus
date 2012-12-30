@@ -1,7 +1,7 @@
 from avernus import objects
 from avernus.objects import asset, portfolio_transaction
 from avernus import math
-from sqlalchemy import Column, Integer, String, Float, Date, ForeignKey
+from sqlalchemy import Column, Integer, String, Float, Date, ForeignKey, asc
 from sqlalchemy.orm import relationship, reconstructor
 import datetime
 
@@ -131,11 +131,14 @@ class PortfolioPosition(Position):
 
     def get_buy_transactions(self):
         return objects.session.query(portfolio_transaction.BuyTransaction)\
-                            .filter_by(position=self).all()
+                       .filter_by(position=self)\
+            .order_by(asc(portfolio_transaction.BuyTransaction.date)).all()
 
     def get_sell_transactions(self):
         return objects.Session().query(portfolio_transaction.SellTransaction)\
-                        .filter_by(position=self).all()
+                        .filter_by(position=self)\
+                        .order_by(asc(portfolio_transaction.BuyTransaction.date))\
+                        .all()
 
     def delete(self, *args):
         Position.delete(self)
@@ -159,7 +162,8 @@ class WatchlistPosition(Position):
 
 class ClosedPosition(object):
 
-    def __init__(self, buy_transactions, sell_transaction):
+    def __init__(self, sell_transaction):
+        position = sell_transaction.position
         self.asset = sell_transaction.position.asset
         self.sell_date = sell_transaction.date
         self.quantity = sell_transaction.quantity
@@ -167,17 +171,36 @@ class ClosedPosition(object):
         self.sell_cost = sell_transaction.cost
         self.sell_total = sell_transaction.total
         self.buy_date = sell_transaction.position.date
-        if len(buy_transactions) == 1:
-            self.buy_price = buy_transactions[0].price_per_share
-            self.buy_cost = buy_transactions[0].cost / buy_transactions[0].quantity \
-                                    * sell_transaction.quantity
-            self.buy_total = self.buy_cost + self.quantity * self.buy_price
 
-            self.gain = self.sell_total - self.buy_total
-            self.gain_percent = self.gain / self.buy_total
-        else:
-            print "ERROR"
-            # FIXME calculate price if there is more than one bue transaction
+        buy_price = 0.0
+        buy_quantity = 0.0
+        buy_costs = 0.0
+        sold_quantity = 0.0
+        for sell_ta in position.get_sell_transactions():
+            if sell_ta != sell_transaction and sell_ta.date < sell_transaction.date:
+                sold_quantity += sell_ta.quantity
+
+        for buy_ta in position.get_buy_transactions():
+            # only consider buys before the sell date
+            if buy_ta.date <= sell_transaction.date:
+                if sold_quantity >= buy_ta.quantity:
+                    sold_quantity -= buy_ta.quantity
+                elif sold_quantity > 0:
+                    remaining_quantity = buy_ta.quantity - sold_quantity
+                    sold_quantity = 0
+                    buy_price += buy_ta.price * remaining_quantity / buy_ta.quantity
+                    buy_costs += buy_ta.cost * remaining_quantity / buy_ta.quantity
+                    buy_quantity += remaing_quantity
+                else:
+                    buy_price += buy_ta.price
+                    buy_costs += buy_ta.cost
+                    buy_quantity += buy_ta.quantity
+        self.buy_price = buy_price / buy_quantity
+        self.buy_cost = buy_costs * self.quantity / buy_quantity
+
+        self.buy_total = self.buy_cost + self.quantity * self.buy_price
+        self.gain = self.sell_total - self.buy_total
+        self.gain_percent = self.gain / self.buy_total
 
 
 def get_all_portfolio_positions():
