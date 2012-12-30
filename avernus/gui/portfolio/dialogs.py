@@ -232,7 +232,10 @@ class EditAssetTable(Gtk.Table):
         self.attach(entry, 1, 2, 2, 3, yoptions=Gtk.AttachOptions.FILL)
 
         self.attach(Gtk.Label(label=_('TER')), 0, 1, 3, 4, yoptions=Gtk.AttachOptions.SHRINK)
-        self.ter_entry = Gtk.SpinButton(adjustment=Gtk.Adjustment(lower=0, upper=100, step_increment=0.1, value=self.asset.ter), digits=2)
+        ter_value = 0.0
+        if self.asset.ter != None:
+            ter_value = self.asset.ter
+        self.ter_entry = Gtk.SpinButton(adjustment=Gtk.Adjustment(lower=0, upper=100, step_increment=0.1, value=ter_value), digits=2)
         self.attach(self.ter_entry, 1, 2, 3, 4, yoptions=Gtk.AttachOptions.SHRINK)
 
         currentRow = 4
