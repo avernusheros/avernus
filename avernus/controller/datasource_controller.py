@@ -67,7 +67,8 @@ def _item_found_callback(item, source, source_info=None):
         item['source'] = source.name
         assettype = item['assettype']
         del item['assettype']
-        del item['yahoo_id']
+        if 'yahoo_id' in item:
+            del item['yahoo_id']
         new_asset = assettype(**item)
         if source_info is not None:
             asset_m.SourceInfo(source=source.name,
