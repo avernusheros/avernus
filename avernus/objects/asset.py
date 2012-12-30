@@ -109,14 +109,14 @@ class Fund(Asset):
     __tablename__ = 'fund'
     __mapper_args__ = {'polymorphic_identity': 'fund'}
     id = Column(Integer, ForeignKey('asset.id'), primary_key=True)
-    ter = Column(Float)
+    ter = Column(Float, default=0.0)
 
 
 class Etf(Asset):
     __tablename__ = 'etf'
     __mapper_args__ = {'polymorphic_identity': 'etf'}
     id = Column(Integer, ForeignKey('asset.id'), primary_key=True)
-    ter = Column(Float)
+    ter = Column(Float, default=0.0)
 
 
 class Bond(Asset):

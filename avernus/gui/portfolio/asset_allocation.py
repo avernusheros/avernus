@@ -109,7 +109,7 @@ class AssetAllocation(page.Page):
                 menu = Gtk.Menu()
                 positions_menu.set_submenu(menu)
                 for pos in positions:
-                    if pos.asset_category != selected_item and pos.quantity > 0:
+                    if pos.asset_category is None and pos.quantity > 0:
                         item = Gtk.MenuItem(label=pos.asset.name)
                         item.connect("activate", self.on_aa_add_position, selected_item, pos)
                         menu.append(item)
@@ -158,13 +158,15 @@ class AssetAllocation(page.Page):
             self.load_categories()
 
     def on_aa_category_edited(self, cell, path, new_name):
-        self.treestore[path][self.OBJECT].name = new_name
-        self.treestore[path][self.NAME] = new_name
+        if self.treestore[path][self.OBJECT].name != new_name:
+            self.treestore[path][self.OBJECT].name = new_name
+            self.treestore[path][self.NAME] = new_name
 
     def on_aa_targetpercent_edited(self, cell, path, new_value):
         new_value = float(new_value) / 100
-        self.treestore[path][self.OBJECT].target_percent = new_value
-        self.load_categories()
+        if new_value != self.treestore[path][self.OBJECT].target_percent:
+            self.treestore[path][self.OBJECT].target_percent = new_value
+            self.load_categories()
 
     def on_aa_remove_from_category(self, widget):
         item = self.get_selected_item()[0]
