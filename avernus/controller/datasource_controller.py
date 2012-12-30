@@ -58,23 +58,26 @@ def _item_found_callback(item, source, source_info=None):
     if not validate_isin(item['isin']):
         return
     new = False
-    new_asset = check_asset_existance(source=source.name,
+    existing_asset = check_asset_existance(source=source.name,
                                                    isin=item['isin'],
                                                    currency=item['currency'])
     # FIXME ugly
-    if not new_asset:
+    if not existing_asset:
         new = True
         item['source'] = source.name
         assettype = item['assettype']
         del item['assettype']
-        del item['yahoo_id']
-        new_asset = assettype(**item)
+        if 'yahoo_id' in item:
+            del item['yahoo_id']
+        if 'volume' in item:
+            del item['volume']
+        existing_asset = assettype(**item)
         if source_info is not None:
             asset_m.SourceInfo(source=source.name,
-                               asset=new_asset,
+                               asset=existing_asset,
                                info=source_info)
     if new and search_callback:
-        search_callback(new_asset, 'source')
+        search_callback(existing_asset, 'source')
 
 
 def validate_isin(isin):
