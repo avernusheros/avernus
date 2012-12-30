@@ -154,10 +154,17 @@ class PortfolioPositionsTab(page.Page):
     def insert_position(self, position):
         if position.quantity != 0:
             tree_iter = self.treestore.append(None, self.get_row_position(position))
+            sold_quantity = sum([pos.quantity for pos in position.get_sell_transactions()])
             buy_transactions = position.get_buy_transactions()
             if len(buy_transactions) > 1:
                 for buy in buy_transactions:
-                    self.treestore.append(tree_iter, self.get_row_transaction(buy))
+                    if sold_quantity >= buy.quantity:
+                        sold_quantity -= buy.quantity
+                    else:
+                        if sold_quantity > 0:
+                            #FIXME parts are already sold, show only the remaining shares
+                            pass
+                        self.treestore.append(tree_iter, self.get_row_transaction(buy))
             position.asset.connect("updated", self.on_asset_updated)
 
     def get_row_position(self, position):

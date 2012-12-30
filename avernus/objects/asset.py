@@ -102,7 +102,7 @@ class Dividend(objects.Base):
     @property
     def dividend_yield(self):
         # div total / position buy value
-        return (self.price - self.cost) / (self.position.quantity * self.position.price)
+        return (self.price - self.cost) / self.position.price
 
 
 class Fund(Asset):

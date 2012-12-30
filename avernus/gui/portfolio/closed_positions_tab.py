@@ -21,6 +21,7 @@ class ClosedPositionsTab(page.Page):
         self.update_page()
 
     def get_info(self):
+        # FIXME is called very often (without changes)
         count = 0
         total = 0.0
         for pos in self.portfolio.get_closed_positions():
@@ -53,7 +54,8 @@ class ClosedPositionsTree(gui_utils.Tree):
         self.create_column('%', 12, func=gui_utils.float_to_red_green_string_percent)
 
     def load_positions(self, portfolio):
-        for pos in portfolio.get_closed_positions():
+        self.closed_positions = portfolio.get_closed_positions()
+        for pos in self.closed_positions:
             self.insert_position(pos)
 
     def insert_position(self, pos):
