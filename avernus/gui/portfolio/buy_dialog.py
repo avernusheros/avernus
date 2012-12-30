@@ -87,10 +87,13 @@ class BuyDialog:
     def on_asset_selection(self, *args):
         self.asset_ok = True
         asset = self.asset_selector.get_asset()
-        # TODO update does not work
-        # datasource_controller.update_asset(asset)
-        # self.price_entry.set_total_labelvalue(asset.price)
-        self.set_response_sensitivity()
+        #TODO update does not work
+        datasource_controller.update_asset(asset)
+        if asset != None:
+            self.price_entry.set_value(asset.price)
+            self.set_response_sensitivity()
+        else:
+            logger.error("Asset is None")
 
     def on_asset_deselection(self, *args):
         self.asset_ok = False
@@ -120,7 +123,6 @@ class BuyDialog:
             if shares == 0.0:
                 return
             if self.transaction:
-                # FIXME update position
                 self.transaction.price = total - ta_costs
                 self.transaction.date = date
                 self.transaction.quantity = shares

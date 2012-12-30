@@ -298,7 +298,9 @@ class StockSelector(Gtk.VBox):
 
     def get_asset(self):
         path, col = self.result_tree.get_cursor()
-        return self.result_tree.get_model()[path][0]
+        if path != None:
+            return self.result_tree.get_model()[path][0]
+        return None
 
     def _show_spinner(self):
         self.spinner = Gtk.Spinner()
