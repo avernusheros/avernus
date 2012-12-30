@@ -31,12 +31,10 @@ class PortfolioBase(GObject.GObject):
     }
 
     def __init__(self, *args, **kwargs):
-        print "init", self.name
         GObject.GObject.__init__(self)
 
     @reconstructor
     def _init(self):
-        print "reinit base", self.name
         GObject.GObject.__init__(self)
 
     @property
