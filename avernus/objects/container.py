@@ -108,8 +108,7 @@ class PortfolioBase(GObject.GObject):
         ret = []
         for pos in self:
             for sell_ta in pos.get_sell_transactions():
-                buy_ta = pos.get_buy_transaction()
-                ret.append(position.ClosedPosition(buy_ta, sell_ta))
+                ret.append(position.ClosedPosition(sell_ta))
         return ret
 
     def get_dividends_count(self):

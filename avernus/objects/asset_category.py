@@ -39,7 +39,7 @@ def calculate_values():
         root.target = root.target_percent * root.parent.current
         root.delta = root.current - root.target
         if root.target:
-            root.delta_percent = root.current / root.target
+            root.delta_percent = root.delta / root.target
         else:
             root.delta_percent = 0.0
         for child in root.children:

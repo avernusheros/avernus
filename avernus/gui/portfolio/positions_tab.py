@@ -5,8 +5,7 @@ from avernus.gui.gui_utils import get_name_string
 from avernus.gui.portfolio import buy_dialog, sell_dialog, dividend_dialog
 from avernus.gui.portfolio.plot import ChartWindow
 from avernus.gui.portfolio.position_dialog import PositionDialog
-from avernus.objects import container
-from avernus.objects import position as position_model
+from avernus.objects import container, position
 from gi.repository import Gdk, Gtk
 import datetime
 import sys
@@ -30,23 +29,22 @@ def get_arrow_icon(perc):
 def start_price_markup(column, cell, model, iterator, column_id):
     pos = model.get_value(iterator, 0)
     markup = "%s\n<small>%s</small>" % (gui_utils.get_currency_format_from_float(model.get_value(iterator, column_id)), gui_utils.get_date_string(pos.date))
-    if isinstance(pos, position_model.MetaPosition):
-        markup = unichr(8709) + " " + markup
     cell.set_property('markup', markup)
 
 
 def quantity_markup(column, cell, model, iterator, column_id):
     pos = model.get_value(iterator, 0)
     markup = gui_utils.get_string_from_float(model.get_value(iterator, column_id))
-    if isinstance(pos, position_model.MetaPosition):
-        markup = unichr(8721) + " " + markup
     cell.set_property('markup', markup)
 
 
 def current_price_markup(column, cell, model, iterator, column_id):
-    asset = model.get_value(iterator, 0).asset
-    markup = "%s\n<small>%s</small>" % (gui_utils.get_currency_format_from_float(model.get_value(iterator, column_id)), gui_utils.get_datetime_string(asset.date))
-    cell.set_property('markup', markup)
+    try:
+        asset = model.get_value(iterator, 0).asset
+        markup = "%s\n<small>%s</small>" % (gui_utils.get_currency_format_from_float(model.get_value(iterator, column_id)), gui_utils.get_datetime_string(asset.date))
+        cell.set_property('markup', markup)
+    except:
+        pass
 
 
 class PortfolioPositionsTab(page.Page):
@@ -69,6 +67,7 @@ class PortfolioPositionsTab(page.Page):
     GAIN_DIV = 15
     GAIN_DIV_PERCENT = 16
     ANNUAL_RETURN = 17
+    IS_POSITION = 18
 
     def __init__(self):
         page.Page.__init__(self)
@@ -139,7 +138,6 @@ class PortfolioPositionsTab(page.Page):
     def set_portfolio(self, portfolio):
         # clear
         self.treestore.clear()
-        self.asset_cache = {}
         if self.portfolio:
             self.portfolio.disconnect(self.signal_id)
         # set new portfolio
@@ -155,33 +153,29 @@ class PortfolioPositionsTab(page.Page):
 
     def insert_position(self, position):
         if position.quantity != 0:
-            tree_iter = None
-            if position.asset.id in self.asset_cache:
-                if isinstance(self.asset_cache[position.asset.id], position_model.MetaPosition):
-                    mp = self.asset_cache[position.asset.id]
-                    tree_iter = self.find_position(mp).iter
-                else:
-                    p1 = self.asset_cache[position.asset.id]
-                    mp = position_model.MetaPosition(p1)
-                    tree_iter = self.treestore.append(None, self._get_row(mp))
-                    self.asset_cache[position.asset.id] = mp
-                    self._move_position(p1, tree_iter)
-                mp.add_position(position)
-                self.update_position_after_edit(mp, tree_iter)
-            else:
-                self.asset_cache[position.asset.id] = position
-                position.asset.connect("updated", self.on_asset_updated)
-            self.treestore.append(tree_iter, self._get_row(position, tree_iter != None))
+            tree_iter = self.treestore.append(None, self.get_row_position(position))
+            sold_quantity = sum([pos.quantity for pos in position.get_sell_transactions()])
+            buy_transactions = position.get_buy_transactions()
+            if len(buy_transactions) > 1:
+                for buy in buy_transactions:
+                    if sold_quantity >= buy.quantity:
+                        sold_quantity -= buy.quantity
+                    else:
+                        if sold_quantity > 0:
+                            #FIXME parts are already sold, show only the remaining shares
+                            pass
+                        self.treestore.append(tree_iter, self.get_row_transaction(buy))
+            position.asset.connect("updated", self.on_asset_updated)
 
-    def _get_row(self, position, child=False):
+    def get_row_position(self, position):
         asset = position.asset
         gain = position.gain
         gain_div = position.gain_with_dividends
         gain_icon = get_arrow_icon(gain[1])
         c_change = position.current_change
-        ret = [position,
+        return [position,
                get_name_string(asset),
-               position.price,
+               position.price_per_share,
                asset.price,
                c_change[0],
                gain[0],
@@ -196,11 +190,35 @@ class PortfolioPositionsTab(page.Page):
                self.portfolio.get_fraction(position),
                gain_div[0],
                float(gain_div[1]),
-               position.get_annual_return()
+               position.get_annual_return(),
+               True
                ]
-        if child:
-            ret[self.NAME] = ""
-        return ret
+
+    def get_row_transaction(self, transaction):
+        asset = transaction.position.asset
+        gain = transaction.gain
+        gain_icon = get_arrow_icon(gain[1])
+        c_change = transaction.current_change
+        return [transaction,
+               get_name_string(asset),
+               transaction.price_per_share,
+               asset.price,
+               c_change[0],
+               gain[0],
+               transaction.quantity,
+               -transaction.total,
+               transaction.current_value,
+               transaction.days_gain,
+               float(gain[1]),
+               gain_icon,
+               float(c_change[1]),
+               "",
+               self.portfolio.get_fraction(transaction),
+               0.0,
+               0.0,
+               0.0,
+               False,
+               ]
 
     def _move_position(self, position, parent=None):
         row = self.find_position(position)
@@ -216,6 +234,21 @@ class PortfolioPositionsTab(page.Page):
             for row in rows:
                 if row[self.OBJECT] == pos:
                     return row
+                result = search(row.iterchildren())
+                if result:
+                    return result
+            return None
+        return search(self.treestore)
+
+    def find_position_from_asset(self, asset):
+        # search recursiv
+        def search(rows):
+            if not rows:
+                return None
+            for row in rows:
+                if isinstance(row[self.OBJECT], position.PortfolioPosition):
+                    if row[self.OBJECT].asset == asset:
+                        return row
                 result = search(row.iterchildren())
                 if result:
                     return result
@@ -240,28 +273,18 @@ class PortfolioPositionsTab(page.Page):
                 ]
 
     def on_asset_updated(self, asset):
-        position = self.asset_cache[asset.id]
-        tree_iter = self.find_position(position).iter
-        if isinstance(position, position_model.MetaPosition):
-            position.recalculate()
-            self.treestore[tree_iter] = self._get_row(self.treestore[tree_iter][self.OBJECT])
-            child_iter = self.treestore.iter_children(tree_iter)
-            self.treestore[child_iter] = self._get_row(self.treestore[child_iter][self.OBJECT], True)
-            while self.treestore.iter_next(child_iter) != None:
-                child_iter = self.treestore.iter_next(child_iter)
-                self.treestore[child_iter] = self._get_row(self.treestore[child_iter][self.OBJECT], True)
-        else:
-            self.treestore[tree_iter] = self._get_row(position)
+        tree_iter = self.find_position_from_asset(asset).iter
+        self.treestore[tree_iter] = self.get_row_position(self.treestore[tree_iter][self.OBJECT])
+        child_iter = self.treestore.iter_children(tree_iter)
+        self.treestore[child_iter] = self.get_row_transaction(self.treestore[child_iter][self.OBJECT])
+        while self.treestore.iter_next(child_iter) != None:
+            child_iter = self.treestore.iter_next(child_iter)
+            self.treestore[child_iter] = self.get_row_transaction(self.treestore[child_iter][self.OBJECT])
 
     def update_position_after_edit(self, pos, iterator=None):
         if iterator is None:
             iterator = self.find_position(pos).iterator
-        self.treestore[iterator] = self._get_row(pos)
-        if not isinstance(pos, position_model.MetaPosition) and pos.asset.id in self.asset_cache:
-            item = self.asset_cache[pos.asset.id]
-            if isinstance(item, position_model.MetaPosition):
-                item.recalculate()
-                self.update_position_after_edit(item)
+        self.treestore[iterator] = self.get_row_position(pos)
 
     def on_update_portfolio_positions(self, *args):
         def finished_cb():
@@ -274,7 +297,7 @@ class PortfolioPositionsTab(page.Page):
                               complete_callback=finished_cb,
                               args=(self.portfolio)).start()
 
-    def on_add_position(self, widget):
+    def on_positionstab_add_position(self, widget):
         buy_dialog.BuyDialog(self.portfolio, parent=self.widget.get_toplevel())
 
     def on_delete_position(self, widget):
@@ -366,3 +389,4 @@ class PortfolioPositionsTab(page.Page):
     def on_move_position(self, widget, new_portfolio):
         position, iterator = self.selected_item
         position.portfolio = new_portfolio
+        self.treestore.remove(iterator)

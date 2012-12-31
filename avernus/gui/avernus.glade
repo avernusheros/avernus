@@ -44,6 +44,22 @@
       </object>
     </child>
   </object>
+  <object class="GtkListStore" id="account_transactions_treestore">
+    <columns>
+      <!-- column-name object -->
+      <column type="PyObject"/>
+      <!-- column-name description -->
+      <column type="gchararray"/>
+      <!-- column-name amount -->
+      <column type="gfloat"/>
+      <!-- column-name category -->
+      <column type="gchararray"/>
+      <!-- column-name date -->
+      <column type="PyObject"/>
+      <!-- column-name icon -->
+      <column type="gchararray"/>
+    </columns>
+  </object>
   <object class="GtkAction" id="add_acc_transaction">
     <property name="label" translatable="yes">_Add</property>
     <property name="short_label" translatable="yes">_Add</property>
@@ -68,7 +84,7 @@
     <property name="short_label" translatable="yes">_Add</property>
     <property name="tooltip" translatable="yes">Buy new position</property>
     <property name="stock_id">gtk-add</property>
-    <signal name="activate" handler="on_add_position" swapped="no"/>
+    <signal name="activate" handler="on_positionstab_add_position" swapped="no"/>
   </object>
   <object class="GtkActionGroup" id="asset_allocation_actiongroup">
     <property name="accel_group">accelgroup1</property>
@@ -110,6 +126,98 @@
         <signal name="activate" handler="on_remove_category" swapped="no"/>
       </object>
     </child>
+  </object>
+  <object class="GtkAdjustment" id="adjustment1">
+    <property name="upper">100</property>
+    <property name="step_increment">1</property>
+    <property name="page_increment">10</property>
+  </object>
+  <object class="GtkMenu" id="asset_allocation_contextmenu">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="accel_group">accelgroup1</property>
+    <child>
+      <object class="GtkImageMenuItem" id="add_category2">
+        <property name="related_action">add_category1</property>
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="use_underline">True</property>
+        <property name="use_stock">True</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkImageMenuItem" id="menuitem22">
+        <property name="related_action">remove_category</property>
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="use_underline">True</property>
+        <property name="use_stock">True</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkMenuItem" id="aa_add_account_menu">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="has_tooltip">True</property>
+        <property name="tooltip_text" translatable="yes">Add account</property>
+        <property name="label" translatable="yes">Add account..</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkMenuItem" id="aa_add_positions_menu">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="has_tooltip">True</property>
+        <property name="tooltip_text" translatable="yes">Add position</property>
+        <property name="label" translatable="yes">Add position..</property>
+      </object>
+    </child>
+  </object>
+  <object class="GtkMenu" id="asset_allocation_item_contextmenu">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="accel_group">accelgroup1</property>
+    <child>
+      <object class="GtkImageMenuItem" id="menuitem24">
+        <property name="related_action">aa_remove_from_category</property>
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="use_underline">True</property>
+        <property name="use_stock">True</property>
+      </object>
+    </child>
+  </object>
+  <object class="GtkTreeStore" id="asset_allocation_store">
+    <columns>
+      <!-- column-name object -->
+      <column type="PyObject"/>
+      <!-- column-name name -->
+      <column type="gchararray"/>
+      <!-- column-name target_percent -->
+      <column type="gfloat"/>
+      <!-- column-name target -->
+      <column type="gfloat"/>
+      <!-- column-name current_percent -->
+      <column type="gfloat"/>
+      <!-- column-name current -->
+      <column type="gfloat"/>
+      <!-- column-name delta_percent -->
+      <column type="gfloat"/>
+      <!-- column-name delta -->
+      <column type="gfloat"/>
+      <!-- column-name is_category -->
+      <column type="gboolean"/>
+    </columns>
+    <signal name="row-changed" handler="on_asset_allocation_row_changed" swapped="no"/>
+  </object>
+  <object class="GtkTreeStore" id="category_treestore">
+    <columns>
+      <!-- column-name object -->
+      <column type="PyObject"/>
+      <!-- column-name name -->
+      <column type="gchararray"/>
+    </columns>
+    <signal name="row-changed" handler="on_row_changed" swapped="no"/>
   </object>
   <object class="GtkActionGroup" id="dividend_actiongroup">
     <property name="accel_group">accelgroup1</property>
@@ -271,6 +379,7 @@
   <object class="GtkMenu" id="acc_transaction_contextmenu">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
+    <property name="accel_group">accelgroup1</property>
     <child>
       <object class="GtkImageMenuItem" id="add2">
         <property name="related_action">add_acc_transaction</property>
@@ -322,22 +431,6 @@
         <property name="use_stock">True</property>
       </object>
     </child>
-  </object>
-  <object class="GtkListStore" id="account_transactions_treestore">
-    <columns>
-      <!-- column-name object -->
-      <column type="PyObject"/>
-      <!-- column-name description -->
-      <column type="gchararray"/>
-      <!-- column-name amount -->
-      <column type="gfloat"/>
-      <!-- column-name category -->
-      <column type="gchararray"/>
-      <!-- column-name date -->
-      <column type="PyObject"/>
-      <!-- column-name icon -->
-      <column type="gchararray"/>
-    </columns>
   </object>
   <object class="GtkBox" id="account_vbox">
     <property name="visible">True</property>
@@ -707,88 +800,6 @@
       </packing>
     </child>
   </object>
-  <object class="GtkAdjustment" id="adjustment1">
-    <property name="upper">100</property>
-    <property name="step_increment">1</property>
-    <property name="page_increment">10</property>
-  </object>
-  <object class="GtkMenu" id="asset_allocation_contextmenu">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <property name="accel_group">accelgroup1</property>
-    <child>
-      <object class="GtkImageMenuItem" id="add_category2">
-        <property name="related_action">add_category1</property>
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="use_underline">True</property>
-        <property name="use_stock">True</property>
-      </object>
-    </child>
-    <child>
-      <object class="GtkImageMenuItem" id="menuitem22">
-        <property name="related_action">remove_category</property>
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="use_underline">True</property>
-        <property name="use_stock">True</property>
-      </object>
-    </child>
-    <child>
-      <object class="GtkMenuItem" id="aa_add_account_menu">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="has_tooltip">True</property>
-        <property name="tooltip_text" translatable="yes">Add account</property>
-        <property name="label" translatable="yes">Add account..</property>
-      </object>
-    </child>
-    <child>
-      <object class="GtkMenuItem" id="aa_add_positions_menu">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="has_tooltip">True</property>
-        <property name="tooltip_text" translatable="yes">Add position</property>
-        <property name="label" translatable="yes">Add position..</property>
-      </object>
-    </child>
-  </object>
-  <object class="GtkMenu" id="asset_allocation_item_contextmenu">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <child>
-      <object class="GtkImageMenuItem" id="menuitem24">
-        <property name="related_action">aa_remove_from_category</property>
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="use_underline">True</property>
-        <property name="use_stock">True</property>
-      </object>
-    </child>
-  </object>
-  <object class="GtkTreeStore" id="asset_allocation_store">
-    <columns>
-      <!-- column-name object -->
-      <column type="PyObject"/>
-      <!-- column-name name -->
-      <column type="gchararray"/>
-      <!-- column-name target_percent -->
-      <column type="gfloat"/>
-      <!-- column-name target -->
-      <column type="gfloat"/>
-      <!-- column-name current_percent -->
-      <column type="gfloat"/>
-      <!-- column-name current -->
-      <column type="gfloat"/>
-      <!-- column-name delta_percent -->
-      <column type="gfloat"/>
-      <!-- column-name delta -->
-      <column type="gfloat"/>
-      <!-- column-name is_category -->
-      <column type="gboolean"/>
-    </columns>
-    <signal name="row-changed" handler="on_asset_allocation_row_changed" swapped="no"/>
-  </object>
   <object class="GtkScrolledWindow" id="asset_allocation_widget">
     <property name="width_request">300</property>
     <property name="height_request">300</property>
@@ -967,15 +978,6 @@
         <property name="use_stock">True</property>
       </object>
     </child>
-  </object>
-  <object class="GtkTreeStore" id="category_treestore">
-    <columns>
-      <!-- column-name object -->
-      <column type="PyObject"/>
-      <!-- column-name name -->
-      <column type="gchararray"/>
-    </columns>
-    <signal name="row-changed" handler="on_row_changed" swapped="no"/>
   </object>
   <object class="GtkTreeStore" id="dividend_treestore">
     <columns>
@@ -1437,6 +1439,122 @@
       <column type="gfloat"/>
     </columns>
   </object>
+  <object class="GtkMenu" id="position_contextmenu">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="accel_group">accelgroup1</property>
+    <child>
+      <object class="GtkImageMenuItem" id="add6">
+        <property name="related_action">add_pf_position</property>
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="use_underline">True</property>
+        <property name="use_stock">True</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkSeparatorMenuItem" id="menuitem17">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkImageMenuItem" id="sell1">
+        <property name="related_action">sell</property>
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="use_underline">True</property>
+        <property name="use_stock">True</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkImageMenuItem" id="delete">
+        <property name="related_action">remove7</property>
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="use_underline">True</property>
+        <property name="use_stock">True</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkImageMenuItem" id="menuitem19">
+        <property name="related_action">edit3</property>
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="use_underline">True</property>
+        <property name="use_stock">True</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkImageMenuItem" id="menuitem20">
+        <property name="label" translatable="yes">imagemenuitem</property>
+        <property name="related_action">chart</property>
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="image">image6</property>
+        <property name="use_stock">False</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkImageMenuItem" id="menuitem21">
+        <property name="related_action">dividend</property>
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="use_underline">True</property>
+        <property name="use_stock">True</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkMenuItem" id="move_menu">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="tooltip_text" translatable="yes">Move to different portfolio</property>
+        <property name="label" translatable="yes">Move</property>
+      </object>
+    </child>
+  </object>
+  <object class="GtkTreeStore" id="positions_treestore">
+    <columns>
+      <!-- column-name object -->
+      <column type="PyObject"/>
+      <!-- column-name name -->
+      <column type="gchararray"/>
+      <!-- column-name start -->
+      <column type="gfloat"/>
+      <!-- column-name last -->
+      <column type="gfloat"/>
+      <!-- column-name change -->
+      <column type="gfloat"/>
+      <!-- column-name gain -->
+      <column type="gfloat"/>
+      <!-- column-name shares -->
+      <column type="gfloat"/>
+      <!-- column-name buy -->
+      <column type="gfloat"/>
+      <!-- column-name market -->
+      <column type="gfloat"/>
+      <!-- column-name days -->
+      <column type="gfloat"/>
+      <!-- column-name gain1 -->
+      <column type="gfloat"/>
+      <!-- column-name gain2 -->
+      <column type="gchararray"/>
+      <!-- column-name change1 -->
+      <column type="gfloat"/>
+      <!-- column-name type -->
+      <column type="gchararray"/>
+      <!-- column-name pf_percent -->
+      <column type="gfloat"/>
+      <!-- column-name gain_div -->
+      <column type="gfloat"/>
+      <!-- column-name gain_div_percent -->
+      <column type="gfloat"/>
+      <!-- column-name annual_return -->
+      <column type="gfloat"/>
+      <!-- column-name is_position -->
+      <column type="gboolean"/>
+    </columns>
+  </object>
   <object class="GtkNotebook" id="portfolio_notebook">
     <property name="width_request">400</property>
     <property name="height_request">200</property>
@@ -1599,6 +1717,7 @@
                     <child>
                       <object class="GtkCellRendererText" id="cellrenderertext9"/>
                       <attributes>
+                        <attribute name="visible">18</attribute>
                         <attribute name="markup">1</attribute>
                       </attributes>
                     </child>
@@ -1674,6 +1793,7 @@
                     <child>
                       <object class="GtkCellRendererText" id="cellrenderertext14"/>
                       <attributes>
+                        <attribute name="visible">18</attribute>
                         <attribute name="text">3</attribute>
                       </attributes>
                     </child>
@@ -1689,6 +1809,7 @@
                     <child>
                       <object class="GtkCellRendererText" id="cellrenderertext15"/>
                       <attributes>
+                        <attribute name="visible">18</attribute>
                         <attribute name="text">4</attribute>
                       </attributes>
                     </child>
@@ -1704,6 +1825,7 @@
                     <child>
                       <object class="GtkCellRendererText" id="cellrenderertext16"/>
                       <attributes>
+                        <attribute name="visible">18</attribute>
                         <attribute name="text">12</attribute>
                       </attributes>
                     </child>
@@ -1785,6 +1907,7 @@
                     <child>
                       <object class="GtkCellRendererText" id="cellrenderertext21"/>
                       <attributes>
+                        <attribute name="visible">18</attribute>
                         <attribute name="text">15</attribute>
                       </attributes>
                     </child>
@@ -1800,6 +1923,7 @@
                     <child>
                       <object class="GtkCellRendererText" id="cellrenderertext22"/>
                       <attributes>
+                        <attribute name="visible">18</attribute>
                         <attribute name="text">16</attribute>
                       </attributes>
                     </child>
@@ -1815,6 +1939,7 @@
                     <child>
                       <object class="GtkCellRendererText" id="cellrenderertext23"/>
                       <attributes>
+                        <attribute name="visible">18</attribute>
                         <attribute name="text">17</attribute>
                       </attributes>
                     </child>
@@ -2207,124 +2332,9 @@
       </packing>
     </child>
   </object>
-  <object class="GtkMenu" id="position_contextmenu">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <property name="accel_group">accelgroup1</property>
-    <child>
-      <object class="GtkImageMenuItem" id="add6">
-        <property name="related_action">add_pf_position</property>
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="use_underline">True</property>
-        <property name="use_stock">True</property>
-      </object>
-    </child>
-    <child>
-      <object class="GtkSeparatorMenuItem" id="menuitem17">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-      </object>
-    </child>
-    <child>
-      <object class="GtkImageMenuItem" id="sell1">
-        <property name="related_action">sell</property>
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="use_underline">True</property>
-        <property name="use_stock">True</property>
-      </object>
-    </child>
-    <child>
-      <object class="GtkImageMenuItem" id="delete">
-        <property name="related_action">remove7</property>
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="use_underline">True</property>
-        <property name="use_stock">True</property>
-      </object>
-    </child>
-    <child>
-      <object class="GtkImageMenuItem" id="menuitem19">
-        <property name="related_action">edit3</property>
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="use_underline">True</property>
-        <property name="use_stock">True</property>
-      </object>
-    </child>
-    <child>
-      <object class="GtkImageMenuItem" id="menuitem20">
-        <property name="label" translatable="yes">imagemenuitem</property>
-        <property name="related_action">chart</property>
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="image">image6</property>
-        <property name="use_stock">False</property>
-      </object>
-    </child>
-    <child>
-      <object class="GtkImageMenuItem" id="menuitem21">
-        <property name="related_action">dividend</property>
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="use_underline">True</property>
-        <property name="use_stock">True</property>
-      </object>
-    </child>
-    <child>
-      <object class="GtkMenuItem" id="move_menu">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="tooltip_text" translatable="yes">Move to different portfolio</property>
-        <property name="label" translatable="yes">Move</property>
-      </object>
-    </child>
-  </object>
-  <object class="GtkTreeStore" id="positions_treestore">
-    <columns>
-      <!-- column-name object -->
-      <column type="PyObject"/>
-      <!-- column-name name -->
-      <column type="gchararray"/>
-      <!-- column-name start -->
-      <column type="gfloat"/>
-      <!-- column-name last -->
-      <column type="gfloat"/>
-      <!-- column-name change -->
-      <column type="gfloat"/>
-      <!-- column-name gain -->
-      <column type="gfloat"/>
-      <!-- column-name shares -->
-      <column type="gfloat"/>
-      <!-- column-name buy -->
-      <column type="gfloat"/>
-      <!-- column-name market -->
-      <column type="gfloat"/>
-      <!-- column-name days -->
-      <column type="gfloat"/>
-      <!-- column-name gain1 -->
-      <column type="gfloat"/>
-      <!-- column-name gain2 -->
-      <column type="gchararray"/>
-      <!-- column-name change1 -->
-      <column type="gfloat"/>
-      <!-- column-name type -->
-      <column type="gchararray"/>
-      <!-- column-name pf_percent -->
-      <column type="gfloat"/>
-      <!-- column-name gain_div -->
-      <column type="gfloat"/>
-      <!-- column-name gain_div_percent -->
-      <column type="gfloat"/>
-      <!-- column-name annual_return -->
-      <column type="gfloat"/>
-    </columns>
-  </object>
   <object class="GtkMenu" id="sidebar_category_contextmenu">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
-    <property name="accel_group">accelgroup1</property>
     <child>
       <object class="GtkImageMenuItem" id="add5">
         <property name="related_action">add3</property>
@@ -2338,7 +2348,6 @@
   <object class="GtkMenu" id="sidebar_contextmenu">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
-    <property name="accel_group">accelgroup1</property>
     <child>
       <object class="GtkImageMenuItem" id="add4">
         <property name="related_action">add3</property>
