@@ -216,7 +216,6 @@ class PortfolioPositionsTab(page.Page):
                self.portfolio.get_fraction(transaction),
                0.0,
                0.0,
-               # FIXME
                0.0,
                False,
                ]

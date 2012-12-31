@@ -22,7 +22,6 @@ class Position(objects.Base):
 
     @property
     def buy_value(self):
-        # FIXME how is the price calculate if parts are sold?
         return self.price
 
     @property
@@ -30,20 +29,21 @@ class Position(objects.Base):
         return self.asset.change * self.quantity
 
     def get_quantity_at_date(self, t):
-        # FIXME
         if t < self.date:
-            return 0
-        q = self.quantity
-        for sell_ta in self.get_sell_transactions():
-            if t < sell_ta.date:
-                q += sell_ta.quantity
+            return 0.0
+        q = 0.0
+        for ta in self.transactions:
+            if t >= ta.date:
+                if ta.type == "portfolio_sell_transaction":
+                    q -= ta.quantity
+                else:
+                    q += ta.quantity
         return q
 
     def get_value_at_date(self, t):
-        # FIXME
         quantity = self.get_quantity_at_date(self, t)
-        if quantity == 0:
-            return 0
+        if quantity == 0.0:
+            return 0.0
         t1 = t - datetime.timedelta(days=3)
         price = self.asset.get_price_at_date(t, t1)
         if price:
@@ -121,13 +121,25 @@ class PortfolioPosition(Position):
             self.date = None
         self.quantity = 0.0
         self.price = 0.0
-        for ta in self.transactions:
-            if ta.type == "portfolio_buy_transaction":
-                self.quantity += ta.quantity
-                self.price += ta.price
+        self.cost = 0.0
+
+        sold_quantity = 0.0
+        for sell_ta in self.get_sell_transactions():
+            sold_quantity += sell_ta.quantity
+
+        for buy_ta in self.get_buy_transactions():
+            if sold_quantity >= buy_ta.quantity:
+                sold_quantity -= buy_ta.quantity
+            elif sold_quantity > 0:
+                remaining_quantity = buy_ta.quantity - sold_quantity
+                sold_quantity = 0
+                self.price += buy_ta.price * remaining_quantity / buy_ta.quantity
+                self.cost += buy_ta.cost * remaining_quantity / buy_ta.quantity
+                self.quantity += remaing_quantity
             else:
-                self.quantity -= ta.quantity
-                self.price -= ta.price
+                self.price += buy_ta.price
+                self.cost += buy_ta.cost
+                self.quantity += buy_ta.quantity
 
     def get_buy_transactions(self):
         return objects.session.query(portfolio_transaction.BuyTransaction)\
