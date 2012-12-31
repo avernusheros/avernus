@@ -7,6 +7,8 @@ avernus 0.10:
   * ported most gui elements to glade
   * keyboard shortcuts are working again
   * translations
+  * more robust data model
+  * asset allocation tool
 
 avernus 0.9:
 

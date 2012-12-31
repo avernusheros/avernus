@@ -55,7 +55,8 @@ class AssetAllocation(page.Page):
                          cat.current,
                          cat.delta_percent,
                          cat.delta,
-                         True
+                         True,
+                         "gtk-directory"
                         ])
 
     def load_categories(self):
@@ -66,12 +67,12 @@ class AssetAllocation(page.Page):
             for acc in cat.accounts:
                 self.treestore.append(new_iter,
                         [acc, acc.name, 0.0, 0.0, acc.balance / cat.current,
-                         acc.balance, 0.0, 0.0, False])
+                         acc.balance, 0.0, 0.0, False, "account"])
             for pos in cat.positions:
                 self.treestore.append(new_iter,
                         [pos, pos.asset.name, 0.0, 0.0,
                          pos.current_value / cat.current, pos.current_value,
-                         0.0, 0.0, False])
+                         0.0, 0.0, False, "portfolio"])
 
         self.treestore.clear()
         root = asset_category.get_root_category()
