@@ -162,7 +162,7 @@ class PortfolioPositionsTab(page.Page):
                         sold_quantity -= buy.quantity
                     else:
                         if sold_quantity > 0:
-                            #FIXME parts are already sold, show only the remaining shares
+                            # FIXME parts are already sold, show only the remaining shares
                             pass
                         self.treestore.append(tree_iter, self.get_row_transaction(buy))
             position.asset.connect("updated", self.on_asset_updated)
@@ -206,7 +206,7 @@ class PortfolioPositionsTab(page.Page):
                c_change[0],
                gain[0],
                transaction.quantity,
-               -transaction.total,
+               - transaction.total,
                transaction.current_value,
                transaction.days_gain,
                float(gain[1]),
@@ -276,10 +276,11 @@ class PortfolioPositionsTab(page.Page):
         tree_iter = self.find_position_from_asset(asset).iter
         self.treestore[tree_iter] = self.get_row_position(self.treestore[tree_iter][self.OBJECT])
         child_iter = self.treestore.iter_children(tree_iter)
-        self.treestore[child_iter] = self.get_row_transaction(self.treestore[child_iter][self.OBJECT])
-        while self.treestore.iter_next(child_iter) != None:
-            child_iter = self.treestore.iter_next(child_iter)
+        if child_iter:
             self.treestore[child_iter] = self.get_row_transaction(self.treestore[child_iter][self.OBJECT])
+            while self.treestore.iter_next(child_iter) != None:
+                child_iter = self.treestore.iter_next(child_iter)
+                self.treestore[child_iter] = self.get_row_transaction(self.treestore[child_iter][self.OBJECT])
 
     def update_position_after_edit(self, pos, iterator=None):
         if iterator is None:
