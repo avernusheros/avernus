@@ -16,7 +16,7 @@ class TransactionsTab(page.Page):
         self.builder = get_avernus_builder()
         self.treestore = self.builder.get_object("pf_transactions_treestore")
         self.tree = self.builder.get_object("pf_transactions_tree")
-        self.tree.connect("draw", self.update_page)
+        self.tree.connect('map', self.update_page)
 
         # date format
         cell = self.builder.get_object("cellrenderertext24")

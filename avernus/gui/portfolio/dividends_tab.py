@@ -20,7 +20,7 @@ class DividendsTab(page.Page):
         self.actiongroup = self.builder.get_object("dividend_actiongroup")
         self.treestore = self.builder.get_object("dividend_treestore")
         self.tree = self.builder.get_object("dividend_tree")
-        self.tree.connect("draw", self.update_page)
+        self.tree.connect("map", self.update_page)
 
         # date format
         cell = self.builder.get_object("cellrenderertext32")
@@ -50,7 +50,6 @@ class DividendsTab(page.Page):
         for pos in self.portfolio:
             for div in pos.dividends:
                 self.insert_dividend(div)
-        self.update_page()
 
     def find_item(self, row0, itemtype=None):
         def search(rows):

@@ -22,7 +22,6 @@ class WatchlistPositionsPage(page.Page):
         page.Page.__init__(self)
         self.builder = get_avernus_builder()
         self.widget = self.builder.get_object("watchlist_box")
-        self.widget.connect("draw", self.update_page)
         self.treestore = self.builder.get_object("wl_positions_treestore")
         self.actiongroup = self.builder.get_object("wl_position_actiongroup")
         self.watchlist = None

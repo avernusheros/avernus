@@ -73,8 +73,8 @@ class PortfolioPositionsTab(page.Page):
         page.Page.__init__(self)
         self.builder = get_avernus_builder()
         self.treestore = self.builder.get_object("positions_treestore")
-        self.widget = self.builder.get_object("portfolio_notebook")
-        self.widget.connect("draw", self.update_page)
+        self.widget = self.builder.get_object("positions_box")
+        self.widget.connect("map", self.update_page)
         self.actiongroup = self.builder.get_object("position_actiongroup")
         self.portfolio = None
 
@@ -254,9 +254,6 @@ class PortfolioPositionsTab(page.Page):
                     return result
             return None
         return search(self.treestore)
-
-    def show(self):
-        self.update_page()
 
     def get_info(self):
         if not self.portfolio:

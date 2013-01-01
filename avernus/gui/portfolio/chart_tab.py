@@ -15,14 +15,15 @@ class ChartTab(page.Page):
         page.Page.__init__(self)
         builder = get_avernus_builder()
         self.sw = builder.get_object("charts_sw")
-        self.sw.connect("draw", self.update_page)
+        self.sw.connect("map", self.show)
 
     def set_portfolio(self, portfolio):
         self.pf = portfolio
+
+    def show(self, *args):
         child = self.sw.get_child()
         if child:
             self.sw.remove(child)
-        self.update_page()
         if len(self.pf.positions) == 0:
             self.sw.add_with_viewport(Gtk.Label(label='\n%s\n%s\n\n' % (_('No data!'), _('Add positions to portfolio first.'))))
             self.sw.show_all()
@@ -118,6 +119,7 @@ class ChartTab(page.Page):
 
         self.sw.add_with_viewport(table)
         self.sw.show_all()
+        self.update_page()
 
     def on_zoom_change(self, combobox):
         value = combobox.get_model()[combobox.get_active()][0]

@@ -21,7 +21,7 @@ class AssetAllocation(page.Page):
         self.widget = self.builder.get_object("asset_allocation_widget")
         self.treestore = self.builder.get_object("asset_allocation_store")
         self.tree = self.builder.get_object("asset_allocation_tree")
-        self.tree.connect("draw", self.update_page)
+        self.tree.connect("map", self.update_page)
         self.init_widgets()
 
     def init_widgets(self):

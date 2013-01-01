@@ -119,9 +119,6 @@ class MainWindow:
             self.maximized = False
             self.config.set_option('maximize', False, section='Gui')
 
-    def on_portfolio_notebook_selection(self, notebook, page, page_num):
-        notebook.get_nth_page(page_num).show()
-
     def on_destroy(self, widget=None, data=None):
         """on_destroy - called when the avernusWindow is closed. """
         objects.session.commit()
@@ -144,6 +141,7 @@ class MainWindow:
             self.hpaned.pack2(self.portfolio_notebook)
             for page in self.portfolio_pages:
                 page.set_portfolio(item)
+            self.portfolio_notebook.set_current_page(0)
         elif page == "Watchlist":
             self.hpaned.pack2(self.watchlist_page.widget)
             self.watchlist_page.set_watchlist(item)

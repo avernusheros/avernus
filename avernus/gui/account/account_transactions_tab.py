@@ -44,7 +44,6 @@ class AccountTransactionTab(page.Page):
         self.category_actiongroup = self.builder.get_object("category_actiongroup")
         self.category_context_menu = self.builder.get_object("category_context_menu")
 
-        self.widget.connect("draw", self.update_page)
         pre = self.config.get_option('account hpaned position', 'Gui')
         pos = pre or 600
         self.hpaned.set_position(int(pos))

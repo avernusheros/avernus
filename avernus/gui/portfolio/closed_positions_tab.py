@@ -9,8 +9,8 @@ class ClosedPositionsTab(page.Page):
         page.Page.__init__(self)
         builder = get_avernus_builder()
         sw = builder.get_object("closed_positions_sw")
+        sw.connect('map', self.update_page)
         self.closed_positions_tree = ClosedPositionsTree()
-        self.closed_positions_tree.connect("draw", self.update_page)
         sw.add(self.closed_positions_tree)
         sw.show_all()
 
@@ -18,10 +18,8 @@ class ClosedPositionsTab(page.Page):
         self.portfolio = portfolio
         self.closed_positions_tree.clear()
         self.closed_positions_tree.load_positions(portfolio)
-        self.update_page()
 
     def get_info(self):
-        # FIXME is called very often (without changes)
         count = 0
         total = 0.0
         for pos in self.portfolio.get_closed_positions():
