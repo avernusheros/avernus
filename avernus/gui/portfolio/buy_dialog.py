@@ -5,6 +5,9 @@ from avernus.objects import portfolio_transaction, position
 from gi.repository import Gtk
 import datetime
 
+import logging
+
+logger = logging.getLogger(__name__)
 
 class BuyDialog:
 
