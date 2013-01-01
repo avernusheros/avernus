@@ -76,10 +76,14 @@ class Position(objects.Base):
 
     @property
     def current_value(self):
+        if not self.asset:
+            return 0.0
         return self.quantity * self.asset.price
 
     @property
     def current_change(self):
+        if not self.asset:
+            return 0.0, 0.0
         return self.asset.change, self.asset.change_percent
 
     def get_annual_return(self):
