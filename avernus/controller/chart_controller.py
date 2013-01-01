@@ -250,9 +250,7 @@ class StockChartPlotController(ChartController):
     def __init__(self, quotations):
         self.y_values = [(_("close"), [d.close for d in quotations])]
         quotation_count = len(quotations)
-        self.x_values = [gui_utils.get_date_string(quotations[int(quotation_count / 18 * i)].date) for i in range(18)]
-        self.x_values.insert(0, str(quotations[0].date))
-        self.x_values.insert(len(self.x_values), str(quotations[-1].date))
+        self.x_values = [gui_utils.get_date_string(q.date) for q in quotations]
 
     def calculate_values(self, *args):
         yield 1
