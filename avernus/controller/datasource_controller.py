@@ -110,7 +110,7 @@ def get_historical_prices(asset, start_date=None, end_date=None):
         for qt in sources[asset.source].update_historical_prices(asset, start_date, end_date):
             # qt : (stock, exchange, date, open, high, low, close, vol)
             if qt is not None:
-                yield asset_m.Quotation(asset=qt[0], exchange=qt[1], \
+                yield asset_m.Quotation(asset_id=asset.id, exchange=qt[1], \
                         date=qt[2], open=qt[3], high=qt[4], \
                         low=qt[5], close=qt[6], volume=qt[7])
     # needed to run as generator thread

@@ -5,7 +5,7 @@ import matplotlib
 from matplotlib.figure import Figure
 from matplotlib.ticker import FuncFormatter
 
-#from backend_gtk3agg import FigureCanvasGTK3Agg as FigureCanvas
+# from backend_gtk3agg import FigureCanvasGTK3Agg as FigureCanvas
 from avernus.matplotlib.backend_gtk3cairo import FigureCanvasGTK3Cairo as FigureCanvas
 from avernus.gui import gui_utils
 from avernus.gui import threads
@@ -86,7 +86,7 @@ class SimpleLineChart(ChartBase):
         ax.xaxis.grid(color='gray')
 
         # background
-        #ax.patch.set_alpha(1)
+        # ax.patch.set_alpha(1)
 
         # font
         matplotlib.rc('font', family="sans", weight="normal", size=9)
@@ -108,7 +108,7 @@ class SimpleLineChart(ChartBase):
                 textcoords='offset points', ha='right', va='bottom',
                 color='white',
                 bbox=dict(boxstyle='round,pad=0.5', color=self.colors[0]),
-                #arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=0')
+                # arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=0')
                 )
         self.annotation.set_visible(False)
 
@@ -120,6 +120,7 @@ class SimpleLineChart(ChartBase):
         fig.canvas.mpl_connect('motion_notify_event', self.on_move)
 
     def draw_plot(self):
+
         # remove lines
         self.ax.lines = []
         # vertical line
@@ -139,7 +140,7 @@ class SimpleLineChart(ChartBase):
 
         # legend
         legend = self.ax.legend(loc="best")
-        #legend.draw_frame(False)
+        # legend.draw_frame(False)
         legend.get_frame().set_edgecolor("gray")
 
         # show figure
@@ -200,7 +201,7 @@ class BarChart(ChartBase):
                 textcoords='offset points', ha='right', va='bottom',
                 color='white',
                 bbox=dict(boxstyle='round,pad=0.5', color=self.colors[0]),
-                #arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=0')
+                # arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=0')
                 )
         self.annotation.set_visible(False)
 
@@ -220,7 +221,7 @@ class BarChart(ChartBase):
                         linewidth=0,
                         label=name)
             c += 1
-        #self.ax.set_xticklabels(self.controller.x_values)
+        # self.ax.set_xticklabels(self.controller.x_values)
 
         # formatter
         formatter = FuncFormatter(gui_utils.get_currency_format_from_float)
@@ -234,7 +235,7 @@ class BarChart(ChartBase):
 
         # legend
         legend = self.ax.legend(loc="best")
-        #legend.draw_frame(False)
+        # legend.draw_frame(False)
         legend.get_frame().set_edgecolor("gray")
 
         # recalc limits
