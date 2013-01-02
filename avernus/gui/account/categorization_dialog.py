@@ -72,7 +72,7 @@ class CategorizationRulesDialog:
 
     def save_active_rule(self):
         if self.active_rule:
-            self.active_rule.rule = self.searchstring_entry.get_text()
+            self.active_rule.rule = unicode(self.searchstring_entry.get_text())
             self.active_rule.priority = self.priority_entry.get_value()
             active_iter = self.category_combobox.get_active_iter()
             model = self.category_combobox.get_model()
@@ -80,7 +80,7 @@ class CategorizationRulesDialog:
 
     def on_searchstring_changed(self, searchstring_entry):
         model = self.rules_tree.get_model()
-        new_text = searchstring_entry.get_text()
+        new_text = unicode(searchstring_entry.get_text())
         model[self.rules_tree.get_selected_item()[1]][2] = new_text
         if self.preview_active:
             self.active_rule.rule = new_text

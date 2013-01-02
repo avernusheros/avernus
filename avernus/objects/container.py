@@ -2,7 +2,7 @@ from avernus import objects
 from avernus import math
 from avernus.objects import asset as asset_m, position, portfolio_transaction
 from gi.repository import GObject
-from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, Unicode
 from sqlalchemy.orm import reconstructor, relationship
 import datetime
 
@@ -222,7 +222,7 @@ class Container(objects.Base):
     __mapper_args__ = {'polymorphic_on': discriminator}
 
     id = Column(Integer, primary_key=True)
-    name = Column(String)
+    name = Column(Unicode(32))
     last_update = Column(DateTime)
 
     def __iter__(self):

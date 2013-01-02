@@ -1,7 +1,7 @@
 from avernus import objects
 from gi.repository import GObject
 from sqlalchemy import Column, Integer, String, Float, Date, Boolean, ForeignKey, \
-    event, or_
+    event, or_, Unicode
 from sqlalchemy.orm import reconstructor, relationship
 import datetime
 
@@ -183,7 +183,7 @@ class CategoryFilter(objects.Base):
     __tablename__ = 'category_filter'
 
     id = Column(Integer, primary_key=True)
-    rule = Column(String, default="")
+    rule = Column(Unicode, default=u"")
     active = Column(Boolean, default=False)
     priority = Column(Integer, default=1)
     category_id = Column(String, ForeignKey('account_category.id'))

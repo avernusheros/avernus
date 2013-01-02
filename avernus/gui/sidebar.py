@@ -168,7 +168,7 @@ class Sidebar(GObject.GObject):
 
     def on_sidebar_cell_edited(self, cellrenderertext, path, new_text):
         model = self.tree.get_model()
-        model[path][0].name = model[path][2] = new_text
+        model[path][0].name = model[path][2] = unicode(new_text)
 
     def on_sidebar_add(self, widget):
         obj_string = self.selected_item[0]
