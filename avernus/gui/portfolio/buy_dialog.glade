@@ -78,8 +78,8 @@
             <child>
               <object class="GtkLabel" id="label6">
                 <property name="visible">True</property>
-                <property name="sensitive">False</property>
                 <property name="can_focus">False</property>
+                <property name="tooltip_text" translatable="yes">Computed from the Cost and the number of shares.</property>
                 <property name="label" translatable="yes">_Price per share:</property>
                 <property name="use_underline">True</property>
               </object>
@@ -220,12 +220,14 @@
               <placeholder/>
             </child>
             <child>
-              <object class="GtkLabel" id="price_label">
+              <object class="GtkEntry" id="price_entry">
                 <property name="visible">True</property>
                 <property name="sensitive">False</property>
-                <property name="can_focus">False</property>
-                <property name="has_tooltip">True</property>
-                <property name="label" translatable="yes">computed</property>
+                <property name="can_focus">True</property>
+                <property name="tooltip_text" translatable="yes">Computed from the Cost and the number of shares.</property>
+                <property name="editable">False</property>
+                <property name="invisible_char">●</property>
+                <property name="input_purpose">digits</property>
               </object>
               <packing>
                 <property name="left_attach">2</property>
