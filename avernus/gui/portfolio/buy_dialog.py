@@ -20,7 +20,8 @@ class BuyDialog:
 
         self.dlg = builder.get_object("dialog")
         self.shares_entry = builder.get_object("shares_entry")
-        self.price_entry = builder.get_object("price_entry")
+        self.price_label = builder.get_object("price_label")
+        self.price_label.set_tooltip_text(_('Computed from the Cost and the number of shares.'))
         self.costs_entry = builder.get_object("costs_entry")
         self.total_entry = builder.get_object("total_entry")
         self.calendar = builder.get_object("calendar")
@@ -85,7 +86,7 @@ class BuyDialog:
     def on_change(self, widget=None):
         price = self.total_entry.get_value() - self.costs_entry.get_value()
         price_per_share = price / self.shares_entry.get_value()
-        self.price_entry.set_value(price_per_share)
+        self.price_label.set_text(str(price_per_share))
 
     def on_asset_selection(self, *args):
         self.asset_ok = True
@@ -93,7 +94,7 @@ class BuyDialog:
         #TODO update does not work
         datasource_controller.update_asset(asset)
         if asset != None:
-            self.price_entry.set_value(asset.price)
+            self.price_label.set_text(str(asset.price))
             self.set_response_sensitivity()
         else:
             logger.error("Asset is None")
