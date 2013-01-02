@@ -56,35 +56,40 @@ class Position(objects.Base):
 
     @property
     def gain(self):
-        if self.asset:
+        try:
             change = self.asset.price - self.price_per_share
-        else:
-            return 0, 0
-        absolute = change * self.quantity
-        if self.price == 0:
-            percent = 0
-        else:
-            percent = absolute / self.price
-        return absolute, percent
+            absolute = change * self.quantity
+            if self.price == 0.0:
+                percent = 0.0
+            else:
+                percent = absolute / self.price
+            return absolute, percent
+        except:
+            return 0.0, 0.0
 
     @property
     def gain_with_dividends(self):
         absolute = self.gain[0]
         absolute += sum([div.total for div in self.dividends])
-        percent = absolute / self.price
+        if self.price == 0.0:
+            percent = 0.0
+        else:
+            percent = absolute / self.price
         return absolute, percent
 
     @property
     def current_value(self):
-        if not self.asset:
+        try:
+            return self.quantity * self.asset.price
+        except:
             return 0.0
-        return self.quantity * self.asset.price
 
     @property
     def current_change(self):
-        if not self.asset:
+        try:
+            return self.asset.change, self.asset.change_percent
+        except:
             return 0.0, 0.0
-        return self.asset.change, self.asset.change_percent
 
     def get_annual_return(self):
         # get a list of all transactions and dividend payments sorted by date
@@ -108,11 +113,6 @@ class PortfolioPosition(Position):
 
     # to prevent some warnings
     portfolio = None
-
-    def __init__(self, **kwargs):
-        Position.__init__(self, **kwargs)
-        self.portfolio.emit("position_added", self)
-        self.portfolio.emit("positions_changed")
 
     @reconstructor
     def _init(self):
