@@ -134,13 +134,14 @@ class BuyDialog:
                 self.position = position.get_position(portfolio=self.pf, asset=ass)
                 # create a new position if there is no active position with this asset in this portfolio
                 if not self.position or self.position.quantity == 0:
-                    self.position = position.PortfolioPosition(price=price,
-                                                           quantity=shares,
-                                                           portfolio=self.pf,
-                                                           asset=ass)
+                    self.position = position.PortfolioPosition(portfolio=self.pf, asset=ass)
                     self.position.date = date
                 portfolio_transaction.BuyTransaction(date=date, quantity=shares,
                                      price=price, cost=ta_costs,
                                      position=self.position)
                 self.position.recalculate()
+                print self.position.quantity
+                self.pf.emit("position_added", self.position)
+                self.pf.emit("positions_changed")
+
         self.dlg.destroy()
