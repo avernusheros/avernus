@@ -153,7 +153,7 @@ class DataSource():
         if not item[4] in TYPES:
             return None
         res = {}
-        res['name'] = item[1]
+        res['name'] = unicode(item[1])
         res['yahoo_id'] = item[0]
         res['isin'] = item[2]
         res['exchange'] = item[5]

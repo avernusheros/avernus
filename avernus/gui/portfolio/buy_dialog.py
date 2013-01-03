@@ -84,7 +84,11 @@ class BuyDialog:
 
     def on_change(self, widget=None):
         price = self.total_entry.get_value() - self.costs_entry.get_value()
-        price_per_share = price / self.shares_entry.get_value()
+        shares = self.shares_entry.get_value()
+        if shares > 0.0:
+            price_per_share = price / shares
+        else:
+            price_per_share = 0.0
         self.price_entry.set_text(gui_utils.get_string_from_float(price_per_share))
 
     def on_asset_selection(self, *args):

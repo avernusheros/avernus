@@ -2,7 +2,7 @@ from avernus import objects
 from gi.repository import GObject
 from sqlalchemy import or_, desc
 from sqlalchemy import Column, Integer, String, Float, Date, ForeignKey, \
-    DateTime
+    DateTime, Unicode
 from sqlalchemy.orm import reconstructor, relationship, backref
 import datetime
 
@@ -15,13 +15,13 @@ class Asset(objects.Base, GObject.GObject):
     __mapper_args__ = {'polymorphic_on': type}
 
     id = Column(Integer, primary_key=True)
-    name = Column(String)
+    name = Column(Unicode)
     date = Column(DateTime, default=datetime.datetime(1970, 1, 1))
     isin = Column(String, default="")
-    exchange = Column(String)
-    currency = Column(String)
+    exchange = Column(String(24))
+    currency = Column(String(8))
     price = Column(Float, default=1.0)
-    source = Column(String)
+    source = Column(String(16))
     change = Column(Float, default=0.0)
 
     __gsignals__ = {
@@ -163,7 +163,7 @@ def get_all_assets():
 
 
 def get_asset_for_searchstring(searchstring):
-    searchstring = '%' + searchstring + '%'
+    searchstring = unicode('%' + searchstring + '%')
     return objects.session.query(Asset)\
             .filter(or_(Asset.name.like(searchstring),
                      Asset.isin.like(searchstring))).all()
