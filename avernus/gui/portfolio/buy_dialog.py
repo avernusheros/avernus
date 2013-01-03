@@ -88,15 +88,10 @@ class BuyDialog:
         self.price_entry.set_text(gui_utils.get_string_from_float(price_per_share))
 
     def on_asset_selection(self, *args):
-        self.asset_ok = True
         asset = self.asset_selector.get_asset()
-        #TODO update does not work
-        datasource_controller.update_asset(asset)
-        if asset != None:
-            self.price_entry.set_text(gui_utils.get_string_from_float(asset.price))
+        if asset:
+            self.asset_ok = True
             self.set_response_sensitivity()
-        else:
-            logger.error("Asset is None")
 
     def on_asset_deselection(self, *args):
         self.asset_ok = False
@@ -140,7 +135,6 @@ class BuyDialog:
                                      price=price, cost=ta_costs,
                                      position=self.position)
                 self.position.recalculate()
-                print self.position.quantity
                 self.pf.emit("position_added", self.position)
                 self.pf.emit("positions_changed")
 

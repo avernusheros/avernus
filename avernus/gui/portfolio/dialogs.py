@@ -56,7 +56,7 @@ class PosSelector(Gtk.ComboBox):
         self.pack_start(cell, True)
         self.add_attribute(cell, 'text', 1)
         self.set_active(0)
-        #self.set_button_sensitivity(GTK_SENSITIVITY_AUTO)
+        # self.set_button_sensitivity(GTK_SENSITIVITY_AUTO)
 
         liststore = Gtk.ListStore(object, str)
         liststore.append([-1, 'Select a position'])
@@ -144,10 +144,10 @@ class DimensionComboBox(Gtk.ComboBoxText):
 
     def on_entry_changed(self, editable):
         parse = self.parse()
-        if not parse and not parse == []: # unsuccesfull parse
+        if not parse and not parse == []:  # unsuccesfull parse
             self.get_child().set_icon_from_stock(1, Gtk.STOCK_CANCEL)
             self.dialog.set_response_sensitive(Gtk.ResponseType.ACCEPT, False)
-        else: # sucessful parse
+        else:  # sucessful parse
             self.get_child().set_icon_from_stock(1, Gtk.STOCK_APPLY)
             self.dialog.set_response_sensitive(Gtk.ResponseType.ACCEPT, True)
 
@@ -181,23 +181,23 @@ class DimensionComboBox(Gtk.ComboBoxText):
                 data = portion.partition(":")
                 currentName = data[0].strip()
                 value = data[2].strip()
-                #print "|"+value+"|"
-                if value == "": # no value given
-                    if not currentName == "": # has the user not even entered a name?
-                        value = "100" # he has, so consider it to be a full value
+                # print "|"+value+"|"
+                if value == "":  # no value given
+                    if not currentName == "":  # has the user not even entered a name?
+                        value = "100"  # he has, so consider it to be a full value
                     else:
-                        continue # no name, no entry
+                        continue  # no name, no entry
                 try:
-                    value = locale.atof(value) # try parsing a float out of the number
+                    value = locale.atof(value)  # try parsing a float out of the number
                 except:
-                    return False # failure
+                    return False  # failure
                 sum += value
                 erg.append((unicode(currentName), value))
             if sum > 100:
                 return False
             else:
                 return erg
-        return [(self.get_model()[iterator][self.COL_OBJ].name, 100)] # hack to have it easier in the calling method
+        return [(self.get_model()[iterator][self.COL_OBJ].name, 100)]  # hack to have it easier in the calling method
 
     def get_active(self):
         erg = []
@@ -240,7 +240,7 @@ class EditAssetTable(Gtk.Table):
 
         currentRow = 4
         for dim in dimension.get_all_dimensions():
-            #print dim
+            # print dim
             self.attach(Gtk.Label(label=_(dim.name)), 0, 1, currentRow, currentRow + 1, yoptions=Gtk.AttachOptions.FILL)
             comboName = dim.name + "ValueComboBox"
             setattr(self, comboName, DimensionComboBox(dim, asset_to_edit, dialog))
@@ -301,7 +301,7 @@ class StockSelector(Gtk.VBox):
 
     def get_asset(self):
         path, col = self.result_tree.get_cursor()
-        if path != None:
+        if path:
             return self.result_tree.get_model()[path][0]
         return None
 

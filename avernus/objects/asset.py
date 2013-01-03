@@ -16,7 +16,7 @@ class Asset(objects.Base, GObject.GObject):
 
     id = Column(Integer, primary_key=True)
     name = Column(String)
-    date = Column(DateTime, default=datetime.datetime.now())
+    date = Column(DateTime, default=datetime.datetime(1970, 1, 1))
     isin = Column(String, default="")
     exchange = Column(String)
     currency = Column(String)
