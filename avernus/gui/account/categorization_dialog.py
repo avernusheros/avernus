@@ -98,8 +98,9 @@ class CategorizationRulesDialog:
         if self.active_rule:
             self.searchstring_entry.set_text(self.active_rule.rule)
             self.priority_entry.set_value(self.active_rule.priority)
-            active_iter = self.categories[self.active_rule.category.id]
-            self.category_combobox.set_active_iter(active_iter)
+            if self.active_rule.category:
+                active_iter = self.categories[self.active_rule.category.id]
+                self.category_combobox.set_active_iter(active_iter)
 
     def on_add(self, widget, user_data=None):
         rule = account.CategoryFilter(rule="", priority=1, active=True)
