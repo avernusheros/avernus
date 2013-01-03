@@ -64,11 +64,17 @@ class CategorizationRulesDialog:
         self.categories = {}
         root_categories = account.get_root_categories()
         treestore = self.category_combobox.get_model()
+        # insert None category
+        treestore.append(None, [None, "None"])
         for cat in root_categories:
             insert_recursive(cat, None)
 
     def get_active_rule(self):
-        return self.rules_tree.get_selected_item()[0]
+        item = self.rules_tree.get_selected_item()
+        if item:
+            return item[0]
+        else:
+            return None
 
     def save_active_rule(self):
         if self.active_rule:
@@ -96,14 +102,25 @@ class CategorizationRulesDialog:
         self.save_active_rule()
         self.active_rule = self.get_active_rule()
         if self.active_rule:
+            self.set_sensitive(True)
             self.searchstring_entry.set_text(self.active_rule.rule)
             self.priority_entry.set_value(self.active_rule.priority)
             if self.active_rule.category:
                 active_iter = self.categories[self.active_rule.category.id]
                 self.category_combobox.set_active_iter(active_iter)
+            else:
+                # select None category
+                self.category_combobox.set_active(0)
+        else:
+            self.set_sensitive(False)
+
+    def set_sensitive(self, status):
+        self.searchstring_entry.set_sensitive(status)
+        self.priority_entry.set_sensitive(status)
+        self.category_combobox.set_sensitive(status)
 
     def on_add(self, widget, user_data=None):
-        rule = account.CategoryFilter(rule="", priority=1, active=True)
+        rule = account.CategoryFilter(rule=_("insert searchstring"), priority=1, active=True)
         model = self.rules_tree.get_model()
         iterator = model.append([rule, rule.active, rule.rule])
         self.rules_tree.scroll_to_cell(model.get_path(iterator))
