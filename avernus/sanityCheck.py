@@ -44,6 +44,7 @@ try:
             raise db.Error('No Table %s present' % table)
     # start with the sanity checks
     # asset: Every asset should have a source, currency and isin
+    # TODO: Do the types have to be reflected in the type-tables?
     logger.info("Sanity Check for asset")
     cur.execute('SELECT * FROM asset')
     assets = cur.fetchall()
@@ -55,6 +56,7 @@ try:
                 logger.error('Missing %s on asset id %s' %(key, asset['id']))
     if assets_sane:
         logger.info("Sanity Check for asset passed")
+    checked_tables.append('asset')
     # quotation: the asset id has to be present 
     # TODO: The date sanity has to be checked as well
     logger.info('Sanity Check for quotation')
@@ -66,7 +68,17 @@ try:
         quotations_sane = False
     if quotations_sane:
         logger.info("Sanity Check for quotation passed")
-    checked_tables.append('asset')
+    checked_tables.append('quotation')
+    # stock: has to be an assert, i.e. the id has to be present in the assets
+    logger.info("Sanity Check for stock")
+    cur.execute('SELECT * from stock WHERE NOT EXISTS (select 1 from asset where stock.id = asset.id)')
+    stock_sane = True
+    for zombie in cur.fetchall():
+        logger.error('stock %s referrs to a non-existant asset %s' % (zombie['id'], zombie['id']))
+        stock_sane = False
+    if stock_sane:
+        logger.info('Sanity Check for stock passed')
+    checked_tables.append('stock')
         
 except db.Error, e: 
     logger.error("Error %s" % e.args[0])
