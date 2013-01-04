@@ -372,20 +372,6 @@ class EditPositionTable(Gtk.Table):
         Gtk.Table.__init__(self)
         self.pos = pos
 
-        self.attach(Gtk.Label(label=_('Shares')), 0, 1, 0, 1)
-        adjustment = Gtk.Adjustment(lower=0, upper=100000, step_increment=1.0)
-        self.shares_entry = Gtk.SpinButton(adjustment=adjustment, digits=2)
-        self.attach(self.shares_entry, 1, 2, 0, 1)
-
-        self.attach(Gtk.Label(label=_('Buy price')), 0, 1, 1, 2)
-        adjustment = Gtk.Adjustment(lower=0, upper=100000, step_increment=0.1)
-        self.price_entry = Gtk.SpinButton(adjustment=adjustment, digits=2)
-        self.attach(self.price_entry, 1, 2, 1, 2)
-
-        self.attach(Gtk.Label(label=_('Buy date')), 0, 1, 2, 3)
-        self.calendar = Gtk.Calendar()
-
-        self.attach(self.calendar, 1, 2, 2, 3)
         self.attach(Gtk.Label(label=_('Comment')), 0, 1, 3, 4)
 
         self.comment_entry = Gtk.TextView()
@@ -396,23 +382,10 @@ class EditPositionTable(Gtk.Table):
         self.update_values()
 
     def update_values(self, *args):
-        self.price_entry.set_value(self.pos.price)
-        self.shares_entry.set_value(self.pos.quantity)
-        self.calendar.select_month(self.pos.date.month - 1, self.pos.date.year)
-        self.calendar.select_day(self.pos.date.day)
         entry_buffer = self.comment_entry.get_buffer()
         entry_buffer.set_text(self.pos.comment)
 
     def process_result(self, widget=None):
-        self.pos.quantity = self.shares_entry.get_value()
-        self.pos.price = self.price_entry.get_value()
-        year, month, day = self.calendar.get_date()
-        self.pos.date = datetime.datetime(year, month + 1, day)
         b = self.comment_entry.get_buffer()
         self.pos.comment = unicode(b.get_text(b.get_start_iter(), b.get_end_iter(), True))
-        if hasattr(self.pos, "buy_transaction"):
-            ta = self.pos.buy_transaction
-            if ta:
-                ta.quantity = self.pos.quantity
-                ta.price = self.pos.price
-                ta.date = self.pos.date
+

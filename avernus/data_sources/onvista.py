@@ -65,9 +65,10 @@ class URLGetter(threading.Thread):
     def run(self):
         try:
             self.result = opener.open(self.url)
-            print "Downloaded ", self.url
+            # print "Downloaded ", self.url
         except IOError:
             print "Could not open document: %s" % self.url
+
 
 class FunctionThread(threading.Thread):
 
