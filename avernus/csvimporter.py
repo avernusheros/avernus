@@ -6,6 +6,9 @@ import chardet
 import codecs
 import csv
 import re
+import logging
+
+logger = logging.getLogger(__name__)
 
 if __name__ == '__main__':
     import sys
@@ -46,17 +49,15 @@ class CsvImporter:
         profile = {}
         #csv dialect
         csvdata = StringIO(open(filename, 'rb').read())
-        delimiter = self._guess_delimiter(csvdata)
+        profile['delimiter'] = self._guess_delimiter(csvdata)
+        logger.debug("delimiter detected", profile['delimiter'])
         csvdata.seek(0)
-        profile['dialect'] = csv.Sniffer().sniff(csvdata.read(2048), delimiters=delimiter)
-        csvdata.seek(0)
-        #encoding
         profile['encoding'] = chardet.detect(csvdata.read(2048))['encoding']
         csvdata.seek(0)
 
         #row length
         maxlength = 0
-        for row in UnicodeReader(csvdata, profile['dialect'], profile['encoding']):
+        for row in UnicodeReader(csvdata, profile['delimiter'], profile['encoding']):
             current = len(row)
             if current > maxlength:
                 maxlength = current
@@ -72,7 +73,7 @@ class CsvImporter:
         profile['category'] = -1
         csvdata.seek(0)
         checked_header = False
-        for row in UnicodeReader(csvdata, profile['dialect'], profile['encoding']):
+        for row in UnicodeReader(csvdata, profile['delimiter'], profile['encoding']):
             if len(row) == profile['row length']:
                 profile['description column'] = []
                 if not checked_header and profile['header']:
@@ -154,7 +155,7 @@ class CsvImporter:
         # subtracting from the likelihood of the first row being a header.
         started = False
         checked = 0
-        for row in UTF8Reader(csvdata, profile['dialect'], profile['encoding']):
+        for row in UnicodeReader(csvdata, profile['delimiter'], profile['encoding']):
             if len(row) == profile['row length']:
                 if not started:
                     started = True
@@ -243,7 +244,7 @@ class CsvImporter:
         csvdata = StringIO(open(filename, 'rb').read())
         result = []
         first_line_skipped = False
-        for row in UnicodeReader(csvdata, profile['dialect'], profile['encoding']):
+        for row in UnicodeReader(csvdata, profile['delimiter'], profile['encoding']):
             if len(row) == profile['row length']:
                 if not first_line_skipped and profile['header']:
                     first_line_skipped = True
@@ -297,26 +298,13 @@ class UnicodeReader:
     which is encoded in the given encoding.
     """
 
-    def __init__(self, f, dialect=csv.excel, encoding="utf-8", **kwds):
+    def __init__(self, f, delimiter=",", encoding="utf-8", **kwargs):
         f = UTF8Recoder(f, encoding)
-        self.reader = csv.reader(f, dialect=dialect, **kwds)
+        self.reader = csv.reader(f, delimiter=delimiter, **kwargs)
 
     def next(self):
         row = self.reader.next()
         return [unicode(s, "utf-8") for s in row]
-
-    def __iter__(self):
-        return self
-
-
-class UTF8Reader:
-    def __init__(self, f, dialect=csv.excel, encoding="utf-8", **kwds):
-        f = UTF8Recoder(f, encoding)
-        self.reader = csv.reader(f, dialect=dialect, **kwds)
-
-    def next(self):
-        row = self.reader.next()
-        return row
 
     def __iter__(self):
         return self
