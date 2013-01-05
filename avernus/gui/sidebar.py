@@ -147,7 +147,7 @@ class Sidebar(GObject.GObject):
         self.selected_item = None
         self.emit("unselect")
 
-    def on_sidebar_edit(self, treeview, iter, path):
+    def on_sidebar_edit(self, treeview):
         if self.selected_item is None:
             return
         obj, row = self.selected_item

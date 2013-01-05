@@ -11,7 +11,7 @@ class EditAccountDialog:
         builder = Gtk.Builder()
         builder.add_from_file(get_ui_file("account/edit_account_dialog.glade"))
         self.dlg = builder.get_object("dialog")
-        self.dlg.set_transient_for(parent.get_toplevel())
+        self.dlg.set_transient_for(parent.tree.get_toplevel())
         self.name_entry = builder.get_object("name_entry")
         self.name_entry.set_text(account.name)
         self.balance_entry = builder.get_object("balance_entry")
@@ -34,9 +34,9 @@ class EditAccountDialog:
 
     def on_response(self, widget, response):
         self.account.name = self.name_entry.get_text()
-        #FIXME
+        # FIXME
         #
         self.account.balance = self.balance_entry.get_value()
-        #self.get_model()[row][3] = gui_utils.get_currency_format_from_float(acc.balance)
+        # self.get_model()[row][3] = gui_utils.get_currency_format_from_float(acc.balance)
         self.account.type = self.combobox.get_model()[self.combobox.get_active_iter()][0]
         self.dlg.destroy()
