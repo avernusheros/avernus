@@ -34,9 +34,6 @@ class EditAccountDialog:
 
     def on_response(self, widget, response):
         self.account.name = self.name_entry.get_text()
-        # FIXME
-        #
         self.account.balance = self.balance_entry.get_value()
-        # self.get_model()[row][3] = gui_utils.get_currency_format_from_float(acc.balance)
         self.account.type = self.combobox.get_model()[self.combobox.get_active_iter()][0]
         self.dlg.destroy()
