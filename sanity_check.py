@@ -40,6 +40,19 @@ def test_for_existing_attributes(table, columns):
                 logger.error('Missing %s on %s %s' %(key, table, asset['id']))
     if table_sane:
         logger.info("Sanity Check (existing attribute) for %s passed" % table)
+        
+def test_for_correct_reference(table, foreign_key, referenced_table):
+    logger.info('Sanity Check (correct reference) for %s' % table)
+    cur.execute('SELECT * from %s WHERE NOT EXISTS (select 1 from %s where %s = %s)' % 
+                (table, referenced_table, table + '.' + foreign_key, referenced_table + '.id'))
+    zombies = cur.fetchall()
+    table_sane = True
+    for zombie in zombies:
+        logger.error('%s %s referrs to a non-existant %s %s' % 
+                     (table, zombie['id'], referenced_table, zombie['asset_id']))
+        table_sane = False
+    if table_sane:
+        logger.info("Sanity Check (correct reference) for %s passed" % table)
     
 try:
     con = db.connect(db_file)
@@ -66,70 +79,23 @@ try:
     checked_tables.append('asset')
     # quotation: the asset id has to be present 
     # TODO: The date sanity has to be checked as well
-    logger.info('Sanity Check for quotation')
-    cur.execute('SELECT * from quotation WHERE NOT EXISTS (select 1 from asset where quotation.asset_id = asset.id)')
-    zombie_quotations = cur.fetchall()
-    quotations_sane = True
-    for zombie in zombie_quotations:
-        logger.error('quotation %s referrs to a non-existant asset %s' % (zombie['id'], zombie['asset_id']))
-        quotations_sane = False
-    if quotations_sane:
-        logger.info("Sanity Check for quotation passed")
+    test_for_correct_reference('quotation', 'asset_id', 'asset')
     checked_tables.append('quotation')
     # stock: has to be an assert, i.e. the id has to be present in the table_entries
-    logger.info("Sanity Check for stock")
-    cur.execute('SELECT * from stock WHERE NOT EXISTS (select 1 from asset where stock.id = asset.id)')
-    stock_sane = True
-    for zombie in cur.fetchall():
-        logger.error('stock %s referrs to a non-existant asset %s' % (zombie['id'], zombie['id']))
-        stock_sane = False
-    if stock_sane:
-        logger.info('Sanity Check for stock passed')
+    test_for_correct_reference('stock', 'id', 'asset')
     checked_tables.append('stock')
     # category_filter: the rule must not be empty and the category id must exist
-    logger.info("Santiy Check for category_filter")
-    category_filter_sane = True
-    cur.execute('SELECT * from category_filter')
-    for cf in cur.fetchall():
-        if cf['rule'] == '':
-            logger.error('category_filter %s has an empty rule' % cf['id'])
-            category_filter_sane = False
-    cur.execute('SELECT * from category_filter WHERE NOT EXISTS (select 1 from account_category where category_filter.category_id = account_category.id)')
-    for zombie in cur.fetchall():
-        logger.error('category_filter %s referrs to a non-existant category %s' % (cf['id'], cf['category_id']))
-        category_filter_sane = False
-    if category_filter_sane:
-        logger.info('Sanity Check for category_filter passed')
+    test_for_existing_attributes('category_filter', ['rule'])
+    test_for_correct_reference('category_filter', 'category_id', 'account_category')
     checked_tables.append('category_filter')
     # dimension_value: the dimension_id must exist
-    logger.info('Sanity Check for dimension_value')
-    dimension_value_sane = True
-    cur.execute('SELECT * from dimension_value WHERE NOT EXISTS (select 1 from dimension where dimension_value.dimension_id = dimension.id)')
-    for zombie in cur.fetchall():
-        logger.error('dimension_value %s referrs to a non-existant dimension %s' % (zombie['id'], zombie['dimension_id']))
-        dimension_value_sane = False
-    if dimension_value_sane:
-        logger.info('Sanity Check for dimension_value passed')
+    test_for_correct_reference('dimension_value', 'dimension_id', 'dimension')
     checked_tables.append('dimension_value')
     # fund: the id has to be present
-    logger.info('Sanify Check for fund')
-    fund_sane = True
-    cur.execute('SELECT * from fund WHERE NOT EXISTS (select 1 from asset where fund.id = asset.id)')
-    for zombie in cur.fetchall():
-        logger.error('fund %s referrs to a non-existant asset' % zombie['id'])
-        fund_sane = False
-    if fund_sane:
-        logger.info('Sanity Check for fund passed')
+    test_for_correct_reference('fund', 'id', 'asset')
     checked_tables.append('fund')
     # position: the asset_id has to exist
-    logger.info('Sanity Check for position')
-    position_sane = True
-    cur.execute('SELECT * from position WHERE NOT EXISTS (select 1 from asset where position.asset_id = asset.id)')
-    for zombie in cur.fetchall():
-        position_sane = False
-        logger.error('position %s referrs to a non-existant asset %s' % (zombie['id'], zombie['asset_id']))
-    if position_sane:
-        logger.info('Sanity Check for position passed')
+    test_for_correct_reference('position', 'asset_id', 'asset')
     checked_tables.append('position')
         
 except db.Error, e: 
