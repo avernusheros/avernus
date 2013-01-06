@@ -27,6 +27,19 @@ checked_tables = []
 table_names = []
 expected_tables = ['asset', 'quotation', 'stock', 'category_filter', 'source_info',
                    'dimension_value', 'fund', 'position']
+
+def test_for_existing_attributes(table, columns):
+    logger.info("Sanity Check (existing attribute) for %s" % table)
+    cur.execute('SELECT * FROM %s' % table)
+    table_entries = cur.fetchall()
+    table_sane = True
+    for key in columns:
+        for asset in table_entries:
+            if asset[key] == '':
+                table_sane = False
+                logger.error('Missing %s on %s %s' %(key, table, asset['id']))
+    if table_sane:
+        logger.info("Sanity Check (existing attribute) for %s passed" % table)
     
 try:
     con = db.connect(db_file)
@@ -49,17 +62,7 @@ try:
     # start with the sanity checks
     # asset: Every asset should have a source, currency and isin
     # TODO: Do the types have to be reflected in the type-tables?
-    logger.info("Sanity Check for asset")
-    cur.execute('SELECT * FROM asset')
-    assets = cur.fetchall()
-    assets_sane = True
-    for key in ['isin','currency','source']:
-        for asset in assets:
-            if asset[key] == '':
-                assets_sane = False
-                logger.error('Missing %s on asset id %s' %(key, asset['id']))
-    if assets_sane:
-        logger.info("Sanity Check for asset passed")
+    test_for_existing_attributes('asset', ['source','currency','isin'])
     checked_tables.append('asset')
     # quotation: the asset id has to be present 
     # TODO: The date sanity has to be checked as well
@@ -73,7 +76,7 @@ try:
     if quotations_sane:
         logger.info("Sanity Check for quotation passed")
     checked_tables.append('quotation')
-    # stock: has to be an assert, i.e. the id has to be present in the assets
+    # stock: has to be an assert, i.e. the id has to be present in the table_entries
     logger.info("Sanity Check for stock")
     cur.execute('SELECT * from stock WHERE NOT EXISTS (select 1 from asset where stock.id = asset.id)')
     stock_sane = True
