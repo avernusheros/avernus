@@ -19,14 +19,29 @@ db_file = configs.get_option('database file', default=default_file)
 #building the database connection
 con = None
 # tables that do not need a sanity check
-omitted_tables = ['container', 'source_info']
+omitted_tables = ['container', 'source_info', 'account_category', 'asset_category',
+                  'meta', 'dimension']
 # Reasons for omitting tables:
 #    container: author does not know what could be checked (empty type??)
 #    source_info: author does not know what this table stores
-checked_tables = []
+#    account_category: check does not fit standard functions
+
+### TODO: More complex checks
+# account category parents have to exist
+# each portfolio transaction has to either be a buy or a sell
+# assetcategory parents have to exist
+# each container has to be one of the types
+# each asset has to be one of the types
+
+# as this 'each' foo has to be one of the 'bars' is common, there should be a function too
 table_names = []
 expected_tables = ['asset', 'quotation', 'stock', 'category_filter', 'source_info',
-                   'dimension_value', 'fund', 'position']
+                   'dimension_value', 'fund', 'position', 'asset_category', 
+                   'account_category', 'meta', 'dimension', 'container', 'account',
+                   'benchmark', 'asset_dimension_value', 'dividend', 'watchlist_position',
+                   'portfolio_position', 'account_transaction', 'portfolio_transaction',
+                   'portfolio_sell_transaction', 'portfolio_buy_transaction','watchlist',
+                   'portfolio', 'bond', 'etf']
 
 def test_for_existing_attributes(table, columns):
     logger.info("Sanity Check (existing attribute) for %s" % table)
@@ -48,8 +63,8 @@ def test_for_correct_reference(table, foreign_key, referenced_table):
     zombies = cur.fetchall()
     table_sane = True
     for zombie in zombies:
-        logger.error('%s %s referrs to a non-existant %s %s' % 
-                     (table, zombie['id'], referenced_table, zombie['asset_id']))
+        logger.error('%s %s referrs to a non-existant %s' % 
+                     (table, zombie['id'], referenced_table))
         table_sane = False
     if table_sane:
         logger.info("Sanity Check (correct reference) for %s passed" % table)
@@ -67,45 +82,69 @@ try:
     for table in tables:
         table_names.append(table['name'])
     logger.info("Table names %s" %table_names)
-    for table in omitted_tables:
-        logger.debug('Table %s omitted on purpose' % table)
+    logger.info('Tables omitted on purpose: %s' % omitted_tables)
     for table in expected_tables:
         if not table in table_names:
             raise db.Error('No Table %s present' % table)
+    logger.info('All expected tables are present')
+    if len(table_names) > len(expected_tables):
+        logger.error('There are unexpected tables in the database')
+    else:
+        logger.info('No unexpected tables were found in the database')
     # start with the sanity checks
     # asset: Every asset should have a source, currency and isin
     # TODO: Do the types have to be reflected in the type-tables?
     test_for_existing_attributes('asset', ['source','currency','isin'])
-    checked_tables.append('asset')
     # quotation: the asset id has to be present 
     # TODO: The date sanity has to be checked as well
     test_for_correct_reference('quotation', 'asset_id', 'asset')
-    checked_tables.append('quotation')
     # stock: has to be an assert, i.e. the id has to be present in the table_entries
     test_for_correct_reference('stock', 'id', 'asset')
-    checked_tables.append('stock')
     # category_filter: the rule must not be empty and the category id must exist
     test_for_existing_attributes('category_filter', ['rule'])
     test_for_correct_reference('category_filter', 'category_id', 'account_category')
-    checked_tables.append('category_filter')
     # dimension_value: the dimension_id must exist
     test_for_correct_reference('dimension_value', 'dimension_id', 'dimension')
-    checked_tables.append('dimension_value')
     # fund: the id has to be present
     test_for_correct_reference('fund', 'id', 'asset')
-    checked_tables.append('fund')
     # position: the asset_id has to exist
     test_for_correct_reference('position', 'asset_id', 'asset')
-    checked_tables.append('position')
+    # account: should have a name and a type
+    test_for_existing_attributes('category_filter', ['rule'])
+    # benchmark: portfolio_id must exist
+    test_for_correct_reference('benchmark', 'portfolio_id', 'portfolio')
+    # asset_dimension_value: asset_id must exist
+    test_for_correct_reference('asset_dimension_value', 'asset_id', 'asset')
+    # dividend: position_id must exist
+    test_for_correct_reference('dividend', 'position_id', 'position')
+    # watchlist_position: watchlist_id must exist
+    test_for_correct_reference('watchlist_position', 'watchlist_id', 'watchlist')
+    # portfolio_position: portfolio_id must exist
+    test_for_correct_reference('portfolio_position', 'portfolio_id', 'portfolio')
+    # account_transaction: account_id must exist, description, amount and date have to be
+    test_for_existing_attributes('account_transaction', ['description','amount','date'])
+    test_for_correct_reference('account_transaction', 'account_id', 'account')
+    # portfolio_transaction: position_id must exist, type, date, quantity and price have to be
+    test_for_existing_attributes('portfolio_transaction', ['type','date','quantity','price'])
+    test_for_correct_reference('portfolio_transaction', 'position_id', 'position')
+    # portfolio_sell_transaction: id has to exist
+    test_for_correct_reference('portfolio_sell_transaction', 'id', 'portfolio_transaction')
+    # portfolio_buy_transaction: id has to exist
+    test_for_correct_reference('portfolio_buy_transaction', 'id', 'portfolio_transaction')
+    # watchlist: id has to exist
+    test_for_correct_reference('watchlist', 'id', 'container')
+    # portfolio: id has to exist
+    test_for_correct_reference('portfolio', 'id', 'container')
+    # bond: id has to exist
+    test_for_correct_reference('bond', 'id', 'asset')
+    # etf: id has to exist
+    test_for_correct_reference('etf', 'id', 'asset')
         
 except db.Error, e: 
-    logger.error("Error %s" % e.args[0])
+    logger.critical("Fatal Error %s" % e.args[0])
     sys.exit(1)
     
 finally:
-    for table in table_names:
-        if not table in checked_tables and not table in omitted_tables:
-            logger.info('Table %s was neither checked nor omitted on purpose.' % table)
     if con:
         con.close()
         logger.info("Connection closed")
