@@ -54,14 +54,14 @@ class AccountTransactionTab(page.Page):
     def set_account(self, account):
         self.account = account
         self.model.clear()
-        for ta in self.account:
+        for ta in self.account.transactions:
             self.model.append(self.get_item_to_insert(ta))
         self.signal_id = self.account.connect('transaction_added', self.on_transaction_added)
         self.update_page()
         self.update_charts()
 
     def get_item_to_insert(self, ta):
-        if ta.category:
+        if ta.category is not None:
             cat = ta.category.name
         else:
             cat = ''
@@ -93,9 +93,9 @@ class AccountTransactionTab(page.Page):
         self.modelfilter = self.builder.get_object("treemodelfilter1")
         self.model = self.modelfilter.get_model()
         self.modelfilter.set_visible_func(self.visible_cb, None)
-        sorter = self.builder.get_object("treemodelsort1")
-        sorter.set_sort_func(self.DATE, gui_utils.sort_by_datetime, self.DATE)
-        self.model.set_sort_func(self.DATE, gui_utils.sort_by_datetime, self.DATE)
+        self.sorter = self.builder.get_object("treemodelsort1")
+        self.sorter.set_sort_func(self.DATE, gui_utils.sort_by_datetime, self.DATE)
+        self.sorter.set_sort_column_id(self.DATE, Gtk.SortType.DESCENDING)
 
         if self.config.get_option('transactionGrid', 'Account') == 'True':
             self.transactions_tree.set_grid_lines(Gtk.TreeViewGridLines.HORIZONTAL)

@@ -44,22 +44,6 @@
       </object>
     </child>
   </object>
-  <object class="GtkListStore" id="account_transactions_treestore">
-    <columns>
-      <!-- column-name object -->
-      <column type="PyObject"/>
-      <!-- column-name description -->
-      <column type="gchararray"/>
-      <!-- column-name amount -->
-      <column type="gfloat"/>
-      <!-- column-name category -->
-      <column type="gchararray"/>
-      <!-- column-name date -->
-      <column type="PyObject"/>
-      <!-- column-name icon -->
-      <column type="gchararray"/>
-    </columns>
-  </object>
   <object class="GtkAction" id="add_acc_transaction">
     <property name="label" translatable="yes">_Add</property>
     <property name="short_label" translatable="yes">_Add</property>
@@ -283,6 +267,22 @@
         <signal name="activate" handler="on_update_wlpositions" swapped="no"/>
       </object>
     </child>
+  </object>
+  <object class="GtkListStore" id="account_transactions_treestore">
+    <columns>
+      <!-- column-name object -->
+      <column type="PyObject"/>
+      <!-- column-name description -->
+      <column type="gchararray"/>
+      <!-- column-name amount -->
+      <column type="gfloat"/>
+      <!-- column-name category -->
+      <column type="gchararray"/>
+      <!-- column-name date -->
+      <column type="PyObject"/>
+      <!-- column-name icon -->
+      <column type="gchararray"/>
+    </columns>
   </object>
   <object class="GtkMenu" id="acc_transaction_contextmenu">
     <property name="visible">True</property>
@@ -941,6 +941,7 @@
   <object class="GtkMenu" id="category_context_menu">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
+    <property name="accel_group">accelgroup1</property>
     <child>
       <object class="GtkImageMenuItem" id="add1">
         <property name="related_action">add_category</property>
