@@ -190,16 +190,17 @@ class MainWindow:
         dialog.hide()
 
     def on_help(self, *args):
+        # unused
         web("https://answers.launchpad.net/avernus")
 
     def on_website(self, *args):
-        web("https://launchpad.net/avernus")
+        web("https://github.com/avernusheros/avernus")
 
     def on_feature(self, *args):
-        web("https://blueprints.launchpad.net/avernus")
+        web("https://github.com/avernusheros/avernus/issues")
 
     def on_bug(self, *args):
-        web("https://bugs.launchpad.net/avernus")
+        web("https://github.com/avernusheros/avernus/issues")
 
     def on_export(self, *args):
         ExportDialog(parent=self.window)
