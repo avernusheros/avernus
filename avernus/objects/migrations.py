@@ -3,6 +3,13 @@ import datetime
 import sqlite3
 
 
+def to_seventeen(db):
+    conn = sqlite3.connect(db)
+    conn.execute("DROP TABLE IF EXISTS stock")
+    conn.execute("DROP TABLE IF EXISTS bond")
+    conn.commit()
+
+
 def to_sixteen(db):
     for pf in container.get_all_portfolios():
         for pos in pf:
