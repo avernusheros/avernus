@@ -11,15 +11,15 @@ class AssetCategory(objects.Base):
     name = Column(String)
     parent_id = Column(Integer, ForeignKey('asset_category.id'))
     parent = relationship('AssetCategory', remote_side=[id], backref='children')
-    target_percent = Column(Float)
+    target_percent = Column(Float, default=0.0)
     positions = relationship('PortfolioPosition', backref="asset_category")
     accounts = relationship('Account', backref="asset_category")
 
 
-def get_root_category():
-    return objects.session.query(AssetCategory)\
+def get_root_categories():
+    return objects.Session().query(AssetCategory)\
                      .filter_by(parent=None)\
-                     .one()
+                     .all()
 
 
 def calculate_values():
@@ -45,11 +45,12 @@ def calculate_values():
         for child in root.children:
             calculate_other(child)
 
-    root = get_root_category()
-    calculate_current(root)
-    root.current_percent = 1.0
-    root.target = root.current
-    root.delta = 0.0
-    root.delta_percent = 0.0
-    for child in root.children:
-        calculate_other(child)
+    roots = get_root_categories()
+    for root in roots:
+        calculate_current(root)
+        root.current_percent = 1.0
+        root.target = root.current
+        root.delta = 0.0
+        root.delta_percent = 0.0
+        for child in root.children:
+            calculate_other(child)

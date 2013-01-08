@@ -228,4 +228,7 @@ def load_sample_data(session):
     account.AccountTransaction(account=acc, description='another sample transaction', amount= -33.90, date=datetime.date.today())
     container.Portfolio(name=_('sample portfolio'))
     container.Watchlist(name=_('sample watchlist'))
-    asset_category.AssetCategory(name=_('All'))
+    root = asset_category.AssetCategory(name=_('My Portfolio'))
+    asset_category.AssetCategory(name=_("Group 1"), parent=root)
+    asset_category.AssetCategory(name=_("Group 2"), parent=root)
+    asset_category.AssetCategory(name=_("Group 3"), parent=root)

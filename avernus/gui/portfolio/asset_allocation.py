@@ -75,21 +75,24 @@ class AssetAllocation(page.Page):
                          0.0, 0.0, False, "portfolio"])
 
         self.treestore.clear()
-        root = asset_category.get_root_category()
+        roots = asset_category.get_root_categories()
         asset_category.calculate_values()
-        insert_recursive(root, None)
-        self.tree.expand_all()
+        for root in roots:
+            insert_recursive(root, None)
+
+        # expand first level
+        iterator = self.treestore.get_iter_first()
+        while iterator:
+            path = self.treestore.get_path(iterator)
+            self.tree.expand_row(path, False)
+            iterator = self.treestore.iter_next(iterator)
+
+        self.tree.set_cursor(0)
 
     def show_context_menu(self, event):
         selected_item = self.get_selected_item()[0]
         if selected_item.__class__.__name__ == "AssetCategory":
             context_menu = self.builder.get_object("asset_allocation_contextmenu")
-            remove_item = self.builder.get_object("remove_category")
-            # check if it is the root category -> disable removing
-            if selected_item.parent == None:
-                remove_item.set_sensitive(False)
-            else:
-                remove_item.set_sensitive(True)
             # accounts
             account_menu = self.builder.get_object("aa_add_account_menu")
             all_accounts = account.get_all_accounts()
@@ -143,20 +146,22 @@ class AssetAllocation(page.Page):
         if event.button == 3:
             self.show_context_menu(event)
 
+    def on_aa_add_root(self, widget):
+        asset_category.AssetCategory(name=_("new root"), target_percent=1.0)
+        self.load_categories()
+
     def on_aa_add_category(self, widget):
         parent = self.get_selected_item()[0]
-        asset_category.AssetCategory(parent=parent, name="new category", target_percent=0.0)
+        asset_category.AssetCategory(parent=parent, name=_("new category"), target_percent=0.0)
         self.load_categories()
 
     def on_aa_remove_category(self, widget):
         cat = self.get_selected_item()[0]
-        # disable deleting of root category
-        if not cat.parent == None:
-            # move children to parent category
-            for child in cat.children:
-                child.parent = cat.parent
-            cat.delete()
-            self.load_categories()
+        # move children to parent category
+        for child in cat.children:
+            child.parent = cat.parent
+        cat.delete()
+        self.load_categories()
 
     def on_aa_category_edited(self, cell, path, new_name):
         if self.treestore[path][self.OBJECT].name != new_name:
