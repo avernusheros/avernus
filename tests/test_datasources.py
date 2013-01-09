@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 
-from avernus.data_sources import onvista, yahoo
+from avernus import objects
 from avernus.objects import db
+from avernus.data_sources import onvista, yahoo
 import __builtin__
 import datetime
 import unittest
@@ -12,7 +13,7 @@ __builtin__._ = str
 dbfile = ":memory:"
 db.set_db(dbfile)
 db.connect()
-db.session.commit()
+objects.Session().commit()
 
 #stocks which are mentioned in bug reports
 ITEMS_WITH_PROBLEMS = ['AT0000859582']
