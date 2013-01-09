@@ -31,7 +31,7 @@ Running from sources
   * on debian based systems  
    
    ```
-    sudo apt-get install bzr python-dateutil, python-tz, python-chardet, python-beautifulsoup, python-matplotlib
+    sudo apt-get install bzr python-dateutil python-tz python-chardet python-beautifulsoup python-matplotlib
    ```
 * pull code from github
    ```
