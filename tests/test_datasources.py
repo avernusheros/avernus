@@ -29,8 +29,7 @@ class DataSourcesTest(unittest.TestCase):
             self.assertIsNotNone(data['exchange'])
             self.assertIsNotNone(data['name'])
             self.assertIsNotNone(data['currency'])
-            self.assertTrue(data['type'] < 10)
-            self.assertTrue(data['type'] >= 0)
+            self.assertEqual(data['type'], 'stock')
 
     def test_onvista_search(self):
         o = onvista.DataSource()
@@ -40,8 +39,7 @@ class DataSourcesTest(unittest.TestCase):
             self.assertIsNotNone(data['exchange'])
             self.assertIsNotNone(data['name'])
             self.assertIsNotNone(data['currency'])
-            self.assertTrue(data['type'] < 10)
-            self.assertTrue(data['type'] >= 0)
+            self.assertEqual(data['type'], 'fund')
 
     def put_stocks_in_db(self):
         o = onvista.DataSource()

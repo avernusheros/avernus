@@ -11,6 +11,7 @@ sources = data_sources.sources
 current_searches = []
 search_callback = None
 
+# FIXME where is this used?
 ASSET_TYPES = {
                asset_m.Bond: _('Bond'),
                asset_m.Etf: _('ETF'),
@@ -18,6 +19,12 @@ ASSET_TYPES = {
                asset_m.Stock: _('Stock'),
                }
 
+TYPES ={
+       "bond": asset_m.Bond,
+       "etf": asset_m.Etf,
+       "fund": asset_m.Fund,
+       "stock": asset_m.Stock,
+       }
 
 def get_source_count():
     return len(sources.items())
@@ -65,13 +72,15 @@ def _item_found_callback(item, source, source_info=None):
     if not existing_asset:
         new = True
         item['source'] = source.name
-        assettype = item['assettype']
-        del item['assettype']
+        assettype = item['type']
+        del item['type']
         if 'yahoo_id' in item:
             del item['yahoo_id']
         if 'volume' in item:
             del item['volume']
-        existing_asset = assettype(**item)
+        if assettype not in TYPES:
+            return
+        existing_asset = TYPES[assettype](**item)
         if source_info is not None:
             asset_m.SourceInfo(source=source.name,
                                asset=existing_asset,

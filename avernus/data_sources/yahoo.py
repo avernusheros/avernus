@@ -8,12 +8,14 @@ import json
 import logging
 from datetime import datetime
 
-from avernus.objects.asset import Fund, Stock
 
 
 logger = logging.getLogger(__name__)
 
-TYPES = {'Fonds':Fund, 'Aktien':Stock, 'Namensaktie':Stock, 'Vorzugsaktie':Stock}
+TYPES = {'Fonds': 'fund',
+         'Aktien': 'stock',
+         'Namensaktie': 'stock',
+         'Vorzugsaktie': 'stock'}
 EXCHANGE_CURRENCY = [(['NYQ', 'PNK'], 'USD'),
                      (['GER', 'BER', 'FRA', 'MUN', 'STU', 'HAN' , 'HAM' , 'DUS', 'AMS'], 'EUR'),
                      (['LSE'], 'GBP')
@@ -157,7 +159,7 @@ class DataSource():
         res['yahoo_id'] = item[0]
         res['isin'] = item[2]
         res['exchange'] = item[5]
-        res['assettype'] = TYPES[item[4]]
+        res['type'] = TYPES[item[4]]
         for ex, cur in EXCHANGE_CURRENCY:
             if res['exchange'] in ex:
                 res['currency'] = cur
