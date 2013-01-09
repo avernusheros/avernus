@@ -2,6 +2,7 @@ import os, sys, logging
 
 from avernus import config
 import sqlite3 as db
+import optparse
 
 logger = logging.getLogger(os.path.basename(__file__))
 logger.setLevel(logging.DEBUG)
@@ -10,11 +11,17 @@ consolehandler = logging.StreamHandler()
 consolehandler.setFormatter(formatter)
 logger.addHandler(consolehandler)
 
+version = '1'
 
+parser = optparse.OptionParser(version='%prog ' + version)
+parser.add_option("-f", "--file", dest="datafile", help="set database file")
+(options, args) = parser.parse_args()
+db_file = options.datafile
+if db_file == None:
 # getting the database file
-configs = config.avernusConfig()
-default_file = os.path.join(config.config_path, 'avernus.db')
-db_file = configs.get_option('database file', default=default_file)
+    configs = config.avernusConfig()
+    default_file = os.path.join(config.config_path, 'avernus.db')
+    db_file = configs.get_option('database file', default=default_file)
 
 #building the database connection
 con = None
