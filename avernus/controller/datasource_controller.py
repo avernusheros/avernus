@@ -60,14 +60,14 @@ def stop_search():
     current_searches = []
 
 
-def _item_found_callback(item, source, source_info=None):
+def _item_found_callback(item, source, source_infos=None):
     # mandatory: isin, type, name
     if not validate_isin(item['isin']):
         return
     new = False
     existing_asset = check_asset_existance(source=source.name,
-                                                   isin=item['isin'],
-                                                   currency=item['currency'])
+                                           isin=item['isin'],
+                                           currency=item['currency'])
     # FIXME ugly
     if not existing_asset:
         new = True
@@ -81,8 +81,9 @@ def _item_found_callback(item, source, source_info=None):
         if assettype not in TYPES:
             return
         existing_asset = TYPES[assettype](**item)
-        if source_info is not None:
-            asset_m.SourceInfo(source=source.name,
+        if source_infos is not None:
+            for source_info in source_infos:
+                asset_m.SourceInfo(source=source.name,
                                asset=existing_asset,
                                info=source_info)
     if new and search_callback:

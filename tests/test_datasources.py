@@ -17,7 +17,7 @@ db.connect()
 
 
 #stocks which are mentioned in bug reports
-ITEMS_WITH_PROBLEMS = ['AT0000859582']
+ITEMS_WITH_PROBLEMS = ['AT0000859582', 'DE0005229504']
 
 
 class DataSourcesTest(unittest.TestCase):
