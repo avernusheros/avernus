@@ -35,12 +35,8 @@ omitted_tables = ['container', 'source_info', 'account_category', 'asset_categor
 
 ### TODO: More complex checks
 # account category parents have to exist
-# each portfolio transaction has to either be a buy or a sell
 # assetcategory parents have to exist
-# each container has to be one of the types
-# each asset has to be one of the types
 
-# as this 'each' foo has to be one of the 'bars' is common, there should be a function too
 table_names = []
 expected_tables = ['asset', 'quotation', 'category_filter', 'source_info',
                    'dimension_value', 'fund', 'position', 'asset_category', 
@@ -49,6 +45,26 @@ expected_tables = ['asset', 'quotation', 'category_filter', 'source_info',
                    'portfolio_position', 'account_transaction', 'portfolio_transaction',
                    'portfolio_sell_transaction', 'portfolio_buy_transaction','watchlist',
                    'portfolio', 'etf']
+
+def test_for_complete_partition(table, partition_tables, criteria = None):
+    logger.info("Sanity Check (complete partition) for %s" % table)
+    table_sane = True
+    query = 'SELECT * from %s WHERE ' % table
+    if criteria:
+        query += criteria + " AND "
+    for part_table in partition_tables:
+        query += ' NOT EXISTS (select 1 from %s where %s.id = %s.id)' % (
+                                                                        part_table,
+                                                                        table,
+                                                                        part_table
+                                                                        )
+        if partition_tables.index(part_table) < len(partition_tables) - 1:
+            query += ' AND '
+    cur.execute(query)
+    for zombie in cur.fetchall():
+        logger.error('unpartitioned %s %s' % (table, zombie['id']))
+    if table_sane:
+        logger.info("Sanity Check (complete partition) for %s passed" % table)
 
 def test_for_existing_attributes(table, columns):
     logger.info("Sanity Check (existing attribute) for %s" % table)
@@ -96,6 +112,9 @@ try:
     logger.info('All expected tables are present')
     if len(table_names) > len(expected_tables):
         logger.error('There are unexpected tables in the database')
+        for table in table_names:
+            if not table in expected_tables:
+                logger.info('unexpected table %s' % table)
     else:
         logger.info('No unexpected tables were found in the database')
     # start with the sanity checks
@@ -142,6 +161,11 @@ try:
     test_for_correct_reference('portfolio', 'id', 'container')
     # etf: id has to exist
     test_for_correct_reference('etf', 'id', 'asset')
+    #complex sanity checks
+    test_for_complete_partition('portfolio_transaction', ['portfolio_buy_transaction','portfolio_sell_transaction'])
+    test_for_complete_partition('container', ['portfolio', 'watchlist'])
+    test_for_complete_partition('asset', ['fund'], 'type="fund"')
+    test_for_complete_partition('asset', ['etf'], 'type="etf"')
         
 except db.Error, e: 
     logger.critical("Fatal Error %s" % e.args[0])
