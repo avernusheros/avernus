@@ -23,10 +23,9 @@ ITEMS_WITH_PROBLEMS = ['AT0000859582', 'DE0005229504']
 class DataSourcesTest(unittest.TestCase):
 
     def setUp(self):
-        self.put_stocks_in_db()
         db.set_db(dbfile)
         db.connect()
-        objects.Session().commit()
+        objects.session.commit()
 
     def test_yahoo_search(self):
         y = yahoo.DataSource()
@@ -58,6 +57,7 @@ class DataSourcesTest(unittest.TestCase):
             item, source, source_info = res
             dsm._item_found_callback(item, source, source_info)
 
+
     def test_update_stocks(self):
         test_date = datetime.datetime(1900, 1, 1)
         for asset in objects.asset.get_all_assets():
@@ -71,7 +71,7 @@ class DataSourcesTest(unittest.TestCase):
 
     def get_historical_prices(self, st):
         #loops needed, since the dsm uses generators
-        for foo in dsm.update_historical_prices_asset(st):
+        for foo in dsm.update_historical_prices_asset(st, threaded=False):
             for bar in foo:
                 pass
 

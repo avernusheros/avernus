@@ -110,13 +110,14 @@ def update_asset(asset):
     update_assets([asset])
 
 
-def get_historical_prices(asset, start_date=None, end_date=None):
+def get_historical_prices(asset, start_date=None, end_date=None, threaded=True):
     # detach asset from current sqlalchemy session
-    try:
-        objects.session.expunge(asset)
-        other_session = True
-    except:
-        other_session = False
+    if threaded:
+        try:
+            objects.session.expunge(asset)
+            other_session = True
+        except:
+            other_session = False
 
     if end_date is None:
         end_date = datetime.date.today() - datetime.timedelta(days=1)
@@ -134,17 +135,17 @@ def get_historical_prices(asset, start_date=None, end_date=None):
     yield 1
 
     # merge asset into session again
-    if other_session:
+    if threaded and other_session:
         objects.Session().commit()
         objects.session.merge(asset, load=False)
 
 
-def update_historical_prices_asset(asset):
+def update_historical_prices_asset(asset, threaded=True):
     end_date = datetime.date.today() - datetime.timedelta(days=1)
     start_date = asset.get_date_of_newest_quotation()
     if start_date == None:
         start_date = datetime.date(end_date.year - 20, end_date.month, end_date.day)
-    yield get_historical_prices(asset, start_date, end_date)
+    yield get_historical_prices(asset, start_date, end_date, threaded=threaded)
 
 
 def update_historical_prices(*args):
@@ -175,7 +176,7 @@ def update_all(*args):
         yield count / itemcount
     for item in objects.Session().query(container.Container).all():
         item.last_update = datetime.datetime.now()
-    db.Session().commit()
+    objects.session.commit()
     yield 1
 
 
