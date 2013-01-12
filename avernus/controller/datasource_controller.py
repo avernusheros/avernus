@@ -176,7 +176,7 @@ def update_all(*args):
         yield count / itemcount
     for item in objects.Session().query(container.Container).all():
         item.last_update = datetime.datetime.now()
-    objects.session.commit()
+    objects.Session().commit()
     yield 1
 
 
