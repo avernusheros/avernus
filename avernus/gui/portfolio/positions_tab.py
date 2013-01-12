@@ -41,7 +41,8 @@ def quantity_markup(column, cell, model, iterator, column_id):
 def current_price_markup(column, cell, model, iterator, column_id):
     try:
         asset = model.get_value(iterator, 0).asset
-        markup = "%s\n<small>%s</small>" % (gui_utils.get_currency_format_from_float(model.get_value(iterator, column_id)), gui_utils.get_datetime_string(asset.date))
+        # why? model.get_value(iterator, column_id)
+        markup = "%s\n<small>%s</small>" % (gui_utils.get_currency_format_from_float(asset.price), gui_utils.get_datetime_string(asset.date))
         cell.set_property('markup', markup)
     except:
         pass
