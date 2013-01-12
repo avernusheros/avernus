@@ -342,6 +342,7 @@ class PortfolioPositionsTab(page.Page):
 
     def on_position_added(self, portfolio, position):
         self.insert_position(position)
+        position.asset.connect("updated", self.on_asset_updated)
         # update portfolio fractions
         self.update()
 

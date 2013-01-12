@@ -120,9 +120,10 @@ class Etf(Asset):
 
 
 class Bond(Asset):
-    __tablename__ = 'bond'
+    # commented so no extra table is generated for bonds
+    #__tablename__ = 'bond'
+    #id = Column(Integer, ForeignKey('asset.id'), primary_key=True)
     __mapper_args__ = {'polymorphic_identity': 'bond'}
-    id = Column(Integer, ForeignKey('asset.id'), primary_key=True)
 
 
 class Quotation(objects.Base):
@@ -153,9 +154,10 @@ class SourceInfo(objects.Base):
 
 
 class Stock(Asset):
-    __tablename__ = 'stock'
+    # commented so no extra table is generated for stocks
+    #__tablename__ = 'stock'
+    #id = Column(Integer, ForeignKey('asset.id'), primary_key=True)
     __mapper_args__ = {'polymorphic_identity': 'stock'}
-    id = Column(Integer, ForeignKey('asset.id'), primary_key=True)
 
 
 def get_all_assets():

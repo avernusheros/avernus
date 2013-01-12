@@ -109,7 +109,6 @@ class PortfolioPosition(Position):
     __mapper_args__ = {'polymorphic_identity': 'portfolioposition'}
     id = Column(Integer, ForeignKey('position.id'), primary_key=True)
     portfolio_id = Column(Integer, ForeignKey('portfolio.id'))
-    asset_category_id = Column(Integer, ForeignKey('asset_category.id'))
 
     # to prevent some warnings
     portfolio = None

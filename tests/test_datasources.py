@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 
-from avernus.data_sources import onvista, yahoo
+from avernus import objects
 from avernus.objects import db
+from avernus.data_sources import onvista, yahoo
+from avernus.controller import datasource_controller as dsm
 import __builtin__
 import datetime
 import unittest
@@ -12,13 +14,19 @@ __builtin__._ = str
 dbfile = ":memory:"
 db.set_db(dbfile)
 db.connect()
-db.session.commit()
+
 
 #stocks which are mentioned in bug reports
-ITEMS_WITH_PROBLEMS = ['AT0000859582']
+ITEMS_WITH_PROBLEMS = ['AT0000859582', 'DE0005229504']
 
 
 class DataSourcesTest(unittest.TestCase):
+
+    def setUp(self):
+        self.put_stocks_in_db()
+        db.set_db(dbfile)
+        db.connect()
+        objects.Session().commit()
 
     def test_yahoo_search(self):
         y = yahoo.DataSource()
@@ -28,8 +36,7 @@ class DataSourcesTest(unittest.TestCase):
             self.assertIsNotNone(data['exchange'])
             self.assertIsNotNone(data['name'])
             self.assertIsNotNone(data['currency'])
-            self.assertTrue(data['type'] < 10)
-            self.assertTrue(data['type'] >= 0)
+            self.assertEqual(data['type'], 'stock')
 
     def test_onvista_search(self):
         o = onvista.DataSource()
@@ -39,58 +46,71 @@ class DataSourcesTest(unittest.TestCase):
             self.assertIsNotNone(data['exchange'])
             self.assertIsNotNone(data['name'])
             self.assertIsNotNone(data['currency'])
-            self.assertTrue(data['type'] < 10)
-            self.assertTrue(data['type'] >= 0)
+            self.assertEqual(data['type'], 'fund')
 
     def put_stocks_in_db(self):
         o = onvista.DataSource()
         for res in o.search("DE0008474248"):
             item, source, source_info = res
-            self.dsm._item_found_callback(item, source, source_info)
-        y = yahoo.Yahoo()
+            dsm._item_found_callback(item, source, source_info)
+        y = yahoo.DataSource()
         for res in y.search('google'):
             item, source, source_info = res
-            self.dsm._item_found_callback(item, source, source_info)
+            dsm._item_found_callback(item, source, source_info)
 
     def test_update_stocks(self):
-        self.put_stocks_in_db()
         test_date = datetime.datetime(1900, 1, 1)
-        for st in controller.getAllStock():
-            st.price = 0
-            st.date = test_date
-        for item in self.dsm.update_stocks(controller.getAllStock()):
-            pass
-        for st in controller.getAllStock():
-            self.assertNotEqual(st.date, test_date)
-            self.assertNotEqual(st.price, 0)
-
+        for asset in objects.asset.get_all_assets():
+            asset.price = 0
+            asset.date = test_date
+        for item in dsm.update_assets(objects.asset.get_all_assets()):
+            print item
+        for asset in objects.asset.get_all_assets():
+            self.assertNotEqual(asset.date, test_date)
+            self.assertNotEqual(asset.price, 0)
 
     def get_historical_prices(self, st):
         #loops needed, since the dsm uses generators
-        for foo in self.dsm.update_historical_prices(st):
+        for foo in dsm.update_historical_prices_asset(st):
             for bar in foo:
                 pass
 
-    def test_historicals(self):
+    def test_historicals_onvista(self):
         self.put_stocks_in_db()
-        for st in controller.getAllStock():
-            count = len(controller.getAllQuotationsFromStock(st))
-            self.get_historical_prices(st)
-            self.assertNotEqual(count, len(controller.getAllQuotationsFromStock(st)))
+        asset_count = 0
+        for asset in objects.asset.get_all_assets():
+            if "onvista" in asset.source:
+                asset_count +=1
+                count = len(asset.quotations)
+                self.get_historical_prices(asset)
+                self.assertNotEqual(count, len(asset.quotations))
+        self.assertNotEqual(0, asset_count)
+
+    def test_historicals_yahoo(self):
+        self.put_stocks_in_db()
+        asset_count = 0
+        for asset in objects.asset.get_all_assets():
+            if "yahoo" in asset.source:
+                asset_count +=1
+                count = len(asset.quotations)
+                self.get_historical_prices(asset)
+                self.assertNotEqual(count, len(asset.quotations))
+        self.assertNotEqual(0, asset_count)
 
     def test_items_with_problems(self):
         for item in ITEMS_WITH_PROBLEMS:
-            self.dsm.search(item, threaded=False)
-            stock = controller.getStockForSearchstring(item)[0]
-
+            dsm.search(item, threaded=False)
+            asset = objects.asset.get_asset_for_searchstring(item)[0]
+            self.assertIsNotNone(asset)
             test_date = datetime.datetime(1900, 1, 1)
-            stock.price = 0
-            stock.date = test_date
-            self.dsm.update_stocks([stock])
-            self.assertNotEqual(stock.date, test_date)
-            self.assertNotEqual(stock.price, 0)
+            asset.price = 0
+            asset.date = test_date
+            for foo in dsm.update_assets([asset]):
+                pass
+            self.assertNotEqual(asset.date, test_date)
+            self.assertNotEqual(asset.price, 0)
 
-            self.assertIsNotNone(stock)
-            count = len(controller.getAllQuotationsFromStock(stock))
-            self.get_historical_prices(stock)
-            self.assertNotEqual(count, len(controller.getAllQuotationsFromStock(stock)))
+            self.assertIsNotNone(asset)
+            count = len(asset.quotations)
+            self.get_historical_prices(asset)
+            self.assertNotEqual(count, len(asset.quotations))

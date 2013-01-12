@@ -146,16 +146,18 @@ def float_to_red_green_string_percent(column, cell, model, iterator, user_data):
     cell.set_property('markup', get_green_red_string(num, text))
 
 
-def sort_by_datetime(model, iter1, iter2, data=None):
+def sort_by_datetime(model, iter1, iter2, column):
     try:
-        d1 = model.get_value(iter1, data)
-        d2 = model.get_value(iter2, data)
+        d1 = model.get_value(iter1, column)
+        d2 = model.get_value(iter2, column)
         if not d1 or not d2:
             return 1
         elif d1 < d2:
             return -1
         elif d1 > d2:
             return 1
+        else:
+            return 0
     except:
         return 0
 

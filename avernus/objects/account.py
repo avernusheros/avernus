@@ -54,7 +54,6 @@ class Account(objects.Base, GObject.GObject):
     type = Column(Integer, default=1)
     balance = Column(Float, default=0.0)
     transactions = relationship('AccountTransaction', backref='account', cascade="all,delete")
-    asset_category_id = Column(Integer, ForeignKey('asset_category.id'))
 
     __gsignals__ = {
         'balance_changed': (GObject.SIGNAL_RUN_LAST, None,
@@ -152,7 +151,7 @@ class AccountTransaction(objects.Base):
     account = None
     transfer_id = Column(Integer, ForeignKey('account_transaction.id'))
     transfer = relationship('AccountTransaction', remote_side=[id], uselist=False, post_update=True)
-    category_id = Column(String, ForeignKey('account_category.id'))
+    category_id = Column(Integer, ForeignKey('account_category.id'))
     category = relationship('AccountCategory', remote_side=[AccountCategory.id])
 
     def __init__(self, ** kwargs):
@@ -162,8 +161,7 @@ class AccountTransaction(objects.Base):
         self.account.emit("transaction_added", self)
 
     def __repr__(self):
-        return "AccountTransaction<" + str(self.date) + \
-                 "|" + str(self.amount) + ">"
+        return "AccountTransaction<%i> %s|%.2f" % (self.id, str(self.date), self.amount)
 
     def yield_matching_transfer_transactions(self):
         res = objects.session.query(AccountTransaction) \
@@ -186,7 +184,7 @@ class CategoryFilter(objects.Base):
     rule = Column(Unicode, default=u"")
     active = Column(Boolean, default=False)
     priority = Column(Integer, default=1)
-    category_id = Column(String, ForeignKey('account_category.id'))
+    category_id = Column(Integer, ForeignKey('account_category.id'))
     category = relationship('AccountCategory', remote_side=[AccountCategory.id])
 
     def __repr__(self):

@@ -8,12 +8,16 @@ import json
 import logging
 from datetime import datetime
 
-from avernus.objects.asset import Fund, Stock
 
 
 logger = logging.getLogger(__name__)
 
-TYPES = {'Fonds':Fund, 'Aktien':Stock, 'Namensaktie':Stock, 'Vorzugsaktie':Stock}
+TYPES = {'Fonds': 'fund',
+         'Aktien': 'stock',
+         'Namensaktie': 'stock',
+         'Vorzugsaktie': 'stock',
+         'ETF': "etf",
+         }
 EXCHANGE_CURRENCY = [(['NYQ', 'PNK'], 'USD'),
                      (['GER', 'BER', 'FRA', 'MUN', 'STU', 'HAN' , 'HAM' , 'DUS', 'AMS'], 'EUR'),
                      (['LSE'], 'GBP')
@@ -134,7 +138,8 @@ class DataSource():
         doc = self.__request(searchstring)
         if doc is None:
             return
-        soup = BeautifulSoup(doc)  # , markupMassage=my_massage)
+        soup = BeautifulSoup(doc)
+        found_items = {}
         for table in soup.findAll('table', summary="YFT_SL_TABLE_SUMMARY"):
             for body in table('tbody'):
                 for row in body('tr'):
@@ -147,7 +152,14 @@ class DataSource():
                         item = self.__to_dict(item)
                         if item is not None:
                             logger.debug("yahoo found item", item)
-                            yield (item, self, item['yahoo_id'])
+                            # cache all items first, because we want to store all yahoo_ids..
+                            key = (item['isin'], item['currency'])
+                            if key in found_items:
+                                found_items[key].append(item)
+                            else:
+                                found_items[key] = [item]
+        for items in found_items.values():
+            yield (items[0], self, [item['yahoo_id'] for item in items])
 
     def __to_dict(self, item):
         if not item[4] in TYPES:
@@ -157,7 +169,7 @@ class DataSource():
         res['yahoo_id'] = item[0]
         res['isin'] = item[2]
         res['exchange'] = item[5]
-        res['assettype'] = TYPES[item[4]]
+        res['type'] = TYPES[item[4]]
         for ex, cur in EXCHANGE_CURRENCY:
             if res['exchange'] in ex:
                 res['currency'] = cur
@@ -166,6 +178,28 @@ class DataSource():
 
 
 if __name__ == "__main__":
+    import sys
+    sys.path.append("../../")
+    import __builtin__
+    __builtin__._ = str
+    from avernus import objects
+    from avernus.objects import db
+    from avernus.controller import datasource_controller as dsm
+
+    dbfile = ":memory:"
+    db.set_db(dbfile)
+    db.connect()
+
     y = DataSource()
-    for item in y.search('DE0005229504'):
-        print item
+    for res in y.search('DE0005229504'):
+        item, source, source_info = res
+        dsm._item_found_callback(item, source, source_info)
+
+    asset = objects.asset.get_asset_for_searchstring('DE0005229504')[0]
+    for foo in dsm.update_assets([asset]):
+        pass
+
+    for asset in objects.asset.get_all_assets():
+        for foo in dsm.update_historical_prices_asset(asset):
+            for bar in foo:
+                pass

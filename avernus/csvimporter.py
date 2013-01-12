@@ -125,7 +125,6 @@ class CsvImporter:
             for char in row:
                 if char in candidates:
                     histogram[char][-1] += 1
-
         max_count = 0
         ret = None
         for key, hist in histogram.iteritems():
@@ -135,7 +134,7 @@ class CsvImporter:
             #    print key, max_item, count
             # counting the appearance of the max item is not good if the
             # max_item is low, so the average appearance gives a better result
-            count = sum(hist) / len(hist)
+            count = float(sum(hist)) / len(hist)
             if count > max_count:
                 max_count = count
                 ret = key

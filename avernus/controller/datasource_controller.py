@@ -11,6 +11,7 @@ sources = data_sources.sources
 current_searches = []
 search_callback = None
 
+# FIXME where is this used?
 ASSET_TYPES = {
                asset_m.Bond: _('Bond'),
                asset_m.Etf: _('ETF'),
@@ -18,6 +19,12 @@ ASSET_TYPES = {
                asset_m.Stock: _('Stock'),
                }
 
+TYPES ={
+       "bond": asset_m.Bond,
+       "etf": asset_m.Etf,
+       "fund": asset_m.Fund,
+       "stock": asset_m.Stock,
+       }
 
 def get_source_count():
     return len(sources.items())
@@ -53,27 +60,30 @@ def stop_search():
     current_searches = []
 
 
-def _item_found_callback(item, source, source_info=None):
+def _item_found_callback(item, source, source_infos=None):
     # mandatory: isin, type, name
     if not validate_isin(item['isin']):
         return
     new = False
     existing_asset = check_asset_existance(source=source.name,
-                                                   isin=item['isin'],
-                                                   currency=item['currency'])
+                                           isin=item['isin'],
+                                           currency=item['currency'])
     # FIXME ugly
     if not existing_asset:
         new = True
         item['source'] = source.name
-        assettype = item['assettype']
-        del item['assettype']
+        assettype = item['type']
+        del item['type']
         if 'yahoo_id' in item:
             del item['yahoo_id']
         if 'volume' in item:
             del item['volume']
-        existing_asset = assettype(**item)
-        if source_info is not None:
-            asset_m.SourceInfo(source=source.name,
+        if assettype not in TYPES:
+            return
+        existing_asset = TYPES[assettype](**item)
+        if source_infos is not None:
+            for source_info in source_infos:
+                asset_m.SourceInfo(source=source.name,
                                asset=existing_asset,
                                info=source_info)
     if new and search_callback:
@@ -110,7 +120,7 @@ def get_historical_prices(asset, start_date=None, end_date=None):
         for qt in sources[asset.source].update_historical_prices(asset, start_date, end_date):
             # qt : (stock, exchange, date, open, high, low, close, vol)
             if qt is not None:
-                yield asset_m.Quotation(asset_id=asset.id, exchange=qt[1], \
+                yield asset_m.Quotation(asset=asset, exchange=qt[1], \
                         date=qt[2], open=qt[3], high=qt[4], \
                         low=qt[5], close=qt[6], volume=qt[7])
     # needed to run as generator thread
@@ -140,7 +150,7 @@ def update_all(*args):
         yield count / itemcount
     for item in objects.Session().query(container.Container).all():
         item.last_update = datetime.datetime.now()
-    objects.Session().commit()
+    db.Session().commit()
     yield 1
 
 

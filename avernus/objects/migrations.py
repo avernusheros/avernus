@@ -3,6 +3,26 @@ import datetime
 import sqlite3
 
 
+#TODO dropping columns is not supported by sqlite3
+
+
+def to_eighteen(db):
+    conn = sqlite3.connect(db)
+    for row in conn.execute('SELECT id, asset_category_id from account').fetchall():
+        if row[1] is not None:
+            conn.execute("INSERT INTO category_account VALUES (?, ?)", (row[1], row[0]))
+    for row in conn.execute('SELECT id, asset_category_id from portfolio_position').fetchall():
+        if row[1] is not None:
+            conn.execute("INSERT INTO category_position VALUES (?, ?)", (row[1], row[0]))
+    conn.commit()
+
+def to_seventeen(db):
+    conn = sqlite3.connect(db)
+    conn.execute("DROP TABLE IF EXISTS stock")
+    conn.execute("DROP TABLE IF EXISTS bond")
+    conn.commit()
+
+
 def to_sixteen(db):
     for pf in container.get_all_portfolios():
         for pos in pf:
@@ -228,4 +248,7 @@ def load_sample_data(session):
     account.AccountTransaction(account=acc, description='another sample transaction', amount= -33.90, date=datetime.date.today())
     container.Portfolio(name=_('sample portfolio'))
     container.Watchlist(name=_('sample watchlist'))
-    asset_category.AssetCategory(name=_('All'))
+    root = asset_category.AssetCategory(name=_('My Portfolio'))
+    asset_category.AssetCategory(name=_("Group 1"), parent=root)
+    asset_category.AssetCategory(name=_("Group 2"), parent=root)
+    asset_category.AssetCategory(name=_("Group 3"), parent=root)
