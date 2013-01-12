@@ -26,16 +26,13 @@ if db_file == None:
 #building the database connection
 con = None
 # tables that do not need a sanity check
-omitted_tables = ['container', 'source_info', 'account_category', 'asset_category',
-                  'meta', 'dimension']
+omitted_tables = ['container', 'source_info', 'meta', 'dimension']
 # Reasons for omitting tables:
 #    container: author does not know what could be checked (empty type??)
 #    source_info: author does not know what this table stores
 #    account_category: check does not fit standard functions
 
 ### TODO: More complex checks
-# account category parents have to exist
-# assetcategory parents have to exist
 
 table_names = []
 expected_tables = ['asset', 'quotation', 'category_filter', 'source_info',
@@ -45,6 +42,19 @@ expected_tables = ['asset', 'quotation', 'category_filter', 'source_info',
                    'portfolio_position', 'account_transaction', 'portfolio_transaction',
                    'portfolio_sell_transaction', 'portfolio_buy_transaction','watchlist',
                    'portfolio', 'etf']
+
+def test_for_complete_hierarchie(table):
+    logger.info('Sanity Check (complete hierarchie) for %s' % table)
+    table_sane = True
+    cur.execute('select * from %s where parent_id AND not exists (select 1 from %s tt where %s.parent_id = tt.id)' % (
+                                                                                                                      table,
+                                                                                                                      table,
+                                                                                                                      table))
+    for orphan in cur.fetchall():
+        table_sane = False
+        logger.error('orphaned %s %s' % (table,orphan['id']))
+    if table_sane:
+        logger.info('Sanity Check (complete hierarchie) for %s passed' % table)
 
 def test_for_complete_partition(table, partition_tables, criteria = None):
     logger.info("Sanity Check (complete partition) for %s" % table)
@@ -63,6 +73,7 @@ def test_for_complete_partition(table, partition_tables, criteria = None):
     cur.execute(query)
     for zombie in cur.fetchall():
         logger.error('unpartitioned %s %s' % (table, zombie['id']))
+        table_sane = False
     if table_sane:
         logger.info("Sanity Check (complete partition) for %s passed" % table)
 
@@ -166,6 +177,8 @@ try:
     test_for_complete_partition('container', ['portfolio', 'watchlist'])
     test_for_complete_partition('asset', ['fund'], 'type="fund"')
     test_for_complete_partition('asset', ['etf'], 'type="etf"')
+    test_for_complete_hierarchie('account_category')
+    test_for_complete_hierarchie('asset_category')
         
 except db.Error, e: 
     logger.critical("Fatal Error %s" % e.args[0])
