@@ -42,13 +42,13 @@ omitted_tables = ['container', 'source_info', 'account_category', 'asset_categor
 
 # as this 'each' foo has to be one of the 'bars' is common, there should be a function too
 table_names = []
-expected_tables = ['asset', 'quotation', 'stock', 'category_filter', 'source_info',
+expected_tables = ['asset', 'quotation', 'category_filter', 'source_info',
                    'dimension_value', 'fund', 'position', 'asset_category', 
                    'account_category', 'meta', 'dimension', 'container', 'account',
                    'benchmark', 'asset_dimension_value', 'dividend', 'watchlist_position',
                    'portfolio_position', 'account_transaction', 'portfolio_transaction',
                    'portfolio_sell_transaction', 'portfolio_buy_transaction','watchlist',
-                   'portfolio', 'bond', 'etf']
+                   'portfolio', 'etf']
 
 def test_for_existing_attributes(table, columns):
     logger.info("Sanity Check (existing attribute) for %s" % table)
@@ -105,8 +105,6 @@ try:
     # quotation: the asset id has to be present 
     # TODO: The date sanity has to be checked as well
     test_for_correct_reference('quotation', 'asset_id', 'asset')
-    # stock: has to be an assert, i.e. the id has to be present in the table_entries
-    test_for_correct_reference('stock', 'id', 'asset')
     # category_filter: the rule must not be empty and the category id must exist
     test_for_existing_attributes('category_filter', ['rule'])
     test_for_correct_reference('category_filter', 'category_id', 'account_category')
@@ -142,8 +140,6 @@ try:
     test_for_correct_reference('watchlist', 'id', 'container')
     # portfolio: id has to exist
     test_for_correct_reference('portfolio', 'id', 'container')
-    # bond: id has to exist
-    test_for_correct_reference('bond', 'id', 'asset')
     # etf: id has to exist
     test_for_correct_reference('etf', 'id', 'asset')
         
