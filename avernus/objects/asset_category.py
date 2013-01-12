@@ -1,6 +1,17 @@
 from avernus import objects
-from sqlalchemy import Column, Integer, String, ForeignKey, Float
+from sqlalchemy import Column, Integer, String, ForeignKey, Float, Table
 from sqlalchemy.orm import relationship
+
+
+association_table_positions = Table('category_position', objects.Base.metadata,
+    Column('category_id', Integer, ForeignKey('asset_category.id')),
+    Column('position_id', Integer, ForeignKey('portfolio_position.id'))
+)
+
+association_table_accounts = Table('category_account', objects.Base.metadata,
+    Column('category_id', Integer, ForeignKey('asset_category.id')),
+    Column('account_id', Integer, ForeignKey('account.id'))
+)
 
 
 class AssetCategory(objects.Base):
@@ -12,8 +23,12 @@ class AssetCategory(objects.Base):
     parent_id = Column(Integer, ForeignKey('asset_category.id'))
     parent = relationship('AssetCategory', remote_side=[id], backref='children')
     target_percent = Column(Float, default=0.0)
-    positions = relationship('PortfolioPosition', backref="asset_category")
-    accounts = relationship('Account', backref="asset_category")
+    positions = relationship('PortfolioPosition',
+                            secondary=association_table_positions,
+                            backref="asset_categories")
+    accounts = relationship('Account',
+                            secondary=association_table_accounts,
+                            backref="asset_categories")
 
 
 def get_root_categories():

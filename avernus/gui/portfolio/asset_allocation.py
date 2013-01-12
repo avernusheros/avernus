@@ -101,7 +101,7 @@ class AssetAllocation(page.Page):
                 menu = Gtk.Menu()
                 account_menu.set_submenu(menu)
                 for acc in all_accounts:
-                    if acc.asset_category != selected_item:
+                    if selected_item not in acc.asset_categories:
                         item = Gtk.MenuItem(label=acc.name)
                         item.connect("activate", self.on_aa_add_account, selected_item, acc)
                         menu.append(item)
@@ -113,7 +113,7 @@ class AssetAllocation(page.Page):
                 menu = Gtk.Menu()
                 positions_menu.set_submenu(menu)
                 for pos in positions:
-                    if pos.asset_category is None and pos.quantity > 0:
+                    if pos.quantity > 0:
                         item = Gtk.MenuItem(label=pos.asset.name)
                         item.connect("activate", self.on_aa_add_position, selected_item, pos)
                         menu.append(item)
@@ -135,11 +135,11 @@ class AssetAllocation(page.Page):
         return isinstance(item, asset_category.AssetCategory)
 
     def on_aa_add_account(self, widget, category, acc):
-        acc.asset_category = category
+        acc.asset_categories.append(category)
         self.load_categories()
 
     def on_aa_add_position(self, widget, category, pos):
-        pos.asset_category = category
+        pos.asset_categories.append(category)
         self.load_categories()
 
     def on_asset_allocation_button_press(self, widget, event):
@@ -175,8 +175,10 @@ class AssetAllocation(page.Page):
             self.load_categories()
 
     def on_aa_remove_from_category(self, widget):
-        item = self.get_selected_item()[0]
-        item.asset_category = None
+        item, child_iter = self.get_selected_item()
+        parent_iter = self.treestore.iter_parent(child_iter)
+        category = self.treestore[parent_iter][self.OBJECT]
+        item.asset_categories.remove(category)
         self.load_categories()
 
     def on_asset_allocation_key_press(self, widget, event):

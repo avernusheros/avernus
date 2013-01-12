@@ -3,6 +3,19 @@ import datetime
 import sqlite3
 
 
+#TODO dropping columns is not supported by sqlite3
+
+
+def to_eighteen(db):
+    conn = sqlite3.connect(db)
+    for row in conn.execute('SELECT id, asset_category_id from account').fetchall():
+        if row[1] is not None:
+            conn.execute("INSERT INTO category_account VALUES (?, ?)", (row[1], row[0]))
+    for row in conn.execute('SELECT id, asset_category_id from portfolio_position').fetchall():
+        if row[1] is not None:
+            conn.execute("INSERT INTO category_position VALUES (?, ?)", (row[1], row[0]))
+    conn.commit()
+
 def to_seventeen(db):
     conn = sqlite3.connect(db)
     conn.execute("DROP TABLE IF EXISTS stock")
