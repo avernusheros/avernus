@@ -1,6 +1,6 @@
 from avernus import data_sources, objects
 from avernus.gui import threads
-from avernus.objects import asset as asset_m, container, position
+from avernus.objects import asset as asset_model, container, position
 import datetime
 import logging
 import re
@@ -13,17 +13,17 @@ search_callback = None
 
 # FIXME where is this used?
 ASSET_TYPES = {
-               asset_m.Bond: _('Bond'),
-               asset_m.Etf: _('ETF'),
-               asset_m.Fund: _('Fund'),
-               asset_m.Stock: _('Stock'),
+               asset_model.Bond: _('Bond'),
+               asset_model.Etf: _('ETF'),
+               asset_model.Fund: _('Fund'),
+               asset_model.Stock: _('Stock'),
                }
 
 TYPES ={
-       "bond": asset_m.Bond,
-       "etf": asset_m.Etf,
-       "fund": asset_m.Fund,
-       "stock": asset_m.Stock,
+       "bond": asset_model.Bond,
+       "etf": asset_model.Etf,
+       "fund": asset_model.Fund,
+       "stock": asset_model.Stock,
        }
 
 def get_source_count():
@@ -83,7 +83,7 @@ def _item_found_callback(item, source, source_infos=None):
         existing_asset = TYPES[assettype](**item)
         if source_infos is not None:
             for source_info in source_infos:
-                asset_m.SourceInfo(source=source.name,
+                asset_model.SourceInfo(source=source.name,
                                asset=existing_asset,
                                info=source_info)
     if new and search_callback:
@@ -111,6 +111,13 @@ def update_asset(asset):
 
 
 def get_historical_prices(asset, start_date=None, end_date=None):
+    # detach asset from current sqlalchemy session
+    try:
+        objects.session.expunge(asset)
+        other_session = True
+    except:
+        other_session = False
+
     if end_date is None:
         end_date = datetime.date.today() - datetime.timedelta(days=1)
     start_date = asset.get_date_of_newest_quotation()
@@ -120,11 +127,16 @@ def get_historical_prices(asset, start_date=None, end_date=None):
         for qt in sources[asset.source].update_historical_prices(asset, start_date, end_date):
             # qt : (stock, exchange, date, open, high, low, close, vol)
             if qt is not None:
-                yield asset_m.Quotation(asset=asset, exchange=qt[1], \
+                yield asset_model.Quotation(asset=asset, exchange=qt[1], \
                         date=qt[2], open=qt[3], high=qt[4], \
                         low=qt[5], close=qt[6], volume=qt[7])
     # needed to run as generator thread
     yield 1
+
+    # merge asset into session again
+    if other_session:
+        objects.Session().commit()
+        objects.session.merge(asset, load=False)
 
 
 def update_historical_prices_asset(asset):
@@ -135,8 +147,21 @@ def update_historical_prices_asset(asset):
     yield get_historical_prices(asset, start_date, end_date)
 
 
+def update_historical_prices(*args):
+    assets = position.get_all_used_assets()
+    l = len(assets)
+    i = 0.0
+    for asset in assets:
+        for qt in get_historical_prices(asset):
+            yield i / l
+        i += 1.0
+        yield i / l
+    objects.Session().commit()
+    yield 1
+
+
 def check_asset_existance(source, isin, currency):
-    return 0 < objects.session.query(asset_m.Asset).filter_by(isin=isin,
+    return 0 < objects.session.query(asset_model.Asset).filter_by(isin=isin,
                                             source=source,
                                             currency=currency).count()
 
@@ -153,18 +178,6 @@ def update_all(*args):
     db.Session().commit()
     yield 1
 
-
-def update_historical_prices(*args):
-    assets = position.get_all_used_assets()
-    l = len(assets)
-    i = 0.0
-    for asset in assets:
-        for qt in get_historical_prices(asset):
-            yield i / l
-        i += 1.0
-        yield i / l
-    objects.Session().commit()
-    yield 1
 
 
 def update_positions(portfolio):
