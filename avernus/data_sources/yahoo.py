@@ -190,16 +190,21 @@ if __name__ == "__main__":
     db.set_db(dbfile)
     db.connect()
 
+    test_asset = 'FR0010959676'
+
     y = DataSource()
-    for res in y.search('DE0005229504'):
+    for res in y.search(test_asset):
         item, source, source_info = res
         dsm._item_found_callback(item, source, source_info)
 
-    asset = objects.asset.get_asset_for_searchstring('DE0005229504')[0]
+    asset = objects.asset.get_asset_for_searchstring(test_asset)[0]
     for foo in dsm.update_assets([asset]):
         pass
 
     for asset in objects.asset.get_all_assets():
-        for foo in dsm.update_historical_prices_asset(asset):
+        for foo in dsm.update_historical_prices_asset(asset, threaded=False):
             for bar in foo:
                 pass
+
+    print asset.price, asset.date
+    print len(asset.quotations)

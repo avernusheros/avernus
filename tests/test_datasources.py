@@ -2,18 +2,17 @@
 
 from avernus import objects
 from avernus.objects import db
+
+dbfile = ":memory:"
+db.set_db(dbfile)
+db.connect()
+
 from avernus.data_sources import onvista, yahoo
 from avernus.controller import datasource_controller as dsm
 import __builtin__
 import datetime
 import unittest
 __builtin__._ = str
-
-
-
-dbfile = ":memory:"
-db.set_db(dbfile)
-db.connect()
 
 
 #stocks which are mentioned in bug reports

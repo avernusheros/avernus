@@ -1,14 +1,15 @@
 #!/usr/bin/env python
 
 import unittest, datetime
-from avernus.csvimporter import CsvImporter
-from avernus.objects import db
+
 from avernus import objects
+from avernus.objects import db
 
 dbfile = ":memory:"
 db.set_db(dbfile)
 db.connect()
-objects.Session().commit()
+
+from avernus.csvimporter import CsvImporter
 
 
 class CsvImporterTest(unittest.TestCase):
