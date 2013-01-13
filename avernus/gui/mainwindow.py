@@ -212,13 +212,9 @@ class MainWindow:
             pass
 
     def on_get_historical_data(self, *args):
-        def finished_cb():
-            progress_manager.remove_monitor(42)
-        m = progress_manager.add_monitor(42, _('downloading quotations...'), Gtk.STOCK_REFRESH)
-        threads.GeneratorTask(datasource_controller.update_historical_prices, m.progress_update, complete_callback=finished_cb).start()
+        progress_manager.add_task(datasource_controller.update_historical_prices,
+                            description = _('downloading quotations...'))
 
     def on_update_assets(self, *args):
-        def finished_cb():
-            progress_manager.remove_monitor(11)
-        m = progress_manager.add_monitor(11, _('updating stocks...'), Gtk.STOCK_REFRESH)
-        threads.GeneratorTask(datasource_controller.update_all, m.progress_update, complete_callback=finished_cb).start()
+        progress_manager.add_task(datasource_controller.update_all,
+                            description = _('updating assets...'))

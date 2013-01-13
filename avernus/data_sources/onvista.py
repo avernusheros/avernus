@@ -10,7 +10,6 @@ import threading
 import urllib
 import urllib2
 
-
 logger = logging.getLogger(__name__)
 
 

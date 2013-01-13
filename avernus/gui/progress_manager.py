@@ -1,17 +1,17 @@
 from gi.repository import Gtk
 from gi.repository import GObject
 import logging
+from avernus.gui import threads
 
 logger = logging.getLogger(__name__)
 
 
 class ProgressMonitor(Gtk.Frame):
 
-    def __init__(self, progress_id, desc, icon):
+    def __init__(self, desc, icon):
         Gtk.Frame.__init__(self)
         self.desc = desc
         self.icon = icon
-        self.id = progress_id
         self._setup_widgets()
         self.show_all()
 
@@ -27,7 +27,7 @@ class ProgressMonitor(Gtk.Frame):
         GObject.timeout_add(100, self.progress_update_pulse)
 
     def stop(self, *e):
-        remove_monitor(self.id)
+        remove_monitor(self)
 
     def _setup_widgets(self):
         icon = self.icon
@@ -58,10 +58,21 @@ class ProgressMonitor(Gtk.Frame):
 
 
 box = None
-monitors = {}
+monitors = []
 
 
-def add_monitor(progress_id, description, stock_icon):
+def add_task(task, args=None, description="", callback=None):
+    def finished_cb():
+        remove_monitor(m)
+        if callback is not None:
+            callback()
+
+    m = add_monitor(description, Gtk.STOCK_REFRESH)
+    threads.GeneratorTask(task, m.progress_update, complete_callback=finished_cb,
+                              args=args).start()
+
+
+def add_monitor(description, stock_icon):
     """
     Adds a progress box
 
@@ -70,21 +81,20 @@ def add_monitor(progress_id, description, stock_icon):
     """
     if not monitors:
         box.show()
-    monitor = ProgressMonitor(progress_id, description, stock_icon)
-    #self.box.add(monitor)
+    monitor = ProgressMonitor(description, stock_icon)
     box.pack_start(monitor, False, False, 0)
 
-    monitors[progress_id] = monitor
+    monitors.append(monitor)
     return monitor
 
 
-def remove_monitor(progress_id):
+def remove_monitor(monitor):
     """
     Removes a monitor from the manager
     """
     try:
-        box.remove(monitors[progress_id])
-        del monitors[progress_id]
+        box.remove(monitor)
+        monitors.remove(monitor)
         if not monitors:
             box.hide()
     except:

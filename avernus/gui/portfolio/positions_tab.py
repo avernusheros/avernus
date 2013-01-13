@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from avernus.controller import datasource_controller
-from avernus.gui import gui_utils, progress_manager, page, threads, get_avernus_builder
+from avernus.gui import gui_utils, progress_manager, page, get_avernus_builder
 from avernus.gui.gui_utils import get_name_string
 from avernus.gui.portfolio import buy_dialog, sell_dialog, dividend_dialog
 from avernus.gui.portfolio.plot import ChartWindow
@@ -9,6 +9,9 @@ from avernus.objects import container, position
 from gi.repository import Gdk, Gtk
 import datetime
 import sys
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 gain_thresholds = {
@@ -271,14 +274,18 @@ class PortfolioPositionsTab(page.Page):
                 ]
 
     def on_asset_updated(self, asset):
-        tree_iter = self.find_position_from_asset(asset).iter
-        self.treestore[tree_iter] = self.get_row_position(self.treestore[tree_iter][self.OBJECT])
-        child_iter = self.treestore.iter_children(tree_iter)
-        if child_iter:
-            self.treestore[child_iter] = self.get_row_transaction(self.treestore[child_iter][self.OBJECT])
-            while self.treestore.iter_next(child_iter) != None:
-                child_iter = self.treestore.iter_next(child_iter)
+        item = self.find_position_from_asset(asset)
+        if item:
+            tree_iter = item.iter
+            self.treestore[tree_iter] = self.get_row_position(self.treestore[tree_iter][self.OBJECT])
+            child_iter = self.treestore.iter_children(tree_iter)
+            if child_iter:
                 self.treestore[child_iter] = self.get_row_transaction(self.treestore[child_iter][self.OBJECT])
+                while self.treestore.iter_next(child_iter) != None:
+                    child_iter = self.treestore.iter_next(child_iter)
+                    self.treestore[child_iter] = self.get_row_transaction(self.treestore[child_iter][self.OBJECT])
+        else:
+            logger.error("update from unknown asset")
 
     def update_position_after_edit(self, pos, iterator=None):
         if iterator is None:
@@ -286,15 +293,10 @@ class PortfolioPositionsTab(page.Page):
         self.treestore[iterator] = self.get_row_position(pos)
 
     def on_update_portfolio_positions(self, *args):
-        def finished_cb():
-            progress_manager.remove_monitor(self.portfolio.id)
-            self.update()
-        m = progress_manager.add_monitor(self.portfolio.id, _('updating assets...'),
-                                         Gtk.STOCK_REFRESH)
-        threads.GeneratorTask(datasource_controller.update_positions,
-                              m.progress_update,
-                              complete_callback=finished_cb,
-                              args=(self.portfolio)).start()
+        progress_manager.add_task(datasource_controller.update_positions,
+                            self.portfolio,
+                            _('updating assets...'),
+                            self.update)
 
     def on_positionstab_add_position(self, widget):
         buy_dialog.BuyDialog(self.portfolio, parent=self.widget.get_toplevel())

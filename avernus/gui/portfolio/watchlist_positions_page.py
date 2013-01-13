@@ -1,6 +1,5 @@
 from avernus.controller import datasource_controller
-from avernus.gui import page, get_avernus_builder, gui_utils, progress_manager, \
-    threads
+from avernus.gui import page, get_avernus_builder, gui_utils, progress_manager
 from avernus.gui.portfolio import positions_tab, dialogs, position_dialog, plot
 from gi.repository import Gtk
 
@@ -108,15 +107,10 @@ class WatchlistPositionsPage(page.Page):
                 self.treestore.remove(iterator)
 
     def on_update_wlpositions(self, *args):
-        def finished_cb():
-            progress_manager.remove_monitor(self.watchlist.id)
-            self.update()
-        m = progress_manager.add_monitor(self.watchlist.id, _('updating assets...'),
-                                         Gtk.STOCK_REFRESH)
-        threads.GeneratorTask(datasource_controller.update_positions,
-                              m.progress_update,
-                              complete_callback=finished_cb,
-                              args=(self.watchlist)).start()
+        progress_manager.add_task(datasource_controller.update_positions,
+                            self.watchlist,
+                            _('updating assets...'),
+                            self.update)
 
     def on_add_wlposition(self, widget):
         dl = dialogs.NewWatchlistPositionDialog(self.watchlist,
