@@ -1,7 +1,6 @@
 # -*- Mode: Python; coding: utf-8; indent-tabs-mode: nil; tab-width: 4 -*-
 from BeautifulSoup import BeautifulSoup
 from Queue import Queue
-from avernus.objects.asset import Fund, Bond, Etf
 from datetime import datetime, date
 import logging
 import pytz
@@ -13,11 +12,6 @@ import urllib2
 logger = logging.getLogger(__name__)
 
 
-if __name__ == "__main__":
-    import sys
-    sys.path.append("../../")
-
-# from avernus.objects import stock
 
 QUEUE_THRESHOLD = 3
 QUEUE_DIVIDEND = 10
@@ -188,7 +182,6 @@ class DataSource():
         # ID_TOOL FUN only searches fonds and etfs
         page = opener.open(search_url, urllib.urlencode({"TARGET": "kurse", "SEARCH_VALUE": searchstring}))  # ,'ID_TOOL':'FUN' }))
         received_url = page.geturl()
-        # print "received url ", received_url
         # single result http://www.onvista.de/etf/kurse.html?ID_INSTRUMENT=16353286&SEARCH_VALUE=DBX0AE
         # result page http://www.onvista.de/suche.html
         # now check if we got a single result or a result page
@@ -234,19 +227,20 @@ class DataSource():
             # determine whether its an etf or a fonds
             html = page.read()
             if "etf" in received_url:
-                # etf
-                # print "found ETF-onepage"
+                print "found ETF-onepage"
                 for item in self._parse_kurse_html(html, tdInd=etfTDS, stockType='etf'):
                     # print "Yield ", item
                     yield (item, self, None)
             elif "anleihen" in received_url:
-                # bond
+                print "bond"
                 for item in self._parse_kurse_html(html, tdInd=bondTDS, stockType='bond'):
                     yield (item, self, None)
             elif "fond" in received_url:
-                # aktive fonds
+                print " aktive fonds"
                 for item in self._parse_kurse_html(html):
                     yield (item, self, None)
+            else:
+                print "unknown", received_url
         logger.debug("Finished Searching " + searchstring)
 
     def _parse_kurse_html(self, kursPage, tdInd=fondTDS, stockType='fund'):
@@ -305,16 +299,16 @@ class DataSource():
             logger.error("parsing errror in onvista.py")
             return
 
-    def update_stocks(self, sts):
-        for i, st in enumerate(sts):
+    def update_stocks(self, assets):
+        for i, asset in enumerate(assets):
             try:
-                if isinstance(st, Fund):
+                if asset.type == "fund":
                     f = opener.open("http://www.onvista.de/fonds/kurse.html", urllib.urlencode({"ISIN": st.isin}))
                     generator = self._parse_kurse_html(f)
-                elif isinstance(st, Etf):
+                elif asset.type == "etf":
                     f = opener.open("http://www.onvista.de/etf/kurse.html", urllib.urlencode({"ISIN": st.isin}))
                     generator = self._parse_kurse_html(f, tdInd=etfTDS, stockType='etf')
-                elif isinstance(st, Bond):
+                elif asset.type == "bond":
                     f = opener.open("http://www.onvista.de/anleihen/kurse.html", urllib.urlencode({"ISIN": st.isin}))
                     generator = self._parse_kurse_html(f, tdInd=bondTDS, stockType='bond')
                 else:
@@ -333,19 +327,19 @@ class DataSource():
                     st.volume = item['volume']
                     yield st
 
-    def update_historical_prices(self, st, start_date, end_date):
+    def update_historical_prices(self, asset, start_date, end_date):
         url = ''
-        if isinstance(st, Fund):
+        if asset.type == "fund":
             url = 'http://www.onvista.de/fonds/kurshistorie.html'
-        elif isinstance(st, Etf):
+        elif asset.type == "etf":
             url = 'http://www.onvista.de/etf/kurshistorie.html'
-        elif isinstance(st, Bond):
+        elif asset.type == "bond":
             url = 'http://anleihen.onvista.de/kurshistorie.html'
         else:
             logger.error("Uknown stock type in onvistaplugin.search_kurse")
-        fileobj = opener.open(url, urllib.urlencode({'ISIN':st.isin, 'RANGE':'60M'}))
+        fileobj = opener.open(url, urllib.urlencode({'ISIN':asset.isin, 'RANGE':'60M'}))
         soup = BeautifulSoup(fileobj)
-        if isinstance(st, Bond):
+        if asset.type == "bond":
             lines = soup.findAll('tr', {'class':'hr'})
         else:
             lines = soup.findAll('tr', {'align':'right'})
@@ -357,8 +351,8 @@ class DataSource():
             if day < start_date:
                 return
 
-            if isinstance(st, Bond):
-                yield (st, 'KAG',
+            if asset.type == "bond":
+                yield (asset, 'KAG',
                        day,
                        to_float(tds[1].replace('&nbsp;', '')),
                        to_float(tds[2].replace('&nbsp;', '')),
@@ -367,10 +361,16 @@ class DataSource():
                        0)
             else:
                 kurs = to_float(tds[1].replace('&nbsp;', ''))
-                yield (st, 'KAG', day, kurs, kurs, kurs, kurs, 0)
+                yield (asset, 'KAG', day, kurs, kurs, kurs, kurs, 0)
 
 
 if __name__ == "__main__":
+
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    logger.setLevel(logging.DEBUG)
+    consolehandler = logging.StreamHandler()
+    consolehandler.setFormatter(formatter)
+    logger.addHandler(consolehandler)
 
     class Stock():
         def __init__(self, isin, ex, type):
@@ -406,11 +406,11 @@ if __name__ == "__main__":
             print item
 
     plugin = DataSource()
-    s1 = Fund('DE000A0RFEE5', 'foo')
-    s2 = Fund('LU0103598305', 'foo')
-    # test_search()
+    s1 = Stock('DE000A0RFEE5', 'foo', "fund")
+    s2 = Stock('LU0103598305', 'foo', "fund")
+    test_search()
     # print plugin.search_kurse(s1)
     # print plugin.search_kurse(s3)
     # test_parse_kurse()
-    test_update(s1)
+    #test_update(s1)
     # test_historicals()

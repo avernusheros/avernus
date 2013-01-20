@@ -613,6 +613,7 @@
       <object class="GtkBox" id="box2">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
+        <property name="spacing">5</property>
         <child>
           <object class="GtkCheckButton" id="checkbutton1">
             <property name="label" translatable="yes">Transfers</property>
@@ -771,6 +772,7 @@
         <property name="related_action">add_root_category</property>
         <property name="visible">True</property>
         <property name="can_focus">False</property>
+        <property name="use_underline">True</property>
         <property name="use_stock">True</property>
       </object>
     </child>
@@ -799,6 +801,7 @@
         <property name="related_action">add_root_category</property>
         <property name="visible">True</property>
         <property name="can_focus">False</property>
+        <property name="use_underline">True</property>
         <property name="use_stock">True</property>
       </object>
     </child>
