@@ -61,7 +61,6 @@ def stop_search():
 
 
 def _item_found_callback(item, source, source_infos=None):
-    # mandatory: isin, type, name
     if not validate_isin(item['isin']):
         return
     new = False

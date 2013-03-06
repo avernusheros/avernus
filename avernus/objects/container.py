@@ -187,8 +187,6 @@ GObject.type_register(PortfolioBase)
 class AllPortfolio(PortfolioBase):
 
     name = _("All")
-    # FIXME dont use portfolio id for progress monitor
-    id = 1233312
 
     def __iter__(self):
         return self.positions.__iter__()

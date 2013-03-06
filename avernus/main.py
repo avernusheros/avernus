@@ -26,6 +26,17 @@ if b_from_source:
     config.__avernus_data_directory__ = '../data/'
 
 
+def check_dependencies():
+    try:
+        import BeautifulSoup
+        import matplotlib
+        import chardet
+        import dateutil
+        import sqlalchemy
+    except ImportError:
+        print "Import Error"
+        exit(1)
+
 def init_logger(debug=False):
     if debug:
         loggerlevel = logging.DEBUG
@@ -98,6 +109,7 @@ def init_icons():
 
 
 def main():
+    check_dependencies()
     try:
         init_translations()
         # Support for command line options.

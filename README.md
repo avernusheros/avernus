@@ -19,17 +19,18 @@ Dependencies
 -------------
 
 * python-chardet
-* python-dateutil 
-* pytz 
-* python-beautifulsoup 
-* matplotlib 
+* python-dateutil
+* pytz
+* beautifulsoup
+* matplotlib
+* sqlalchemy
 
 Running from sources
 -------------
 
 * install dependencies
-  * on debian based systems  
-   
+  * on debian based systems
+
    ```
     sudo apt-get install bzr python-dateutil python-tz python-chardet python-beautifulsoup python-matplotlib
    ```
@@ -37,12 +38,12 @@ Running from sources
    ```
     git clone https://github.com/avernusheros/avernus.git
   ```
-  
+
 * change to directory
-  ```  
+  ```
    cd avernus
   ```
-* launch 
+* launch
   ```
    python avernus.py
   ```
