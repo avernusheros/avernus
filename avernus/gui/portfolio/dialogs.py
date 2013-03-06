@@ -222,7 +222,7 @@ class EditAssetTable(Gtk.Table):
         self.attach(self.name_entry, 1, 2, 0, 1, yoptions=Gtk.AttachOptions.FILL)
 
         self.attach(Gtk.Label(label=_('Current price')), 0, 1, 1, 2, yoptions=Gtk.AttachOptions.SHRINK)
-        self.price_entry = Gtk.SpinButton(adjustment=Gtk.Adjustment(lower=0, upper=100, step_increment=0.1, value=asset_to_edit.price), digits=2)
+        self.price_entry = Gtk.SpinButton(adjustment=Gtk.Adjustment(lower=0, upper=1000000, step_increment=0.1, value=asset_to_edit.price), digits=2)
         self.attach(self.price_entry, 1, 2, 1, 2, yoptions=Gtk.AttachOptions.SHRINK)
 
         self.attach(Gtk.Label(label=_('ISIN')), 0, 1, 2, 3, yoptions=Gtk.AttachOptions.FILL)
@@ -269,6 +269,7 @@ class EditAssetTable(Gtk.Table):
             new_price = self.price_entry.get_value()
             if self.asset.price != new_price:
                 self.asset.price = new_price
+                self.asset.change = 0.0
                 self.asset.date = datetime.datetime.now()
             for dim in dimension.get_all_dimensions():
                 box = getattr(self, dim.name + "ValueComboBox")
