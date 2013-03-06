@@ -3,6 +3,7 @@ from avernus.gui import gui_utils
 from avernus.objects import asset, dimension, position as position_m
 from gi.repository import Gtk, GObject
 import locale
+import datetime
 
 
 class NewWatchlistPositionDialog(Gtk.Dialog):
@@ -220,25 +221,29 @@ class EditAssetTable(Gtk.Table):
         self.name_entry.set_text(asset_to_edit.name)
         self.attach(self.name_entry, 1, 2, 0, 1, yoptions=Gtk.AttachOptions.FILL)
 
-        self.attach(Gtk.Label(label=_('ISIN')), 0, 1, 1, 2, yoptions=Gtk.AttachOptions.FILL)
+        self.attach(Gtk.Label(label=_('Current price')), 0, 1, 1, 2, yoptions=Gtk.AttachOptions.SHRINK)
+        self.price_entry = Gtk.SpinButton(adjustment=Gtk.Adjustment(lower=0, upper=100, step_increment=0.1, value=asset_to_edit.price), digits=2)
+        self.attach(self.price_entry, 1, 2, 1, 2, yoptions=Gtk.AttachOptions.SHRINK)
+
+        self.attach(Gtk.Label(label=_('ISIN')), 0, 1, 2, 3, yoptions=Gtk.AttachOptions.FILL)
         self.isin_entry = Gtk.Entry()
         self.isin_entry.set_text(asset_to_edit.isin)
-        self.attach(self.isin_entry, 1, 2, 1, 2, yoptions=Gtk.AttachOptions.FILL)
+        self.attach(self.isin_entry, 1, 2, 2, 3, yoptions=Gtk.AttachOptions.FILL)
 
-        self.attach(Gtk.Label(label=_('Type')), 0, 1, 2, 3, yoptions=Gtk.AttachOptions.FILL)
+        self.attach(Gtk.Label(label=_('Type')), 0, 1, 3, 4, yoptions=Gtk.AttachOptions.FILL)
         entry = Gtk.Entry()
         entry.set_text(datasource_controller.ASSET_TYPES[type(asset_to_edit)])
         entry.set_editable(False)
-        self.attach(entry, 1, 2, 2, 3, yoptions=Gtk.AttachOptions.FILL)
+        self.attach(entry, 1, 2, 3, 4, yoptions=Gtk.AttachOptions.FILL)
 
-        self.attach(Gtk.Label(label=_('TER')), 0, 1, 3, 4, yoptions=Gtk.AttachOptions.SHRINK)
+        self.attach(Gtk.Label(label=_('TER')), 0, 1, 4, 5, yoptions=Gtk.AttachOptions.SHRINK)
         ter_value = 0.0
         if self.asset.ter != None:
             ter_value = self.asset.ter
         self.ter_entry = Gtk.SpinButton(adjustment=Gtk.Adjustment(lower=0, upper=100, step_increment=0.1, value=ter_value), digits=2)
-        self.attach(self.ter_entry, 1, 2, 3, 4, yoptions=Gtk.AttachOptions.SHRINK)
+        self.attach(self.ter_entry, 1, 2, 4, 5, yoptions=Gtk.AttachOptions.SHRINK)
 
-        currentRow = 4
+        currentRow = 5
         for dim in dimension.get_all_dimensions():
             # print dim
             self.attach(Gtk.Label(label=_(dim.name)), 0, 1, currentRow, currentRow + 1, yoptions=Gtk.AttachOptions.FILL)
@@ -251,6 +256,7 @@ class EditAssetTable(Gtk.Table):
         self.name_entry.connect('changed', self.on_change)
         self.isin_entry.connect('changed', self.on_change)
         self.ter_entry.connect('changed', self.on_change)
+        self.price_entry.connect('changed', self.on_change)
 
     def on_change(self, widget):
         self.b_change = True
@@ -260,6 +266,10 @@ class EditAssetTable(Gtk.Table):
             self.asset.name = self.name_entry.get_text()
             self.asset.isin = self.isin_entry.get_text()
             self.asset.ter = self.ter_entry.get_value()
+            new_price = self.price_entry.get_value()
+            if self.asset.price != new_price:
+                self.asset.price = new_price
+                self.asset.date = datetime.datetime.now()
             for dim in dimension.get_all_dimensions():
                 box = getattr(self, dim.name + "ValueComboBox")
                 active = box.get_active()
