@@ -45,11 +45,15 @@ class PortfolioBase(GObject.GObject):
     def ter(self):
         ter = 0
         val = 0
-        for pos in [p for p in self if p.asset and p.asset.ter != None]:
+        for pos in self:
+            try:
+                pos_ter = pos.ter
+            except:
+                pos_ter = 0.0
             pos_val = pos.current_value
-            ter += pos_val * pos.asset.ter
+            ter += pos_val * pos_ter
             val += pos_val
-        if val == 0:
+        if val == 0.0:
             return 0.0
         return ter / val
 

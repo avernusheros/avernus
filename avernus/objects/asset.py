@@ -43,11 +43,6 @@ class Asset(objects.Base, GObject.GObject):
         return objects.Session().query(SourceInfo) \
                                 .filter_by(asset=self, source=source).all()
 
-    # only funds and etfs have TER
-    @property
-    def ter(self):
-        return 0.0
-
     @property
     def is_used(self):
         if self.positions:

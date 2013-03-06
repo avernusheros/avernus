@@ -236,12 +236,11 @@ class EditAssetTable(Gtk.Table):
         entry.set_editable(False)
         self.attach(entry, 1, 2, 3, 4, yoptions=Gtk.AttachOptions.FILL)
 
-        self.attach(Gtk.Label(label=_('TER')), 0, 1, 4, 5, yoptions=Gtk.AttachOptions.SHRINK)
-        ter_value = 0.0
-        if self.asset.ter != None:
-            ter_value = self.asset.ter
-        self.ter_entry = Gtk.SpinButton(adjustment=Gtk.Adjustment(lower=0, upper=100, step_increment=0.1, value=ter_value), digits=2)
-        self.attach(self.ter_entry, 1, 2, 4, 5, yoptions=Gtk.AttachOptions.SHRINK)
+        if hasattr(self.asset, 'ter'):
+            self.attach(Gtk.Label(label=_('TER')), 0, 1, 4, 5, yoptions=Gtk.AttachOptions.SHRINK)
+            self.ter_entry = Gtk.SpinButton(adjustment=Gtk.Adjustment(lower=0, upper=100, step_increment=0.1, value=self.asset.ter), digits=2)
+            self.attach(self.ter_entry, 1, 2, 4, 5, yoptions=Gtk.AttachOptions.SHRINK)
+            self.ter_entry.connect('changed', self.on_change)
 
         currentRow = 5
         for dim in dimension.get_all_dimensions():
@@ -255,7 +254,7 @@ class EditAssetTable(Gtk.Table):
 
         self.name_entry.connect('changed', self.on_change)
         self.isin_entry.connect('changed', self.on_change)
-        self.ter_entry.connect('changed', self.on_change)
+
         self.price_entry.connect('changed', self.on_change)
 
     def on_change(self, widget):
@@ -265,7 +264,8 @@ class EditAssetTable(Gtk.Table):
         if response == Gtk.ResponseType.ACCEPT and self.b_change:
             self.asset.name = self.name_entry.get_text()
             self.asset.isin = self.isin_entry.get_text()
-            self.asset.ter = self.ter_entry.get_value()
+            if hasattr(self.asset, 'ter'):
+                self.asset.ter = self.ter_entry.get_value()
             new_price = self.price_entry.get_value()
             if self.asset.price != new_price:
                 self.asset.price = new_price
