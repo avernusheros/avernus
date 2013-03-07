@@ -5,6 +5,10 @@ import sqlite3
 
 #TODO dropping columns is not supported by sqlite3
 
+def to_nineteen(db):
+    conn = sqlite3.connect(db)
+    conn.execute("DROP TABLE IF EXISTS benchmark")
+    conn.commit()
 
 def to_eighteen(db):
     conn = sqlite3.connect(db)
