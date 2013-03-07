@@ -47,10 +47,6 @@ class ChartTab(page.Page):
         combobox.connect('changed', self.on_zoom_change)
         hbox.pack_start(combobox, False, False, 0)
 
-        benchmark_button = Gtk.Button(_("Benchmarks"))
-        benchmark_button.connect('button-press-event', self.on_button_press_event)
-        hbox.pack_start(benchmark_button, False, False, 0)
-
         y += 1
 
         self.pfvalue_chart_controller = chart_controller.PortfolioChartController(self.pf, 'monthly')
@@ -126,85 +122,3 @@ class ChartTab(page.Page):
         self.pfvalue_chart_controller.step = value
         self.pfvalue_chart.update()
 
-    def on_button_press_event(self, widget, event):
-        BenchmarkDialog(self.pf)
-
-
-class BenchmarkDialog(Gtk.Dialog):
-    DEFAULT_WIDTH = 300
-    DEFAULT_HEIGHT = 300
-
-    def __init__(self, portfolio, parent=None):
-        Gtk.Dialog.__init__(self, _('New portfolio benchmark'), parent
-                            , Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,
-                     (Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT))
-        self.set_default_size(self.DEFAULT_WIDTH, self.DEFAULT_HEIGHT)
-        self.portfolio = portfolio
-
-        vbox = self.get_content_area()
-
-        self.tree = gui_utils.Tree()
-        self.model = Gtk.ListStore(object, str, float)
-        self.tree.set_model(self.model)
-        vbox.pack_start(self.tree, True, True, 0)
-
-        self.tree.create_column(_('Name'), 1)
-        self.tree.create_column(_('Percentage'), 2)
-
-        # load items
-        self.count = 0
-        for bm in portfolio.get_benchmarks():
-            self.model.append([bm, str(bm), bm.percentage * 100])
-            self.count += 1
-
-        actiongroup = Gtk.ActionGroup('benchmarks')
-        actiongroup.add_actions([
-                ('add', Gtk.STOCK_ADD, 'new dimension', None, _('Add new dimension'), self.on_add),
-                ('remove', Gtk.STOCK_DELETE, 'remove dimension', None, _('Remove selected dimension'), self.on_remove)
-                     ])
-        toolbar = Gtk.Toolbar()
-
-        for action in actiongroup.list_actions():
-            button = action.create_tool_item()
-            toolbar.insert(button, -1)
-        vbox.pack_start(toolbar, False, True, 0)
-
-        self.show_all()
-        self.run()
-
-        self.destroy()
-
-    def on_add(self, widget, user_data=None):
-        if self.count < 3:
-            dlg = Gtk.Dialog(_("Add benchmark"), self
-                            , Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,
-                     (Gtk.STOCK_CANCEL, Gtk.ResponseType.REJECT,
-                      Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT))
-
-            vbox = dlg.get_content_area()
-            table = Gtk.Table()
-            vbox.pack_end(table, True, True, 0)
-            table.attach(Gtk.Label("Percentage:"), 0, 1, 0, 1)
-            entry = Gtk.SpinButton()
-            entry.set_adjustment(Gtk.Adjustment(lower=0, upper=100, step_increment=1.0, value=1))
-            entry.set_digits(1)
-            table.attach(entry, 1, 2, 0, 1, xoptions=Gtk.AttachOptions.SHRINK, yoptions=Gtk.AttachOptions.SHRINK)
-            dlg.show_all()
-            response = dlg.run()
-            if response == Gtk.ResponseType.ACCEPT:
-                bm = container.Benchmark(portfolio=self.portfolio, percentage=entry.get_value() / 100.0)
-                self.model.append([bm, str(bm), bm.percentage * 100.0])
-                self.count += 1
-            dlg.destroy()
-
-        else:
-            pass
-            # FIXME show some error message
-
-    def on_remove(self, widget, user_data=None):
-        selection = self.tree.get_selection()
-        model, selection_iter = selection.get_selected()
-        if selection_iter:
-            model[selection_iter][0].delete()
-            self.model.remove(selection_iter)
-            self.count -= 1

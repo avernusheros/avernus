@@ -2,21 +2,11 @@ from avernus import objects
 from avernus import math
 from avernus.objects import asset as asset_m, position, portfolio_transaction
 from gi.repository import GObject
-from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, Unicode
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Unicode
 from sqlalchemy.orm import reconstructor, relationship
 import datetime
 
 
-class Benchmark(objects.Base):
-    __tablename__ = 'benchmark'
-
-    id = Column(Integer, primary_key=True)
-    percentage = Column(Float)
-    portfolio_id = Column(Integer, ForeignKey('portfolio.id'))
-    portfolio = relationship('Portfolio')
-
-    def __str__(self):
-        return _('Benchmark ') + str(round(self.percentage * 100, 2)) + "%"
 
 
 class PortfolioBase(GObject.GObject):
@@ -252,9 +242,6 @@ class Portfolio(Container, PortfolioBase):
                                position.Position.asset == asset)\
                        .order_by(portfolio_transaction.Transaction.date).all()
 
-    def get_benchmarks(self):
-        return objects.Session().query(Benchmark)\
-                    .filter_by(portfolio=self).all()
 
     def get_value_at_daterange(self, asset, days):
         quantity = 0

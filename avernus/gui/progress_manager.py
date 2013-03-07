@@ -1,7 +1,7 @@
 from gi.repository import Gtk
 from gi.repository import GObject
 import logging
-from avernus.gui import threads
+from avernus.gui import threads 
 
 logger = logging.getLogger(__name__)
 

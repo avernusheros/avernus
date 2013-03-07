@@ -21,7 +21,7 @@ from avernus.gui.portfolio import asset_allocation
 from avernus.gui.preferences import PrefDialog
 
 from gi.repository import Gdk, Gtk
-from webbrowser import open as web
+from webbrowser import open as web 
 import avernus
 import sys
 import logging
