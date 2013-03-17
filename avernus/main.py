@@ -142,8 +142,6 @@ def main():
         print "crashed ... !!"
         import traceback
         traceback.print_exc()
-        from avernus import objects
-        objects.session.commit()
-        objects.session.close_all()
+        db.close_session()
         threads.terminate_all()
         exit(1)

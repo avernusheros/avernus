@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from avernus import config, objects
+from avernus import config
 from avernus.controller import datasource_controller, categorization_controller
 from avernus.gui import progress_manager, threads, get_avernus_builder
 from avernus.gui.account.account_overview import AccountOverview
@@ -19,7 +19,7 @@ from avernus.gui.portfolio import watchlist_positions_page
 from avernus.gui.portfolio import asset_allocation
 # from avernus.gui.portfolio.positions_tab import WatchlistPositionsTab
 from avernus.gui.preferences import PrefDialog
-
+from avernus.objects import db
 from gi.repository import Gdk, Gtk
 from webbrowser import open as web 
 import avernus
@@ -121,7 +121,7 @@ class MainWindow:
 
     def on_destroy(self, widget=None, data=None):
         """on_destroy - called when the avernusWindow is closed. """
-        objects.session.commit()
+        db.close_session()
         # save db on quit
         self.config.set_option('hpaned position', self.hpaned.get_position(), 'Gui')
         threads.terminate_all()

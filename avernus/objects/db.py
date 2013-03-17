@@ -1,5 +1,13 @@
 from avernus import objects
-from gi.repository.GObject import GObjectMeta
+
+#FIXME
+try:
+    from gi.repository.GObject import GObjectMeta
+except:
+    from gi.repository import GObject
+    GObjectMeta = type(GObject.GObject)
+
+
 from sqlalchemy import Column, Integer, create_engine, event
 from sqlalchemy.ext.declarative import declarative_base, DeclarativeMeta
 from sqlalchemy.orm import mapper, sessionmaker, scoped_session
@@ -21,6 +29,7 @@ database = None
 @event.listens_for(mapper, 'init')
 def auto_add(target, args, kwargs):
     objects.Session.add(target)
+
 
 
 class DeclarativeGObjectMeta(DeclarativeMeta, GObjectMeta):
@@ -63,7 +72,7 @@ def backup(db):
 
 
 def add_new_tables(*args):
-        # import all objects that are stored in the db
+    # import all objects that are stored in the db
     # sqlalchemy needs this to setup tables
     from avernus.objects import account
     from avernus.objects import asset
@@ -159,4 +168,9 @@ def connect(create_sample_data=False):
             objects.session.commit()
     else:
         create_new_database(create_sample_data)
+        
 
+def close_session():
+    if objects.session:
+        objects.session.commit()
+        objects.session.close_all()

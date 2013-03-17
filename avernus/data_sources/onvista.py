@@ -303,29 +303,29 @@ class DataSource():
         for i, asset in enumerate(assets):
             try:
                 if asset.type == "fund":
-                    f = opener.open("http://www.onvista.de/fonds/kurse.html", urllib.urlencode({"ISIN": st.isin}))
+                    f = opener.open("http://www.onvista.de/fonds/kurse.html", urllib.urlencode({"ISIN": asset.isin}))
                     generator = self._parse_kurse_html(f)
                 elif asset.type == "etf":
-                    f = opener.open("http://www.onvista.de/etf/kurse.html", urllib.urlencode({"ISIN": st.isin}))
+                    f = opener.open("http://www.onvista.de/etf/kurse.html", urllib.urlencode({"ISIN": asset.isin}))
                     generator = self._parse_kurse_html(f, tdInd=etfTDS, stockType='etf')
                 elif asset.type == "bond":
-                    f = opener.open("http://www.onvista.de/anleihen/kurse.html", urllib.urlencode({"ISIN": st.isin}))
+                    f = opener.open("http://www.onvista.de/anleihen/kurse.html", urllib.urlencode({"ISIN": asset.isin}))
                     generator = self._parse_kurse_html(f, tdInd=bondTDS, stockType='bond')
                 else:
-                    print "Unknown stock type in onvistaplugin.update_stocks: ", type(st)
+                    print "Unknown stock type in onvistaplugin.update_stocks: ", type(asset)
                     return
             except:
                 logger.info("can not download quotations")
                 return
             for item in generator:
                 # found newer price?
-                if st.date < item['date']:
-                    st.exchange = item['exchange']
-                    st.price = item['price']
-                    st.date = item['date']
-                    st.change = item['change']
-                    st.volume = item['volume']
-                    yield st
+                if asset.date < item['date']:
+                    asset.exchange = item['exchange']
+                    asset.price = item['price']
+                    asset.date = item['date']
+                    asset.change = item['change']
+                    asset.volume = item['volume']
+                    yield asset
 
     def update_historical_prices(self, asset, start_date, end_date):
         url = ''
