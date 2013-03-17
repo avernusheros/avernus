@@ -345,28 +345,6 @@ class AllPortfolioInvestmentsOverTime(PortfolioChartController):
         yield 1
 
 
-class DimensionChartController():
-
-    def __init__(self, portfolio, dimension):
-        self.portfolio = portfolio
-        self.dimension = dimension
-
-    def calculate_values(self, *args):
-        data = {}
-        for val in self.dimension.get_values():
-            data[val.name] = 0
-        for pos in self.portfolio:
-            for adv in self.dimension.get_asset_dimension_value(pos.asset):
-                data[adv.dimension_value.name] += adv.value * pos.current_value
-        # remove unused dimvalues
-        data = dict((k, v) for k, v in data.iteritems() if v != 0.0)
-        if sum(data.values()) == 0:
-            self.values = {' ': 1}
-        else:
-            self.values = data
-        yield 1
-
-
 class PositionAttributeChartController():
 
     def __init__(self, portfolio, attribute):

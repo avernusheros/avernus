@@ -1,8 +1,7 @@
 from avernus.controller import datasource_controller
 from avernus.gui import gui_utils
-from avernus.objects import asset, dimension, position as position_m
+from avernus.objects import asset, position as position_m
 from gi.repository import Gtk, GLib
-import locale
 import datetime
 
 
@@ -98,116 +97,6 @@ class EditAssetDialog(Gtk.Dialog):
         self.destroy()
 
 
-class DimensionComboBox(Gtk.ComboBoxText):
-
-    COL_OBJ = 0
-    COL_TEXT = 1
-    SEPARATOR = ';'
-
-    def __init__(self, dimension, asset, dialog):
-        self.dimension = dimension
-        self.dialog = dialog
-        liststore = Gtk.ListStore(object, str)
-        Gtk.ComboBox.__init__(self, model=liststore, id_column=self.COL_TEXT, has_entry=True)
-        for dimVal in sorted(dimension.values):
-            liststore.append([dimVal, dimVal.name])
-        self.get_child().set_text(self.get_dimension_text(asset, dimension))
-        completion = Gtk.EntryCompletion()
-        completion.set_model(liststore)
-        completion.set_text_column(self.COL_TEXT)
-        completion.set_match_func(self.match_func, None)
-        self.get_child().set_completion(completion)
-        self.get_child().set_icon_from_stock(1, Gtk.STOCK_APPLY)
-        self.get_child().set_property('secondary-icon-activatable', False)
-        self.get_child().set_property('secondary-icon-tooltip-markup', '<b>ValueA</b> or <b>ValueA:40, ValueB:30 ...</b>')
-        completion.connect("match-selected", self.on_completion_match)
-        self.connect('changed', self.on_entry_changed)
-
-    def get_dimension_text(self, asset, dim):
-        advs = dim.get_asset_dimension_value(asset)
-        if len(advs) == 1:
-            # we have 100% this value in its dimension
-            return advs.pop(0).get_text()
-        erg = ""
-        i = 0
-        for adv in advs:
-            i += 1
-            erg += self.get_adv_text(adv)
-            if i < len(advs):
-                erg += self.SEPARATOR + " "
-        return erg
-
-    def get_adv_text(self, adv):
-        erg = adv.dimension_value.name
-        if adv.value != 100:
-            erg += ":" + locale.str(adv.value)
-        return erg
-
-    def on_entry_changed(self, editable):
-        parse = self.parse()
-        if not parse and not parse == []:  # unsuccesfull parse
-            self.get_child().set_icon_from_stock(1, Gtk.STOCK_CANCEL)
-            self.dialog.set_response_sensitive(Gtk.ResponseType.ACCEPT, False)
-        else:  # sucessful parse
-            self.get_child().set_icon_from_stock(1, Gtk.STOCK_APPLY)
-            self.dialog.set_response_sensitive(Gtk.ResponseType.ACCEPT, True)
-
-    def match_func(self, completion, key, iter):
-        model = completion.get_model()
-        text = model.get_value(iter, self.COL_TEXT).lower()
-        key = key.split(self.SEPARATOR)[-1].strip().lower()
-        if text.startswith(key):
-            return True
-        return False
-
-    def on_completion_match(self, completion, model, iter):
-        current_text = self.get_child().get_active_text()
-        current_text = current_text[:-len(current_text.split(self.SEPARATOR)[-1])]
-        if len(current_text) == 0:
-            self.get_child().set_text(model[iter][self.COL_TEXT])
-        else:
-            self.get_child().set_text(current_text + ' ' + model[iter][self.COL_TEXT])
-        self.get_child().set_position(-1)
-        # stop the event propagation
-        return True
-
-    def parse(self):
-        iterator = self.get_active_iter()
-        if iterator is None:
-            name = self.get_active_text()
-            portions = name.split(self.SEPARATOR)
-            sum = 0
-            erg = []
-            for portion in portions:
-                data = portion.partition(":")
-                currentName = data[0].strip()
-                value = data[2].strip()
-                # print "|"+value+"|"
-                if value == "":  # no value given
-                    if not currentName == "":  # has the user not even entered a name?
-                        value = "100"  # he has, so consider it to be a full value
-                    else:
-                        continue  # no name, no entry
-                try:
-                    value = locale.atof(value)  # try parsing a float out of the number
-                except:
-                    return False  # failure
-                sum += value
-                erg.append((unicode(currentName), value))
-            if sum > 100:
-                return False
-            else:
-                return erg
-        return [(self.get_model()[iterator][self.COL_OBJ].name, 100)]  # hack to have it easier in the calling method
-
-    def get_active(self):
-        erg = []
-        parse = self.parse()
-        if parse:
-            for name, value in parse:
-                erg.append((dimension.DimensionValue(dimension=self.dimension, name=name), value))
-        return erg
-
 
 class EditAssetTable(Gtk.Table):
 
@@ -242,19 +131,8 @@ class EditAssetTable(Gtk.Table):
             self.attach(self.ter_entry, 1, 2, 4, 5, yoptions=Gtk.AttachOptions.SHRINK)
             self.ter_entry.connect('changed', self.on_change)
 
-        currentRow = 5
-        for dim in dimension.get_all_dimensions():
-            # print dim
-            self.attach(Gtk.Label(label=_(dim.name)), 0, 1, currentRow, currentRow + 1, yoptions=Gtk.AttachOptions.FILL)
-            comboName = dim.name + "ValueComboBox"
-            setattr(self, comboName, DimensionComboBox(dim, asset_to_edit, dialog))
-            self.attach(getattr(self, comboName), 1, 2, currentRow, currentRow + 1, yoptions=Gtk.AttachOptions.FILL)
-            getattr(self, comboName).connect("changed", self.on_change)
-            currentRow += 1
-
         self.name_entry.connect('changed', self.on_change)
         self.isin_entry.connect('changed', self.on_change)
-
         self.price_entry.connect('changed', self.on_change)
 
     def on_change(self, widget):
@@ -271,11 +149,7 @@ class EditAssetTable(Gtk.Table):
                 self.asset.price = new_price
                 self.asset.change = 0.0
                 self.asset.date = datetime.datetime.now()
-            for dim in dimension.get_all_dimensions():
-                box = getattr(self, dim.name + "ValueComboBox")
-                active = box.get_active()
-                dim.update_asset_dimension_values(self.asset, active)
-
+            
 
 class StockSelector(Gtk.VBox):
 

@@ -19,7 +19,7 @@ import traceback
 
 
 # current version of our model
-version = 19
+version = 20
 
 logger = logging.getLogger(__name__)
 database = None
@@ -77,7 +77,6 @@ def add_new_tables(*args):
     from avernus.objects import account
     from avernus.objects import asset
     from avernus.objects import container
-    from avernus.objects import dimension
     from avernus.objects import asset_category
     objects.Base.metadata.create_all(engine)
 
@@ -93,7 +92,8 @@ def migrate(from_version, database):
                 (16, migrations.to_sixteen),
                 (17, migrations.to_seventeen),
                 (18, migrations.to_eighteen),
-                (19, migrations.to_nineteen)
+                (19, migrations.to_nineteen),
+                (20, migrations.to_twenty),
                 ]
 
     # pre sqlalchemy area

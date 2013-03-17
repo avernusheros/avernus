@@ -153,7 +153,7 @@ class MainWindow:
         elif page == "Category Portfolios":
             self.hpaned.pack2(OverviewNotebook())
         elif page is not None:
-           logger.debug("Sidebar select unknown page " + page)
+            logger.debug("Sidebar select unknown page " + page)
 
     def on_sidebar_unselect(self, caller=None):
         page = self.hpaned.get_child2()

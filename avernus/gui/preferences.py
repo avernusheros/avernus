@@ -3,8 +3,6 @@ from gi.repository import Gtk
 import logging
 
 from avernus.config import avernusConfig
-from avernus.gui import gui_utils
-from avernus.objects import dimension
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +24,6 @@ class PrefDialog(Gtk.Dialog):
         notebook.append_page(AccountPreferences(), Gtk.Label(label=_('Account')))
         notebook.append_page(PortfolioPreferences(), Gtk.Label(label=_('Portfolio')))
         notebook.append_page(ChartPreferences(), Gtk.Label(label=_('Chart')))
-        notebook.append_page(DimensionList(), Gtk.Label(label=_('Dimensions')))
 
         self.show_all()
         self.run()
@@ -108,70 +105,3 @@ class AccountPreferences(PreferencesVBox):
         section = self._add_section(_('Transactions'))
         self._add_option(section, _('Show horizontal grid lines'), 'transactionGrid')
 
-
-class DimensionList(Gtk.VBox):
-
-    OBJECT = 0
-    NAME = 1
-
-    def __init__(self):
-        Gtk.VBox.__init__(self)
-        text = _("Dimensions are used to categorize your assets. You can define dimensions and categories for those dimensions.")
-
-        label = Gtk.Label(label=text)
-        label.set_line_wrap(True)
-        self.pack_start(label, False, False, 0)
-
-        self.tree = gui_utils.Tree()
-        self.tree.set_headers_visible(True)
-        self.model = Gtk.TreeStore(object, str)
-        self.tree.set_model(self.model)
-        col, cell = self.tree.create_column(_('Dimensions'), self.NAME)
-        cell.set_property('editable', True)
-        cell.connect('edited', self.on_cell_edited)
-        sw = Gtk.ScrolledWindow()
-        sw.set_property('hscrollbar-policy', Gtk.PolicyType.AUTOMATIC)
-        sw.set_property('vscrollbar-policy', Gtk.PolicyType.AUTOMATIC)
-        self.pack_start(sw, True, True, 0)
-        sw.add(self.tree)
-        for dim in sorted(dimension.get_all_dimensions()):
-            iterator = self.model.append(None, [dim, dim.name])
-            for val in sorted(dim.values):
-                self.model.append(iterator, [val, val.name])
-
-        actiongroup = Gtk.ActionGroup('dimensions')
-        actiongroup.add_actions([
-                ('add', Gtk.STOCK_ADD, 'new dimension', None, _('Add new dimension'), self.on_add),
-                ('rename', Gtk.STOCK_EDIT, 'rename dimension', None, _('Rename selected dimension'), self.on_edit),
-                ('remove', Gtk.STOCK_REMOVE, 'remove dimension', None, _('Remove selected dimension'), self.on_remove)
-                     ])
-        toolbar = Gtk.Toolbar()
-        toolbar.get_style_context().add_class("inline-toolbar")
-        self.conditioned = ['rename', 'edit']
-
-        for action in actiongroup.list_actions():
-            button = action.create_tool_item()
-            toolbar.insert(button, -1)
-        self.pack_start(toolbar, False, True, 0)
-
-    def on_add(self, widget, user_data=None):
-        dim = dimension.Dimension(name=_('new dimension'))
-        iterator = self.model.append(None, [dim, dim.name])
-        # self.expand_row( model.get_path(parent_iter), True)
-        self.tree.set_cursor(self.model.get_path(iterator), self.tree.get_column(0), True)
-
-    def on_edit(self, widget, user_data=None):
-        selection = self.tree.get_selection()
-        model, selection_iter = selection.get_selected()
-        if selection_iter:
-            self.tree.set_cursor(model.get_path(selection_iter), self.tree.get_column(0), True)
-
-    def on_remove(self, widget, user_data=None):
-        selection = self.tree.get_selection()
-        model, selection_iter = selection.get_selected()
-        if selection_iter:
-            model[selection_iter][self.OBJECT].delete()
-            self.model.remove(selection_iter)
-
-    def on_cell_edited(self, cellrenderertext, path, new_text):
-        self.model[path][self.OBJECT].name = self.model[path][self.NAME] = new_text

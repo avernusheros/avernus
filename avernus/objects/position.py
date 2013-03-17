@@ -138,7 +138,7 @@ class PortfolioPosition(Position):
                 sold_quantity = 0
                 self.price += buy_ta.price * remaining_quantity / buy_ta.quantity
                 self.cost += buy_ta.cost * remaining_quantity / buy_ta.quantity
-                self.quantity += remaing_quantity
+                self.quantity += remaining_quantity
             else:
                 self.price += buy_ta.price
                 self.cost += buy_ta.cost
@@ -205,7 +205,7 @@ class ClosedPosition(object):
                     sold_quantity = 0
                     buy_price += buy_ta.price * remaining_quantity / buy_ta.quantity
                     buy_costs += buy_ta.cost * remaining_quantity / buy_ta.quantity
-                    buy_quantity += remaing_quantity
+                    buy_quantity += remaining_quantity
                 else:
                     buy_price += buy_ta.price
                     buy_costs += buy_ta.cost

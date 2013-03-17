@@ -1,14 +1,23 @@
-from avernus.objects import account, container, dimension, asset_category
+from avernus.objects import account, container, asset_category
 import datetime
 import sqlite3
 
 
 #TODO dropping columns is not supported by sqlite3
 
+def to_twenty(db):
+    conn = sqlite3.connect(db)
+    conn.execute("DROP TABLE IF EXISTS dimension")
+    conn.execute("DROP TABLE IF EXISTS dimension_value")
+    conn.execute("DROP TABLE IF EXISTS asset_dimension_value")
+    conn.commit()
+
+
 def to_nineteen(db):
     conn = sqlite3.connect(db)
     conn.execute("DROP TABLE IF EXISTS benchmark")
     conn.commit()
+
 
 def to_eighteen(db):
     conn = sqlite3.connect(db)
@@ -215,13 +224,6 @@ def to_ten(database, old_db):
 
 
 def load_sample_data(session):
-    DIMENSIONS = {_('Region'): [_('Emerging markets'), _('America'), _('Europe'), _('Pacific')],
-              _('Asset Class'): [_('Bond'), _('Stocks developed countries'), _('Commodities')],
-              _('Risk'): [_('high'), _('medium'), _('low')],
-              _('Currency'): [_('Euro'), _('Dollar'), _('Yen')],
-              _('Company Size'): [_('large'), _('medium'), _('small')],
-              _('Sector'): ['Basic Materials', 'Conglomerates', 'Consumer Goods', 'Energy', 'Financial', 'Healthcare', 'Industrial Goods', 'Services', 'Technology', 'Transportation', 'Utilities']
-              }
     CATEGORIES = {
         _('Utilities'): [_('Gas'), _('Phone'), _('Water'), _('Electricity')],
         _('Entertainment'): [_('Books'), _('Movies'), _('Music'), _('Amusement')],
@@ -239,10 +241,6 @@ def load_sample_data(session):
         _('Travel'): [_('Lodging'), _('Transportation')]
     }
 
-    for dim, vals in DIMENSIONS.iteritems():
-        new_dim = dimension.Dimension(name=dim)
-        for val in vals:
-            dimension.DimensionValue(dimension=new_dim, name=val)
     for cat, subcats in CATEGORIES.iteritems():
         parent = account.AccountCategory(name=cat)
         for subcat in subcats:

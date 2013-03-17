@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 from avernus.controller import chart_controller
-from avernus.gui import charts, page, gui_utils, get_avernus_builder
-from avernus.objects import container, dimension
+from avernus.gui import charts, page, get_avernus_builder
 from gi.repository import Gtk
 import logging
 
@@ -60,42 +59,20 @@ class ChartTab(page.Page):
         label.set_tooltip_text(_("Percentual fraction of each portfolio position."))
         table.attach(label, 0, 1, y, y + 1)
 
-        y += 1
-
         controller = chart_controller.PositionAttributeChartController(self.pf, 'name')
         chart = charts.Pie(controller, width / 2)
-        table.attach(chart, 0, 1, y, y + 1)
+        table.attach(chart, 0, 1, y + 1, y + 2)
 
         label = Gtk.Label()
         label.set_markup('<b>' + _('Investment types') + '</b>')
         label.set_tooltip_text(_("Percentual fraction by investment type."))
-        table.attach(label, 1, 2, y - 1, y)
+        table.attach(label, 1, 2, y, y + 1)
         # FIXME
         controller = chart_controller.PositionAttributeChartController(self.pf, 'type')
         chart = charts.Pie(controller, width / 2)
-        table.attach(chart, 1, 2, y, y + 1)
-
-        y = y + 1
-
-        col = 0
-        switch = True
-        for dim in dimension.get_all_dimensions():
-            label = Gtk.Label()
-            label.set_markup('<b>' + dim.name + '</b>')
-            label.set_tooltip_text(_('Percentual fraction by "') + dim.name + '".')
-            table.attach(label, col, col + 1, y, y + 1)
-            controller = chart_controller.DimensionChartController(self.pf, dim)
-            chart = charts.Pie(controller, width / 2)
-            table.attach(chart, col, col + 1, y + 1, y + 2)
-            if switch:
-                col = 1
-            else:
-                col = 0
-                y += 2
-            switch = not switch
-
-        if not switch:
-            y += 2
+        table.attach(chart, 1, 2, y + 1 , y + 2)
+        
+        y += 2
 
         label = Gtk.Label()
         label.set_markup('<b>' + _('Dividends per year') + '</b>')
@@ -103,15 +80,17 @@ class ChartTab(page.Page):
         table.attach(label, 0, 2, y, y + 1)
         controller = chart_controller.DividendsPerYearChartController(self.pf)
         chart = charts.BarChart(controller, width)
-        table.attach(chart, 0, 2, y + 2, y + 3)
+        table.attach(chart, 0, 2, y + 1, y + 2)
+
+        y += 2
 
         label = Gtk.Label()
         label.set_markup('<b>' + _('Dividends') + '</b>')
         label.set_tooltip_text(_('Total dividend payment for each position.'))
-        table.attach(label, 0, 2, y + 3, y + 4)
+        table.attach(label, 0, 2, y , y + 1)
         controller = chart_controller.DividendsPerPositionChartController(self.pf)
         chart = charts.BarChart(controller, width)
-        table.attach(chart, 0, 2, y + 4, y + 5)
+        table.attach(chart, 0, 2, y + 1, y + 2)
 
         self.sw.add_with_viewport(table)
         self.sw.show_all()
