@@ -1,7 +1,7 @@
 from avernus.objects import asset as asset_m
 from avernus.gui import get_ui_file, gui_utils
 from avernus.gui.portfolio.dialogs import EditAssetDialog
-from gi.repository import Gtk, GObject, Gdk
+from gi.repository import Gtk, GLib, Gdk
 
 
 class AssetManager:
@@ -48,7 +48,7 @@ class AssetManager:
         dlg.destroy()
 
     def get_row(self, asset):
-        return [asset, GObject.markup_escape_text(asset.name), asset.isin, asset.type, asset.currency]
+        return [asset, GLib.markup_escape_text(asset.name), asset.isin, asset.type, asset.currency]
 
     def on_button_press_event(self, widget, event):
         if event.button == 1 and event.type == Gdk.EventType._2BUTTON_PRESS:

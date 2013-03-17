@@ -7,7 +7,7 @@ from avernus.gui import get_avernus_builder, gui_utils, common_dialogs, page, \
 from avernus.gui.account import edit_transaction_dialog
 from avernus.gui.portfolio import dividend_dialog
 from avernus.objects import account
-from gi.repository import Gdk, Gtk, GObject
+from gi.repository import Gdk, Gtk, GLib
 import datetime
 import logging
 
@@ -202,7 +202,7 @@ class AccountTransactionTab(page.Page):
         dlg = Gtk.MessageDialog(None,
              Gtk.DialogFlags.DESTROY_WITH_PARENT, Gtk.MessageType.QUESTION,
              Gtk.ButtonsType.OK_CANCEL)
-        msg = _("Permanently delete category <b>") + GObject.markup_escape_text(obj.name) + '</b>?'
+        msg = _("Permanently delete category <b>") + GLib.markup_escape_text(obj.name) + '</b>?'
         model = self.category_tree.get_model()
         if model.iter_has_child(iterator):
             msg += _("\nWill also delete subcategories")

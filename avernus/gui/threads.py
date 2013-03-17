@@ -1,4 +1,5 @@
 from gi.repository import GObject
+from gi.repository import GLib
 
 import logging
 import threading
@@ -42,17 +43,17 @@ class GeneratorTask(threading.Thread):
                         ret = ()
                     elif not isinstance(ret, tuple):
                         ret = (ret,)
-                    GObject.idle_add(self.loop_callback, *ret)
+                    GLib.idle_add(self.loop_callback, *ret)
 
             if self.complete_callback is not None:
-                GObject.idle_add(self.complete_callback)
+                GLib.idle_add(self.complete_callback)
             logger.debug("finished thread")
         except:
             logger.debug("thread failed")
             import traceback
             traceback.print_exc()
             if self.complete_callback is not None:
-                GObject.idle_add(self.complete_callback)
+                GLib.idle_add(self.complete_callback)
 
     def stop(self):
         """Stop method, sets the event to terminate the thread's main loop"""

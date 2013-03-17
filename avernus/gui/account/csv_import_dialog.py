@@ -2,7 +2,7 @@
 from avernus import csvimporter, config
 from avernus.gui import gui_utils, get_ui_file
 from avernus.objects import account
-from gi.repository import Gtk, Pango, GObject
+from gi.repository import Gtk, Pango, GLib
 import os
 
 
@@ -148,7 +148,7 @@ class PreviewTree(gui_utils.Tree):
                     cat = trans.category.name
             else:
                 cat = ''
-            model.append([trans.date, GObject.markup_escape_text(trans.description), trans.amount, trans.b_import, cat, color])
+            model.append([trans.date, GLib.markup_escape_text(trans.description), trans.amount, trans.b_import, cat, color])
 
     def on_toggled(self, cellrenderertoggle, path):
         self.model[path][3] = self.transactions[int(path)].b_import = not self.model[path][3]

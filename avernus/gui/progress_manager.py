@@ -1,5 +1,6 @@
 from gi.repository import Gtk
 from gi.repository import GObject
+from gi.repository import GLib
 import logging
 from avernus.gui import threads 
 
@@ -16,11 +17,11 @@ class ProgressMonitor(Gtk.Frame):
         self.show_all()
 
     def progress_update(self, percent):
-        GObject.idle_add(self.progress.set_fraction, percent)
-        GObject.idle_add(self.progress.set_text, self.desc + '%d%%' % int(100 * percent))
+        GLib.idle_add(self.progress.set_fraction, percent)
+        GLib.idle_add(self.progress.set_text, self.desc + '%d%%' % int(100 * percent))
 
     def progress_update_pulse(self, *args):
-        GObject.idle_add(self.progress.pulse)
+        GLib.idle_add(self.progress.pulse)
         return True
 
     def progress_update_auto(self):

@@ -1,7 +1,7 @@
 from avernus.controller import datasource_controller
 from avernus.gui import gui_utils
 from avernus.objects import asset, dimension, position as position_m
-from gi.repository import Gtk, GObject
+from gi.repository import Gtk, GLib
 import locale
 import datetime
 
@@ -356,7 +356,7 @@ class StockSelector(Gtk.VBox):
         self.result_tree.get_model().append(None, [
                                        asset,
                                        icon,
-                                       GObject.markup_escape_text(asset.name),
+                                       GLib.markup_escape_text(asset.name),
                                        asset.isin,
                                        asset.currency,
                                        asset.type,

@@ -1,5 +1,5 @@
 from avernus import config
-from gi.repository import GObject, Gtk
+from gi.repository import Gtk, GLib
 import locale
 import logging
 import pytz
@@ -190,7 +190,7 @@ def get_name_string(stock):
         format_string = '%s\n<small>%s | %s</small>'
     else:
         format_string = '<b>%s</b>\n<small>%s\n%s</small>'
-    return format_string % (GObject.markup_escape_text(stock.name), GObject.markup_escape_text(stock.isin), GObject.markup_escape_text(stock.exchange.encode('utf8')))
+    return format_string % (GLib.markup_escape_text(stock.name), GLib.markup_escape_text(stock.isin), GLib.markup_escape_text(stock.exchange.encode('utf8')))
 
 
 def get_green_red_string(num, text=None):
@@ -237,7 +237,7 @@ def get_datetime_string(datetime):
 
 def transaction_desc_markup(column, cell, model, iterator, user_data):
     text = model.get_value(iterator, user_data)
-    markup = '<span size="small">%s</span>' % (GObject.markup_escape_text(text),)
+    markup = '<span size="small">%s</span>' % (GLib.markup_escape_text(text),)
     cell.set_property('markup', markup)
 
 

@@ -58,7 +58,6 @@ class URLGetter(threading.Thread):
     def run(self):
         try:
             self.result = opener.open(self.url)
-            # print "Downloaded ", self.url
         except IOError:
             print "Could not open document: %s" % self.url
 
@@ -190,7 +189,6 @@ class DataSource():
             logger.debug("Received result page")
             # we have a result page
             soup = BeautifulSoup(page.read())
-            # print soup
             linkTagsFonds = soup.findAll(attrs={'href' : re.compile('http://fonds\\.onvista\\.de/kurse\\.html\?ID_INSTRUMENT=\d+')})
             etfRegex = re.compile("http://www\\.onvista\\.de/etf/.+?")  # re.compile('http://etf\\.onvista\\.de/kurse\\.html\?ID_INSTRUMENT=\d+')
             linkTagsETF = soup.findAll(attrs={'href' : etfRegex})
@@ -227,20 +225,16 @@ class DataSource():
             # determine whether its an etf or a fonds
             html = page.read()
             if "etf" in received_url:
-                print "found ETF-onepage"
                 for item in self._parse_kurse_html(html, tdInd=etfTDS, stockType='etf'):
-                    # print "Yield ", item
                     yield (item, self, None)
             elif "anleihen" in received_url:
-                print "bond"
                 for item in self._parse_kurse_html(html, tdInd=bondTDS, stockType='bond'):
                     yield (item, self, None)
             elif "fond" in received_url:
-                print " aktive fonds"
                 for item in self._parse_kurse_html(html):
                     yield (item, self, None)
             else:
-                print "unknown", received_url
+                logger.error("unknown %s", received_url)
         logger.debug("Finished Searching " + searchstring)
 
     def _parse_kurse_html(self, kursPage, tdInd=fondTDS, stockType='fund'):
