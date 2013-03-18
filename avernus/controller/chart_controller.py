@@ -249,7 +249,6 @@ class StockChartPlotController(ChartController):
 
     def __init__(self, quotations):
         self.y_values = [(_("close"), [d.close for d in quotations])]
-        quotation_count = len(quotations)
         self.x_values = [gui_utils.get_date_string(q.date) for q in quotations]
 
     def calculate_values(self, *args):
@@ -282,9 +281,9 @@ class PortfolioChartController(ChartController):
         # import time
         # t0 = time.clock()
         temp = [0.0] * len(self.days)
-        for asset in self.portfolio.get_used_assets():
+        for pos in self.portfolio:
             i = 0
-            for val in self.portfolio.get_value_at_daterange(asset, self.days):
+            for val in pos.get_value_at_daterange(self.days):
                 temp[i] += val
                 i += 1
                 yield 0

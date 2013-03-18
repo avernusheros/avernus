@@ -145,7 +145,7 @@ class PortfolioPosition(Position):
                 self.quantity += buy_ta.quantity
 
     def get_buy_transactions(self):
-        return objects.session.query(portfolio_transaction.BuyTransaction)\
+        return objects.Session().query(portfolio_transaction.BuyTransaction)\
                        .filter_by(position=self)\
             .order_by(asc(portfolio_transaction.BuyTransaction.date)).all()
 
@@ -154,6 +154,32 @@ class PortfolioPosition(Position):
                         .filter_by(position=self)\
                         .order_by(asc(portfolio_transaction.BuyTransaction.date))\
                         .all()
+
+    def get_value_at_daterange(self, days):
+        quantity = 0
+        delta = datetime.timedelta(days=3)
+        transactions = sorted(self.transactions, key=lambda x: x.date).__iter__()
+        ta = transactions.next()
+        for day in days:
+            # adjust quantity            
+            while ta and ta.date <= day:
+                if ta.type == "portfolio_buy_transaction":
+                    quantity += ta.quantity
+                else:
+                    quantity -= ta.quantity
+                try:
+                    ta = transactions.next()
+                except:
+                    ta = None
+            # get price
+            if not quantity:
+                yield 0
+            else:
+                price = self.asset.get_price_at_date(day, day - delta)
+                if price:
+                    yield quantity * price
+                else:
+                    yield 0
 
     def delete(self, *args):
         Position.delete(self)

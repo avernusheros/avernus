@@ -1,4 +1,3 @@
-from avernus.controller import datasource_controller
 from avernus.gui import get_ui_file, gui_utils
 from avernus.gui.portfolio import dialogs
 from avernus.objects import portfolio_transaction, position

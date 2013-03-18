@@ -8,7 +8,6 @@ import datetime
 
 
 
-
 class PortfolioBase(GObject.GObject):
     """
     everything that is used by Portfolio and AllPortfolio
@@ -120,6 +119,12 @@ class PortfolioBase(GObject.GObject):
             ret += pos.dividends
         return ret
 
+    def has_dividends(self):
+        for pos in self:
+            if pos.dividends:
+                return True
+        return False
+
     def get_dividends_sum(self):
         ret = 0.0
         for pos in self:
@@ -127,12 +132,8 @@ class PortfolioBase(GObject.GObject):
         return ret
 
     def get_used_assets(self):
-        return objects.Session().query(asset_m.Asset)\
-                       .join(position.PortfolioPosition)\
-                       .filter(position.PortfolioPosition.portfolio == self)\
-                       .distinct()\
-                       .all()
-
+        return set([pos.asset for pos in self])
+        
     def get_current_value(self):
         value = 0.0
         for pos in self:
@@ -183,18 +184,17 @@ class AllPortfolio(PortfolioBase):
     name = _("All")
 
     def __iter__(self):
-        return self.positions.__iter__()
-
+        for pf in get_all_portfolios():
+            for pos in pf:
+                yield pos
+    
     @property
     def positions(self):
-        return position.get_all_portfolio_positions()
-
+        return [pos for pos in self]
+    
     @property
     def last_update(self):
-        try:
-            return min([pf.last_update for pf in get_all_portfolios()])
-        except:
-            return None
+        return min([pf.last_update for pf in get_all_portfolios()])
 
     @last_update.setter
     def last_update(self, value):
@@ -234,36 +234,6 @@ class Portfolio(Container, PortfolioBase):
 
     def __iter__(self):
         return self.positions.__iter__()
-
-    def get_transactions_for_asset(self, asset):
-        return objects.Session().query(portfolio_transaction.Transaction)\
-                       .join(position.PortfolioPosition)\
-                       .filter(position.PortfolioPosition.portfolio == self,
-                               position.Position.asset == asset)\
-                       .order_by(portfolio_transaction.Transaction.date).all()
-
-
-    def get_value_at_daterange(self, asset, days):
-        quantity = 0
-        delta = datetime.timedelta(days=3)
-        transactions = self.get_transactions_for_asset(asset)
-        for day in days:
-            # adjust quantity
-            while transactions and transactions[0].date <= day:
-                ta = transactions.pop(0)
-                if ta.type == "portfolio_buy_transaction":
-                    quantity += ta.quantity
-                else:
-                    quantity -= ta.quantity
-            # get price
-            if not quantity:
-                yield 0
-            else:
-                price = asset.get_price_at_date(day, day - delta)
-                if price:
-                    yield quantity * price
-                else:
-                    yield 0
 
 
 class Watchlist(Container, GObject.GObject):

@@ -4,7 +4,7 @@ import os, sys
 def fn_name(): return sys._getframe(1).f_code.co_name
 
 try:
-    from gi.repository import Gtk, Gdk, GObject
+    from gi.repository import Gtk, Gdk, GLib, GObject
 except ImportError:
     raise ImportError("GTK3 backend requires pygobject to be installed.")
 
@@ -187,7 +187,7 @@ class FigureCanvasGTK3 (Gtk.DrawingArea, FigureCanvasBase):
         self.set_double_buffered(True)
         self.set_can_focus(True)
         self._renderer_init()
-        self._idle_event_id = GObject.idle_add(self.idle_event)
+        self._idle_event_id = GLib.idle_add(self.idle_event)
 
     def destroy(self):
         #Gtk.DrawingArea.destroy(self)
