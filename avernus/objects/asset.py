@@ -63,13 +63,18 @@ class Asset(objects.Base, GObject.GObject):
         if quotation.count() > 0:
             return quotation.order_by(desc(Quotation.date)).first().date
 
-    def get_price_at_date(self, t, min_t, max_t):
+    def get_price_at_date(self, t):
+        delta = datetime.timedelta(days=30)
+        min_t = t - delta
+        max_t = t + delta
         close = objects.Session().query(Quotation.close)\
                 .filter(Quotation.asset == self,
                         Quotation.date >= min_t, Quotation.date <= max_t)\
                 .order_by(Quotation.date-t).first()
         if close:
             return close[0]
+        # use current price if there are no historical prices available
+        return self.price
 
     def get_quotations(self, start_date):
         return objects.session.query(Quotation).filter(Quotation.asset == self,

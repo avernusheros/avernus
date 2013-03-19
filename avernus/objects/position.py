@@ -44,8 +44,7 @@ class Position(objects.Base):
         quantity = self.get_quantity_at_date(self, t)
         if quantity == 0.0:
             return 0.0
-        t1 = t - datetime.timedelta(days=3)
-        price = self.asset.get_price_at_date(t, t1)
+        price = self.asset.get_price_at_date(t)
         if price:
             return quantity * price
         return 0.0
@@ -172,14 +171,9 @@ class PortfolioPosition(Position):
                     ta = None
             # get price
             if not quantity:
-                yield 0
+                yield 0.0
             else:
-                delta = datetime.timedelta(days=20)
-                price = self.asset.get_price_at_date(day, day - delta, day + delta)
-                if price:
-                    yield quantity * price
-                else:
-                    yield 0
+                yield quantity * self.asset.get_price_at_date(day)
 
     def delete(self, *args):
         Position.delete(self)

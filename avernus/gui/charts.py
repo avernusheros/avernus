@@ -120,7 +120,6 @@ class SimpleLineChart(ChartBase):
         fig.canvas.mpl_connect('motion_notify_event', self.on_move)
 
     def draw_plot(self):
-
         # remove lines
         self.ax.lines = []
         # vertical line
