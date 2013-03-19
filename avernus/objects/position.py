@@ -157,7 +157,6 @@ class PortfolioPosition(Position):
 
     def get_value_at_daterange(self, days):
         quantity = 0
-        delta = datetime.timedelta(days=3)
         transactions = sorted(self.transactions, key=lambda x: x.date).__iter__()
         ta = transactions.next()
         for day in days:
@@ -175,7 +174,8 @@ class PortfolioPosition(Position):
             if not quantity:
                 yield 0
             else:
-                price = self.asset.get_price_at_date(day, day - delta)
+                delta = datetime.timedelta(days=20)
+                price = self.asset.get_price_at_date(day, day - delta, day + delta)
                 if price:
                     yield quantity * price
                 else:
