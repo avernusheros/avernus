@@ -190,7 +190,7 @@ class PortfolioPositionsTab(page.Page):
                float(gain[1]),
                gain_icon,
                float(c_change[1]),
-               datasource_controller.ASSET_TYPES[type(position.asset)],
+               position.asset.type_str,
                self.portfolio.get_fraction(position),
                gain_div[0],
                float(gain_div[1]),

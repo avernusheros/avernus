@@ -169,7 +169,6 @@ class AccountTransaction(objects.Base):
                         AccountTransaction.amount == -self.amount,
                         or_(AccountTransaction.transfer == None,
                             AccountTransaction.transfer == self))
-        # FIXME maybe do this in sqlalchemy
         fivedays = datetime.timedelta(5)
         for trans in res:
             if self.date - fivedays < trans.date and self.date + fivedays > trans.date:

@@ -3,8 +3,6 @@ import datetime
 import sqlite3
 
 
-#TODO dropping columns is not supported by sqlite3
-
 def to_twenty(db):
     conn = sqlite3.connect(db)
     conn.execute("DROP TABLE IF EXISTS dimension")

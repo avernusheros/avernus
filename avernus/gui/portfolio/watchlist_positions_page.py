@@ -81,7 +81,7 @@ class WatchlistPositionsPage(page.Page):
         c_change = position.current_change
         return [position,
                gui_utils.get_name_string(position.asset),
-               datasource_controller.ASSET_TYPES[type(position.asset)],
+               position.asset.type_str,
                position.price,
                position.asset.price,
                c_change[0],

@@ -206,8 +206,6 @@ class MainWindow:
         ExportDialog(parent=self.window)
 
     def on_apply_categorization_rules(self, *args):
-        # FIXME the threaded version does not work
-        # threads.GeneratorTask(categorization_controller.apply_categorization_rules).start()
         for foo in categorization_controller.apply_categorization_rules():
             pass
 

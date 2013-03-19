@@ -11,13 +11,6 @@ sources = data_sources.sources
 current_searches = []
 search_callback = None
 
-# FIXME where is this used?
-ASSET_TYPES = {
-               asset_model.Bond: _('Bond'),
-               asset_model.Etf: _('ETF'),
-               asset_model.Fund: _('Fund'),
-               asset_model.Stock: _('Stock'),
-               }
 
 TYPES ={
        "bond": asset_model.Bond,

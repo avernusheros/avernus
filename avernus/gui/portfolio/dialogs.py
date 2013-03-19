@@ -121,7 +121,7 @@ class EditAssetTable(Gtk.Table):
 
         self.attach(Gtk.Label(label=_('Type')), 0, 1, 3, 4, yoptions=Gtk.AttachOptions.FILL)
         entry = Gtk.Entry()
-        entry.set_text(datasource_controller.ASSET_TYPES[type(asset_to_edit)])
+        entry.set_text(asset_to_edit.type_str)
         entry.set_editable(False)
         self.attach(entry, 1, 2, 3, 4, yoptions=Gtk.AttachOptions.FILL)
 

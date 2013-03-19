@@ -63,7 +63,6 @@ class BuyTransaction(Transaction):
             percent = absolute / self.price
         return absolute, percent
 
-    # FIXME use in code
     @property
     def buy_value(self):
         return self.price

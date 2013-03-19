@@ -105,6 +105,8 @@ class Fund(Asset):
     __mapper_args__ = {'polymorphic_identity': 'fund'}
     id = Column(Integer, ForeignKey('asset.id'), primary_key=True)
     ter = Column(Float, default=0.0)
+    
+    type_str = _("Fund")
 
 
 class Etf(Asset):
@@ -112,6 +114,7 @@ class Etf(Asset):
     __mapper_args__ = {'polymorphic_identity': 'etf'}
     id = Column(Integer, ForeignKey('asset.id'), primary_key=True)
     ter = Column(Float, default=0.0)
+    type_str = _("ETF")
 
 
 class Bond(Asset):
@@ -119,7 +122,7 @@ class Bond(Asset):
     #__tablename__ = 'bond'
     #id = Column(Integer, ForeignKey('asset.id'), primary_key=True)
     __mapper_args__ = {'polymorphic_identity': 'bond'}
-
+    type_str = _("Bond")
 
 class Quotation(objects.Base):
     __tablename__ = 'quotation'
@@ -153,8 +156,9 @@ class Stock(Asset):
     #__tablename__ = 'stock'
     #id = Column(Integer, ForeignKey('asset.id'), primary_key=True)
     __mapper_args__ = {'polymorphic_identity': 'stock'}
-
-
+    type_str = _("Stock")
+    
+    
 def get_all_assets():
     return objects.session.query(Asset).all()
 

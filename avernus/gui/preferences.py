@@ -94,11 +94,9 @@ class AccountPreferences(PreferencesVBox):
         Gtk.VBox.__init__(self)
         self.configParser = avernusConfig()
 
-        # FIXME tooltip
         section = self._add_section(_('Charts'))
         self._add_option(section, _('Include child categories'), 'categoryChildren')
 
-        # FIXME tooltip
         section = self._add_section(_('Category Assignments'))
         self._add_option(section, _('Include already categorized transactions'), 'assignments categorized transactions')
 
