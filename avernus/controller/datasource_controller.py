@@ -179,7 +179,6 @@ def update_all(*args):
     yield 1
 
 
-
 def update_positions(portfolio):
     items = set(pos.asset for pos in portfolio if pos.quantity > 0)
     itemcount = len(items)

@@ -95,7 +95,7 @@ class DividendsTab(page.Page):
     def on_edit_dividend(self, widget):
         dividend = self.get_selected_dividend()[0]
         if dividend:
-            dividend_dialog.DividendDialog(self.portfolio, tree=self, dividend=dividend, parent=self.tree.get_toplevel())
+            dividend_dialog.DividendDialog(self.portfolio, dividend=dividend, parent=self.tree.get_toplevel())
 
     def get_info(self):
         return [('# dividends', self.portfolio.get_dividends_count()),

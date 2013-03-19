@@ -1,6 +1,6 @@
 from avernus import objects
 from avernus import math
-from avernus.objects import asset as asset_m, position, portfolio_transaction
+from avernus.objects import position
 from gi.repository import GObject
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Unicode
 from sqlalchemy.orm import reconstructor, relationship
