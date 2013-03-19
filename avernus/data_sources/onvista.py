@@ -177,7 +177,8 @@ class DataSource():
     def search(self, searchstring):
         logger.debug("Starting search for " + searchstring)
         # http://www.onvista.de/suche.html?TARGET=kurse&SEARCH_VALUE=&ID_TOOL=FUN
-        search_url = "http://www.onvista.de/suche.html"
+        #FIXME onvista changed their asset search page. "suche2" is the old search...  
+        search_url = "http://www.onvista.de/suche2.html"
         # ID_TOOL FUN only searches fonds and etfs
         page = opener.open(search_url, urllib.urlencode({"TARGET": "kurse", "SEARCH_VALUE": searchstring}))  # ,'ID_TOOL':'FUN' }))
         received_url = page.geturl()
@@ -185,7 +186,7 @@ class DataSource():
         # result page http://www.onvista.de/suche.html
         # now check if we got a single result or a result page
         # if we get a result page, the url doesn't change
-        if received_url == search_url or received_url.startswith(search_url):
+        if received_url == search_url or "www.onvista.de/suche" in received_url:
             logger.debug("Received result page")
             # we have a result page
             soup = BeautifulSoup(page.read())
@@ -403,8 +404,4 @@ if __name__ == "__main__":
     s1 = Stock('DE000A0RFEE5', 'foo', "fund")
     s2 = Stock('LU0103598305', 'foo', "fund")
     test_search()
-    # print plugin.search_kurse(s1)
-    # print plugin.search_kurse(s3)
-    # test_parse_kurse()
-    #test_update(s1)
-    # test_historicals()
+
