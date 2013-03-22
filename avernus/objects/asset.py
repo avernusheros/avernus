@@ -5,6 +5,8 @@ from sqlalchemy import Column, Integer, String, Float, Date, ForeignKey, \
     DateTime, Unicode
 from sqlalchemy.orm import reconstructor, relationship, backref
 import datetime
+from bisect import bisect_left
+
 
 
 class Asset(objects.Base, GObject.GObject):
@@ -31,14 +33,19 @@ class Asset(objects.Base, GObject.GObject):
     def __init__(self, *args, **kwargs):
         GObject.GObject.__init__(self)
         objects.Base.__init__(self, *args, **kwargs)
-
+        self.update_quotation_keys()
+    
     @reconstructor
     def _init(self):
         GObject.GObject.__init__(self)
+        self.update_quotation_keys()
 
     def __repr__(self):
         return self.name + " " + self.isin
 
+    def update_quotation_keys(self):
+        self.quotation_keys = [q.date for q in self.quotations]
+        
     def get_source_info(self, source):
         return objects.Session().query(SourceInfo) \
                                 .filter_by(asset=self, source=source).all()
@@ -64,17 +71,16 @@ class Asset(objects.Base, GObject.GObject):
             return quotation.order_by(desc(Quotation.date)).first().date
 
     def get_price_at_date(self, t):
-        delta = datetime.timedelta(days=30)
-        min_t = t - delta
-        max_t = t + delta
-        close = objects.Session().query(Quotation.close)\
-                .filter(Quotation.asset == self,
-                        Quotation.date >= min_t, Quotation.date <= max_t)\
-                .order_by(Quotation.date-t).first()
-        if close:
-            return close[0]
-        # use current price if there are no historical prices available
-        return self.price
+        if not self.quotations:
+            return None
+        if len(self.quotations) != len(self.quotation_keys):
+            self.update_quotation_keys()
+        
+        pos = bisect_left(self.quotation_keys, t)
+        try:
+            return self.quotations[pos].close
+        except:
+            return self.quotations[-1].close
 
     def get_quotations(self, start_date):
         return objects.session.query(Quotation).filter(Quotation.asset == self,
@@ -141,7 +147,7 @@ class Quotation(objects.Base):
     close = Column(Float)
     volume = Column(Integer)
     asset_id = Column(Integer, ForeignKey('asset.id'))
-    asset = relationship('Asset', backref=backref('quotations',
+    asset = relationship('Asset', backref=backref('quotations', lazy="immediate",
                     cascade="all,delete", order_by="Quotation.date"))
 
 

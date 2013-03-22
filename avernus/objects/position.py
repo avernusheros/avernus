@@ -3,7 +3,6 @@ from avernus.objects import asset, portfolio_transaction
 from avernus import math
 from sqlalchemy import Column, Integer, String, Float, Date, ForeignKey, asc
 from sqlalchemy.orm import relationship, reconstructor
-import datetime
 
 
 class Position(objects.Base):
@@ -27,27 +26,6 @@ class Position(objects.Base):
     @property
     def days_gain(self):
         return self.asset.change * self.quantity
-
-    def get_quantity_at_date(self, t):
-        if t < self.date:
-            return 0.0
-        q = 0.0
-        for ta in self.transactions:
-            if t >= ta.date:
-                if ta.type == "portfolio_sell_transaction":
-                    q -= ta.quantity
-                else:
-                    q += ta.quantity
-        return q
-
-    def get_value_at_date(self, t):
-        quantity = self.get_quantity_at_date(self, t)
-        if quantity == 0.0:
-            return 0.0
-        price = self.asset.get_price_at_date(t)
-        if price:
-            return quantity * price
-        return 0.0
 
     @property
     def price_per_share(self):
@@ -173,7 +151,13 @@ class PortfolioPosition(Position):
             if not quantity:
                 yield 0.0
             else:
-                yield quantity * self.asset.get_price_at_date(day)
+                price = self.asset.get_price_at_date(day)
+                if price is None:
+                    # weight buy price and current price by distance to requested date
+                    diff1 = abs((day - self.asset.date.date()).days)
+                    diff2 = abs((day - self.date).days)
+                    price = (diff1 * self.asset.price + diff2 * self.price_per_share) / (diff1 + diff2)
+                yield quantity * price
 
     def delete(self, *args):
         Position.delete(self)
