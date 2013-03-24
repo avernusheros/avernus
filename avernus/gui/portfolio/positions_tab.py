@@ -151,7 +151,8 @@ class PortfolioPositionsTab(page.Page):
         for pos in portfolio:
             self.insert_position(pos)
         # auto-update assets
-        if datetime.datetime.now() - portfolio.last_update > datetime.timedelta(minutes=5):
+        if portfolio.last_update is not None and \
+            datetime.datetime.now() - portfolio.last_update > datetime.timedelta(minutes=5):
             self.on_update_portfolio_positions()
         self.update_page()
 

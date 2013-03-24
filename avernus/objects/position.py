@@ -7,7 +7,7 @@ from sqlalchemy.orm import relationship, reconstructor
 
 class Position(objects.Base):
     __tablename__ = 'position'
-    discriminator = Column('type', String(30))
+    discriminator = Column('type', String(30)) 
     __mapper_args__ = {'polymorphic_on': discriminator}
 
     id = Column(Integer, primary_key=True)

@@ -3,7 +3,7 @@
 import sys
 import os
 import gi
-gi.require_version('Gtk', '3.0')
+gi.require_version('Gtk', '3.0') 
 
 from gi.repository import Gtk, GObject
 import optparse
@@ -28,7 +28,7 @@ if b_from_source:
 
 def check_dependencies():
     try:
-        import BeautifulSoup
+        import bs4
         import matplotlib
         import chardet
         import dateutil

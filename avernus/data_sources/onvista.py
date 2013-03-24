@@ -1,5 +1,5 @@
 # -*- Mode: Python; coding: utf-8; indent-tabs-mode: nil; tab-width: 4 -*-
-from BeautifulSoup import BeautifulSoup
+from bs4 import BeautifulSoup
 from Queue import Queue
 from datetime import datetime, date
 import logging
@@ -22,16 +22,15 @@ def to_float(s):
     return float(s.replace('.', '').replace('%', '').replace(',', '.').split('&')[0])
 
 
-def to_datetime(datestring, time='', toUTC=True):
-    if time == '':
-        ret_date = datetime.strptime(datestring + time, "%d.%m.%y")
+def to_datetime(datestring, time=None, toUTC=True):
+    if time is None:
+        ret_date = datetime.strptime(datestring, "%d.%m.%y")
     else:
         ret_date = datetime.strptime(datestring + time, "%d.%m.%y%H:%M:%S")
     ret_date = pytz.timezone('Europe/Berlin').localize(ret_date)
     if toUTC:
         ret_date = ret_date.astimezone(pytz.utc)
         ret_date = ret_date.replace(tzinfo=None)
-    # print ret_date
     return ret_date
 
 
@@ -174,6 +173,11 @@ class DataSource():
         self.exchangeBlacklist = [u'Summe:', u'Realtime-Kurse', u'Neartime-Kurse', \
                                  u'Leider stehen zu diesem Fonds keine Informationen zur Verfügung.']
 
+    def regex_isin(self, text):
+        match_object = re.search('[A-Z]{2}[A-Z0-9]{9}[0-9]', text)
+        if match_object:
+            return match_object.group(0)
+
     def search(self, searchstring):
         logger.debug("Starting search for " + searchstring)
         # http://www.onvista.de/suche.html?TARGET=kurse&SEARCH_VALUE=&ID_TOOL=FUN
@@ -190,10 +194,10 @@ class DataSource():
             logger.debug("Received result page")
             # we have a result page
             soup = BeautifulSoup(page.read())
-            linkTagsFonds = soup.findAll(attrs={'href' : re.compile('http://fonds\\.onvista\\.de/kurse\\.html\?ID_INSTRUMENT=\d+')})
+            linkTagsFonds = soup.find_all(attrs={'href' : re.compile('http://fonds\\.onvista\\.de/kurse\\.html\?ID_INSTRUMENT=\d+')})
             etfRegex = re.compile("http://www\\.onvista\\.de/etf/.+?")  # re.compile('http://etf\\.onvista\\.de/kurse\\.html\?ID_INSTRUMENT=\d+')
-            linkTagsETF = soup.findAll(attrs={'href' : etfRegex})
-            linkTagsBond = soup.findAll(attrs={'href' : re.compile('http://anleihen\\.onvista\\.de/kurse\\.html\?ID_INSTRUMENT=\d+')})
+            linkTagsETF = soup.find_all(attrs={'href' : etfRegex})
+            linkTagsBond = soup.find_all(attrs={'href' : re.compile('http://anleihen\\.onvista\\.de/kurse\\.html\?ID_INSTRUMENT=\d+')})
             filePara = FileDownloadParalyzer([tag['href'] for tag in linkTagsFonds])
             pages = filePara.perform()
             for kursPage in pages:
@@ -247,11 +251,11 @@ class DataSource():
                 return
             name = unicode(base.h1.contents[0])
             if stockType == 'bond':
-                temp = base.findAll('tr', 'hgrau2')[0].findAll('td', text=True)
+                temp = base.find_all('tr', 'hgrau2')[0].findAll('td').get_text()
                 isin = temp[3]
                 currency = temp[9]
             else:
-                isin = str(base.findAll('tr', 'hgrau2')[1].findAll('td', text=True)[1])
+                isin = base.find_all('tr', 'hgrau2')[1].find_all('td')[1].get_text()
 
                 # getting the year
                 # FIXME
@@ -266,7 +270,7 @@ class DataSource():
                 # else:
                 #    #fallback to the hardcoded current year
                 year = unicode(str(date.today().year)[2:])
-            isin = isin.replace('&nbsp;', '')
+            isin = self.regex_isin(isin)
             for row in base.findAll('div', tdInd['table_class'])[tdInd['table']].find('table'):
                 tds = row.findAll('td')
                 if len(tds) > 3:
@@ -295,7 +299,7 @@ class DataSource():
             return
 
     def update_stocks(self, assets):
-        for i, asset in enumerate(assets):
+        for asset in assets:
             try:
                 if asset.type == "fund":
                     f = opener.open("http://www.onvista.de/fonds/kurse.html", urllib.urlencode({"ISIN": asset.isin}))
@@ -335,13 +339,15 @@ class DataSource():
         fileobj = opener.open(url, urllib.urlencode({'ISIN':asset.isin, 'RANGE':'60M'}))
         soup = BeautifulSoup(fileobj)
         if asset.type == "bond":
-            lines = soup.findAll('tr', {'class':'hr'})
+            lines = soup.find_all('tr', {'class':'hr'})
         else:
-            lines = soup.findAll('tr', {'align':'right'})
+            lines = soup.find_all('tr', {'align':'right'})
         for line in lines:
-            tds = line.findAll('td', text=True)
-            day = to_datetime(tds[0].replace('&nbsp;', '')).date()
-
+            tds = line.find_all('td')
+            try:
+                day = to_datetime(tds[0].get_text()).date()
+            except:
+                continue
             # terminate if the start date is reached
             if day < start_date:
                 return
@@ -349,13 +355,13 @@ class DataSource():
             if asset.type == "bond":
                 yield (asset, 'KAG',
                        day,
-                       to_float(tds[1].replace('&nbsp;', '')),
-                       to_float(tds[2].replace('&nbsp;', '')),
-                       to_float(tds[3].replace('&nbsp;', '')),
-                       to_float(tds[4].replace('&nbsp;', '')),
+                       to_float(tds[1].get_text().replace('&nbsp;', '')),
+                       to_float(tds[2].get_text().replace('&nbsp;', '')),
+                       to_float(tds[3].get_text().replace('&nbsp;', '')),
+                       to_float(tds[4].get_text().replace('&nbsp;', '')),
                        0)
             else:
-                kurs = to_float(tds[1].replace('&nbsp;', ''))
+                kurs = to_float(tds[1].get_text().replace('&nbsp;', ''))
                 yield (asset, 'KAG', day, kurs, kurs, kurs, kurs, 0)
 
 
@@ -403,5 +409,5 @@ if __name__ == "__main__":
     plugin = DataSource()
     s1 = Stock('DE000A0RFEE5', 'foo', "fund")
     s2 = Stock('LU0103598305', 'foo', "fund")
-    test_search()
+    test_historicals()
 

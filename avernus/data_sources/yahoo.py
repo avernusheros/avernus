@@ -1,5 +1,5 @@
 # -*- Mode: Python; coding: utf-8; indent-tabs-mode: nil; tab-width: 4 -*-
-from BeautifulSoup import BeautifulSoup
+from bs4 import BeautifulSoup
 from urllib import urlopen
 import csv
 import pytz
@@ -140,14 +140,15 @@ class DataSource():
             return
         soup = BeautifulSoup(doc)
         found_items = {}
-        for table in soup.findAll('table', summary="YFT_SL_TABLE_SUMMARY"):
+        for table in soup.find_all('table', summary="YFT_SL_TABLE_SUMMARY"):
             for body in table('tbody'):
                 for row in body('tr'):
                     item = []
                     for s in row('td', text=True):
-                        s = s.strip()
-                        if s is not None and s != unicode(''):
-                            item.append(s)
+                        if s is not None:
+                            s = s.get_text().strip()
+                            if s != unicode(''):
+                                item.append(s)
                     if len(item) == 6:
                         item = self.__to_dict(item)
                         if item is not None:
