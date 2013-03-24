@@ -76,29 +76,6 @@ class Tree(Gtk.TreeView):
         self.get_model().clear()
 
 
-class ContextMenu(Gtk.Menu):
-
-    def __init__(self):
-        Gtk.Menu.__init__(self)
-
-    def add_item(self, label, func=None, icon=None):
-        if label == '----':
-            self.append(Gtk.SeparatorMenuItem())
-        else:
-            if icon is not None:
-                item = Gtk.ImageMenuItem()
-                item.set_label(icon)
-                item.set_use_stock(True)
-                item.get_children()[0].set_label(label)
-            else:
-                item = Gtk.MenuItem()
-                item.set_label(label)
-            if func is not None:
-                item.connect("activate", func)
-            self.append(item)
-            return item
-
-
 def float_format(column, cell_renderer, tree_model, iterator, user_data):
     number = tree_model.get_value(iterator, user_data)
     cell_renderer.set_property('text', get_string_from_float(number))

@@ -21,8 +21,8 @@ Dependencies
 * python-chardet
 * python-dateutil
 * pytz
-* beautifulsoup
-* matplotlib
+* beautifulsoup4
+* matplotlib 1.2.0
 * sqlalchemy
 
 Running from sources
@@ -32,7 +32,7 @@ Running from sources
   * on debian based systems
 
    ```
-    sudo apt-get install bzr python-dateutil python-tz python-chardet python-beautifulsoup python-matplotlib
+    sudo apt-get install bzr python-dateutil python-tz python-chardet python-bs4 python-matplotlib
    ```
 * pull code from github
    ```

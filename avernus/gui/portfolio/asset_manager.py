@@ -48,7 +48,8 @@ class AssetManager:
         dlg.destroy()
 
     def get_row(self, asset):
-        return [asset, GLib.markup_escape_text(asset.name), asset.isin, asset.type, asset.currency]
+        return [asset, GLib.markup_escape_text(asset.name),
+                asset.isin, asset.type_str, asset.currency]
 
     def on_button_press_event(self, widget, event):
         if event.button == 1 and event.type == Gdk.EventType._2BUTTON_PRESS:

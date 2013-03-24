@@ -4,9 +4,9 @@ from gi.repository import Gtk
 import matplotlib
 from matplotlib.figure import Figure
 from matplotlib.ticker import FuncFormatter
+from matplotlib.backends.backend_gtk3cairo import FigureCanvasGTK3Cairo as FigureCanvas
+#from matplotlib.backends.backend_gtk3agg import FigureCanvasGTK3Agg as FigureCanvas
 
-# from backend_gtk3agg import FigureCanvasGTK3Agg as FigureCanvas
-from avernus.matplotlib.backend_gtk3cairo import FigureCanvasGTK3Cairo as FigureCanvas
 from avernus.gui import gui_utils
 from avernus.gui import threads
 

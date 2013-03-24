@@ -39,12 +39,13 @@ class ChartTab(page.Page):
         label.set_tooltip_text(_("This chart plots the portfolio value over the selected time period."))
         hbox.pack_start(label, True, True, 0)
 
-        combobox = Gtk.ComboBoxText()
-        for st in ['daily', 'weekly', 'monthly', 'yearly']:
-            combobox.append_text(st)
-        combobox.set_active(2)
-        combobox.connect('changed', self.on_zoom_change)
-        hbox.pack_start(combobox, False, False, 0)
+        #FIXME 
+        #combobox = Gtk.ComboBoxText()
+        #for st in ['daily', 'weekly', 'monthly', 'yearly']:
+        #    combobox.append_text(st)
+        #combobox.set_active(2)
+        #combobox.connect('changed', self.on_zoom_change)
+        #hbox.pack_start(combobox, False, False, 0)
 
         y += 1
 
