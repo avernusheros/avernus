@@ -101,7 +101,7 @@ def init_icons():
     'avernus', 'tags', 'tag', 'watchlists', 'watchlist', 'portfolio',
     'portfolios', 'index', 'indices', 'arrow_down', 'arrow_med_down',
     'arrow_up', 'arrow_med_up', 'arrow_right', 'A', 'F', 'fund', 'stock',
-    'etf', 'accounts', 'account', 'onvista', 'yahoo'
+    'etf', 'accounts', 'account'
     ]
     for name in iconNames:
         icons.add_icon_name_from_directory(name, path)

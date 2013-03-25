@@ -207,13 +207,7 @@ class StockSelector(Gtk.VBox):
         searchstring = self.search_field.get_text().strip()
         self._show_spinner()
         for item in asset.get_asset_for_searchstring(searchstring):
-            if item.source == "yahoo":
-                icon = 'yahoo'
-            elif item.source == "onvista.de":
-                icon = 'onvista'
-            else:
-                icon = 'gtk-harddisk'
-            self.insert_item(item, icon)
+            self.insert_item(item, "")
         self.search_source_count = datasource_controller.get_source_count()
         datasource_controller.search(searchstring, self.insert_item, self.search_complete_callback)
 

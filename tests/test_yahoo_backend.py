@@ -7,7 +7,7 @@ dbfile = ":memory:"
 db.set_db(dbfile)
 db.connect()
 
-from avernus.data_sources import onvista, yahoo
+from avernus.data_sources import yahoo
 from avernus.controller import datasource_controller as dsm
 import __builtin__
 import datetime
@@ -36,21 +36,8 @@ class DataSourcesTest(unittest.TestCase):
             self.assertIsNotNone(data['currency'])
             self.assertEqual(data['type'], 'stock')
 
-    def test_onvista_search(self):
-        o = onvista.DataSource()
-        for res in o.search("DE0008474248"):
-            data = res[0]
-            self.assertTrue(len(data['isin']) == 12)
-            self.assertIsNotNone(data['exchange'])
-            self.assertIsNotNone(data['name'])
-            self.assertIsNotNone(data['currency'])
-            self.assertEqual(data['type'], 'fund')
 
     def put_stocks_in_db(self):
-        o = onvista.DataSource()
-        for res in o.search("DE0008474248"):
-            item, source, source_info = res
-            dsm._item_found_callback(item, source, source_info)
         y = yahoo.DataSource()
         for res in y.search('google'):
             item, source, source_info = res
@@ -73,17 +60,6 @@ class DataSourcesTest(unittest.TestCase):
         for foo in dsm.update_historical_prices_asset(st, threaded=False):
             for bar in foo:
                 pass
-
-    def test_historicals_onvista(self):
-        self.put_stocks_in_db()
-        asset_count = 0
-        for asset in objects.asset.get_all_assets():
-            if "onvista" in asset.source:
-                asset_count +=1
-                count = len(asset.quotations)
-                self.get_historical_prices(asset)
-                self.assertNotEqual(count, len(asset.quotations))
-        self.assertNotEqual(0, asset_count)
 
     def test_historicals_yahoo(self):
         self.put_stocks_in_db()
