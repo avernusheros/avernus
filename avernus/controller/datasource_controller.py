@@ -56,13 +56,12 @@ def stop_search():
 def _item_found_callback(item, source, source_infos=None):
     if not validate_isin(item['isin']):
         return
-    new = False
+    
     existing_asset = check_asset_existance(source=source.name,
                                            isin=item['isin'],
                                            currency=item['currency'])
     # FIXME ugly
-    if not existing_asset:
-        new = True
+    if existing_asset is None:
         item['source'] = source.name
         assettype = item['type']
         del item['type']
@@ -78,7 +77,7 @@ def _item_found_callback(item, source, source_infos=None):
                 asset_model.SourceInfo(source=source.name,
                                asset=existing_asset,
                                info=source_info)
-    if new and search_callback:
+    if search_callback:
         search_callback(existing_asset, 'source')
 
 
@@ -154,11 +153,11 @@ def update_historical_prices(*args):
 
 
 def check_asset_existance(source, isin, currency):
-    return 0 < objects.session.query(asset_model.Asset).filter_by(isin=isin,
+    return objects.Session().query(asset_model.Asset).filter_by(isin=isin,
                                             source=source,
-                                            currency=currency).count()
-
-
+                                            currency=currency).first()
+    
+    
 def update_all(*args):
     items = position.get_all_used_assets()
     itemcount = len(items)

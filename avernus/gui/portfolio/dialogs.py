@@ -219,9 +219,12 @@ class StockSelector(Gtk.VBox):
     def stop_search(self):
         self._hide_spinner()
         datasource_controller.stop_search()
-
+        self.cache = set()
+        
     def insert_item(self, asset, icon):
-        self.result_tree.get_model().append(None, [
+        if asset.id not in self.cache:
+            self.cache.add(asset.id)
+            self.result_tree.get_model().append(None, [
                                        asset,
                                        icon,
                                        GLib.markup_escape_text(asset.name),
