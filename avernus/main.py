@@ -26,17 +26,38 @@ if b_from_source:
     config.__avernus_data_directory__ = '../data/'
 
 
-def check_dependencies():
-    try:
-        import bs4
-        import matplotlib
-        import chardet
-        import dateutil
-        import sqlalchemy
-    except ImportError:
-        print "Import Error"
-        exit(1)
 
+
+
+def check_dependencies():
+    def get_module(module_name):
+        try:
+            return __import__(module_name)
+        except ImportError:
+            return None
+
+    deps = [("bs4", None), 
+            ("matplotlib", "1.2.0"), 
+            ("chardet", None), 
+            ("dateutil", None), 
+            ("sqlalchemy", None), 
+            ]
+    error = False
+    for dep, version in deps:
+        module = get_module(dep)
+        if module is None:
+            print "Import error: %s is not installed." % dep
+            error = True
+        elif version is not None:
+            for att in ["version", "VERSION", "__version__"]:
+                if hasattr(module, att):
+                    if getattr(module, att) < version:
+                        print "Import error: version %s of %s is required. Installed is version %s" % (version, dep, getattr(module, att)) 
+                        error = True
+    if error:
+        exit(1)
+        
+            
 def init_logger(debug=False):
     if debug:
         loggerlevel = logging.DEBUG
