@@ -29,7 +29,11 @@ class AssetCategory(objects.Base):
     accounts = relationship('Account',
                             secondary=association_table_accounts,
                             backref="asset_categories")
-
+    
+    @property
+    def sum_target_children(self):
+        return sum([ch.target_percent for ch in self.children])
+        
 
 def get_root_categories():
     return objects.Session().query(AssetCategory)\

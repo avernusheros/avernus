@@ -46,6 +46,10 @@ class AssetAllocation(page.Page):
         column.set_cell_data_func(cell, gui_utils.float_to_red_green_string_currency, self.DELTA)
 
     def insert_category(self, cat, iterator):
+        if cat.sum_target_children > 1.0:
+            icon = "gtk-dialog-error"
+        else:
+            icon = "gtk-directory"
         return self.treestore.append(iterator,
                         [cat,
                          cat.name,
@@ -56,7 +60,7 @@ class AssetAllocation(page.Page):
                          cat.delta_percent,
                          cat.delta,
                          True,
-                         "gtk-directory"
+                         icon
                         ])
 
     def load_categories(self):
