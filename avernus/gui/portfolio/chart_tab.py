@@ -65,8 +65,8 @@ class ChartTab(page.Page):
         table.attach(chart, 0, 1, y + 1, y + 2)
 
         label = Gtk.Label()
-        label.set_markup('<b>' + _('Investment types') + '</b>')
-        label.set_tooltip_text(_("Percentual fraction by investment type."))
+        label.set_markup('<b>' + _('Asset types') + '</b>')
+        label.set_tooltip_text(_("Percentual fraction by asset type."))
         table.attach(label, 1, 2, y, y + 1)
         
         controller = chart_controller.PositionAttributeChartController(self.pf, 'type')
