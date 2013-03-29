@@ -8,6 +8,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 class BuyDialog:
 
     def __init__(self, pf, transaction=None, parent=None):
@@ -121,24 +122,23 @@ class BuyDialog:
             shares = self.shares_entry.get_value()
             price = total - ta_costs
 
-            if shares == 0.0:
-                return
-            if self.transaction:
-                self.transaction.price = total - ta_costs
-                self.transaction.date = date
-                self.transaction.quantity = shares
-                self.transaction.cost = ta_costs
-            else:
-                self.position = position.get_position(portfolio=self.pf, asset=ass)
-                # create a new position if there is no active position with this asset in this portfolio
-                if not self.position or self.position.quantity == 0:
-                    self.position = position.PortfolioPosition(portfolio=self.pf, asset=ass)
-                    self.position.date = date
-                portfolio_transaction.BuyTransaction(date=date, quantity=shares,
-                                     price=price, cost=ta_costs,
-                                     position=self.position)
-                self.position.recalculate()
-                self.pf.emit("position_added", self.position)
-                self.pf.emit("positions_changed")
+            if shares != 0.0:
+                if self.transaction:
+                    self.transaction.price = total - ta_costs
+                    self.transaction.date = date
+                    self.transaction.quantity = shares
+                    self.transaction.cost = ta_costs
+                else:
+                    self.position = position.get_position(portfolio=self.pf, asset=ass)
+                    # create a new position if there is no active position with this asset in this portfolio
+                    if not self.position or self.position.quantity == 0:
+                        self.position = position.PortfolioPosition(portfolio=self.pf, asset=ass)
+                        self.position.date = date
+                    portfolio_transaction.BuyTransaction(date=date, quantity=shares,
+                                         price=price, cost=ta_costs,
+                                         position=self.position)
+                    self.position.recalculate()
+                    self.pf.emit("position_added", self.position)
+                    self.pf.emit("positions_changed")
 
         self.dlg.destroy()

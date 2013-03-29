@@ -169,7 +169,7 @@ class StockSelector(Gtk.VBox):
         sw.set_property('hscrollbar-policy', Gtk.PolicyType.AUTOMATIC)
         sw.set_property('vscrollbar-policy', Gtk.PolicyType.AUTOMATIC)
         self.result_tree = gui_utils.Tree()
-        self.result_tree.model = Gtk.TreeStore(object, str, str, str, str, str)
+        self.result_tree.model = Gtk.ListStore(object, str, str, str, str, str)
         self.result_tree.set_model(self.result_tree.model)
         self.result_tree.create_icon_column(None, 1)
         col, cell = self.result_tree.create_column(_('Name'), 2)
@@ -198,9 +198,10 @@ class StockSelector(Gtk.VBox):
         self.spinner.start()
 
     def _hide_spinner(self):
-        if self.spinner:
+        if self.spinner is not None:
             self.remove(self.spinner)
-
+            self.spinner = None
+            
     def on_search(self, *args):
         self.stop_search()
         self.result_tree.clear()
@@ -224,7 +225,7 @@ class StockSelector(Gtk.VBox):
     def insert_item(self, asset, icon):
         if asset.id not in self.cache:
             self.cache.add(asset.id)
-            self.result_tree.get_model().append(None, [
+            self.result_tree.get_model().append([
                                        asset,
                                        icon,
                                        GLib.markup_escape_text(asset.name),
