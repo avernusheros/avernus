@@ -28,7 +28,7 @@ database = None
 # automatically add new objects to the session
 @event.listens_for(mapper, 'init')
 def auto_add(target, args, kwargs):
-    objects.Session.add(target)
+    objects.session.add(target)
 
 
 

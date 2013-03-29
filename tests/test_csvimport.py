@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 
-import unittest, datetime
+import unittest
+import datetime
+import __builtin__
+__builtin__._ = str
+
 
 from avernus import objects
 from avernus.objects import db

@@ -47,9 +47,8 @@ class Asset(objects.Base, GObject.GObject):
         self.quotation_keys = [q.date for q in self.quotations]
         
     def get_source_info(self, source):
-        return objects.Session().query(SourceInfo) \
-                                .filter_by(asset=self, source=source).all()
-
+        return [si for si in self.source_info if si.source==source]
+        
     @property
     def is_used(self):
         if self.positions:
@@ -158,7 +157,7 @@ class SourceInfo(objects.Base):
     source = Column(String)
     info = Column(String)
     asset_id = Column(Integer, ForeignKey('asset.id'))
-    asset = relationship('Asset', backref=backref('source_info',
+    asset = relationship('Asset', backref=backref('source_info', lazy="immediate",
                                                  cascade="all,delete"))
 
 

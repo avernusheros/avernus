@@ -294,8 +294,8 @@ class PortfolioPositionsTab(page.Page):
         self.treestore[iterator] = self.get_row_position(pos)
 
     def on_update_portfolio_positions(self, *args):
-        progress_manager.add_task(datasource_controller.update_positions,
-                            self.portfolio,
+        progress_manager.add_task(self.portfolio.update_assets,
+                                  None,
                             _('updating assets...'),
                             self.update)
 

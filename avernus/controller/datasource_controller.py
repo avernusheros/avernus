@@ -1,6 +1,6 @@
 from avernus import data_sources, objects
 from avernus.gui import threads
-from avernus.objects import asset as asset_model, container, position
+from avernus.objects import asset as asset_model, position
 import datetime
 import logging
 import re
@@ -44,7 +44,7 @@ def search(searchstring, callback=None, complete_cb=None, threaded=True):
                 for res in func(searchstring):
                     item, source, source_info = res
                     _item_found_callback(item, source, source_info)
-
+    
 
 def stop_search():
     global current_searches
@@ -79,7 +79,7 @@ def _item_found_callback(item, source, source_infos=None):
                                info=source_info)
     if search_callback:
         search_callback(existing_asset, 'source')
-
+    
 
 def validate_isin(isin):
     return re.match('^[A-Z]{2}[A-Z0-9]{9}[0-9]$', isin)
@@ -98,7 +98,7 @@ def update_assets(assets):
 
 
 def update_asset(asset):
-    update_assets([asset])
+    return update_assets([asset])
 
 
 def get_historical_prices(asset, start_date=None, end_date=None, threaded=True):
@@ -165,19 +165,5 @@ def update_all(*args):
     for item in update_assets(items):
         count += 1
         yield count / itemcount
-    for item in objects.Session().query(container.Container).all():
-        item.last_update = datetime.datetime.now()
     objects.Session().commit()
-    yield 1
-
-
-def update_positions(portfolio):
-    items = set(pos.asset for pos in portfolio if pos.quantity > 0)
-    itemcount = len(items)
-    count = 0.0
-    for i in update_assets(items):
-        count += 1
-        yield count / itemcount
-    portfolio.last_update = datetime.datetime.now()
-    portfolio.emit("updated")
     yield 1

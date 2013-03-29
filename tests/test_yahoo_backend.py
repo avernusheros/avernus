@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 
+import __builtin__
+__builtin__._ = str
+
+
 from avernus import objects
 from avernus.objects import db
 
@@ -9,10 +13,9 @@ db.connect()
 
 from avernus.data_sources import yahoo
 from avernus.controller import datasource_controller as dsm
-import __builtin__
 import datetime
 import unittest
-__builtin__._ = str
+
 
 
 #stocks which are mentioned in bug reports

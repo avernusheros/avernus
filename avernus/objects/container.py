@@ -1,6 +1,7 @@
 from avernus import objects
 from avernus import math
 from avernus.objects import position
+from avernus.controller import datasource_controller
 from gi.repository import GObject
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Unicode
 from sqlalchemy.orm import reconstructor, relationship
@@ -175,6 +176,18 @@ class PortfolioBase(GObject.GObject):
         for pos in self:
             value += pos.buy_value
         return value
+    
+    def update_assets(self, *args):
+        assets = set(pos.asset for pos in self if pos.quantity > 0)
+        itemcount = len(assets)
+        count = 0.0
+        for i in datasource_controller.update_assets(assets):
+            count += 1
+            yield count / itemcount
+        self.last_update = datetime.datetime.now()
+        self.emit("updated")
+        yield 1
+
 
 GObject.type_register(PortfolioBase)
 

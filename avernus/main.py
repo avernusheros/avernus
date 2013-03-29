@@ -27,8 +27,6 @@ if b_from_source:
 
 
 
-
-
 def check_dependencies():
     def get_module(module_name):
         try:

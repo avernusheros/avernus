@@ -1,4 +1,3 @@
-from gi.repository import GObject
 from gi.repository import GLib
 
 import logging
@@ -59,7 +58,7 @@ class GeneratorTask(threading.Thread):
         """Stop method, sets the event to terminate the thread's main loop"""
         logger.debug("stopped thread")
         self.stopthread.set()
-
+        
     def __repr__(self):
         return str(self.generator)
 
