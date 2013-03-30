@@ -92,10 +92,19 @@ class Account(objects.Base, GObject.GObject):
             return max([t.date for t in self])
 
     def has_transaction(self, trans):
-        return objects.session.query(AccountTransaction)\
-                .filter_by(account=self, description=trans['description'], amount=trans['amount'], date=trans['date'])\
-                .count() > 0
-
+        candidates = objects.session.query(AccountTransaction)\
+                .filter_by(account=self, amount=trans['amount'], date=trans['date']).all()
+        if not candidates:
+            return False
+        
+        # fuzzy matching of description
+        for candidate in candidates:
+            a = candidate.description.split()
+            b = trans["description"].split()
+            matching_words = [word for word in b if word in a]
+            if float(len(matching_words)) / len(a) > 0.5:
+                return True 
+        
 
 event.listen(Account.balance, 'set', Account.on_balance_changed)
 GObject.type_register(Account)

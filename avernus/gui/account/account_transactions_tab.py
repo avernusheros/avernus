@@ -420,10 +420,10 @@ class AccountTransactionTab(page.Page):
 
     def on_dividend_from_transaction(self, widget):
         trans, iterator = self.get_selected_transaction()
-        dividend_dialog.DividendDialog(date=trans.date, price=trans.amount, parent=self.get_toplevel())
+        dividend_dialog.DividendDialog(date=trans.date, price=trans.amount, parent=self.widget.get_toplevel())
 
     def on_add_acc_transaction(self, widget):
-        dlg = edit_transaction_dialog.EditTransactionDialog(self.account, parent=self.get_toplevel())
+        dlg = edit_transaction_dialog.EditTransactionDialog(self.account, parent=self.widget.get_toplevel())
         dlg.start()
 
     def on_remove_transaction_category(self, widget):
