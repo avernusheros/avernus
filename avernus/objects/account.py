@@ -50,7 +50,7 @@ class Account(objects.Base, GObject.GObject):
     __tablename__ = 'account'
 
     id = Column(Integer, primary_key=True)
-    name = Column(String)
+    name = Column(Unicode(32))
     type = Column(Integer, default=1)
     balance = Column(Float, default=0.0)
     transactions = relationship('AccountTransaction', backref='account', cascade="all,delete")

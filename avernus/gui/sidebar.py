@@ -182,7 +182,7 @@ class Sidebar(GObject.GObject):
             item = container.Watchlist(name=_('new watchlist'))
         elif "Account" in obj_string:
             inserter = self.insert_account
-            item = account.Account(name=_('new account'), balance=0.0)
+            item = account.Account(name=_('new account'), balance=0.0, type=1)
         else:
             return
         iterator = inserter(item)

@@ -33,7 +33,7 @@ class EditAccountDialog:
         self.dlg.show()
 
     def on_response(self, widget, response):
-        self.account.name = self.name_entry.get_text()
+        self.account.name = unicode(self.name_entry.get_text())
         self.account.balance = self.balance_entry.get_value()
         self.account.type = self.combobox.get_model()[self.combobox.get_active_iter()][0]
         self.dlg.destroy()
