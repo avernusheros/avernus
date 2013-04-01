@@ -125,6 +125,28 @@ class EditAssetTable(Gtk.Table):
         entry.set_editable(False)
         self.attach(entry, 1, 2, 3, 4, yoptions=Gtk.AttachOptions.FILL)
 
+        self.attach(Gtk.Label(label=_('Data source')), 0, 1, 4, 5, yoptions=Gtk.AttachOptions.FILL)
+        self.source_cb = Gtk.ComboBoxText()
+        self.source_cb.set_entry_text_column(0)
+        self.source_cb.append_text(_("None"))
+        index = 0
+        if self.asset.source is None:
+            found = True
+            self.source_cb.set_active(index)
+        else:
+            found = False
+        for source in datasource_controller.get_available_sources():
+            self.source_cb.append_text(source)
+            index += 1
+            if self.asset.source == source:
+                self.source_cb.set_active(index)
+                found = True
+        # the asset is using source that is currently not available...
+        if not found:
+            self.source_cb.append_text(self.asset.source)
+            self.source_cb.set_active(index+1)
+        self.attach(self.source_cb, 1, 2, 4, 5, yoptions=Gtk.AttachOptions.FILL)
+
         if hasattr(self.asset, 'ter'):
             self.attach(Gtk.Label(label=_('TER')), 0, 1, 4, 5, yoptions=Gtk.AttachOptions.SHRINK)
             self.ter_entry = Gtk.SpinButton(adjustment=Gtk.Adjustment(lower=0, upper=100, step_increment=0.1, value=self.asset.ter), digits=2)
@@ -134,6 +156,7 @@ class EditAssetTable(Gtk.Table):
         self.name_entry.connect('changed', self.on_change)
         self.isin_entry.connect('changed', self.on_change)
         self.price_entry.connect('changed', self.on_change)
+        self.source_cb.connect("changed", self.on_change)
 
     def on_change(self, widget):
         self.b_change = True
@@ -142,6 +165,10 @@ class EditAssetTable(Gtk.Table):
         if response == Gtk.ResponseType.ACCEPT and self.b_change:
             self.asset.name = self.name_entry.get_text()
             self.asset.isin = self.isin_entry.get_text()
+            if self.source_cb.get_active() == 0:
+                self.asset.source = None
+            else:
+                self.asset.source = self.source_cb.get_active_text()
             if hasattr(self.asset, 'ter'):
                 self.asset.ter = self.ter_entry.get_value()
             new_price = self.price_entry.get_value()

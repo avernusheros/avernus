@@ -23,6 +23,10 @@ def get_source_count():
     return len(sources.items())
 
 
+def get_available_sources():
+    return sources.keys()
+
+
 def search(searchstring, callback=None, complete_cb=None, threaded=True):
     stop_search()
     global search_callback
