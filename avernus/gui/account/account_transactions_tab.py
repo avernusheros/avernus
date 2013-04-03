@@ -19,6 +19,7 @@ class AccountTransactionTab(page.Page):
     OBJECT = 0
     DESCRIPTION = 1
     AMOUNT = 2
+    CATEGORY = 3
     DATE = 4
 
     def __init__(self):
@@ -125,7 +126,16 @@ class AccountTransactionTab(page.Page):
 
     def on_category_edited(self, cellrenderertext, path, new_text):
         model = self.category_tree.get_model()
-        model[path][0].name = model[path][1] = unicode(new_text)
+        category = model[path][0]
+        category.name = model[path][1] = unicode(new_text)
+        
+        # update transactions treeview
+        for row in self.model:
+            ta = row[self.OBJECT]
+            if ta.category == category:
+                row[self.CATEGORY] = category.name
+                
+        
 
     def on_edit_category(self, widget):
         cat, selection_iter = self.get_selected_category()
