@@ -1,9 +1,9 @@
 __appname__ = 'avernus'
-__version__ = '0.10'
+__version__ = '0.11'
 __description__ = 'A simple program to easily manage your investments.'
 __url__ = 'https://launchpad.net/avernus'
 __authors__ = ['Wolfgang Steitz', 'Bastian Kennel']
-__mail__ = 'wsteitz(at)gmail.com'
+__mail__ = 'avernusheros(at)gmail.com'
 __copyright__ = '''\
 Copyright (c) 2008-2013
 

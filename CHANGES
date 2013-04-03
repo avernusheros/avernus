@@ -1,9 +1,11 @@
 avernus 0.11:
   * new asset allocation tool
   * more robust data model
+  * option to manually select data source of an asset
   * more robust reading of transaction csvs
   * huge improvements to portfolio performance chart
   * lots of bug fixes and code cleanup
+  * complete german translation
 
 avernus 0.10:
   * annual return of portfolio positions

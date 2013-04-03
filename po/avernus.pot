@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2013-03-24 22:30+0100\n"
+"POT-Creation-Date: 2013-04-02 23:38+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -37,7 +37,7 @@ msgstr ""
 msgid "buy"
 msgstr ""
 
-#: avernus/objects/container.py:184 avernus/objects/migrations.py:74
+#: avernus/objects/container.py:197 avernus/objects/migrations.py:74
 #: avernus/gui/sidebar.py:35 avernus/gui/sidebar.py:45
 msgid "All"
 msgstr ""
@@ -230,19 +230,19 @@ msgstr ""
 msgid "Group 3"
 msgstr ""
 
-#: avernus/objects/asset.py:120
+#: avernus/objects/asset.py:119
 msgid "Fund"
 msgstr ""
 
-#: avernus/objects/asset.py:128
+#: avernus/objects/asset.py:127
 msgid "ETF"
 msgstr ""
 
-#: avernus/objects/asset.py:136
+#: avernus/objects/asset.py:135
 msgid "Bond"
 msgstr ""
 
-#: avernus/objects/asset.py:170
+#: avernus/objects/asset.py:169
 msgid "Stock"
 msgstr ""
 
@@ -264,27 +264,22 @@ msgid "Remove selected categorization rule"
 msgstr ""
 
 #: avernus/gui/account/category_assignments_dialog.glade.h:5
-#: avernus/gui/avernus.glade.h:47
-msgid "toolbutton1"
-msgstr ""
-
-#: avernus/gui/account/category_assignments_dialog.glade.h:6
 msgid "Remove selected categorization"
 msgstr ""
 
-#: avernus/gui/account/category_assignments_dialog.glade.h:7
+#: avernus/gui/account/category_assignments_dialog.glade.h:6
 msgid "_Search string:"
 msgstr ""
 
-#: avernus/gui/account/category_assignments_dialog.glade.h:8
+#: avernus/gui/account/category_assignments_dialog.glade.h:7
 msgid "_Priority:"
 msgstr ""
 
-#: avernus/gui/account/category_assignments_dialog.glade.h:9
+#: avernus/gui/account/category_assignments_dialog.glade.h:8
 msgid "Assigned _category:"
 msgstr ""
 
-#: avernus/gui/account/category_assignments_dialog.glade.h:10
+#: avernus/gui/account/category_assignments_dialog.glade.h:9
 #: avernus/gui/account/import_csv_dialog.glade.h:6
 msgid "Preview"
 msgstr ""
@@ -302,7 +297,7 @@ msgid "_Type:"
 msgstr ""
 
 #: avernus/gui/account/account_overview.py:28
-#: avernus/gui/portfolio/dialogs.py:108 avernus/gui/portfolio/dialogs.py:175
+#: avernus/gui/portfolio/dialogs.py:108 avernus/gui/portfolio/dialogs.py:202
 #: avernus/gui/portfolio/closed_positions_tab.py:40
 #: avernus/gui/portfolio/overview_notebook.py:126
 #: avernus/gui/portfolio/asset_manager.py:18 avernus/gui/avernus.glade.h:80
@@ -633,11 +628,11 @@ msgid "Percentual fraction of each portfolio position."
 msgstr ""
 
 #: avernus/gui/portfolio/chart_tab.py:68
-msgid "Investment types"
+msgid "Asset types"
 msgstr ""
 
 #: avernus/gui/portfolio/chart_tab.py:69
-msgid "Percentual fraction by investment type."
+msgid "Percentual fraction by asset type."
 msgstr ""
 
 #: avernus/gui/portfolio/chart_tab.py:79
@@ -689,12 +684,12 @@ msgstr ""
 msgid "Total"
 msgstr ""
 
-#: avernus/gui/portfolio/buy_dialog.py:52
+#: avernus/gui/portfolio/buy_dialog.py:53
 msgid "Buy dates can not be in the future."
 msgstr ""
 
 #: avernus/gui/portfolio/buy_dialog.glade.h:1
-msgid "Computed from the Cost and the number of shares."
+msgid "Computed from the cost and the number of shares."
 msgstr ""
 
 #: avernus/gui/portfolio/buy_dialog.glade.h:2
@@ -709,11 +704,11 @@ msgstr ""
 msgid "Total:"
 msgstr ""
 
-#: avernus/gui/portfolio/asset_allocation.py:150
+#: avernus/gui/portfolio/asset_allocation.py:154
 msgid "new root"
 msgstr ""
 
-#: avernus/gui/portfolio/asset_allocation.py:155
+#: avernus/gui/portfolio/asset_allocation.py:159
 msgid "new category"
 msgstr ""
 
@@ -734,17 +729,25 @@ msgstr ""
 msgid "ISIN"
 msgstr ""
 
-#: avernus/gui/portfolio/dialogs.py:122 avernus/gui/portfolio/dialogs.py:180
+#: avernus/gui/portfolio/dialogs.py:122 avernus/gui/portfolio/dialogs.py:207
 #: avernus/gui/portfolio/position_dialog.py:139
 #: avernus/gui/portfolio/asset_manager.py:20 avernus/gui/avernus.glade.h:81
 msgid "Type"
 msgstr ""
 
-#: avernus/gui/portfolio/dialogs.py:129
+#: avernus/gui/portfolio/dialogs.py:128
+msgid "Data source"
+msgstr ""
+
+#: avernus/gui/portfolio/dialogs.py:131
+msgid "None"
+msgstr ""
+
+#: avernus/gui/portfolio/dialogs.py:151
 msgid "TER"
 msgstr ""
 
-#: avernus/gui/portfolio/dialogs.py:179
+#: avernus/gui/portfolio/dialogs.py:206
 #: avernus/gui/portfolio/asset_manager.py:21
 msgid "Currency"
 msgstr ""
@@ -1082,6 +1085,10 @@ msgstr ""
 msgid "toolbutton3"
 msgstr ""
 
+#: avernus/gui/avernus.glade.h:47
+msgid "toolbutton1"
+msgstr ""
+
 #: avernus/gui/avernus.glade.h:48
 msgid "Transfers"
 msgstr ""
@@ -1338,6 +1345,6 @@ msgstr ""
 msgid "portfolio value"
 msgstr ""
 
-#: avernus/main.py:117
+#: avernus/main.py:136
 msgid "enable debug output"
 msgstr ""
